@@ -1,6 +1,7 @@
 .DS_Store
 artifacts/notebooks/*.ipynb
 artifacts/outputs/*.png
+artifacts/outputs/*.csv
 data/healthhub_small_clean/*.parquet
 data/healthhub_small_clean/*.pkl
 data/*
