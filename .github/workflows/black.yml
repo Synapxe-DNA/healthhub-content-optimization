@@ -1,0 +1,25 @@
+name: Black Format Check
+
+on: pull_request
+
+jobs:
+  lint_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4  # Check out the code
+
+      - name: Set up Python
+        uses: actions/setup-python@v4  # Set up Python 3.12
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        # Upgrade pip and install black and necessary dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black==24.4.2 black[jupyter]==24.4.2 click==8.1.7
+
+      - name: Run Black to Check Formatting
+        # Check formatting without modifying files
+        run: |
+          black --check --verbose .
