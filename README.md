@@ -66,3 +66,17 @@ pm.execute_notebook(
     output_path="<OUTPUT_NOTEBOOK>",  # input notebook path
     parameters={...},  # parameters to be passed to the notebook in a dictionary
 ```
+
+## Pushing to GitHub
+
+> **⚠️ Warning:** Refrain from pushing into `main` branch directly — it is bad practice. Always create a new branch and make your changes on your new branch.
+
+Every time you complete a feature or change on a branch and want to push it to GitHub to make a pull request, you need to ensure you lint your code.
+
+You can simply run the command `pre-commit run --all-files` to lint your code. For more information, refer to the [pre-commit docs](https://pre-commit.com/). To see what linters are used, refer to the [`.pre-commit-config.yaml`](.pre-commit-config.yaml) YAML file.
+
+You should ensure that all cases are satisfied before you push to GitHub (you should see that all has passed). If not, please debug accordingly or your pull request may be rejected and closed.
+
+The [`lint.yml`](.github/workflows/lint.yml) is a GitHub workflow that kicks off several GitHub Actions when a pull request is made. These GitHub Actions check that your code have been properly linted before it is passed for review. Once all actions have passed and the PR approved, your changes will be merged to the `main` branch.
+
+> **Note:** The `pre-commit` will run regardless if you forget to explicitly call it. Nonetheless, it is recommended to call it explicitly so you can make any necessary changes in advanced.
