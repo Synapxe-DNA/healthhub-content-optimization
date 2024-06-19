@@ -3,6 +3,7 @@ black==24.4.2
 gensim==4.3.0
 isort==5.13.2
 matplotlib==3.9.0
+nbqa==1.8.5
 nltk==3.8.1
 numpy==1.26.4
 pandas==2.2.2

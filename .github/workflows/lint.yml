@@ -27,7 +27,7 @@ jobs:
       - name: Run isort Check
         # Check formatting without modifying files
         run: |
-          nbqa isort --check --profile black .
+          nbqa isort . --check --profile black
           isort --check --profile black .
 
   black_check:
