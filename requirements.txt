@@ -1,6 +1,6 @@
 alive_progress==3.1.5
 black==24.4.2
-gensim==4.3.0
+gensim==4.3.2
 isort==5.13.2
 matplotlib==3.9.0
 nbqa==1.8.5
@@ -8,6 +8,7 @@ nltk==3.8.1
 numpy==1.26.4
 pandas==2.2.2
 papermill==2.6.0
+plotly==5.22.0
 pre-commit==3.7.1
 pyarrow==16.1.0
 scikit-learn==1.5.0
