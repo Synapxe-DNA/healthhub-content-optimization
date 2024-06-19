@@ -2,7 +2,7 @@
 extend-include = ["*.ipynb"]
 
 [tool.poetry]
-name = "src"
+name = "content-optimization"
 version = "0.1.0"
 description = ""
 authors = ["Wilsven Leong <wilsven_leong96@hotmail.co.uk>"]
@@ -29,6 +29,9 @@ seaborn = "0.13.2"
 sentence-transformers = "3.0.1"
 transformers = "4.41.2"
 
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.4"
 
 [build-system]
 requires = ["poetry-core"]
