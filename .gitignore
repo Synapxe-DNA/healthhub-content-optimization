@@ -2,7 +2,7 @@
 artifacts/notebooks/*.ipynb
 artifacts/outputs/*.png
 artifacts/outputs/*.csv
-artifacts/outputs/*.html 
+artifacts/outputs/*.html
 data/healthhub_small_clean/*.parquet
 data/healthhub_small_clean/*.pkl
 data/*

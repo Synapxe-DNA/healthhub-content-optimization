@@ -59,11 +59,10 @@ To run the notebooks, you can use the [`runner.ipynb`](notebooks/runner.ipynb) o
 import papermill as pm
 from logger import logger
 
-pm.inspect_notebook("<INPUT_NOTEBOOK>")  # inspects and outputs the notebook's parameters 
+pm.inspect_notebook("<INPUT_NOTEBOOK>")  # inspects and outputs the notebook's parameters
 
 pm.execute_notebook(
     input_path="<INPUT_NOTEBOOK>",  # input notebook path
     output_path="<OUTPUT_NOTEBOOK>",  # input notebook path
     parameters={...},  # parameters to be passed to the notebook in a dictionary
 ```
-
