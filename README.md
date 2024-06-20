@@ -29,10 +29,27 @@ pip install -r requirements.txt
 
 ### Poetry
 
+First create a virtual environment by running the following commands:
+
+```bash
+poetry shell
+```
+
+> **Note:** If you see the following error; `The currently activated Python version 3.11.7 is not supported by the project (^3.12). Trying to find and use a compatible version.`, run:
+```bash
+poetry env use 3.12.3  # Python version used in the project
+```
+
 To install the defined dependencies for your project, just run the `install` command. The `install` command reads the [`pyproject.toml`](pyproject.toml) file from the current project, resolves the dependencies, and installs them.
 
 ```bash
 poetry install
+```
+
+> **Note:** If you face an error installing `gensim` with `poetry`, run this command:
+
+```bash
+poetry run python -m pip install gensim --disable-pip-version-check --no-deps --no-cache-dir --no-binary gensim
 ```
 
 If there is a [`poetry.lock`](poetry.lock) file in the current directory, it will use the exact versions from there instead of resolving them. This ensures that everyone using the library will get the same versions of the dependencies.
@@ -104,6 +121,8 @@ pm.execute_notebook(
 Every time you complete a feature or change on a branch and want to push it to GitHub to make a pull request, you need to ensure you lint your code.
 
 You can simply run the command `pre-commit run --all-files` to lint your code. For more information, refer to the [pre-commit docs](https://pre-commit.com/). To see what linters are used, refer to the [`.pre-commit-config.yaml`](.pre-commit-config.yaml) YAML file.
+
+Alternatively, there is a [`Makefile`](Makefile) that can also lint your code base when you run the simpler command `make lint`.
 
 You should ensure that all cases are satisfied before you push to GitHub (you should see that all has passed). If not, please debug accordingly or your pull request may be rejected and closed.
 
