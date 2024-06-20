@@ -6,6 +6,7 @@ matplotlib==3.9.0
 nbqa==1.8.5
 nltk==3.8.1
 numpy==1.26.4
+openpyxl==3.1.4
 pandas==2.2.2
 papermill==2.6.0
 plotly==5.22.0
