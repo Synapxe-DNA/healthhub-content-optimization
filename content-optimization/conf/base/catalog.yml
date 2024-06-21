@@ -1,0 +1,4 @@
+# Only for Live Healthy articles
+articles_df:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/full_content/export-published-live-healthy-articles_14062024_data.xlsx
