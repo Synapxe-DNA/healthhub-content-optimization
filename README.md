@@ -2,7 +2,7 @@
 
 This repository contains the content optimization for HealthHub.
 
-## Installation
+## Installation <a name="installation"></a>
 
 ### Anaconda (Recommended)
 
