@@ -5,6 +5,18 @@ from bs4 import BeautifulSoup
 
 
 def clean_text(text: str) -> str:
+    """
+    Cleans the given text by normalizing Unicode characters,
+    replacing problematic characters, and removing multiple whitespace.
+
+    Args:
+        text (str): The input text to be cleaned.
+
+    Returns:
+        str: The cleaned text with normalized Unicode characters,
+            problematic characters replaced, and multiple whitespace
+            replaced with a single space.
+    """
     # Normalize Unicode characters
     text = unicodedata.normalize("NFKD", text)
 
@@ -18,7 +30,18 @@ def clean_text(text: str) -> str:
     return text.strip()
 
 
-def extract_content(html_content: str) -> str:
+def extract_content(html_content: str) -> tuple[list[str], str]:
+    """
+    A function to extract content from HTML using BeautifulSoup
+    and clean the extracted content for further processing.
+
+    Args:
+        html_content (str): The HTML content to extract text from.
+
+    Returns:
+        tuple[list[str], str]: A tuple containing a list of related sections
+            and the cleaned main content as a single string.
+    """
     soup = BeautifulSoup(html_content, "html.parser")
 
     # Find all <br> tags and replace them with newline
