@@ -1,4 +1,20 @@
-# Only for Live Healthy articles
-articles_df:
-  type: pandas.ExcelDataset
-  filepath: data/01_raw/full_content/export-published-live-healthy-articles_14062024_data.xlsx
+# articles_df:
+#   type: pandas.ExcelDataset
+#   filepath: data/01_raw/full_content/export-published-live-healthy-articles_14062024_data.xlsx
+
+all_contents:
+  type: partitions.PartitionedDataset
+  path: data/01_raw/all_contents  # path to the location of partitions
+  dataset: pandas.ExcelDataset
+
+all_contents_extracted:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/all_contents_extracted
+  dataset: pandas.ParquetDataset
+  filename_suffix: ".parquet"
+
+all_extracted_text:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/all_extracted_text
+  dataset: text.TextDataset
+  filename_suffix: ".txt"

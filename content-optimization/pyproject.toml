@@ -55,6 +55,7 @@ exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
 docstring-code-format = true
 
 [tool.ruff]
+extend-include = ["*.ipynb"]
 line-length = 88
 lint.pylint.max-args = 10
 show-fixes = true
@@ -67,4 +68,4 @@ lint.select = [
     "PL",  # Pylint
     "T201", # Print Statement
 ]
-lint.ignore = ["E501"]  # Ruff format takes care of line-too-long
+lint.ignore = ["E501", "I001", "PLR0912", "T201"]  # Ruff format takes care of line-too-long
