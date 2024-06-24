@@ -29,6 +29,12 @@ pip install -r requirements.txt
 
 ### Poetry
 
+Refer to the documentation [here](https://python-poetry.org/docs/#installing-with-the-official-installer) (recommended) on how to install Poetry based on your operating system.
+
+> **Note:** **For Mac users**, if encountering issues with `poetry command not found`, add `export PATH="$HOME/.local/bin:$PATH"` in your `.zshrc` file in your home folder and run `source ~/.zshrc`.
+
+---
+
 First create a virtual environment by running the following commands:
 
 ```bash
@@ -110,7 +116,7 @@ pm.inspect_notebook("<INPUT_NOTEBOOK>")  # inspects and outputs the notebook's p
 
 pm.execute_notebook(
     input_path="<INPUT_NOTEBOOK>",  # input notebook path
-    output_path="<OUTPUT_NOTEBOOK>",  # input notebook path
+    output_path="<OUTPUT_NOTEBOOK>",  # output notebook path
     parameters={...},  # parameters to be passed to the notebook in a dictionary
 ```
 
