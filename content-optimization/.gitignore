@@ -1,3 +1,7 @@
+.telemetry
+session_store.db
+stats.json
+
 ##########################
 # KEDRO PROJECT
 
