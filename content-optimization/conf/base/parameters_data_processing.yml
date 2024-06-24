@@ -3,3 +3,94 @@
 #
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
+content_category: "live-healthy-articles"
+
+columns_to_drop:
+  cost-and-financing:
+    - identifier
+  diseases-and-conditions:
+    - identifier
+  health-statistics:
+    - identifier
+  live-healthy-articles:
+    - identifier
+    - Content.NumberOfCreatedVersions
+    - Content.StrategyCompletenessStatus
+    - Content.NumberOfCreatedVersions
+    - Content.ApprovedForCreation
+    - PublishStatus
+    - LiveHealthyArticle_PRDescription
+    - LiveHealthyArticle_PRContact_Address
+    - LiveHealthyArticle_PopularSortOrder
+    - LiveHealthyArticle_CarouselSortOrder
+    - LiveHealthyArticle_Featured
+    - LiveHealthyArticle_Popular
+    - LiveHealthyArticle_DateModified
+    - LiveHealthyArticle_DateToUnpublish
+    - LiveHealthyArticle_ValidTo
+    - LiveHealthyArticle_ValidFrom
+    - Reference_Programs_RelatedArticles:Child
+    - ContentTypeToContent
+    - ContentLifeCycleToContent
+    - ContentToUsage
+    - MasterContentVersion
+    - ContentVersionHistory
+    - ContentRepositoryToContent
+    - MContentToAvailableRoute
+    - MContentToActiveState
+    - MContentToStateMachine
+    - AssignedUserGroupToMContent
+    - Reference_LiveHealthyArticle_ArticleCategory:Parent
+    - Reference_LiveHealthyArticle_Provider:Parent
+    - LiveHealthyArticle_Cover_x0020_Image
+    - CreatedBy
+    - CreatedOn
+    - ModifiedBy
+    - ModifiedOn
+  medical-care-and-facilities:
+    - identifier
+  medications:
+    - identifier
+  program-sub-pages:
+    - identifier
+  programs:
+    - identifier
+  support-group-and-others:
+    - identifier
+
+metadata:
+  cost-and-financing:
+    content_title: CostAndFinancing_Title
+    content_body: CostAndFinancing_ContentBody
+
+  diseases-and-conditions:
+    content_title: DiseasesCondition_Title
+    content_body: DiseasesCondition_ContentBody
+
+  health-statistics:
+    content_title: HealthStatistics_Title
+    content_body: HealthStatistics_ContentBody
+
+  live-healthy-articles:
+    content_title: LiveHealthyArticle_Title
+    content_body: LiveHealthyArticle_Content_Body
+
+  medical-care-and-facilities:
+    content_title: MedicalCareFaci_Title
+    content_body: MedicalCareFaci_ContentBody
+
+  medications:
+    content_title: Medication_Title
+    content_body: Medication_ContentBody
+
+  program-sub-pages:
+    content_title: ProgramSubPages_Title
+    content_body: ProgramSubPages_Content_Body
+
+  programs:
+    content_title: Programs_Title
+    content_body: Programs_Content_x0020_Body
+
+  support-group-and-others:
+    content_title: SupportGroups_Title
+    content_body: SupportGroups_ContentBody
