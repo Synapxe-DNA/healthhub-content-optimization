@@ -7,6 +7,12 @@ all_contents:
   path: data/01_raw/all_contents  # path to the location of partitions
   dataset: pandas.ExcelDataset
 
+all_contents_processed:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/all_contents_processed
+  dataset: pandas.ParquetDataset
+  filename_suffix: ".parquet"
+
 all_contents_extracted:
   type: partitions.PartitionedDataset
   path: data/02_intermediate/all_contents_extracted
