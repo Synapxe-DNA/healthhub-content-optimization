@@ -1,12 +1,11 @@
 # Content Optimization
 
-## Overview
+## Overview <a id="kedro-pipeline"></a>
 
 > This Kedro project with Kedro-Viz setup was generated using `kedro 0.19.6`.
 
 This visualization shows the current (latest) Kedro pipeline. This will be updated as the pipeline progresses.
 
-<a id="kedro-pipeline"></a>
 ![kedro-pipeline](docs/images/kedro-pipeline.png "Kedro Pipeline")
 
 ## Rules and guidelines
