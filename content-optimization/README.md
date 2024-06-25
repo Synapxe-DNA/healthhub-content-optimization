@@ -8,14 +8,14 @@ This visualization shows the current (latest) Kedro pipeline. This will be updat
 
 ![kedro-pipeline](docs/images/kedro-pipeline.png "Kedro Pipeline")
 
-## Rules and guidelines
+## Rules and Guidelines
 
 - Don't remove any lines from the `.gitignore` file provided (although you may modify or add to it)
 - Make sure any results can be reproduced by following a [data engineering convention](https://docs.kedro.org/en/stable/faq/faq.html#what-is-data-engineering-convention)
 - Don't commit data to the repository
 - Don't commit any credentials or local configuration to the repository. Keep all credentials and local configuration in [`conf/local/`](conf/local)
 
-## How to install dependencies
+## Install Dependencies
 
 <a id="note"></a>
 > **Note:** This assumes that you have already created and activated your virtual environment. For more information on how to get set up, refer [here](../README.md#installation). From this section onwards, do also take note that you are in the `content-optimization` directory. Simply check by running `pwd` in your terminal and `cd content-optimization` if you're not already there.
@@ -36,7 +36,31 @@ If you're using Poetry instead, run:
 cat requirements.txt | xargs poetry add
 ```
 
-## How to run the Kedro pipeline
+## File Structure
+
+- [`conf/`](conf): contains all configurations for the project
+
+    * [`base/`](conf/base): contains all configurations for the parameters used in the pipelines
+
+    * [`local/`](conf/local): contains all local configurations for the project like secrets and credentials (not to be checked into version control)
+
+- [`data/`](data): contains all data for the project at every stages; there are many sub-directories but here are the notable ones (will be updated as the pipeline progresses)
+
+    * [`01_raw/all_contents/`](data/01_raw/all_contents): contains all raw data
+
+    * [`02_intermediate/`](data/02_intermediate): contains all intermediate data
+
+        * [`all_contents_processed/`](data/02_intermediate/all_contents_processed): contains all processed data; kept only relevant columns
+
+        * [`all_contents_extracted/`](data/02_intermediate/all_contents_extracted): contains all extracted data; stores as `related_sections` and `extracted_content_body` columns
+
+        * [`all_extracted_text/`](data/02_intermediate/all_extracted_text): contains all extracted text data from the HTML content body; saved as `.txt` files; for validation and sanity checks
+
+- [`notebooks/`](notebooks): contains all notebooks for the project; for preliminary and exploratory analysis; code to be refactored into nodes and pipelines
+
+- [`src/content_optimization/`](src/content_optimization): contains all code for the project; contains the code for respective pipelines
+
+## Run the Kedro Project
 
 Similarly, ensure you're in the correct directory. Refer [here](#note) for more information. You can simply run the Kedro project with:
 
@@ -46,7 +70,7 @@ kedro run
 
 This will run the entire project for all pipelines.
 
-## How to run specific pipelines
+## Run Pipelines
 
 ### Data Processing
 
