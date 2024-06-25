@@ -12,6 +12,19 @@ data/*
 experiments
 *.model
 
+# Files from frontend
+frontend/app/node_modules/
+frontend/app/dist/
+frontend/app/.angular/
+frontend/app/.vscode/
+frontend/app/tmp
+frontend/app/out-tsc
+frontend/app/bazel-out
+frontend/app/node_modules
+frontend/app/npm-debug.log
+frontend/app/yarn-error.log
+frontend/app/.editorconfig
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -173,4 +186,5 @@ cython_debug/
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+.idea/
+
