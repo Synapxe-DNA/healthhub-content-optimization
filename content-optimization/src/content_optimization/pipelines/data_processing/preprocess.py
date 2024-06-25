@@ -20,6 +20,9 @@ def clean_text(text: str) -> str:
     # Normalize Unicode characters
     text = unicodedata.normalize("NFKD", text)
 
+    # Use ASCII encoding to handle special symbols e.g. copyright \xa9
+    text = text.encode("ascii", "ignore").decode("utf-8")
+
     # Replace common problematic characters
     text = text.replace("\xa0", " ")  # non-breaking space
     text = text.replace("\u200b", "")  # zero-width space
@@ -63,8 +66,10 @@ def extract_content(html_content: str) -> tuple[list[str], str]:
 
     # Extract the main content
     content = []
-    for tag in soup.find_all(["h2", "h3", "h4", "p", "ul", "ol"]):
-        if tag.name in ["h2", "h3", "h4"]:
+    for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol"]):
+        if tag.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+            # Provide paragraphing between key headers
+            content.append("\n")
             content.append(clean_text(tag.text))
 
         elif tag.name == "p":
@@ -101,4 +106,7 @@ def extract_content(html_content: str) -> tuple[list[str], str]:
     # Remove empty strings from content
     content = [c for c in content if c]
 
-    return related_sections, "\n".join(content)
+    # Replace double newlines with single newlines and strip whitespace
+    processed_text = "\n".join(content).replace("\n\n", "\n").strip()
+
+    return related_sections, processed_text

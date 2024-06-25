@@ -6,6 +6,8 @@ kedro-datasets>=1.0; python_version < "3.9"
 kedro-telemetry>=0.3.1
 kedro-viz>=6.7.0
 notebook
+openpyxl==3.1.4
+pyarrow==16.1.0
 pytest~=7.2
 pytest-cov~=3.0
 pytest-mock>=1.7.1, <2.0
