@@ -1,0 +1,10 @@
+/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+  --tui-radius-s: 0.2rem;
+  --tui-radius-m: 0.3rem;
+}
