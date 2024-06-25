@@ -9,7 +9,7 @@ This Kedro project with Kedro-Viz setup was generated using `kedro 0.19.6`.
 - Don't remove any lines from the `.gitignore` file provided (although you may modify or add to it)
 - Make sure any results can be reproduced by following a [data engineering convention](https://docs.kedro.org/en/stable/faq/faq.html#what-is-data-engineering-convention)
 - Don't commit data to the repository
-- Don't commit any credentials or local configuration to the repository. Keep all credentials and local configuration in [`conf/local/`](content-optimization/conf/local)
+- Don't commit any credentials or local configuration to the repository. Keep all credentials and local configuration in [`conf/local/`](conf/local)
 
 ## How to install dependencies
 
@@ -46,7 +46,7 @@ This will run the entire project for all pipelines.
 
 ### Data Processing
 
-> **❗ Important:** Before running the `data_processing` [pipeline]((../content-optimization/src/content_optimization/pipelines/data_processing/pipeline.py)), ensure that you have the raw data in the [`data/01_raw/all_contents`](../content-optimization/data/01_raw/all_contents) directory.
+> **❗ Important:** Before running the `data_processing` [pipeline](src/content_optimization/pipelines/data_processing/pipeline.py)), ensure that you have the raw data in the [`data/01_raw/all_contents`](../content-optimization/data/01_raw/all_contents) directory.
 
 You can run the entire `data_processing` pipeline by running:
 
