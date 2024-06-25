@@ -2,7 +2,11 @@
 
 ## Overview
 
-This Kedro project with Kedro-Viz setup was generated using `kedro 0.19.6`.
+> This Kedro project with Kedro-Viz setup was generated using `kedro 0.19.6`.
+
+This visualization shows the current (latest) Kedro pipeline. This will be updated as the pipeline progresses.
+
+![kedro-pipeline](docs/images/kedro-pipeline.png "Kedro Pipeline") <a id="kedro-pipeline"></a>
 
 ## Rules and guidelines
 
@@ -61,6 +65,6 @@ If for any reason, you would like to run specific nodes in the `data_processing`
 kedro run --nodes="process_data_node"
 ```
 
-The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph). This means that if it's your first time running the pipeline, you should ensure that the nodes are ran in order.
+The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph). You can view the visualization [here](#kedro-pipeline). This means that if it's your first time running the pipeline, you should ensure that the nodes are ran in order.
 
 > **Note:** For example in the `data_processing` pipeline, you should run the `process_data_node` first, followed by the `extract_data_node`. After this, you may run the nodes in any order for subsequent runs. This is because there may be intermediate outputs that are required in subsequent nodes.
