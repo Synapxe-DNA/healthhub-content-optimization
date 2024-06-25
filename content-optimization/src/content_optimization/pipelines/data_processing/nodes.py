@@ -48,6 +48,8 @@ def process_data(
 
     with alive_bar(len(all_contents), title="Processing data", force_tty=True) as bar:
         for filename, partition_load_func in all_contents.items():
+            if filename == ".gitkeep":
+                continue
             # Get content category from filename
             content_category = re.sub(r"export-published-", "", filename.split("_")[0])
             bar.text(f"Processing: {content_category}")
@@ -115,6 +117,8 @@ def extract_data(
         len(all_contents_processed), title="Extracting data", force_tty=True
     ) as bar:
         for content_category, partition_load_func in all_contents_processed.items():
+            if content_category == ".gitkeep":
+                continue
             bar.text(f"Extracting: {content_category}")
 
             # Load the dataframe
