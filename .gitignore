@@ -11,6 +11,7 @@ data/*
 !data/healthhub_small_clean
 experiments
 *.model
+.env
 
 # Files from frontend
 frontend/app/node_modules/
@@ -156,6 +157,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+hh_venv/
+hh_venv
 
 # Spyder project settings
 .spyderproject
