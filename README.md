@@ -31,7 +31,8 @@ pip install -r requirements.txt
 
 Refer to the documentation [here](https://python-poetry.org/docs/#installing-with-the-official-installer) (recommended) on how to install Poetry based on your operating system.
 
-> **Note:** **For Mac users**, if encountering issues with `poetry command not found`, add `export PATH="$HOME/.local/bin:$PATH"` in your `.zshrc` file in your home folder and run `source ~/.zshrc`.
+> [!NOTE]
+> **For Mac users**, if encountering issues with `poetry command not found`, add `export PATH="$HOME/.local/bin:$PATH"` in your `.zshrc` file in your home folder and run `source ~/.zshrc`.
 
 ---
 
@@ -41,7 +42,9 @@ First create a virtual environment by running the following commands:
 poetry shell
 ```
 
-> **Note:** If you see the following error; `The currently activated Python version 3.11.7 is not supported by the project (^3.12). Trying to find and use a compatible version.`, run:
+> [!NOTE]
+> If you see the following error; `The currently activated Python version 3.11.7 is not supported by the project (^3.12). Trying to find and use a compatible version.`, run:
+
 ```bash
 poetry env use 3.12.3  # Python version used in the project
 ```
@@ -52,7 +55,8 @@ To install the defined dependencies for your project, just run the `install` com
 poetry install
 ```
 
-> **Note:** If you face an error installing `gensim` with `poetry`, run this command:
+> [!NOTE]
+> If you face an error installing `gensim` with `poetry`, run this command:
 
 ```bash
 poetry run python -m pip install gensim --disable-pip-version-check --no-deps --no-cache-dir --no-binary gensim
@@ -62,7 +66,8 @@ If there is a [`poetry.lock`](poetry.lock) file in the current directory, it wil
 
 If there is no [`poetry.lock`](poetry.lock) file, Poetry will create one after dependency resolution.
 
-> **⚠️ Warning:** It is best practice to commit the `poetry.lock` to version control for more reproducible builds. For more information, refer [here](https://python-poetry.org/docs/basic-usage/#:~:text=changes%20in%20dependencies.-,Committing%20your%20poetry.lock%20file%20to%20version%20control,-As%20an%20application).
+> [!WARNING]
+> It is best practice to commit the `poetry.lock` to version control for more reproducible builds. For more information, refer [here](https://python-poetry.org/docs/basic-usage/#:~:text=changes%20in%20dependencies.-,Committing%20your%20poetry.lock%20file%20to%20version%20control,-As%20an%20application).
 
 ## File Structure
 
@@ -122,7 +127,8 @@ pm.execute_notebook(
 
 ## Pushing to GitHub
 
-> **⚠️ Warning:** Refrain from pushing into `main` branch directly — it is bad practice. Always create a new branch and make your changes on your new branch.
+> [!WARNING]
+> Refrain from pushing into `main` branch directly — it is bad practice. Always create a new branch and make your changes on your new branch.
 
 Every time you complete a feature or change on a branch and want to push it to GitHub to make a pull request, you need to ensure you lint your code.
 
@@ -134,4 +140,5 @@ You should ensure that all cases are satisfied before you push to GitHub (you sh
 
 The [`lint.yml`](.github/workflows/lint.yml) is a GitHub workflow that kicks off several GitHub Actions when a pull request is made. These GitHub Actions check that your code have been properly linted before it is passed for review. Once all actions have passed and the PR approved, your changes will be merged to the `main` branch.
 
-> **Note:** The `pre-commit` will run regardless if you forget to explicitly call it. Nonetheless, it is recommended to call it explicitly so you can make any necessary changes in advanced.
+> [!NOTE]
+> The `pre-commit` will run regardless if you forget to explicitly call it. Nonetheless, it is recommended to call it explicitly so you can make any necessary changes in advanced.

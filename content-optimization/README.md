@@ -18,7 +18,9 @@ This visualization shows the current (latest) Kedro pipeline. This will be updat
 ## Install Dependencies
 
 <a id="note"></a>
-> **Note:** This assumes that you have already created and activated your virtual environment. For more information on how to get set up, refer [here](../README.md#installation). From this section onwards, do also take note that you are in the `content-optimization` directory. Simply check by running `pwd` in your terminal and `cd content-optimization` if you're not already there.
+
+> [!NOTE]
+> This assumes that you have already created and activated your virtual environment. For more information on how to get set up, refer [here](../README.md#installation). From this section onwards, do also take note that you are in the `content-optimization` directory. Simply check by running `pwd` in your terminal and `cd content-optimization` if you're not already there.
 
 ### Anaconda (Recommended)
 
@@ -91,4 +93,5 @@ kedro run --nodes="process_data_node"
 
 The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph). You can view the visualization [here](#kedro-pipeline). This means that if it's your first time running the pipeline, you should ensure that the nodes are ran in order.
 
-> **Note:** For example in the `data_processing` pipeline, you should run the `process_data_node` first, followed by the `extract_data_node`. After this, you may run the nodes in any order for subsequent runs. This is because there may be intermediate outputs that are required in subsequent nodes.
+> [!NOTE]
+> For example in the `data_processing` pipeline, you should run the `process_data_node` first, followed by the `extract_data_node`. After this, you may run the nodes in any order for subsequent runs. This is because there may be intermediate outputs that are required in subsequent nodes.
