@@ -76,7 +76,8 @@ This will run the entire project for all pipelines.
 
 ### Data Processing
 
-> **❗ Important:** Before running the `data_processing` [pipeline](src/content_optimization/pipelines/data_processing/pipeline.py)), ensure that you have the raw data in the [`data/01_raw/all_contents`](../content-optimization/data/01_raw/all_contents) directory. Do not extract the files directly into the directory.
+> [!IMPORTANT]
+> Before running the `data_processing` [pipeline](src/content_optimization/pipelines/data_processing/pipeline.py)), ensure that you have the raw data in the [`data/01_raw/all_contents`](../content-optimization/data/01_raw/all_contents) directory. Do not extract the files directly into the directory.
 
 You can run the entire `data_processing` pipeline by running:
 
