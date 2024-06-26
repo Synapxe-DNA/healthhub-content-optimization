@@ -2,6 +2,7 @@ all_contents:
   type: partitions.PartitionedDataset
   path: data/01_raw/all_contents  # path to the location of partitions
   dataset: pandas.ExcelDataset
+  filename_suffix: ".xlsx"
 
 all_contents_processed:
   type: partitions.PartitionedDataset

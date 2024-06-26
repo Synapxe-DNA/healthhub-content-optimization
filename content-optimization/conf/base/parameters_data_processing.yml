@@ -3,6 +3,14 @@
 #
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
+
+# Confirmed Content Categories for Content Optimization
+# 1. Disease and Conditions
+# 2. Medical Care and Facilities
+# 3. Support Groups & Others
+# 4. Cost and Financing
+# 5. Live Healthy Articles
+
 columns_to_keep:
   cost-and-financing:
     - id
