@@ -35,7 +35,9 @@ def clean_text(text: str) -> str:
     return text.strip()
 
 
-def extract_content(html_content: str) -> tuple[list[str], str, list[tuple[str, str]], list[tuple[str, str]]]:
+def extract_content(
+    html_content: str,
+) -> tuple[list[str], str, list[tuple[str, str]], list[tuple[str, str]]]:
     """
     A function to extract content from HTML using BeautifulSoup
     and clean the extracted content for further processing.
