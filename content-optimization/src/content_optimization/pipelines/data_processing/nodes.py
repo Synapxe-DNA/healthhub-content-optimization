@@ -158,6 +158,9 @@ def extract_data(
                 if extracted_content_body == "":
                     df.at[index, "to_remove"] = True
 
+                # Substitute forbidden characters for filenames with _
+                title = re.sub(r'[<>:"/\\|?*]', "_", title)
+
                 # Store text files in its own folder named `content_category`
                 all_extracted_text[os.path.join(content_category, title)] = (
                     extracted_content_body
