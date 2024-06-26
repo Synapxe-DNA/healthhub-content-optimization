@@ -9,7 +9,7 @@ from typing import Any, Callable
 
 import pandas as pd
 from alive_progress import alive_bar
-from content_optimization.pipelines.data_processing.preprocess import extract_content
+from content_optimization.pipelines.data_processing.preprocess import HTMLExtractor
 
 
 def process_data(
@@ -140,13 +140,13 @@ def extract_data(
 
                 # Get the HTML content
                 html_content = row[content_body]
-                # Extract text from HTML
-                (
-                    related_sections,
-                    extracted_content_body,
-                    extracted_links,
-                    extracted_headers,
-                ) = extract_content(html_content)
+
+                # Extract text from HTML using the HTMLExtractor Class
+                extractor = HTMLExtractor(html_content)
+                related_sections = extractor.extract_related_sections()
+                extracted_content_body = extractor.extract_text()
+                extracted_links = extractor.extract_links()
+                extracted_headers = extractor.extract_headers()
 
                 # Store extracted data into the dataframe
                 df.at[index, "related_sections"] = related_sections
