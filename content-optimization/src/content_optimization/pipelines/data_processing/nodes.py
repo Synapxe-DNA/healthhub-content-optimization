@@ -9,7 +9,7 @@ from typing import Any, Callable
 
 import pandas as pd
 from alive_progress import alive_bar
-from content_optimization.pipelines.data_processing.preprocess import extract_content
+from content_optimization.pipelines.data_processing.preprocess import HTMLExtractor
 
 
 def process_data(
@@ -48,8 +48,6 @@ def process_data(
 
     with alive_bar(len(all_contents), title="Processing data", force_tty=True) as bar:
         for filename, partition_load_func in all_contents.items():
-            if filename == ".gitkeep":
-                continue
             # Get content category from filename
             content_category = re.sub(r"export-published-", "", filename.split("_")[0])
             bar.text(f"Processing: {content_category}")
@@ -66,13 +64,14 @@ def process_data(
 
             content_body = metadata[content_category]["content_body"]
 
-            # Drop all articles with no content
-            df = df.dropna(subset=[content_body]).reset_index(drop=True)
-            df = df[
-                df[content_body].apply(
-                    lambda x: True if re.search(r"(<[div|p|h2].*?>)", x) else False
+            # Mark articles with no content `to_remove`
+            df["to_remove"] = df[content_body].apply(
+                lambda x: (
+                    False
+                    if pd.notna(x) and re.search(r"(<[div|p|h2].*?>)", str(x))
+                    else True
                 )
-            ].reset_index(drop=True)
+            )
 
             all_contents_processed[content_category] = df
             bar()
@@ -117,8 +116,6 @@ def extract_data(
         len(all_contents_processed), title="Extracting data", force_tty=True
     ) as bar:
         for content_category, partition_load_func in all_contents_processed.items():
-            if content_category == ".gitkeep":
-                continue
             bar.text(f"Extracting: {content_category}")
 
             # Load the dataframe
@@ -127,22 +124,39 @@ def extract_data(
             content_title = metadata[content_category]["content_title"]
             content_body = metadata[content_category]["content_body"]
 
-            # Add new columns to store extracted data
+            # Initialise new columns in dataframe to store extracted data
             df["related_sections"] = None
             df["extracted_content_body"] = None
+            df["extracted_links"] = None
+            df["extracted_headers"] = None
 
             for index, row in df.iterrows():
+                # Skip extraction for those articles flagged for removal
+                if row["to_remove"]:
+                    continue
+
                 # Replace all forward slashes with hyphens to avoid saving as folders
                 title = re.sub(r"\/", "-", row[content_title]).strip()
 
                 # Get the HTML content
                 html_content = row[content_body]
-                # Extract text from HTML
-                related_sections, extracted_content_body = extract_content(html_content)
+
+                # Extract text from HTML using the HTMLExtractor Class
+                extractor = HTMLExtractor(html_content)
+                related_sections = extractor.extract_related_sections()
+                extracted_content_body = extractor.extract_text()
+                extracted_links = extractor.extract_links()
+                extracted_headers = extractor.extract_headers()
 
                 # Store extracted data into the dataframe
                 df.at[index, "related_sections"] = related_sections
                 df.at[index, "extracted_content_body"] = extracted_content_body
+                df.at[index, "extracted_links"] = extracted_links
+                df.at[index, "extracted_headers"] = extracted_headers
+
+                # If `extracted_content_body` is empty, we update flag to remove
+                if extracted_content_body == "":
+                    df.at[index, "to_remove"] = True
 
                 # Store text files in its own folder named `content_category`
                 all_extracted_text[os.path.join(content_category, title)] = (
