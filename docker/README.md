@@ -14,7 +14,7 @@ Docker is currently used to host a MongoDB instance that is used for local devel
 according to `dockercompose.env.sample`.
 
 > [!NOTE]
-> The environment variables set will determine your login credentials to the Mongo DB instance.  
+> The environment variables set will determine your login credentials to the Mongo DB instance.
 
 ---
 
@@ -27,7 +27,7 @@ instance. To start or stop the Mongo DB, run the following commands in the root 
 # Starts Mongo DB
 make local-start-db
 
-# Stops Mongo DB  
+# Stops Mongo DB
 make local-stop-db
 ```
 
