@@ -9,7 +9,7 @@ from typing import Any, Callable
 
 import pandas as pd
 from alive_progress import alive_bar
-from content_optimization.pipelines.data_processing.preprocess import extract_content
+from content_optimization.pipelines.data_processing.preprocess import HTMLExtractor
 
 
 def process_data(
@@ -124,9 +124,11 @@ def extract_data(
             content_title = metadata[content_category]["content_title"]
             content_body = metadata[content_category]["content_body"]
 
-            # Add new columns to store extracted data
+            # Initialise new columns in dataframe to store extracted data
             df["related_sections"] = None
             df["extracted_content_body"] = None
+            df["extracted_links"] = None
+            df["extracted_headers"] = None
 
             for index, row in df.iterrows():
                 # Skip extraction for those articles flagged for removal
@@ -138,12 +140,19 @@ def extract_data(
 
                 # Get the HTML content
                 html_content = row[content_body]
-                # Extract text from HTML
-                related_sections, extracted_content_body = extract_content(html_content)
+
+                # Extract text from HTML using the HTMLExtractor Class
+                extractor = HTMLExtractor(html_content)
+                related_sections = extractor.extract_related_sections()
+                extracted_content_body = extractor.extract_text()
+                extracted_links = extractor.extract_links()
+                extracted_headers = extractor.extract_headers()
 
                 # Store extracted data into the dataframe
                 df.at[index, "related_sections"] = related_sections
                 df.at[index, "extracted_content_body"] = extracted_content_body
+                df.at[index, "extracted_links"] = extracted_links
+                df.at[index, "extracted_headers"] = extracted_headers
 
                 # If `extracted_content_body` is empty, we update flag to remove
                 if extracted_content_body == "":
