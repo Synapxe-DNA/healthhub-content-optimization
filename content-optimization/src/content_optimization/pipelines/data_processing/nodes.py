@@ -163,6 +163,7 @@ def extract_data(
                 title = re.sub(r'[<>:"/\\|?*]', "_", title)
 
                 # Truncate title to 25 characters and append the id
+                # See: https://github.com/Wilsven/healthhub-content-optimization/issues/42
                 title = title[:25] + f"_{row[uuid]}"
 
                 # Store text files in its own folder named `content_category`
