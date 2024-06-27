@@ -6,7 +6,7 @@
 
 This visualization shows the current (latest) Kedro pipeline. This will be updated as the pipeline progresses.
 
-![kedro-pipeline](docs/images/kedro-pipeline.png "Kedro Pipeline" =x250)
+<img src="docs/images/kedro-pipeline.png" height="1000">
 
 ## Rules and Guidelines
 
