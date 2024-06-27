@@ -63,8 +63,8 @@ cat requirements.txt | xargs poetry add
 
         * [`all_extracted_text/`](data/02_intermediate/all_extracted_text): contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
 
-            > [!NOTE]
-            > If you do find any discrepancies in the extracted data, please [open an issue](https://github.com/Wilsven/healthhub-content-optimization/issues).
+> [!NOTE]
+> If you do find any discrepancies in the extracted data, please [open an issue](https://github.com/Wilsven/healthhub-content-optimization/issues).
 
 - [`notebooks/`](notebooks): contains all notebooks for the project; for preliminary and exploratory analysis; code to be refactored into nodes and pipelines
 
