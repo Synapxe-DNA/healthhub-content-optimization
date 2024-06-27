@@ -257,37 +257,46 @@ columns_to_keep:
 
 metadata:
   cost-and-financing:
+    uuid: id
     content_title: CostAndFinancing_Title
     content_body: CostAndFinancing_ContentBody
 
   diseases-and-conditions:
+    uuid: id
     content_title: DiseasesCondition_Title
     content_body: DiseasesCondition_ContentBody
 
   health-statistics:
+    uuid: id
     content_title: HealthStatistics_Title
     content_body: HealthStatistics_ContentBody
 
   live-healthy-articles:
+    uuid: id
     content_title: LiveHealthyArticle_Title
     content_body: LiveHealthyArticle_Content_Body
 
   medical-care-and-facilities:
+    uuid: id
     content_title: MedicalCareFaci_Title
     content_body: MedicalCareFaci_ContentBody
 
   medications:
+    uuid: id
     content_title: Medication_Title
     content_body: Medication_ContentBody
 
   program-sub-pages:
+    uuid: id
     content_title: ProgramSubPages_Title
     content_body: ProgramSubPages_Content_Body
 
   programs:
+    uuid: id
     content_title: Programs_Title
     content_body: Programs_Content_x0020_Body
 
   support-group-and-others:
+    uuid: id
     content_title: SupportGroups_Title
     content_body: SupportGroups_ContentBody
