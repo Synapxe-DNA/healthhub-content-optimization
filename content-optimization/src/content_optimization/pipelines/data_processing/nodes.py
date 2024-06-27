@@ -162,9 +162,8 @@ def extract_data(
                 # Substitute forbidden characters for filenames with _
                 title = re.sub(r'[<>:"/\\|?*]', "_", title)
 
-                # Truncate title to 10 characters and append the id
+                # Truncate title to 25 characters and append the id
                 title = title[:25] + f"_{row[uuid]}"
-                print(title)
 
                 # Store text files in its own folder named `content_category`
                 all_extracted_text[os.path.join(content_category, title)] = (
