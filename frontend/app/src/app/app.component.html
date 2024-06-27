@@ -1,3 +1,16 @@
 <tui-root>
-  <router-outlet></router-outlet>
+    <div class="
+    flex flex-col justify-start items-stretch
+    relative
+    min-h-[100dvh]
+    [&>*:nth-child(3)]:flex
+    [&>*:nth-child(3)]:flex-col
+    [&>*:nth-child(3)]:justify-start
+    [&>*:nth-child(3)]:items-start
+    [&>*:nth-child(3)]:flex-grow
+    [&>*:nth-child(3)>*]:flex-grow
+    ">
+        <app-navbar/>
+        <router-outlet></router-outlet>
+    </div>
 </tui-root>
