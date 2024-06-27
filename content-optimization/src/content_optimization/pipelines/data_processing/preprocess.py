@@ -102,10 +102,15 @@ class HTMLExtractor:
         Returns:
             str: cleaned text as string
         """
+
+        # Unwrap if the HTML content is contained in a div
+        if self.soup.div is not None:
+            self.soup.div.unwrap()
+
         # Extract the main content
         content = []
         for tag in self.soup.find_all(
-            ["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol"]
+            ["h1", "h2", "h3", "h4", "h5", "h6", "div", "p", "ul", "ol"]
         ):
             if tag.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
                 # Provide paragraphing between key headers
@@ -140,6 +145,9 @@ class HTMLExtractor:
             elif tag.name == "ol":
                 for i, li in enumerate(tag.find_all("li")):
                     content.append(f"{i + 1}. " + self.clean_text(li.text))
+            # For texts within div
+            elif tag.name == "div":
+                content.append(self.clean_text(tag.text))
 
             content.append("")  # Add a blank line after each element
 
@@ -149,19 +157,19 @@ class HTMLExtractor:
         # Replace double newlines with single newlines and strip whitespace
         processed_text = "\n".join(content).replace("\n\n", "\n").strip()
 
-        # Edge case - HTML content contained in div tags
-        if processed_text.strip() == "":
-            content = []
-            # Unwrap if the HTML content is contained in a div
-            if self.soup.div is not None:
-                self.soup.div.unwrap()
-                # For texts within div
-                for tag in self.soup.find_all("div"):
-                    if tag.name == "div":
-                        content.append(self.clean_text(tag.text))
+        # # Edge case - HTML content contained in div tags
+        # if processed_text.strip() == "":
+        #     content = []
+        #     # Unwrap if the HTML content is contained in a div
+        #     if self.soup.div is not None:
+        #         self.soup.div.unwrap()
+        #         # For texts within div
+        #         for tag in self.soup.find_all("div"):
+        #             if tag.name == "div":
+        #                 content.append(self.clean_text(tag.text))
 
-                # Replace double newlines with single newlines and strip whitespace
-                processed_text = "\n".join(content).replace("\n\n", "\n").strip()
+        #         # Replace double newlines with single newlines and strip whitespace
+        #         processed_text = "\n".join(content).replace("\n\n", "\n").strip()
 
         return processed_text
 

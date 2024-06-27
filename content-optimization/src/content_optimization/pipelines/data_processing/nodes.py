@@ -121,6 +121,7 @@ def extract_data(
             # Load the dataframe
             df = partition_load_func()
 
+            uuid = metadata[content_category]["uuid"]
             content_title = metadata[content_category]["content_title"]
             content_body = metadata[content_category]["content_body"]
 
@@ -160,6 +161,9 @@ def extract_data(
 
                 # Substitute forbidden characters for filenames with _
                 title = re.sub(r'[<>:"/\\|?*]', "_", title)
+
+                # Truncate title to 25 characters and append the id
+                title = title[:25] + f"_{row[uuid]}"
 
                 # Store text files in its own folder named `content_category`
                 all_extracted_text[os.path.join(content_category, title)] = (
