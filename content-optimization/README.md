@@ -6,7 +6,7 @@
 
 This visualization shows the current (latest) Kedro pipeline. This will be updated as the pipeline progresses.
 
-![kedro-pipeline](docs/images/kedro-pipeline.png "Kedro Pipeline")
+![kedro-pipeline](docs/images/kedro-pipeline.png "Kedro Pipeline" =x250)
 
 ## Rules and Guidelines
 
@@ -52,7 +52,7 @@ cat requirements.txt | xargs poetry add
 
     * [`02_intermediate/`](data/02_intermediate): contains all intermediate data
 
-        * [`all_contents_processed/`](data/02_intermediate/all_contents_processed): contains all processed data; kept only relevant columns
+        * [`all_contents_standardized/`](data/02_intermediate/all_contents_standardized): contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
 
         * [`all_contents_extracted/`](data/02_intermediate/all_contents_extracted): contains all extracted data; stored in columns named `related_sections`, `extracted_content_body`, `extracted_links` and `extracted_headers`; below is a brief description what each column represents:
 
@@ -63,8 +63,12 @@ cat requirements.txt | xargs poetry add
 
         * [`all_extracted_text/`](data/02_intermediate/all_extracted_text): contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
 
-> [!NOTE]
-> If you do find any discrepancies in the extracted data, please [open an issue](https://github.com/Wilsven/healthhub-content-optimization/issues).
+    > [!NOTE]
+    > If you do find any discrepancies in the extracted data, please [open an issue](https://github.com/Wilsven/healthhub-content-optimization/issues).
+
+    * [`03_primary`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
+
+        * [`merged_data.parquet`](data/03_primary/merged_data.parquet): contains the merged data across all content categories
 
 - [`notebooks/`](notebooks): contains all notebooks for the project; for preliminary and exploratory analysis; code to be refactored into nodes and pipelines
 
@@ -99,11 +103,11 @@ kedro run --pipeline=data_processing
 If for any reason, you would like to run specific nodes in the `data_processing` pipeline, you can run:
 
 ```bash
-# Running only the `process_data_node`
-kedro run --nodes="process_data_node"
+# Running only the `standardize_columns_node`
+kedro run --nodes="standardize_columns_node"
 ```
 
 The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph). You can view the visualization [here](#kedro-pipeline). This means that if it's your first time running the pipeline, you should ensure that the nodes are ran in order.
 
 > [!NOTE]
-> For example in the `data_processing` pipeline, you should run the `process_data_node` first, followed by the `extract_data_node`. After this, you may run the nodes in any order for subsequent runs. This is because there may be intermediate outputs that are required in subsequent nodes.
+> For example in the `data_processing` pipeline, you should run the `standardize_columns_node` first, followed by the `extract_data_node` then `merge_data_node`. After this, you may run the nodes in any order for subsequent runs. This is because there may be intermediate outputs that are required in subsequent nodes.
