@@ -6,13 +6,14 @@ from bs4 import BeautifulSoup
 
 class HTMLExtractor:
     """
-    A class to extract and process various elements from HTML content using BeautifulSoup.
+    A class to extract and process various elements from HTML content
+    using BeautifulSoup.
 
     Attributes:
         soup (BeautifulSoup): A BeautifulSoup object.
     """
 
-    def __init__(self, html_content):
+    def __init__(self, html_content: str):
         """
         Initializes the HTMLExtractor with the given HTML content.
 
@@ -25,19 +26,17 @@ class HTMLExtractor:
     def clean_text(cls, text: str) -> str:
         """
         Cleans the given text by normalizing Unicode characters,
-        replacing problematic characters, and removing multiple whitespace.
+        handling special symbols, replacing problematic characters,
+        and removing multiple whitespace.
 
         Args:
             text (str): The input text to be cleaned.
 
         Returns:
-            str: The cleaned text with normalized Unicode characters,
-                problematic characters replaced, and multiple whitespace
-                replaced with a single space.
+            str: The cleaned text.
         """
         # Normalize Unicode characters
         text = unicodedata.normalize("NFKD", text)
-
         # Use ASCII encoding to handle special symbols e.g. copyright \xa9
         text = text.encode("ascii", "ignore").decode("utf-8")
 
@@ -49,19 +48,19 @@ class HTMLExtractor:
 
         # Replace multiple whitespace with single space
         text = re.sub(r"\s+", " ", text)
-
         return text.strip()
 
     @classmethod
     def preprocess_html(cls, html_content: str) -> BeautifulSoup:
         """
-        Preprocesses the HTML content using BeautifulSoup and replaces <br> tags with newlines.
+        Preprocesses the given HTML content by replacing all <br>
+        tags with newline characters.
 
         Args:
-            html_content (str): The HTML content to preprocess.
+            html_content (str): The HTML content to be preprocessed.
 
         Returns:
-            BeautifulSoup: The BeautifulSoup object containing the parsed HTML content.
+            BeautifulSoup: The preprocessed HTML content as a BeautifulSoup object.
         """
         soup = BeautifulSoup(html_content, "html.parser")
 
@@ -73,10 +72,10 @@ class HTMLExtractor:
 
     def extract_related_sections(self) -> list[str]:
         """
-        Extracts related sections from the HTML content.
+        Extracts "Related:" sections and "Read these next:" items from the HTML content.
 
         Returns:
-            list[str]: A list of related sections as cleaned text.
+            list[str]: A list of related sections and "Read these next:" items.
         """
         related_sections = []
         read_these_next_ul = None
@@ -97,12 +96,27 @@ class HTMLExtractor:
 
     def extract_text(self) -> str:
         """
-        A function to extract cleaned text from HTML using BeautifulSoup
+        Extracts the main content from the HTML content.
 
         Returns:
-            str: cleaned text as string
-        """
+            str: The main content extracted from the HTML content.
 
+        Note:
+            This function unwraps the HTML content if it is contained in a <div>. It then extracts the
+            main content by iterating over the tags in the soup. The following tags are considered:
+
+                - h1, h2, h3, h4, h5, h6: These tags are treated as key headers and are paragraphed between them.
+                - p: This tag is treated as a paragraph. <em> tags are removed from the text.
+                    * If the text does not contain sentences about HealthHub app, Google Play, or Apple Store,
+                    and it contains a strong tag, it is treated differently based on the text content.
+                - ul: This tag is treated as an unordered list. If it is the child of a <div>, it is treated as a list.
+                - ol: This tag is treated as an ordered list.
+                - div: This tag is treated as a text within a div.
+
+            The extracted content is stored in a list and then processed. Double newlines are replaced with single
+            newlines and whitespace is stripped. If the processed text is empty, the function attempts to extract the
+            content from the <div> tags.
+        """
         # Unwrap if the HTML content is contained in a div
         if self.soup.div is not None:
             self.soup.div.unwrap()
@@ -175,35 +189,48 @@ class HTMLExtractor:
 
     def extract_links(self) -> list[tuple[str, str]]:
         """
-        Extracts all links from the HTML content.
+        Extracts the title and URL from all the anchor tags in the HTML content.
 
         Returns:
-            list[tuple[str, str]]: A list of tuples containing the link text and URLs.
+            list[tuple[str, str]]:
+                A list of tuples containing the title and URL of each anchor tag.
+
+        Note:
+            Footnotes to references sections are ignored.
         """
         url_records = []
 
         # Extract title/text and links from anchor tags
         for link in self.soup.find_all("a"):
             url = link.get("href")
-            text = link.get("title") or link.get_text()
-            record = text, url
-            url_records.append(record)
+            # Ignore footnotes
+            if url != "#footnotes":
+                text = link.get("title") or link.get_text()
+                record = text, url
+                url_records.append(record)
 
         return url_records
 
     def extract_headers(self) -> list[tuple[str, str]]:
         """
-        Extracts headers from the HTML content.
+        Extracts the headers from the HTML content.
 
         Returns:
-            list[tuple[str, str]]: A list of tuples containing the header text and tag names.
+            list[tuple[str, str]]:
+                A list of tuples containing the text and tag name of
+                each header found in the HTML content.
+
+        Note:
+            References are ignored.
         """
         headers = []
 
         for title in self.soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
             tag = title.name
             text = title.get_text()
-            record = text, tag
-            headers.append(record)
+            # Ignore References
+            if text != "References":
+                record = text, tag
+                headers.append(record)
 
         return headers
