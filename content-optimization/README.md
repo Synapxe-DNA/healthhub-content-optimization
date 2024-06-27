@@ -46,6 +46,9 @@ cat requirements.txt | xargs poetry add
 
     * [`local/`](conf/local): contains all local configurations for the project like secrets and credentials (not to be checked into version control)
 
+> [!IMPORTANT]
+> If you find any discrepancies in the extracted or merged data, please [open an issue](https://github.com/Wilsven/healthhub-content-optimization/issues).
+
 - [`data/`](data): contains all data for the project at every stages; there are many sub-directories but here are the notable ones (will be updated as the pipeline progresses)
 
     * [`01_raw/all_contents/`](data/01_raw/all_contents): contains all raw data
@@ -62,9 +65,6 @@ cat requirements.txt | xargs poetry add
             * `extracted_headers`: extracted headers from the HTML content body; headers include all `<h>` tags
 
         * [`all_extracted_text/`](data/02_intermediate/all_extracted_text): contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
-
-    > [!NOTE]
-    > If you do find any discrepancies in the extracted data, please [open an issue](https://github.com/Wilsven/healthhub-content-optimization/issues).
 
     * [`03_primary`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
