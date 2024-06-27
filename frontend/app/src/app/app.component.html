@@ -1,16 +1,16 @@
 <tui-root>
     <div class="
-    flex flex-col justify-start items-stretch
-    relative
     min-h-[100dvh]
-    [&>*:nth-child(3)]:flex
-    [&>*:nth-child(3)]:flex-col
-    [&>*:nth-child(3)]:justify-start
-    [&>*:nth-child(3)]:items-start
-    [&>*:nth-child(3)]:flex-grow
-    [&>*:nth-child(3)>*]:flex-grow
+    flex flex-col justify-start items-stretch
     ">
         <app-navbar/>
-        <router-outlet></router-outlet>
+        <main class="
+        flex flex-row justify-start items-stretch
+        h-full flex-grow
+        [&>*]:w-full
+        [&>*:nth-child(1)]:w-0
+        ">
+            <router-outlet></router-outlet>
+        </main>
     </div>
 </tui-root>
