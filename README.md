@@ -55,7 +55,7 @@ To install the defined dependencies for your project, just run the `install` com
 poetry install
 ```
 
-> [!NOTE]
+> [!WARNING]
 > If you face an error installing `gensim` with `poetry`, run this command:
 
 ```bash
@@ -66,7 +66,7 @@ If there is a [`poetry.lock`](poetry.lock) file in the current directory, it wil
 
 If there is no [`poetry.lock`](poetry.lock) file, Poetry will create one after dependency resolution.
 
-> [!WARNING]
+> [!TIP]
 > It is best practice to commit the `poetry.lock` to version control for more reproducible builds. For more information, refer [here](https://python-poetry.org/docs/basic-usage/#:~:text=changes%20in%20dependencies.-,Committing%20your%20poetry.lock%20file%20to%20version%20control,-As%20an%20application).
 
 ## File Structure
