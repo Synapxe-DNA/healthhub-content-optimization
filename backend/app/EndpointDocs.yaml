@@ -1,0 +1,27 @@
+openapi: 3.0.0
+
+info:
+  title: Health Hub Content Optimization Backend
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:3000
+    description: Local server hosted on the default port.
+
+paths:
+
+  ### Check endpoints
+  /check/health:
+    get:
+      summary: Checks if the server is running
+      responses:
+        '200':
+          description: Server is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
