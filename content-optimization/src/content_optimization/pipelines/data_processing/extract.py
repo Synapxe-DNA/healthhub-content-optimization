@@ -99,7 +99,7 @@ class HTMLExtractor:
         Extracts the main content from the HTML content.
 
         Returns:
-            str: The main content extracted from the HTML content.
+            str: The main content body extracted from the HTML content.
 
         Note:
             This function unwraps the HTML content if it is contained in a <div>. It then extracts the
@@ -169,10 +169,10 @@ class HTMLExtractor:
         content = [c for c in content if c]
 
         # Replace double newlines with single newlines and strip whitespace
-        processed_text = "\n".join(content).replace("\n\n", "\n").strip()
+        extracted_content_body = "\n".join(content).replace("\n\n", "\n").strip()
 
         # # Edge case - HTML content contained in div tags
-        # if processed_text.strip() == "":
+        # if extracted_content_body.strip() == "":
         #     content = []
         #     # Unwrap if the HTML content is contained in a div
         #     if self.soup.div is not None:
@@ -183,9 +183,9 @@ class HTMLExtractor:
         #                 content.append(self.clean_text(tag.text))
 
         #         # Replace double newlines with single newlines and strip whitespace
-        #         processed_text = "\n".join(content).replace("\n\n", "\n").strip()
+        #         extracted_content_body = "\n".join(content).replace("\n\n", "\n").strip()
 
-        return processed_text
+        return extracted_content_body
 
     def extract_links(self) -> list[tuple[str, str]]:
         """
@@ -198,7 +198,7 @@ class HTMLExtractor:
         Note:
             Footnotes to references sections are ignored.
         """
-        url_records = []
+        extracted_links = []
 
         # Extract title/text and links from anchor tags
         for link in self.soup.find_all("a"):
@@ -207,9 +207,9 @@ class HTMLExtractor:
             if url != "#footnotes":
                 text = link.get("title") or link.get_text()
                 record = text, url
-                url_records.append(record)
+                extracted_links.append(record)
 
-        return url_records
+        return extracted_links
 
     def extract_headers(self) -> list[tuple[str, str]]:
         """
@@ -223,7 +223,7 @@ class HTMLExtractor:
         Note:
             References are ignored.
         """
-        headers = []
+        extracted_headers = []
 
         for title in self.soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
             tag = title.name
@@ -231,6 +231,6 @@ class HTMLExtractor:
             # Ignore References
             if text != "References":
                 record = text, tag
-                headers.append(record)
+                extracted_headers.append(record)
 
-        return headers
+        return extracted_headers

@@ -4,9 +4,9 @@ all_contents:
   dataset: pandas.ExcelDataset
   filename_suffix: ".xlsx"
 
-all_contents_processed:
+all_contents_standardized:
   type: partitions.PartitionedDataset
-  path: data/02_intermediate/all_contents_processed
+  path: data/02_intermediate/all_contents_standardized
   dataset: pandas.ParquetDataset
   filename_suffix: ".parquet"
 
@@ -21,3 +21,7 @@ all_extracted_text:
   path: data/02_intermediate/all_extracted_text
   dataset: text.TextDataset
   filename_suffix: ".txt"
+
+merged_data:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/merged_data.parquet

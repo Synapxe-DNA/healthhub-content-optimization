@@ -9,63 +9,82 @@ from typing import Any, Callable
 
 import pandas as pd
 from alive_progress import alive_bar
-from content_optimization.pipelines.data_processing.preprocess import HTMLExtractor
+from content_optimization.pipelines.data_processing.columns import (
+    select_and_rearrange_columns,
+)
+from content_optimization.pipelines.data_processing.extract import HTMLExtractor
 
 
-def process_data(
+def standardize_columns(
     all_contents: dict[str, Callable[[], Any]],
-    columns_to_keep: dict[str, list[str]],
-    metadata: dict[str, dict[str, str]],
+    columns_to_add_cfg: dict[str, list[str]],
+    columns_to_keep_cfg: dict[str, list[str]],
+    default_columns: list[str],
 ) -> dict[str, pd.DataFrame]:
     """
-    Process the data by loading, filtering, and keeping selected columns
-    specified in the configuration.
+    Standardizes the columns of multiple dataframes in a dictionary.
+
+    This function takes in a dictionary of dataframes, where each dataframe
+    is associated with a filename. It then standardizes the columns of each dataframe
+    by performing the following steps:
+
+    1. Get the content category from the filename.
+    2. Load the dataframe using the provided partition function.
+    3. Standardize the column names by selecting and rearranging the columns.
+    4. Rename the columns to the default column names.
+    5. Tag the dataframe with the content category.
+    6. Mark articles with no content or with dummy content in the `to_remove` column.
+    7. Add the standardized dataframe to the `all_contents_standardized` dictionary.
+
+    The function returns a dictionary mapping content categories to the standardized dataframes.
 
     Args:
         all_contents (dict[str, Callable[[], Any]]):
-            A dictionary containing all the raw contents, where
-            the keys are the filenames and the values are
-            the partition functions to load the corresponding dataframes.
+            A dictionary containing the raw `partitions.PartitionedDataset`
+            where the keys are the filenames and the values loads the raww excel data as
+            `pandas.DataFrame`.
 
-        columns_to_keep (dict[str, list[str]]):
-            A dictionary mapping content categories to relevant columns to keep
-            as specified in the configuration.
+        columns_to_add_cfg (dict[str, list[str]]):
+            A dictionary mapping content categories to lists of column names to add.
 
-        metadata (dict[str, dict[str, str]]):
-            A dictionary containing the metadata for each content category,
-            where the keys are the content categories and the values are
-            dictionaries with the keys "content_title" and "content_body"
-            representing the column names for the article title and body of
-            the HTML content, respectively.
+        columns_to_keep_cfg (dict[str, list[str]]):
+            A dictionary mapping content categories to lists of column names to keep.
+
+        default_columns (list[str]):
+            A list of default column names to rename the columns of the dataframes to.
 
     Returns:
         dict[str, pd.DataFrame]:
-            A dictionary that contains the processed dataframe stored as partitioned
+            A dictionary that contains the standardized dataframes stored as partitioned
             parquet files, where the keys are the content categories and the values are
             the corresponding dataframes.
     """
-    all_contents_processed = {}
+    all_contents_standardized = {}
 
-    with alive_bar(len(all_contents), title="Processing data", force_tty=True) as bar:
+    with alive_bar(
+        len(all_contents), title="Standardizing columns", force_tty=True
+    ) as bar:
         for filename, partition_load_func in all_contents.items():
             # Get content category from filename
             content_category = re.sub(r"export-published-", "", filename.split("_")[0])
-            bar.text(f"Processing: {content_category}")
+            bar.text(f"Standardizing for {content_category}")
 
-            # Load the dataframe
+            # Load partition data
             df = partition_load_func()
 
-            # Drop all columns which have only null values
-            df = df.dropna(axis=1, how="all")
+            # Standardize column names
+            columns_to_add = columns_to_add_cfg.get(content_category, None)
+            columns_to_keep = columns_to_keep_cfg.get(content_category, None)
 
-            relevant_columns = columns_to_keep[content_category]
-            # Keep all relevant columns
-            df = df[relevant_columns]
+            # Standardize columns
+            df = select_and_rearrange_columns(df, columns_to_keep, columns_to_add)
+            # Rename columns to default columns
+            df.columns = default_columns
+            # Tag the dataframe with the content category
+            df["content_category"] = content_category
 
-            content_body = metadata[content_category]["content_body"]
-
-            # Mark articles with no content `to_remove`
-            df["to_remove"] = df[content_body].apply(
+            # Mark articles with no content or with dummy content in `to_remove` column
+            df["to_remove"] = df["content_body"].apply(
                 lambda x: (
                     False
                     if pd.notna(x) and re.search(r"(<[div|p|h2].*?>)", str(x))
@@ -73,32 +92,24 @@ def process_data(
                 )
             )
 
-            all_contents_processed[content_category] = df
+            all_contents_standardized[content_category] = df
             bar()
 
-    return all_contents_processed
+    return all_contents_standardized
 
 
 def extract_data(
-    all_contents_processed: dict[str, Callable[[], Any]],
-    metadata: dict[str, dict[str, str]],
+    all_contents_standardized: dict[str, Callable[[], Any]],
 ) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
     """
     Extracts data from processed content and stores it in parquet files
     and text files.
 
     Args:
-        all_contents_processed (dict[str, Callable[[], Any]]):
-            A dictionary containing the processed content, where
-            the keys are the content categories and the values are
-            the partition functions to load the corresponding dataframes.
-
-        metadata (dict[str, dict[str, str]]):
-            A dictionary containing the metadata for each content category,
-            where the keys are the content categories and the values are
-            dictionaries with the keys "content_title" and "content_body"
-            representing the column names for the article title and body of
-            the HTML content, respectively.
+        all_contents_standardized (dict[str, Callable[[], Any]]):
+            A dictionary containing the standardized `partitions.PartitionedDataset`
+            where the keys are the content categories and thevalues loads the
+            standardized parquet data as `pandas.DataFrame`.
 
     Returns:
         tuple[dict[str, pd.DataFrame], dict[str, str]]:
@@ -113,17 +124,13 @@ def extract_data(
     all_extracted_text = {}  # to store as partitioned text files
 
     with alive_bar(
-        len(all_contents_processed), title="Extracting data", force_tty=True
+        len(all_contents_standardized), title="Extracting data", force_tty=True
     ) as bar:
-        for content_category, partition_load_func in all_contents_processed.items():
+        for content_category, partition_load_func in all_contents_standardized.items():
             bar.text(f"Extracting: {content_category}")
 
-            # Load the dataframe
+            # Load partition data
             df = partition_load_func()
-
-            uuid = metadata[content_category]["uuid"]
-            content_title = metadata[content_category]["content_title"]
-            content_body = metadata[content_category]["content_body"]
 
             # Initialise new columns in dataframe to store extracted data
             df["related_sections"] = None
@@ -137,10 +144,10 @@ def extract_data(
                     continue
 
                 # Replace all forward slashes with hyphens to avoid saving as folders
-                title = re.sub(r"\/", "-", row[content_title]).strip()
+                title = re.sub(r"\/", "-", row["title"]).strip()
 
                 # Get the HTML content
-                html_content = row[content_body]
+                html_content = row["content_body"]
 
                 # Extract text from HTML using the HTMLExtractor Class
                 extractor = HTMLExtractor(html_content)
@@ -164,7 +171,7 @@ def extract_data(
 
                 # Truncate title to 25 characters and append the id
                 # See: https://github.com/Wilsven/healthhub-content-optimization/issues/42
-                title = title[:25] + f"_{row[uuid]}"
+                title = title[:25] + f"_{row['id']}"
 
                 # Store text files in its own folder named `content_category`
                 all_extracted_text[os.path.join(content_category, title)] = (
@@ -176,3 +183,24 @@ def extract_data(
             bar()
 
     return all_contents_extracted, all_extracted_text
+
+
+def merge_data(all_contents_extracted: dict[str, Callable[[], Any]]) -> pd.DataFrame:
+    """
+    Merge the data from multiple partitioned dataframes into a single `pandas.DataFrame`.
+
+    Parameters:
+        all_contents_extracted (dict[str, Callable[[], Any]]):
+            A dictionary containing the `partitions.PartitionedDataset`
+            where the values loads the parquet data as `pandas.DataFrame`.
+
+    Returns:
+        pd.DataFrame: The merged dataframe.
+    """
+    merged_df = pd.DataFrame()
+    for _, partition_load_func in all_contents_extracted.items():
+        # Load partition data
+        df = partition_load_func()
+        merged_df = pd.concat([merged_df, df], axis=0, ignore_index=True)
+
+    return merged_df
