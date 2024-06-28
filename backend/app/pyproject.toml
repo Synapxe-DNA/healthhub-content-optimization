@@ -26,3 +26,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 dev = "app.main:dev"
+mock = "app.scripts.populate_mongo_mock.main:main"
