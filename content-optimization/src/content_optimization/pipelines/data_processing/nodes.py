@@ -9,10 +9,8 @@ from typing import Any, Callable
 
 import pandas as pd
 from alive_progress import alive_bar
-from content_optimization.pipelines.data_processing.columns import (
-    select_and_rearrange_columns,
-)
-from content_optimization.pipelines.data_processing.extract import HTMLExtractor
+from content_optimization.utils.columns import select_and_rename_columns
+from content_optimization.utils.extract import HTMLExtractor
 
 
 def standardize_columns(
@@ -30,11 +28,9 @@ def standardize_columns(
 
     1. Get the content category from the filename.
     2. Load the dataframe using the provided partition function.
-    3. Standardize the column names by selecting and rearranging the columns.
-    4. Rename the columns to the default column names.
-    5. Tag the dataframe with the content category.
-    6. Mark articles with no content or with dummy content in the `to_remove` column.
-    7. Add the standardized dataframe to the `all_contents_standardized` dictionary.
+    3. Standardize the column names by selecting and renaming the columns.
+    4. Mark articles with no content or with dummy content in the `to_remove` column.
+    5. Add the standardized dataframe to the `all_contents_standardized` dictionary.
 
     The function returns a dictionary mapping content categories to the standardized dataframes.
 
@@ -77,11 +73,9 @@ def standardize_columns(
             columns_to_keep = columns_to_keep_cfg.get(content_category, None)
 
             # Standardize columns
-            df = select_and_rearrange_columns(df, columns_to_keep, columns_to_add)
-            # Rename columns to default columns
-            df.columns = default_columns
-            # Tag the dataframe with the content category
-            df["content_category"] = content_category
+            df = select_and_rename_columns(
+                df, columns_to_add, columns_to_keep, default_columns, content_category
+            )
 
             # Mark articles with no content or with dummy content in `to_remove` column
             df["to_remove"] = df["content_body"].apply(
@@ -133,10 +127,12 @@ def extract_data(
             df = partition_load_func()
 
             # Initialise new columns in dataframe to store extracted data
+            df["has_table"] = None
+            df["has_image"] = None
             df["related_sections"] = None
-            df["extracted_content_body"] = None
             df["extracted_links"] = None
             df["extracted_headers"] = None
+            df["extracted_content_body"] = None
 
             for index, row in df.iterrows():
                 # Skip extraction for those articles flagged for removal
@@ -151,16 +147,20 @@ def extract_data(
 
                 # Extract text from HTML using the HTMLExtractor Class
                 extractor = HTMLExtractor(html_content)
+                has_table = extractor.check_for_table()
+                has_image = extractor.check_for_image()
                 related_sections = extractor.extract_related_sections()
-                extracted_content_body = extractor.extract_text()
                 extracted_links = extractor.extract_links()
                 extracted_headers = extractor.extract_headers()
+                extracted_content_body = extractor.extract_text()
 
                 # Store extracted data into the dataframe
+                df.at[index, "has_table"] = has_table
+                df.at[index, "has_image"] = has_image
                 df.at[index, "related_sections"] = related_sections
-                df.at[index, "extracted_content_body"] = extracted_content_body
                 df.at[index, "extracted_links"] = extracted_links
                 df.at[index, "extracted_headers"] = extracted_headers
+                df.at[index, "extracted_content_body"] = extracted_content_body
 
                 # If `extracted_content_body` is empty, we update flag to remove
                 if extracted_content_body == "":

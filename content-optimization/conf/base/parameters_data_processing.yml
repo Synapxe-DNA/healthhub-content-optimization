@@ -11,6 +11,8 @@
 # 4. Cost and Financing
 # 5. Live Healthy Articles
 
+# WARNING: Ensure that the columns_to_keep have the same order as default_columns (columns_to_keep -> default_columns)
+
 columns_to_keep:
   cost-and-financing:
     - id
@@ -255,7 +257,7 @@ columns_to_keep:
     - "% of Total Views"
     - Cumulative % of Total Views
 
-columns_to_add:
+columns_to_add: # Null columns to add back to match columns_to_keep for each content category
   health-statistics:
     - HealthStatistics_ArticleCatNames
     - HealthStatistics_NumberOfViews

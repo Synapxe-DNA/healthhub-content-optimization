@@ -70,6 +70,32 @@ class HTMLExtractor:
 
         return soup
 
+    def check_for_table(self) -> bool:
+        """
+        Check for the presence of table tags in an HTML document.
+
+        Returns:
+            bool: True if at least one table tag is found, False otherwise.
+        """
+        # Find all table tags
+        tables = self.soup.find_all("table")
+
+        # Return True if at least one table is found, False otherwise
+        return len(tables) > 0
+
+    def check_for_image(self) -> bool:
+        """
+        Check for the presence of img tags in an HTML document.
+
+        Returns:
+            bool: True if at least one img tag is found, False otherwise.
+        """
+        # Find all img tags
+        images = self.soup.find_all("img")
+
+        # Return True if at least one image is found, False otherwise
+        return len(images) > 0
+
     def extract_related_sections(self) -> list[str]:
         """
         Extracts "Related:" sections and "Read these next:" items from the HTML content.
@@ -117,6 +143,7 @@ class HTMLExtractor:
             newlines and whitespace is stripped. If the processed text is empty, the function attempts to extract the
             content from the <div> tags.
         """
+
         # Unwrap if the HTML content is contained in a div
         if self.soup.div is not None:
             self.soup.div.unwrap()
@@ -219,18 +246,13 @@ class HTMLExtractor:
             list[tuple[str, str]]:
                 A list of tuples containing the text and tag name of
                 each header found in the HTML content.
-
-        Note:
-            References are ignored.
         """
         extracted_headers = []
 
         for title in self.soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
             tag = title.name
             text = title.get_text()
-            # Ignore References
-            if text != "References":
-                record = text, tag
-                extracted_headers.append(record)
+            record = text, tag
+            extracted_headers.append(record)
 
         return extracted_headers
