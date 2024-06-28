@@ -129,10 +129,12 @@ def extract_data(
             df = partition_load_func()
 
             # Initialise new columns in dataframe to store extracted data
+            df["has_table"] = None
+            df["has_image"] = None
             df["related_sections"] = None
-            df["extracted_content_body"] = None
             df["extracted_links"] = None
             df["extracted_headers"] = None
+            df["extracted_content_body"] = None
 
             for index, row in df.iterrows():
                 # Skip extraction for those articles flagged for removal
@@ -147,16 +149,20 @@ def extract_data(
 
                 # Extract text from HTML using the HTMLExtractor Class
                 extractor = HTMLExtractor(html_content)
+                has_table = extractor.check_for_table()
+                has_image = extractor.check_for_image()
                 related_sections = extractor.extract_related_sections()
-                extracted_content_body = extractor.extract_text()
                 extracted_links = extractor.extract_links()
                 extracted_headers = extractor.extract_headers()
+                extracted_content_body = extractor.extract_text()
 
                 # Store extracted data into the dataframe
+                df.at[index, "has_table"] = has_table
+                df.at[index, "has_image"] = has_image
                 df.at[index, "related_sections"] = related_sections
-                df.at[index, "extracted_content_body"] = extracted_content_body
                 df.at[index, "extracted_links"] = extracted_links
                 df.at[index, "extracted_headers"] = extracted_headers
+                df.at[index, "extracted_content_body"] = extracted_content_body
 
                 # If `extracted_content_body` is empty, we update flag to remove
                 if extracted_content_body == "":
