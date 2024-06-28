@@ -17,4 +17,4 @@ class HarmonisePopulated(BaseModel):
     """
     id: str = Field()
     name: str = Field()
-    articles: Article
+    articles: List[Article]
