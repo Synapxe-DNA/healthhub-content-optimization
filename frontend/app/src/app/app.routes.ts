@@ -4,6 +4,7 @@ import {ClustersComponent} from "./pages/clusters/clusters.component";
 import {ImprovementsComponent} from "./pages/improvements/improvements.component";
 import {HarmoniseComponent} from "./pages/harmonise/harmonise.component";
 import {JobsComponent} from "./pages/jobs/jobs.component";
+import {TestComponent} from "./pages/test/test.component";
 
 export const routes: Routes = [
   {
@@ -36,6 +37,9 @@ export const routes: Routes = [
         path: '', component: JobsComponent
       }
     ]
+  },
+  {
+    path: 'test', component: TestComponent
   },
   {
     path: '**', redirectTo: "/"
