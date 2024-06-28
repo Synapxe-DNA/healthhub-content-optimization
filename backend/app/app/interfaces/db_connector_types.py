@@ -17,11 +17,19 @@ class DbConnector(ABC):
     """
 
     """
+    Method to instantiate connection and complete setup
+    """
+
+    @abstractmethod
+    async def connect(self) -> None:
+        pass
+
+    """
     Methods related to clusters
     """
 
     @abstractmethod
-    async def create_clusters(self, cluster:List[Cluster]):
+    async def create_clusters(self, cluster: List[Cluster]):
         pass
 
     @abstractmethod
@@ -29,16 +37,15 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_cluster(self, cluster_ids:List[str]) -> List[Cluster]:
+    async def read_cluster(self, cluster_ids: List[str]) -> List[Cluster]:
         pass
-
 
     """
     Methods related to articles
     """
 
     @abstractmethod
-    async def create_articles(self, article:List[Article]):
+    async def create_articles(self, article: List[Article]):
         pass
 
     @abstractmethod
@@ -46,16 +53,15 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_article(self, article_ids:List[str]) -> List[Article]:
+    async def read_article(self, article_ids: List[str]) -> List[Article]:
         pass
-
 
     """
     Methods related to harmonisation jobs
     """
 
     @abstractmethod
-    async def create_harmonise(self, harmonisation:[Harmonise]):
+    async def create_harmonise(self, harmonisation: [Harmonise]):
         pass
 
     @abstractmethod
@@ -63,16 +69,15 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_harmonise(self, harmonise_ids:List[str]) -> List[Harmonise]:
+    async def read_harmonise(self, harmonise_ids: List[str]) -> List[Harmonise]:
         pass
-
 
     """
     Methods related to optimisation jobs
     """
 
     @abstractmethod
-    async def create_optimise(self, optimisation:[Optimise]):
+    async def create_optimise(self, optimisation: [Optimise]):
         pass
 
     @abstractmethod
@@ -80,6 +85,5 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_optimise(self, optimise_ids:List[str]) -> List[Optimise]:
+    async def read_optimise(self, optimise_ids: List[str]) -> List[Optimise]:
         pass
-
