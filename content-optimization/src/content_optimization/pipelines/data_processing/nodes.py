@@ -10,7 +10,7 @@ from typing import Any, Callable
 import pandas as pd
 from alive_progress import alive_bar
 from content_optimization.pipelines.data_processing.columns import (
-    select_and_rearrange_columns,
+    select_and_rename_columns,
 )
 from content_optimization.pipelines.data_processing.extract import HTMLExtractor
 
@@ -30,11 +30,9 @@ def standardize_columns(
 
     1. Get the content category from the filename.
     2. Load the dataframe using the provided partition function.
-    3. Standardize the column names by selecting and rearranging the columns.
-    4. Rename the columns to the default column names.
-    5. Tag the dataframe with the content category.
-    6. Mark articles with no content or with dummy content in the `to_remove` column.
-    7. Add the standardized dataframe to the `all_contents_standardized` dictionary.
+    3. Standardize the column names by selecting and renaming the columns.
+    4. Mark articles with no content or with dummy content in the `to_remove` column.
+    5. Add the standardized dataframe to the `all_contents_standardized` dictionary.
 
     The function returns a dictionary mapping content categories to the standardized dataframes.
 
@@ -77,11 +75,9 @@ def standardize_columns(
             columns_to_keep = columns_to_keep_cfg.get(content_category, None)
 
             # Standardize columns
-            df = select_and_rearrange_columns(df, columns_to_keep, columns_to_add)
-            # Rename columns to default columns
-            df.columns = default_columns
-            # Tag the dataframe with the content category
-            df["content_category"] = content_category
+            df = select_and_rename_columns(
+                df, columns_to_add, columns_to_keep, default_columns, content_category
+            )
 
             # Mark articles with no content or with dummy content in `to_remove` column
             df["to_remove"] = df["content_body"].apply(
