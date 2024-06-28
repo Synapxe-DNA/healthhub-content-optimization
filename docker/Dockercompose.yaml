@@ -1,0 +1,25 @@
+name: "healthhub-content-optimization"
+
+services:
+  hh-mongo:
+    container_name: "hh-mongo"
+    image: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-persist:/data/db
+    networks:
+      - internal
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: storage
+    ports:
+      - "27017:27017"
+
+
+volumes:
+  mongo-persist:
+
+
+networks:
+  internal:

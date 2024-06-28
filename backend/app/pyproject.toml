@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "app"
+version = "0.0.1"
+description = ""
+authors = ["Tsien Jin <46650957+TsienJin@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+uvicorn = "^0.30.1"
+fastapi = "^0.111.0"
+beanie = "^1.26.0"
+pydantic = "^2.7.4"
+python-dotenv = "^1.0.1"
+poetry-dotenv-plugin = "^0.2.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+dev = "app.main:dev"
