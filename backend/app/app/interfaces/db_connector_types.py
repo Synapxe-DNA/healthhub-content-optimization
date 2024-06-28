@@ -21,15 +21,15 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    def create_clusters(self, cluster:List[Cluster]):
+    async def create_clusters(self, cluster:List[Cluster]):
         pass
 
     @abstractmethod
-    def read_cluster_all(self) -> List[Cluster]:
+    async def read_cluster_all(self) -> List[Cluster]:
         pass
 
     @abstractmethod
-    def read_cluster(self, cluster_ids:List[str]) -> List[Cluster]:
+    async def read_cluster(self, cluster_ids:List[str]) -> List[Cluster]:
         pass
 
 
@@ -38,15 +38,15 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    def create_article(self, article:List[Article]):
+    async def create_articles(self, article:List[Article]):
         pass
 
     @abstractmethod
-    def read_article_all(self) -> List[Article]:
+    async def read_article_all(self) -> List[Article]:
         pass
 
     @abstractmethod
-    def read_article(self, article_ids:List[str]) -> List[Article]:
+    async def read_article(self, article_ids:List[str]) -> List[Article]:
         pass
 
 
@@ -55,15 +55,15 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    def create_harmonise(self, harmonisation:Harmonise):
+    async def create_harmonise(self, harmonisation:[Harmonise]):
         pass
 
     @abstractmethod
-    def read_harmonise_all(self) -> List[Harmonise]:
+    async def read_harmonise_all(self) -> List[Harmonise]:
         pass
 
     @abstractmethod
-    def read_harmonise(self, harmonise_ids:List[str]) -> List[Harmonise]:
+    async def read_harmonise(self, harmonise_ids:List[str]) -> List[Harmonise]:
         pass
 
 
@@ -72,14 +72,14 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    def create_optimise(self, harmonisation:Optimise):
+    async def create_optimise(self, optimisation:[Optimise]):
         pass
 
     @abstractmethod
-    def read_optimise_all(self) -> List[Optimise]:
+    async def read_optimise_all(self) -> List[Optimise]:
         pass
 
     @abstractmethod
-    def read_optimise(self, harmonise_ids:List[str]) -> List[Optimise]:
+    async def read_optimise(self, optimise_ids:List[str]) -> List[Optimise]:
         pass
 
