@@ -9,10 +9,8 @@ from typing import Any, Callable
 
 import pandas as pd
 from alive_progress import alive_bar
-from content_optimization.pipelines.data_processing.columns import (
-    select_and_rename_columns,
-)
-from content_optimization.pipelines.data_processing.extract import HTMLExtractor
+from content_optimization.utils.columns import select_and_rename_columns
+from content_optimization.utils.extract import HTMLExtractor
 
 
 def standardize_columns(
