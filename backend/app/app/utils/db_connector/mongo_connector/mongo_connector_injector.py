@@ -1,4 +1,3 @@
-import asyncio
 import os
 
 from app.utils.db_connector.mongo_connector.mongo_connector import MongoConnector
@@ -14,4 +13,3 @@ async def create_mongo_db_connector():
     )
     await connector.connect()
     return connector
-
