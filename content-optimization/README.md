@@ -66,9 +66,11 @@ cat requirements.txt | xargs poetry add
 
         * [`all_extracted_text/`](data/02_intermediate/all_extracted_text): contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
 
-    * [`03_primary`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
+    * [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
-        * [`merged_data.parquet`](data/03_primary/merged_data.parquet): contains the merged data across all content categories
+        * [`merged_data.parquet`](data/03_primary/merged_data.parquet): contains the merged data across all content categories; for more information on the data schema, refer [here](#data-schema)
+
+    * [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\_count)}$
 
 - [`notebooks/`](notebooks): contains all notebooks for the project; for preliminary and exploratory analysis; code to be refactored into nodes and pipelines
 
@@ -76,6 +78,12 @@ cat requirements.txt | xargs poetry add
 > It is a good to do some exploratory work in this directory to understand how the data flows and get transformed through the pipeline. Simply run `catalog.list()` to see all available data and parameters. Simply run `catalog.load("<DATA_NAME | PARAMETER>")` to load the data or parameter. For more information, simply refer to one of the existing notebooks. Happy exploring!
 
 - [`src/content_optimization/`](src/content_optimization): contains all code for the project; contains the code for respective pipelines
+
+    * [`pipelines/`](src/content_optimization/pipelines): contains all code for the pipelines
+
+        * [`data_processing/`](src/content_optimization/pipelines/data_processing): contains the code for the `data_processing` pipeline; for more information, refer [here](#data-processing)
+
+        * [`data_science/`](src/content_optimization/pipelines/data_science): contains the code for the `data_science` pipeline; for more information, refer [here](#data-science)
 
 ## Run the Kedro Project
 
@@ -89,7 +97,7 @@ This will run the entire project for all pipelines.
 
 ## Run Pipelines
 
-### Data Processing
+### Data Processing <a id="data-processing"></a>
 
 > [!IMPORTANT]
 > Before running the `data_processing` [pipeline](src/content_optimization/pipelines/data_processing/pipeline.py)), ensure that you have the raw data in the [`data/01_raw/all_contents`](../content-optimization/data/01_raw/all_contents) directory.
@@ -119,19 +127,20 @@ The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/D
 > [!NOTE]
 > For example in the `data_processing` pipeline, you should run the `standardize_columns_node` first, followed by the `extract_data_node` then `merge_data_node`. After this, you may run the nodes in any order for subsequent runs. This is because there may be intermediate outputs that are required in subsequent nodes.
 
-### Data Science
+### Data Science <a id="data-science"></a>
 
+🔧 Work in progress...
 
 ## Dataset
 
 <details>
-<summary>Information Sheet - HealthHub Articles</summary>
+<summary>Expand for more information</summary>
 
 ### General Information
 
 - **Dataset Name:** `merged_data.parquet`
-- **Location**: `content-optimization/data/03_primary`
-- **Dataset Description:** Merged collection of HealthHub articles across different content categories
+- **Location**: [`data/03_primary/`](data/03_primary/)
+- **Dataset Description:** Merged collection of Health Hub articles across different content categories
 - **Version**: v1
 - **Date of Creation:** June 28, 2024
 - **Last Updated:** June 28, 2024
@@ -142,11 +151,11 @@ The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/D
 - **Number of Files:** 1
 - **Total Size:** 13.5MB
 
-### Data Schema
+### Data Schema <a id="data-schema"></a>
 
 - **Number of Rows:** 2613
 - **Number of Columns:** 33
-- **Subject Area/Domain:** HealthHub Articles
+- **Subject Area/Domain:** Health Hub Articles
 - **Column Details:**
 
     <details>
@@ -580,27 +589,23 @@ The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/D
 ### Data Quality and Processing
 
 - **Data Cleaning Process:**
-    - Standardise all column names
-    - Removed columns where all values are `NaN`
-    - Flagged articles with no content or dummy content
-    - Mark articles with tables and images in content body
-    - Extracted content body as clean text from HTML PageElement
-    - Extracted related sections, links, headers
-    - Flagged articles with no extracted content body
-    - Merged all articles across different content categories into one dataframe
+    * Standardise all column names
+    * Removed columns where all values are `NaN`
+    * Flagged articles with no content or dummy content
+    * Mark articles with tables and images in content body
+    * Extracted content body as clean text from HTML PageElement
+    * Extracted related sections, links, headers
+    * Flagged articles with no extracted content body
+    * Merged all articles across different content categories into one dataframe
 
 - **Missing Data Handling:**
-    - Left as is for exploration purposes
-    - No data imputation was used
+    * Left as is for exploration purposes
+    * No data imputation was used
 
 - **Known Issues or Limitations:**
-    - Issue with handling text extraction within `div` containers
+    * Issue with handling text extraction within `<div>` containers
 
 - **Data Quality Checks:**
-    - Under `content-optimization/data/02_intermediate`
-
-### Changelog
-
-- June 28, 2024 - Created `merged_data.parquet` in `content-optimization/data/03_primary/merged_data.parquet`
+    * Under [`data/02_intermediate`](data/02_intermediate)
 
 </details>
