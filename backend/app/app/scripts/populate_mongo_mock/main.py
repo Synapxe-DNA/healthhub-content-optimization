@@ -20,6 +20,8 @@ async def __main():
 
     mocker = Mocker(conn, 75)
 
+    await conn.connect()
+
     await mocker.mock()
 
 
