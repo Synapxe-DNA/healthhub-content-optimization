@@ -25,7 +25,7 @@ export const routes: Routes = [
     ]
   },
   {
-    path: 'harmonise', children: [
+    path: 'combine', children: [
       {
         path: '', component: HarmoniseComponent
       }
