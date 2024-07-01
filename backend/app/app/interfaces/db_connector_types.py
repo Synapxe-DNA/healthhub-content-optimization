@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from app.models.article import Article
-from app.models.cluster import Cluster
-from app.models.harmonise import Harmonise
-from app.models.optimise import Optimise
+from app.models.cluster import Cluster, ClusterPopulated
+from app.models.combination import Combination
+from app.models.ignore import Ignore
 
 
 class DbConnector(ABC):
@@ -12,8 +12,8 @@ class DbConnector(ABC):
     Abstract class for interaction with databases.
     - Clusters
     - Articles
-    - Harmonisation Jobs
-    - Optimisation Jobs
+    - Combination Jobs
+    - Ignore tagging
     """
 
     """
@@ -33,11 +33,11 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_cluster_all(self) -> List[Cluster]:
+    async def read_cluster_all(self) -> List[ClusterPopulated]:
         pass
 
     @abstractmethod
-    async def read_cluster(self, cluster_ids: List[str]) -> List[Cluster]:
+    async def read_cluster(self, cluster_id: str) -> ClusterPopulated:
         pass
 
     """
@@ -53,7 +53,7 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_article(self, article_ids: List[str]) -> List[Article]:
+    async def read_article(self, article_id: str) -> Article:
         pass
 
     """
@@ -61,29 +61,29 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    async def create_harmonise(self, harmonisation: [Harmonise]):
+    async def create_combine(self, combination: [Combination]):
         pass
 
     @abstractmethod
-    async def read_harmonise_all(self) -> List[Harmonise]:
+    async def read_combine_all(self) -> List[Combination]:
         pass
 
     @abstractmethod
-    async def read_harmonise(self, harmonise_ids: List[str]) -> List[Harmonise]:
+    async def read_combine(self, combine_id: str) -> Combination:
         pass
 
     """
-    Methods related to optimisation jobs
+    Methods related to ignore tagging of articles
     """
 
     @abstractmethod
-    async def create_optimise(self, optimisation: [Optimise]):
+    async def create_ignore(self, ignore: [Ignore]):
         pass
 
     @abstractmethod
-    async def read_optimise_all(self) -> List[Optimise]:
+    async def read_ignore_all(self) -> List[Ignore]:
         pass
 
     @abstractmethod
-    async def read_optimise(self, optimise_ids: List[str]) -> List[Optimise]:
+    async def read_ignore(self, ignore_id: str) -> Ignore:
         pass

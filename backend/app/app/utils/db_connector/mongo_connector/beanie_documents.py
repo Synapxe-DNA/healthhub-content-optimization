@@ -23,6 +23,8 @@ class ArticleDocument(Document):
     pillar: Indexed(str)
     url: str
 
+    status: str = Field(default="")
+
     labels: List[str]
     cover_image_url: str
 
@@ -36,10 +38,10 @@ class EdgeDocument(Document):
     weight: float = Field(default=-1.0)
 
 
-class HarmoniseDocument(Document):
+class CombinationDocument(Document):
     name: str
     article_ids: List[Link[ArticleDocument]] = Field(default=[])
 
 
-class OptimiseDocument(Document):
+class IgnoreDocument(Document):
     article_id: Link[ArticleDocument]

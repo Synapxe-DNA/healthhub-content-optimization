@@ -4,13 +4,13 @@ from app.models.article import Article
 from pydantic import BaseModel, Field
 
 
-class Harmonise(BaseModel):
+class Combination(BaseModel):
     id: str = Field(default="")  # Will only be present when retrieving from DB
     name: str = Field()
     article_ids: List[str] = Field(default=[])
 
 
-class HarmonisePopulated(BaseModel):
+class CombinationPopulated(BaseModel):
     """
     This model will be the response type for frontend consumption
     """
