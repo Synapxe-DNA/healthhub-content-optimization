@@ -257,7 +257,7 @@ columns_to_keep:
     - "% of Total Views"
     - Cumulative % of Total Views
 
-columns_to_add: # Null columns to add back to match columns_to_keep for each content category
+columns_to_add:  # null columns to add back to match columns_to_keep for each content category
   health-statistics:
     - HealthStatistics_ArticleCatNames
     - HealthStatistics_NumberOfViews
@@ -306,3 +306,5 @@ default_columns:
   - scroll_percentage
   - percentage_total_views
   - cumulative_percentage_total_views
+
+word_count_cutoff: 90  # see word_count.ipynb for analysis on threshold

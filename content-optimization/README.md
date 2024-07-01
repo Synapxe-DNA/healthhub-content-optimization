@@ -107,6 +107,13 @@ If for any reason, you would like to run specific nodes in the `data_processing`
 kedro run --nodes="standardize_columns_node"
 ```
 
+If you want to run from a particular node to another node, you can run:
+
+```bash
+# Running from `extract_data_node` to `merge_data_node`
+kedro run --from-nodes="extract_data_node" --to-nodes="merge_data_node"
+```
+
 The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph). You can view the visualization [here](#kedro-pipeline). This means that if it's your first time running the pipeline, you should ensure that the nodes are ran in order.
 
 > [!NOTE]
