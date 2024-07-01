@@ -23,6 +23,8 @@ class ArticleDocument(Document):
     pillar: Indexed(str)
     url: str
 
+    status: str = Field(default="")
+
     labels: List[str]
     cover_image_url: str
 
