@@ -12,6 +12,8 @@ class Article(BaseModel):
     pillar: str = Field()
     url: str = Field(default="")
 
+    status: str = Field(default="")
+
     # Article peripheral information
     labels: List[str] = Field(default=[])
     cover_image_url: str = Field(default="")

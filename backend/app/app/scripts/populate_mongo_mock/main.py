@@ -5,7 +5,7 @@ from app.scripts.populate_mongo_mock.generators.mocker import Mocker
 from app.utils.db_connector.mongo_connector.mongo_connector import MongoConnector
 from dotenv import load_dotenv
 
-load_dotenv("./.env.local")
+load_dotenv("./.env")
 
 
 async def __main():

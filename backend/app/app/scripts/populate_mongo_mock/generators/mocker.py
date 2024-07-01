@@ -4,9 +4,8 @@ from typing import List
 from app.interfaces.db_connector_types import DbConnector
 from app.models.article import Article
 from app.models.cluster import Cluster
+from app.models.combination import Combination
 from app.models.edge import Edge
-from app.models.harmonise import Harmonise
-from app.models.optimise import Optimise
 from app.scripts.populate_mongo_mock.generators.string_generator import (
     random_id,
     random_str,
@@ -21,8 +20,19 @@ class Mocker:
         num_clusters: int = 10,
         min_articles_per_cluster: int = 25,
         max_articles_per_cluster: int = 100,
+        percent_processed: float = 0.5,
         percent_connection: float = 0.01,
     ):
+        """
+        Create a new mocker object
+        :param db_connector: {DbConnector} object for connecting to DB
+        :param num_clusters: Number of clusters to mock
+        :param min_articles_per_cluster: Minimum number of articles per cluster
+        :param max_articles_per_cluster: Maximum number of articles per cluster
+        :param percent_processed: Proportion of clusters that relate to "combination" jobs
+        :param percent_connection: Proportion of articles within a cluster with edges
+        """
+
         assert num_clusters > 0, "Number of clusters must be greater than 0!"
         assert (
             min_articles_per_cluster > 0
@@ -30,17 +40,19 @@ class Mocker:
         assert (
             max_articles_per_cluster >= min_articles_per_cluster
         ), "Max must be MEQ min articles!"
-        assert 1 >= percent_connection > 0, "Percent connectio must = (0,1]!"
+        assert 1 >= percent_processed >= 0, "Percent processed must = [0,1]!"
+        assert 1 >= percent_connection > 0, "Percent connection must = (0,1]!"
 
         self.conn = db_connector
         self.num_clusters = num_clusters
         self.min_articles_per_cluster = min_articles_per_cluster
         self.max_articles_per_cluster = max_articles_per_cluster
+        self.percent_processed = percent_processed
         self.percent_connection = percent_connection
 
     def __create_article_ids(self) -> List[str]:
         num_articles = random.randint(
-            1, (self.max_articles_per_cluster - self.min_articles_per_cluster)
+            2, (self.max_articles_per_cluster - self.min_articles_per_cluster)
         )
         return [random_id(32) for _ in range(num_articles)]
 
@@ -77,7 +89,7 @@ class Mocker:
             ]
 
             edges = [
-                Edge(start=e[0], end=e[1], weight=random.uniform(0, 1))
+                Edge(start=e[0], end=e[1], weight=random.uniform(0.5, 1))
                 for e in [
                     random.sample(article_ids, 2)
                     for _ in range(
@@ -90,8 +102,8 @@ class Mocker:
                 name=f"Cluster {random_str(5)}", article_ids=article_ids, edges=edges
             )
 
-            harmonise_jobs = [
-                Harmonise(
+            combine_jobs = [
+                Combination(
                     name=random_str(16),
                     article_ids=random.sample(
                         article_ids,
@@ -100,14 +112,18 @@ class Mocker:
                 )
             ]
 
-            optimise_jobs = [
-                Optimise(article_id=x)
-                for x in random.sample(
-                    article_ids, random.randint(0, int(len(article_ids) / 2))
-                )
-            ]
+            ### Removed mocking of ignore jobs to keep mocking process simple.
+            ### This can be manually tested on the frontend.
+            # ignore_jobs = [
+            #     Ignore(article_id=x)
+            #     for x in random.sample(
+            #         article_ids, random.randint(0, int(len(article_ids) / 2))
+            #     )
+            # ]
 
             await self.conn.create_articles(articles)
-            await self.conn.create_harmonise(harmonise_jobs)
-            await self.conn.create_optimise(optimise_jobs)
             await self.conn.create_clusters([cluster])
+
+            if random.uniform(0, 1) > self.percent_processed:
+                await self.conn.create_combine(combine_jobs)
+                # await self.conn.create_ignore(ignore_jobs)

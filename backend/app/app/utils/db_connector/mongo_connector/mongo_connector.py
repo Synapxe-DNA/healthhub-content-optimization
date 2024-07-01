@@ -3,14 +3,14 @@ from typing import List
 from app.interfaces.db_connector_types import DbConnector
 from app.models.article import Article
 from app.models.cluster import Cluster
-from app.models.harmonise import Harmonise
-from app.models.optimise import Optimise
+from app.models.combination import Combination
+from app.models.ignore import Ignore
 from app.utils.db_connector.mongo_connector.beanie_documents import (
     ArticleDocument,
     ClusterDocument,
+    CombinationDocument,
     EdgeDocument,
-    HarmoniseDocument,
-    OptimiseDocument,
+    IgnoreDocument,
 )
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -50,8 +50,8 @@ class MongoConnector(DbConnector):
                 ClusterDocument,
                 ArticleDocument,
                 EdgeDocument,
-                HarmoniseDocument,
-                OptimiseDocument,
+                CombinationDocument,
+                IgnoreDocument,
             ],
         )
 
@@ -97,22 +97,22 @@ class MongoConnector(DbConnector):
     async def read_article(self, article_ids: List[str]) -> List[Article]:
         pass
 
-    async def create_harmonise(self, harmonisation: List[Harmonise]):
-        for h in harmonisation:
-            await HarmoniseDocument(name=h.name, article_ids=h.article_ids).create()
+    async def create_combine(self, combination: List[Combination]):
+        for c in combination:
+            await CombinationDocument(name=c.name, article_ids=c.article_ids).create()
 
-    async def read_harmonise_all(self) -> List[Harmonise]:
+    async def read_combine_all(self) -> List[Combination]:
         pass
 
-    async def read_harmonise(self, harmonise_ids: List[str]) -> List[Harmonise]:
+    async def read_combine(self, combine_ids: List[str]) -> List[Combination]:
         pass
 
-    async def create_optimise(self, optimisation: List[Optimise]):
-        for o in optimisation:
-            await OptimiseDocument(article_id=o.article_id).create()
+    async def create_ignore(self, ignore: List[Ignore]):
+        for o in ignore:
+            await IgnoreDocument(article_id=o.article_id).create()
 
-    async def read_optimise_all(self) -> List[Optimise]:
+    async def read_ignore_all(self) -> List[Ignore]:
         pass
 
-    async def read_optimise(self, optimisation_ids: List[str]) -> List[Optimise]:
+    async def read_ignore(self, optimisation_ids: List[str]) -> List[Ignore]:
         pass
