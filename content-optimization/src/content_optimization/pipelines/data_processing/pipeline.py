@@ -27,7 +27,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=extract_data,
-                inputs="all_contents_standardized",
+                inputs=["all_contents_standardized", "params:word_count_cutoff"],
                 outputs=["all_contents_extracted", "all_extracted_text"],
                 name="extract_data_node",
             ),

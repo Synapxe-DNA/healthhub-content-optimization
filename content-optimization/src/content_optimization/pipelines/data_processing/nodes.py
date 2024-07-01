@@ -97,7 +97,7 @@ def standardize_columns(
 
 
 def extract_data(
-    all_contents_standardized: dict[str, Callable[[], Any]],
+    all_contents_standardized: dict[str, Callable[[], Any]], word_count_cutoff: int
 ) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
     """
     Extracts data from processed content and stores it in parquet files
@@ -108,6 +108,9 @@ def extract_data(
             A dictionary containing the standardized `partitions.PartitionedDataset`
             where the keys are the content categories and thevalues loads the
             standardized parquet data as `pandas.DataFrame`.
+
+        word_count_cutoff (int): The minimum number of words in an article
+            to be considered before flagging for removal.
 
     Returns:
         tuple[dict[str, pd.DataFrame], dict[str, str]]:
@@ -166,8 +169,12 @@ def extract_data(
                 df.at[index, "extracted_headers"] = extracted_headers
                 df.at[index, "extracted_content_body"] = extracted_content_body
 
-                # If `extracted_content_body` is empty, we update flag to remove
-                if extracted_content_body == "":
+                # If `extracted_content_body` is empty or
+                # below word count cutoff, we update flag to remove
+                if (
+                    extracted_content_body == ""
+                    or len(extracted_content_body.split()) <= word_count_cutoff
+                ):
                     df.at[index, "to_remove"] = True
 
                 # Substitute forbidden characters for filenames with _
