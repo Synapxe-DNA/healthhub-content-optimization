@@ -255,7 +255,8 @@ class HTMLExtractor:
             # Ignore footnotes
             if url != "#footnotes":
                 text = link.get("title") or link.get_text()
-                record = text, url
+                cleaned_text = self.clean_text(text)
+                record = cleaned_text, url
                 extracted_links.append(record)
 
         return extracted_links
@@ -273,7 +274,7 @@ class HTMLExtractor:
 
         for title in self.soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
             tag = title.name
-            text = title.get_text()
+            text = self.clean_text(title.get_text())
             record = text, tag
             extracted_headers.append(record)
 
