@@ -34,6 +34,9 @@ class HTMLExtractor:
 
         Returns:
             str: The cleaned text.
+
+        Note:
+            This method is being used in all extractor methods.
         """
         # Normalize Unicode characters
         text = unicodedata.normalize("NFKD", text)
@@ -108,11 +111,10 @@ class HTMLExtractor:
         # Extract "Related:" sections and "Read these next:" items
         for tag in self.soup.find_all(["p", "ul"]):
             if tag.name == "p" and tag.find("strong"):
-                if "Related:" in tag.text:
-                    related_sections.append(
-                        re.sub(r"Related: ", "", self.clean_text(tag.text))
-                    )
-                elif "Read these next:" in tag.text:
+                cleaned_text = self.clean_text(tag.text)
+                if "Related:" in cleaned_text:
+                    related_sections.append(re.sub(r"Related: ", "", cleaned_text))
+                elif "Read these next:" in cleaned_text:
                     read_these_next_ul = tag.find_next_sibling("ul")
             elif tag == read_these_next_ul:
                 for li in tag.find_all("li"):
@@ -139,6 +141,7 @@ class HTMLExtractor:
                 - ol: This tag is treated as an ordered list.
                 - div: This tag is treated as a text within a div.
                 - span: This tag is treated as a text within a span.
+                - blockquote: This tag is treated as a text within a blockquote.
 
             The extracted content is stored in a list and then processed. Double newlines are replaced with single
             newlines and whitespace is stripped. If the processed text is empty, the function attempts to extract the
@@ -151,48 +154,29 @@ class HTMLExtractor:
         # Extract the main content
         content = []
         for tag in self.soup.find_all(
-            ["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "div", "span"],
+            [
+                "h1",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "h6",
+                "p",
+                "ul",
+                "ol",
+                "div",
+                "span",
+                "blockquote",
+            ],
             recursive=False,
         ):
-            if tag.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
-                # Provide paragraphing between key headers
-                content.append("\n")
-                content.append(self.clean_text(tag.text))
-
-            elif tag.name == "p":
-                # Remove all em tags
-                for em in tag.find_all("em"):
-                    em.extract()
-                # Get the remaining text
-                text = tag.get_text()
-                # Remove sentences about HealthHub app, Google Play, and Apple Store
-                if not re.search(
-                    r"(HealthHub app|Google Play|Apple Store|Parent Hub)", text
-                ):
-                    if tag.find("strong"):
-                        if "Related:" in tag.text:
-                            text = self.clean_text(tag.text)
-                            content.append(re.sub(r"\n", " ", text))
-                        elif "Read these next:" in tag.text:
-                            content.append(self.clean_text(tag.text))
-                    else:
-                        content.append(self.clean_text(text))
-
-            # For unordered lists
-            elif tag.name == "ul":
-                # not "ul" so we avoid duplicates
-                for li in tag.find_all("li"):
-                    content.append("- " + self.clean_text(li.text))
-
-            # For ordered lists
-            elif tag.name == "ol":
-                for i, li in enumerate(tag.find_all("li")):
-                    content.append(f"{i + 1}. " + self.clean_text(li.text))
-
-            # For texts within div
-            elif tag.name in ["div", "span"]:
+            # For texts within div and span - recursive search
+            if tag.name in ["div", "span", "blockquote"]:
                 # Changes content via Pass By Reference
                 self._extract_text_from_container(tag, content)
+            # Handles the text for the rest
+            else:
+                self._extract_text_elements(tag, content)
 
             content.append("")  # Add a blank line after each element
 
@@ -204,13 +188,66 @@ class HTMLExtractor:
 
         return extracted_content_body
 
+    def _extract_text_elements(self, tag: PageElement, content: list[str]) -> None:
+        """
+        Helper method to extract the text elements from the given HTML content.
+
+        This method extracts the text content from the given HTML content.
+
+        Args:
+            tag (PageElement): The HTML element to extract the text elements from.
+            content (list[str]): A list of text elements.
+
+        Returns:
+            None: This method modifies the content list in-place.
+
+        Note:
+            This method is used in `extract_text` method and `_extract_text_from_container` method.
+        """
+        if tag.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+            # Provide paragraphing between key headers
+            content.append("\n")
+            content.append(self.clean_text(tag.text))
+
+        elif tag.name == "p":
+            # Remove all em tags
+            for em in tag.find_all("em"):
+                em.extract()
+            # Get the remaining text
+            text = tag.get_text()
+            # Skip sentences about HealthHub app, Google Play, and Apple Store
+            if re.search(r"(HealthHub app|Google Play|Apple Store|Parent Hub)", text):
+                return
+            # Extract text from related sections
+            if tag.find("strong"):
+                cleaned_text = self.clean_text(tag.text)
+                if "Related:" in cleaned_text:
+                    content.append(re.sub(r"\n", " ", cleaned_text))
+                elif "Read these next:" in cleaned_text:
+                    content.append(cleaned_text)
+            # Extract remaining text within <p></p>
+            cleaned_text = self.clean_text(text)
+            if len(content) > 0 and cleaned_text != content[-1]:
+                content.append(cleaned_text)
+
+        # For unordered lists
+        elif tag.name == "ul":
+            # not "ul" so we avoid duplicates
+            for li in tag.find_all("li"):
+                content.append("- " + self.clean_text(li.text))
+
+        # For ordered lists
+        elif tag.name == "ol":
+            for i, li in enumerate(tag.find_all("li")):
+                content.append(f"{i + 1}. " + self.clean_text(li.text))
+
     def _extract_text_from_container(
         self, tag: PageElement, content: list[str]
     ) -> None:
         """
         Helper method to extract text from div and span containers.
 
-        This method recursively processes div and span elements, extracting their text content
+        This method recursively processes div, span and blockquote elements, extracting their text content
         while avoiding duplication. It handles both direct text content and nested elements.
 
         Args:
@@ -220,21 +257,24 @@ class HTMLExtractor:
         Returns:
             None: This method modifies the content list in-place.
         """
-
-        if tag.text:
-            content.append("")
-            text_fragment = self.clean_text(tag.text)
-            if len(content) > 0 and content[-1] != text_fragment:
-                content.append(text_fragment)
-        else:
-            for child in tag.children:
-                if child.name not in ["div", "span", "ul", "ol"]:
-                    content.append("")
-                    text_fragment = self.clean_text(child.text)
-                    if len(content) > 0 and content[-1] != text_fragment:
-                        content.append(text_fragment)
-                elif child.name in ["div", "span"]:
-                    self._extract_text_from_container(child, content)
+        # Check for text within its children
+        for child in tag.children:
+            # Recursive search
+            if child.name in ["div", "span", "blockquote"]:
+                self._extract_text_from_container(child, content)
+            # Children has no HTML tag
+            elif child.name is None:
+                content.append(self.clean_text(child.text))
+            # Find related section within div
+            elif child.find("strong"):
+                cleaned_text = self.clean_text(tag.text)
+                if "Related:" in cleaned_text:
+                    content.append(re.sub(r"\n", " ", cleaned_text))
+                elif "Read these next:" in cleaned_text:
+                    content.append(cleaned_text)
+            # Continue extracting text for other elements except for tables
+            elif child.name not in ["div", "span", "table", None]:
+                self._extract_text_elements(child, content)
 
     def extract_links(self) -> list[tuple[str, str]]:
         """
