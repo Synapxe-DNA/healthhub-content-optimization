@@ -1,12 +1,13 @@
 from app.routes.articles.article_router import articleRouter
 from app.routes.check.check_router import checkRouter
 from app.routes.clusters.cluster_router import clusterRouter
-from app.routes.harmonise.combine_router import combineRouter
-from app.routes.optimise.ignore_router import ignoreRouter
+from app.routes.combine.combine_router import combineRouter
+from app.routes.ignore.ignore_router import ignoreRouter
 from app.utils.db_connector.mongo_connector.mongo_connector_injector import (
     create_mongo_db_connector,
 )
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 
 class AppBuilder:
@@ -26,6 +27,15 @@ class AppBuilder:
         @app.on_event("startup")
         async def startup_event():
             app.state.db = await create_mongo_db_connector()
+
+        # Middleware
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
         # Register routers here
         app.include_router(clusterRouter)
