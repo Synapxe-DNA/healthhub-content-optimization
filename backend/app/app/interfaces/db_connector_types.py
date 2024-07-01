@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from app.models.article import Article
-from app.models.cluster import Cluster
+from app.models.cluster import Cluster, ClusterPopulated
 from app.models.combination import Combination
 from app.models.ignore import Ignore
 
@@ -12,8 +12,8 @@ class DbConnector(ABC):
     Abstract class for interaction with databases.
     - Clusters
     - Articles
-    - Harmonisation Jobs
-    - Optimisation Jobs
+    - Combination Jobs
+    - Ignore tagging
     """
 
     """
@@ -33,11 +33,11 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_cluster_all(self) -> List[Cluster]:
+    async def read_cluster_all(self) -> List[ClusterPopulated]:
         pass
 
     @abstractmethod
-    async def read_cluster(self, cluster_ids: List[str]) -> List[Cluster]:
+    async def read_cluster(self, cluster_id: str) -> ClusterPopulated:
         pass
 
     """
@@ -53,7 +53,7 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_article(self, article_ids: List[str]) -> List[Article]:
+    async def read_article(self, article_id: str) -> Article:
         pass
 
     """
@@ -69,7 +69,7 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_combine(self, combine_ids: List[str]) -> List[Combination]:
+    async def read_combine(self, combine_id: str) -> Combination:
         pass
 
     """
@@ -85,5 +85,5 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_ignore(self, ignore_ids: List[str]) -> List[Ignore]:
+    async def read_ignore(self, ignore_id: str) -> Ignore:
         pass
