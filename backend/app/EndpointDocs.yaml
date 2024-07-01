@@ -5,8 +5,92 @@ info:
   version: 0.0.1
 
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:8000
     description: Local server hosted on the default port.
+
+
+components:
+  schemas:
+
+    Cluster:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "E2A0b0e274cDdF591C9Bb5bbFD33C479"
+        name:
+          type: string
+          example: "Cluster 7365"
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Edge'
+
+    Article:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "E2A0b0e274cDdF591C9Bb5bbFD33C479"
+        title:
+          type: string
+          example: "Article Title"
+        description:
+          type: string
+          example: "Lorem ipsum dolor sit amet..."
+        author:
+          type: string
+          example: "Author Name"
+        pillar:
+          type: string
+          example: "Health and Wellness"
+        url:
+          type: string
+          example: "www.url-to-resource.com"
+        status:
+          type: string
+          enum:
+            - ""
+            - "COMBINED"
+            - "IGNORED"
+        labels:
+          type: array
+          items:
+            type: string
+          example: ["Label A", "Label B"]
+        cover_image_url:
+          type: string
+          example: "www.content-resource.com"
+        engagement:
+          type: number
+          format: float
+          example: 0.72
+          description: "Engagement is within the bounds of [0,1]"
+        views:
+          type: integer
+          example: 98764
+
+    Edge:
+      type: object
+      properties:
+        start:
+          type: string
+          example: "E2A0b0e274cDdF591C9Bb5bbFD33C479"
+          description: "ID of Article"
+        end:
+          type: string
+          example: "9Bb5bbFD33C479E2A0b0e274cDdF591C"
+          description: "ID of Article"
+        weight:
+          type: number
+          format: float
+          example: 0.72
+          description: "Weight is within the bounds of [0,1]"
+
 
 paths:
 
@@ -25,3 +109,17 @@ paths:
                   status:
                     type: string
                     example: "ok"
+
+  ### Cluster endpoints
+  /clusters:
+    get:
+      summary: Fetches all clusters in the database
+      responses:
+        '200':
+          description: Successfully fetched all clusters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cluster'
