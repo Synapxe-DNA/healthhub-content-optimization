@@ -2,9 +2,11 @@ import { Component } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 
 import { TuiButtonModule, TuiSvgModule } from "@taiga-ui/core";
-import { ClusterService } from "../../services/cluster/cluster.service";
-import { MainClusterTableComponent } from "../../components/cluster/main-cluster-table/main-cluster-table.component";
+
 import { MainClusterFilterSortComponent } from "../../components/cluster/main-cluster-filter-sort/main-cluster-filter-sort.component";
+import { MainClusterTableComponent } from "../../components/cluster/main-cluster-table/main-cluster-table.component";
+import { ClusterService } from "../../services/cluster/cluster.service";
+
 
 export interface Cluster {
   clusterId: Number;
@@ -32,13 +34,9 @@ export class ClustersComponent {
   constructor(private clusterService: ClusterService) {}
 
   ngOnInit(): void {
-    this.clusterService.getCluster().subscribe((res) => {
+    this.clusterService.getCluster().subscribe((res: Cluster[]) => {
       this.data = res;
     });
-  }
-
-  updateView(){
-    
   }
 
 }
