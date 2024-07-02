@@ -156,6 +156,8 @@ celerybeat.pid
 !.env.sample
 !**/*.env.sample
 .venv
+**/environment.*
+!**/environment.types.ts
 env/
 venv/
 ENV/
