@@ -6,6 +6,7 @@ import { TuiButtonModule, TuiSvgModule } from "@taiga-ui/core";
 import { MainClusterFilterSortComponent } from "../../components/cluster/main-cluster-filter-sort/main-cluster-filter-sort.component";
 import { MainClusterTableComponent } from "../../components/cluster/main-cluster-table/main-cluster-table.component";
 import { ClusterService } from "../../services/cluster/cluster.service";
+import { StatusBarComponent } from "../../components/cluster/status-bar/status-bar.component";
 
 
 export interface Cluster {
@@ -24,7 +25,7 @@ export interface Article {
 @Component({
   selector: "app-clusters",
   standalone: true,
-  imports: [FormsModule, TuiSvgModule, TuiButtonModule, MainClusterFilterSortComponent, MainClusterTableComponent],
+  imports: [FormsModule, TuiSvgModule, TuiButtonModule, MainClusterFilterSortComponent, MainClusterTableComponent, StatusBarComponent],
   templateUrl: "./clusters.component.html",
   styleUrl: "./clusters.component.css",
 })

@@ -1,23 +1,26 @@
+<div class="border-2 border-black">
+    <app-filter-popup [clusters]="clusters"></app-filter-popup>
+    <app-sort-popup></app-sort-popup>   
+    
+    <button
+        tuiIconButton
+        type="button"
+        class="tui-space_right-3 tui-space_bottom-3"
+        icon="tuiIconFilter"
+        (click)="filterBtnClick()"
+    ></button>
+    <button
+        tuiIconButton
+        type="button"
+        class="tui-space_right-3 tui-space_bottom-3"
+        icon="tuiIconSortOff"
+        (click) = "sortBtnClick()"
+    ></button>
+    <!-- <span class="block">
+        Clusters selected: @for (cluster of selectedCluster; track cluster) {
+        {{ cluster }}
+        }
+    </span> -->    
+</div>
 
-<app-filter-popup [clusters]="clusters"></app-filter-popup>
-
-
-<button
-    tuiIconButton
-    type="button"
-    class="tui-space_right-3 tui-space_bottom-3"
-    icon="tuiIconFilter"
-    (click)="filterBtnClick()"
-></button>
-<button
-    tuiIconButton
-    type="button"
-    class="tui-space_right-3 tui-space_bottom-3"
-    icon="tuiIconSortOff"
-></button>
-<!-- <span class="block">
-    Clusters selected: @for (cluster of selectedCluster; track cluster) {
-    {{ cluster }}
-    }
-</span> -->    
 

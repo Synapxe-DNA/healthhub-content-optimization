@@ -2,7 +2,8 @@
   <div class="w-10/12 h-full overflow-y-auto">
     <app-main-cluster-table [clusters]="data"></app-main-cluster-table>
   </div>
-  <div class="w-2/12 border-collapse border-2 border-black">
+  <div class="w-2/12 border-collapse">
+    <app-status-bar></app-status-bar>
     <app-main-cluster-filter-sort [clusters]="data"></app-main-cluster-filter-sort>
   </div>
 </div>
