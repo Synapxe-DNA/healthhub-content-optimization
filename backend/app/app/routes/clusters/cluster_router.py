@@ -11,3 +11,8 @@ clusterRouter = APIRouter(prefix="/clusters")
 @clusterRouter.get("", response_model=List[ClusterPopulated])
 async def get_all_clusters(db: DbConnector = Depends(get_db)):
     return await db.read_cluster_all()
+
+
+@clusterRouter.get("/{cluster_id}", response_model=ClusterPopulated)
+async def get_cluster(cluster_id: str, db: DbConnector = Depends(get_db)):
+    return await db.read_cluster(cluster_id)
