@@ -15,4 +15,5 @@ import {NavbarComponent} from "./components/global/navbar/navbar.component";
 })
 export class AppComponent {
   title = 'app';
+  looper: Number[] =  Array.from({length: 1000}, (v, k) => k);
 }
