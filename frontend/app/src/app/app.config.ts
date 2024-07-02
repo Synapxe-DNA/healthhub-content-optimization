@@ -1,10 +1,17 @@
-import { provideAnimations } from "@angular/platform-browser/animations";
+import {BrowserAnimationsModule, provideAnimations} from "@angular/platform-browser/animations";
 import { TuiRootModule } from "@taiga-ui/core";
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
+import {LucideIconImportModule} from "./modules/lucide-icon-import/lucide-icon-import.module";
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideAnimations(), provideRouter(routes), importProvidersFrom(TuiRootModule)]
+  providers: [
+    provideAnimations(),
+    provideRouter(routes),
+    importProvidersFrom(TuiRootModule),
+    importProvidersFrom(LucideIconImportModule),
+    importProvidersFrom(BrowserAnimationsModule),
+  ]
 };
