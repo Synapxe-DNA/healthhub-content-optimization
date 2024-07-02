@@ -123,3 +123,22 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cluster'
+
+  /clusters/{cluster_id}:
+      get:
+        summary: Fetches a specific cluster by ID
+        operationId: getClusterById
+        parameters:
+          - name: cluster_id
+            in: path
+            required: true
+            description: The ID of the cluster to retrieve
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Successfully fetched the cluster
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Cluster'
