@@ -7,5 +7,5 @@
 
 ## June 28, 2024
 
-— Refactored pipeline to standarized the column names to facilitate downstream merging
+- Refactored pipeline to standarized the column names to facilitate downstream merging
 - The merged data is generated, versioned and stored in [`content-optimization/data/03_primary`](content-optimization/data/03_primary)
