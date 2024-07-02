@@ -1,7 +1,5 @@
 from typing import List
 
-from bson import ObjectId
-
 from app.interfaces.db_connector_types import DbConnector
 from app.models.article import Article
 from app.models.cluster import Cluster, ClusterPopulated
@@ -16,6 +14,7 @@ from app.utils.db_connector.mongo_connector.beanie_documents import (
     IgnoreDocument,
 )
 from beanie import init_beanie
+from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 
@@ -158,7 +157,7 @@ class MongoConnector(DbConnector):
                     Edge(
                         start=e.start.to_dict()["id"],
                         end=e.end.to_dict()["id"],
-                        weight=e.weight
+                        weight=e.weight,
                     )
                     for e in c.edges
                 ],
@@ -206,15 +205,17 @@ class MongoConnector(DbConnector):
                     cover_image_url=a.cover_image_url,
                     engagement=a.engagement,
                     views=a.views,
-                ) for a in cluster.article_ids
+                )
+                for a in cluster.article_ids
             ],
             edges=[
                 Edge(
                     start=e.start.to_dict()["id"],
                     end=e.end.to_dict()["id"],
-                    weight=e.weight
-                ) for e in cluster.edges
-            ]
+                    weight=e.weight,
+                )
+                for e in cluster.edges
+            ],
         )
 
     async def create_articles(self, articles: List[Article]):
@@ -271,10 +272,10 @@ class MongoConnector(DbConnector):
                 labels=a.labels,
                 cover_image_url=a.cover_image_url,
                 engagement=a.engagement,
-                views=a.views
-            ) async for a in ArticleDocument.find_all()
+                views=a.views,
+            )
+            async for a in ArticleDocument.find_all()
         ]
-
 
     async def read_article(self, article_id: str) -> Article:
         """
@@ -386,7 +387,9 @@ class MongoConnector(DbConnector):
                 return "COMBINED"
             return ""
 
-        combine_doc = await CombinationDocument.find(CombinationDocument.id==ObjectId(combine_id), fetch_links=True).to_list()
+        combine_doc = await CombinationDocument.find(
+            CombinationDocument.id == ObjectId(combine_id), fetch_links=True
+        ).to_list()
 
         # TODO [BUG] Linting fix needed
         # Linter will show that a.[attr] doesn't exist. This is due to the type hinting of the Document.find()
@@ -407,8 +410,9 @@ class MongoConnector(DbConnector):
                     cover_image_url=a.cover_image_url,
                     engagement=a.engagement,
                     views=a.views,
-                ) for a in combine_doc[0].article_ids
-            ]
+                )
+                for a in combine_doc[0].article_ids
+            ],
         )
 
     async def create_ignore(self, ignore: List[Ignore]):
@@ -422,7 +426,8 @@ class MongoConnector(DbConnector):
         :return:
         """
         return [
-            Ignore(id=str(i.id), article_id=str(i.article_id)) async for i in IgnoreDocument.find_all()
+            Ignore(id=str(i.id), article_id=str(i.article_id))
+            async for i in IgnoreDocument.find_all()
         ]
 
     async def read_ignore(self, ignore_id: str) -> Ignore:
@@ -433,7 +438,4 @@ class MongoConnector(DbConnector):
         """
         ignore = await IgnoreDocument.get(ObjectId(ignore_id))
 
-        return Ignore(
-            id=str(ignore.id),
-            article_id=ignore.article_id.to_dict()['id']
-        )
+        return Ignore(id=str(ignore.id), article_id=ignore.article_id.to_dict()["id"])

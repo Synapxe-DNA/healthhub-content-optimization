@@ -34,8 +34,6 @@ async def __main():
     # await conn.read_ignore(ignore[0].id)
 
 
-
-
 def main():
     asyncio.run(__main())
 
