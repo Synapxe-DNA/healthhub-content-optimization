@@ -1,0 +1,56 @@
+@if (isFilterBtnClicked) {
+<div class="relative h-full w-full bg-gray-400">
+  <div class="absolute top-0 right-0">
+    <button
+      tuiIconButton
+      type="button"
+      class="tui-space_right-3 tui-space_bottom-3"
+      icon="tuiIconClose"
+      size="xs"
+      (click)="filterBtnClicked()"
+    ></button>
+  </div>
+  <div class="flex flex-col items-center justify-between">
+    <p class="text-lg font-bold">Filter</p>
+    <p class="text-base font-bold">Annotation status</p>
+    <form class="group" [formGroup]="filterForm">
+      <div tuiGroup class="group" [collapsed]="true">
+        <tui-checkbox-block
+          contentAlign="right"
+          formControlName="pending"
+          size="m"
+        >
+          Pending
+        </tui-checkbox-block>
+        <tui-checkbox-block
+          contentAlign="right"
+          formControlName="completed"
+          size="m"
+        >
+          Completed
+        </tui-checkbox-block>
+      </div>
+    </form>
+    <p class="text-base font-bold">Cluster number</p>
+    <div >
+      <form [formGroup]="filterForm">
+        <div formArrayName="clustersSelected">
+          <div orientation="vertical" tuiGroup class="group" [collapsed]="true">
+            @for (cluster of clusters; track cluster; let i = $index) {
+            <tui-checkbox-block
+              contentAlign="right"
+              size="l"
+              formControlName= {{i}}
+            >
+              Cluster {{cluster.clusterId}}
+            </tui-checkbox-block>
+            }
+          </div>
+        </div>
+      </form>
+    </div>
+  
+
+  </div>
+</div>
+}

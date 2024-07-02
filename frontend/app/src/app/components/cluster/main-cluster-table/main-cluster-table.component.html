@@ -1,0 +1,39 @@
+<table class="w-full table-auto border-collapse border-2 border-black">
+  <tr class="bg-black [&>th]:text-white">
+    <th class="border-r-2 border-white text-lg text-white">id</th>
+    <th class="border-l-2 border-white text-lg text-white">URL</th>
+    <th class="border-l-2 border-white text-lg text-white">Pillar</th>
+    <th class="border-l-2 border-white text-lg text-white">Status</th>
+  </tr>
+  
+  @for (cluster of clusters; track cluster) {
+  <tr>
+    <th colspan="5" class="border-collapse border-2 border-black bg-gray-400">
+      <div class="relative flex items-center justify-center">
+        <input
+          type="radio"
+          class="v- absolute left-1 scale-150"
+          [formControl]="clusterSelected"
+          value = {{cluster.clusterId}}
+        />
+        <span>Cluster: {{ cluster.clusterId }}</span>
+      </div>
+    </th>
+  </tr>
+  @for (article of cluster.articles; track article) {
+  <tr>
+    <td class="border-collapse border-2 border-black">
+      {{ article.articleId }}
+    </td>
+    <td class="border-collapse border-2 border-black">
+      {{ article.URL }}
+    </td>
+    <td class="border-collapse border-2 border-black">
+      {{ article.pillar }}
+    </td>
+    <td class="border-collapse border-2 border-black">
+      {{ article.status }}
+    </td>
+  </tr>
+  } }
+</table>

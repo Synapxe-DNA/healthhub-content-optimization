@@ -1,0 +1,238 @@
+{
+  "clusters": [
+    {
+      "clusterId": 1,
+      "annotationStatus": "Completed",
+      "articles": [
+        {
+          "articleId": 1,
+          "URL": "www.healthhub.com/1",
+          "pillar": "Live healthy",
+          "status": "Combine"
+        },
+        {
+          "articleId": 2,
+          "URL": "www.healthhub.com/2",
+          "pillar": "Live healthy",
+          "status": "Combine"
+        }
+      ]
+    },
+    {
+      "clusterId": 2,
+      "annotationStatus": "Pending",
+      "articles": [
+        {
+          "articleId": 3,
+          "URL": "www.healthhub.com/3",
+          "pillar": "Diseases and condition",
+          "status": "Pending"
+        },
+        {
+          "articleId": 4,
+          "URL": "www.healthhub.com/4",
+          "pillar": "Diseases and condition",
+          "status": "Pending"
+        },
+        {
+          "articleId": 5,
+          "URL": "www.healthhub.com/5",
+          "pillar": "Diseases and condition",
+          "status": "Pending"
+        }
+      ]
+    },
+    {
+      "clusterId": 3,
+      "annotationStatus": "Pending",
+      "articles": [
+        {
+          "articleId": 6,
+          "URL": "www.healthhub.com/6",
+          "pillar": "Support group",
+          "status": "Pending"
+        },
+        {
+          "articleId": 7,
+          "URL": "www.healthhub.com/7",
+          "pillar": "Support group",
+          "status": "Pending"
+        }
+      ]
+    },
+    {
+      "clusterId": 4,
+      "annotationStatus": "Completed",
+      "articles": [
+        {
+          "articleId": 8,
+          "URL": "www.healthhub.com/8",
+          "pillar": "Cost and financing",
+          "status": "Combine"
+        },
+        {
+          "articleId": 9,
+          "URL": "www.healthhub.com/9",
+          "pillar": "Cost and financing",
+          "status": "Combine"
+        },
+        {
+          "articleId": 10,
+          "URL": "www.healthhub.com/10",
+          "pillar": "Cost and financing",
+          "status": "Remove"
+        }
+      ]
+    },
+    {
+      "clusterId": 5,
+      "annotationStatus": "Pending",
+      "articles": [
+        {
+          "articleId": 11,
+          "URL": "www.healthhub.com/11",
+          "pillar": "Medications",
+          "status": "Pending"
+        },
+        {
+          "articleId": 12,
+          "URL": "www.healthhub.com/12",
+          "pillar": "Medications",
+          "status": "Pending"
+        },
+        {
+          "articleId": 13,
+          "URL": "www.healthhub.com/13",
+          "pillar": "Medications",
+          "status": "Pending"
+        },
+        {
+          "articleId": 14,
+          "URL": "www.healthhub.com/14",
+          "pillar": "Medications",
+          "status": "Pending"
+        }
+      ]
+    },
+    {
+      "clusterId": 6,
+      "annotationStatus": "Pending",
+      "articles": [
+        {
+          "articleId": 15,
+          "URL": "www.healthhub.com/15",
+          "pillar": "Support group",
+          "status": "Pending"
+        },
+        {
+          "articleId": 16,
+          "URL": "www.healthhub.com/16",
+          "pillar": "Support group",
+          "status": "Pending"
+        }
+      ]
+    },
+    {
+      "clusterId": 7,
+      "annotationStatus": "Pending",
+      "articles": [
+        {
+          "articleId": 17,
+          "URL": "www.healthhub.com/17",
+          "pillar": "Diseases and condition",
+          "status": "Pending"
+        },
+        {
+          "articleId": 18,
+          "URL": "www.healthhub.com/18",
+          "pillar": "Diseases and condition",
+          "status": "Pending"
+        }
+      ]
+    },
+    {
+      "clusterId": 8,
+      "annotationStatus": "Completed",
+      "articles": [
+        {
+          "articleId": 19,
+          "URL": "www.healthhub.com/19",
+          "pillar": "Live healthy",
+          "status": "Combine"
+        },
+        {
+          "articleId": 20,
+          "URL": "www.healthhub.com/20",
+          "pillar": "Live healthy",
+          "status": "Standalone"
+        },
+        {
+          "articleId": 21,
+          "URL": "www.healthhub.com/21",
+          "pillar": "Live healthy",
+          "status": "Combine"
+        },
+        {
+          "articleId": 22,
+          "URL": "www.healthhub.com/22",
+          "pillar": "Live healthy",
+          "status": "Standalone"
+        }
+      ]
+    },
+    {
+      "clusterId": 9,
+      "annotationStatus": "Pending",
+      "articles": [
+        {
+          "articleId": 23,
+          "URL": "www.healthhub.com/23",
+          "pillar": "Support group",
+          "status": "Pending"
+        },
+        {
+          "articleId": 24,
+          "URL": "www.healthhub.com/24",
+          "pillar": "Support group",
+          "status": "Pending"
+        }
+      ]
+    },
+    {
+      "clusterId": 10,
+      "annotationStatus": "Completed",
+      "articles": [
+        {
+          "articleId": 25,
+          "URL": "www.healthhub.com/25",
+          "pillar": "Medications",
+          "status": "Remove"
+        },
+        {
+          "articleId": 26,
+          "URL": "www.healthhub.com/26",
+          "pillar": "Medications",
+          "status": "Remove"
+        },
+        {
+          "articleId": 27,
+          "URL": "www.healthhub.com/27",
+          "pillar": "Medications",
+          "status": "Combine"
+        },
+        {
+          "articleId": 28,
+          "URL": "www.healthhub.com/28",
+          "Pillar": "Medications",
+          "status": "Pending"
+        },
+        {
+          "articleId": 29,
+          "URL": "www.healthhub.com/29",
+          "pillar": "Medications",
+          "status": "Combine"
+        }
+      ]
+    }
+  ]
+}
