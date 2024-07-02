@@ -9,14 +9,18 @@
   @for (cluster of clusters; track cluster) {
   <tr>
     <th colspan="5" class="border-collapse border-2 border-black bg-gray-400">
-      <div class="relative flex items-center justify-center">
+      <div class="relative flex-col items-center justify-center">
         <input
           type="radio"
-          class="v- absolute left-1 scale-150"
+          class="absolute top-0 bottom-0 left-1 scale-150"
           [formControl]="clusterSelected"
           value = {{cluster.clusterId}}
         />
-        <span>Cluster: {{ cluster.clusterId }}</span>
+        <span class="block">Cluster: {{ cluster.clusterId }}</span>
+        <div>
+          <span class="outline-1 p-1 outline m-1">Status: {{cluster.annotationStatus}}</span>    
+          <span class="outline-1 p-1 outline m-1">No. of Articles:{{cluster.articles.length}}</span>    
+        </div>
       </div>
     </th>
   </tr>

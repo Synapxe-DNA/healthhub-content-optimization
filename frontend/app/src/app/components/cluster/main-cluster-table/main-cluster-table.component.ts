@@ -13,6 +13,7 @@ import { TuiGroupModule } from '@taiga-ui/core';
 })
 export class MainClusterTableComponent {
   @Input() clusters: Cluster[] = [];
+  @Input() filter: {} = {};
   selectedCluster: Number[] = [];
 
   clusterSelected:FormControl = new FormControl('',Validators.required);
@@ -23,8 +24,5 @@ export class MainClusterTableComponent {
 
   getCheckboxValues() {
     console.log("Cluster select:" + this.clusterSelected.value)
-  }
-  updateView(){
-    
   }
 }
