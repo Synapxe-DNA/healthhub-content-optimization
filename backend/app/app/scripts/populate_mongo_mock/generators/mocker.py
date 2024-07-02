@@ -6,6 +6,7 @@ from app.models.article import Article
 from app.models.cluster import Cluster
 from app.models.combination import Combination
 from app.models.edge import Edge
+from app.models.ignore import Ignore
 from app.scripts.populate_mongo_mock.generators.string_generator import (
     random_id,
     random_str,
@@ -126,4 +127,4 @@ class Mocker:
 
             if random.uniform(0, 1) > self.percent_processed:
                 await self.conn.create_combine(combine_jobs)
-                # await self.conn.create_ignore(ignore_jobs)
+                await self.conn.create_ignore([Ignore(article_id=articles[-1].id)])

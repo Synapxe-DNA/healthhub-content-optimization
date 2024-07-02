@@ -20,9 +20,20 @@ async def __main():
 
     mocker = Mocker(conn, 75)
 
-    await conn.connect()
-
     await mocker.mock()
+
+    ### Uncomment to ensure MongoConnector works properly
+    # await conn.connect()
+    # clusters = await conn.read_cluster_all()
+    # await conn.read_cluster(clusters[0].id)
+    # articles = await conn.read_article_all()
+    # await conn.read_article(articles[0].id)
+    # combine = await conn.read_combine_all()
+    # await conn.read_combine(combine[0].id)
+    # ignore = await conn.read_ignore_all()
+    # await conn.read_ignore(ignore[0].id)
+
+
 
 
 def main():
