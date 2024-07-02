@@ -3,7 +3,7 @@ from typing import List
 
 from app.models.article import Article
 from app.models.cluster import Cluster, ClusterPopulated
-from app.models.combination import Combination
+from app.models.combination import Combination, CombinationPopulated
 from app.models.ignore import Ignore
 
 
@@ -65,11 +65,11 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def read_combine_all(self) -> List[Combination]:
+    async def read_combine_all(self) -> List[CombinationPopulated]:
         pass
 
     @abstractmethod
-    async def read_combine(self, combine_id: str) -> Combination:
+    async def read_combine(self, combine_id: str) -> CombinationPopulated:
         pass
 
     """
