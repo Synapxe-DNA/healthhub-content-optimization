@@ -9,13 +9,13 @@ import { ClusterService } from "../../services/cluster/cluster.service";
 import { StatusBarComponent } from "../../components/cluster/status-bar/status-bar.component";
 
 
-export interface Cluster {
+export interface ClusterDeprecated {
   clusterId: Number;
   annotationStatus: string;
-  articles: Article[];
+  articles: ArticleDeprecated[];
 }
 
-export interface Article {
+export interface ArticleDeprecated {
   articleId: Number;
   URL: string;
   pillar: string;
@@ -30,14 +30,12 @@ export interface Article {
   styleUrl: "./clusters.component.css",
 })
 export class ClustersComponent {
-  data: Cluster[] = [];
+  // data: ClusterDeprecated[] = [];
 
-  constructor(private clusterService: ClusterService) {}
+  // constructor(private clusterService: ClusterService) {}
 
-  ngOnInit(): void {
-    this.clusterService.getCluster().subscribe((res: Cluster[]) => {
-      this.data = res;
-    });
-  }
+  // ngOnInit(): void {
+  //   this.clusterService.loadData().catch(console.error)
+  // }
 
 }

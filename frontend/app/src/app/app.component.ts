@@ -11,9 +11,8 @@ import {NavbarComponent} from "./components/global/navbar/navbar.component";
   imports: [CommonModule, RouterOutlet, TuiRootModule, TuiDialogModule, TuiAlertModule, NavbarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
-    providers: [{provide: TUI_SANITIZER, useClass: NgDompurifySanitizer}]
+  providers: [{provide: TUI_SANITIZER, useClass: NgDompurifySanitizer}]
 })
 export class AppComponent {
-  title = 'app';
-  looper: Number[] =  Array.from({length: 1000}, (v, k) => k);
+  title = 'app'
 }

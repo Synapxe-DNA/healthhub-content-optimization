@@ -87,11 +87,11 @@
       @for (article of cluster.articles; track article) {
       <tr tuiTr>
         <td *tuiCell="'articleId'" tuiTd class="number text">
-          {{ article.articleId }}
+          {{ article.id }}
         </td>
 
         <td *tuiCell="'URL'" tuiTd class="number text">
-          {{ article.URL }}
+          {{ article.url }}
         </td>
 
         <td *tuiCell="'pillar'" tuiTd class="number text">
@@ -108,11 +108,11 @@
     <ng-template #template>
       <input
       type="radio"
-      value = {{cluster.clusterId}}
+      value = {{cluster.id}}
       [formControl]="clusterSelected"
       (click)="$event.stopPropagation()"
       />
-      Cluster {{cluster.clusterId}}
+      Cluster {{cluster.id}}
     </ng-template>
     }
 

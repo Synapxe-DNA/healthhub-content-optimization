@@ -1,10 +1,13 @@
 import { ChangeDetectionStrategy,Component, Input, ViewChild } from '@angular/core';
-import { Cluster } from '../../../pages/clusters/clusters.component';
+import { ClusterDeprecated } from '../../../pages/clusters/clusters.component';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { TuiDataListWrapperModule, TuiInputNumberModule, TuiRadioBlockModule, TuiTextareaModule } from '@taiga-ui/kit';
 import { TuiFormatNumberPipeModule, TuiGroupModule, TuiScrollbarModule, TuiSvgModule, tuiFormatNumber } from '@taiga-ui/core';
 import { TuiComparator, TuiTableModule } from '@taiga-ui/addon-table';
 import { TuiDay, TuiLetModule, TuiValidatorModule, tuiDefaultSort } from '@taiga-ui/cdk';
+import { Cluster } from '../../../types/data/cluster.types';
+import { ClusterService } from '../../../services/cluster/cluster.service';
+import { Article } from '../../../types/data/article.types';
 
 
 @Component({
@@ -17,15 +20,21 @@ import { TuiDay, TuiLetModule, TuiValidatorModule, tuiDefaultSort } from '@taiga
 })
 
 export class MainClusterTableComponent {
-  @Input() clusters: Cluster[] = [];
- 
-    readonly columns = ['articleId', 'URL', 'pillar', 'status'] as const;
+  clusters:Cluster[] = [];
+  selectedCluster: Number[] = [];
+  readonly columns = ['articleId', 'URL', 'pillar', 'status'] as const;
 
-    clusterSelected:FormControl = new FormControl('',Validators.required);
+  clusterSelected:FormControl = new FormControl('',Validators.required)
+
+
+  constructor(private clusterService:ClusterService){
+    this.clusters = this.clusterService.getClusters().getValue()
+
+  }
     
-    trackByIndex(index: number): number {
-        return index;
-    }
- 
+  trackByIndex(index: number): number {
+      return index;
+  }
+
  
 }

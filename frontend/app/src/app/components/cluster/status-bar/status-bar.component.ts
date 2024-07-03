@@ -1,6 +1,5 @@
 import { Component, Input } from "@angular/core";
 import { TuiProgressModule } from "@taiga-ui/kit";
-import { Cluster } from "../../../pages/clusters/clusters.component";
 import { ClusterService } from "../../../services/cluster/cluster.service";
 
 @Component({
@@ -18,21 +17,21 @@ export class StatusBarComponent {
 
   constructor(private clusterService: ClusterService) {}
 
-  ngOnInit(): void {
-    this.clusterService.getCluster().subscribe((res: Cluster[]) => {
-      this.calculateProgress(res);
-    });
-  }
+  // ngOnInit(): void {
+  //   this.clusterService.getCluster().subscribe((res: Cluster[]) => {
+  //     this.calculateProgress(res);
+  //   });
+  // }
 
-  calculateProgress(res: Cluster[]) {
-    for (let c of res) {
-      if (c.annotationStatus == "Completed") {
-        this.clustersCompleted++;
-      } else {
-        this.clustersPending++;
-      }
-    }
-    this.totalClusters = this.clustersCompleted + this.clustersPending
-    this.statusPercentage = (this.clustersCompleted/this.totalClusters) * 100;
-  }
+  // calculateProgress(res: Cluster[]) {
+  //   for (let c of res) {
+  //     if (c.annotationStatus == "Completed") {
+  //       this.clustersCompleted++;
+  //     } else {
+  //       this.clustersPending++;
+  //     }
+  //   }
+  //   this.totalClusters = this.clustersCompleted + this.clustersPending
+  //   this.statusPercentage = (this.clustersCompleted/this.totalClusters) * 100;
+  // }
 }
