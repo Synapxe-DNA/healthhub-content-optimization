@@ -1,4 +1,4 @@
-<table class="w-full table-auto border-collapse border-2 border-black">
+<!-- <table class="w-full table-auto border-collapse border-2 border-black">
   <tr class="bg-black [&>th]:text-white">
     <th class="border-r-2 border-white text-lg text-white">id</th>
     <th class="border-l-2 border-white text-lg text-white">URL</th>
@@ -40,4 +40,82 @@
     </td>
   </tr>
   } }
-</table>
+</table> -->
+<tui-scrollbar waIntersectionRoot class="scrollbar" [hidden]="true">
+  <table size="l" tuiTable class="table" [columns]="columns" [direction]="-1">
+    <thead tuiThead>
+      <tr tuiThGroup>
+        <th
+          *tuiHead="'articleId'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+        >
+          Article No.
+        </th>
+        <th
+          *tuiHead="'URL'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+        >
+          URL
+        </th>
+        <th 
+          *tuiHead="'pillar'" 
+          rowspan="2" 
+          tuiTh 
+          [sorter]="null"
+        >
+          Pillar
+        </th>
+        <th 
+          *tuiHead="'status'" 
+          rowspan="2" 
+          tuiTh
+          [sorter]="null"
+        >
+          Status
+        </th>
+      </tr>
+    </thead>
+
+    @for (cluster of clusters; track cluster) {
+
+    <tbody [heading]="template"   tuiTbody>
+    
+      @for (article of cluster.articles; track article) {
+      <tr tuiTr>
+        <td *tuiCell="'articleId'" tuiTd class="number text">
+          {{ article.articleId }}
+        </td>
+
+        <td *tuiCell="'URL'" tuiTd class="number text">
+          {{ article.URL }}
+        </td>
+
+        <td *tuiCell="'pillar'" tuiTd class="number text">
+          {{ article.pillar }}
+        </td>
+
+        <td *tuiCell="'status'" tuiTd class="number text">
+          {{ article.status }}
+        </td>
+      </tr>
+      }
+    </tbody>
+
+    <ng-template #template>
+      <input
+      type="radio"
+      value = {{cluster.clusterId}}
+      [formControl]="clusterSelected"
+      (click)="$event.stopPropagation()"
+      />
+      Cluster {{cluster.clusterId}}
+    </ng-template>
+    }
+
+  </table>
+</tui-scrollbar>
+
