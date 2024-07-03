@@ -1,5 +1,9 @@
 # Changelog
 
+## July 3, 2024
+
+- Added utility functions in [`utils.py`](content-optimization/src/content_optimization/pipelines/data_processing/utils.py) in `data_processing` pipeline to flag the articles for removal as well as assign the respective types
+
 ## July 1, 2024
 
 - Added addtional feature to flag articles for removal below a certain word count (for more information, you can see the [`word_count.ipynb`](content-optimization/notebooks/word_count.ipynb) notebook)
