@@ -27,13 +27,22 @@ export class MainClusterTableComponent {
   clusterSelected:FormControl = new FormControl('',Validators.required)
 
 
-  constructor(private clusterService:ClusterService){
-    this.clusters = this.clusterService.getClusters().getValue()
+  constructor(private clusterService:ClusterService){}
 
+  ngOnInit(){
+    this.clusterService.getClusters().subscribe(res=>{
+      this.clusters = res
+    })
+    // this.clusters = this.clusterService.getClusters().value
   }
+
     
   trackByIndex(index: number): number {
       return index;
+  }
+
+  ngAfterViewInit(){
+    console.log(this.clusters)
   }
 
  
