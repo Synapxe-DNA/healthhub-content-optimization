@@ -8,7 +8,7 @@ import {
 } from "@angular/forms";
 import { TuiButtonModule, TuiGroupModule, TuiSvgModule } from "@taiga-ui/core";
 import { TuiCheckboxBlockModule } from "@taiga-ui/kit";
-import { Cluster } from "../../pages/clusters/clusters.component";
+import { ClusterDeprecated } from "../../pages/clusters/clusters.component";
 
 
 @Component({
@@ -34,7 +34,7 @@ export class FilterPopupComponent {
 
   filterForm: FormGroup = new FormGroup({});
 
-  @Input() clusters: Cluster[] = [];
+  @Input() clusters: ClusterDeprecated[] = [];
 
   constructor() {
     this.filterForm = new FormGroup({
