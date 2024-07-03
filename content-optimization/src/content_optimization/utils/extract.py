@@ -71,6 +71,10 @@ class HTMLExtractor:
         for br in soup.find_all("br"):
             br.replace_with("\n")
 
+        # Find all <hr> tags and replace them with newline
+        for hr in soup.find_all("hr"):
+            hr.replace_with("\n")
+
         return soup
 
     def check_for_table(self) -> bool:
@@ -151,6 +155,10 @@ class HTMLExtractor:
         if self.soup.div is not None:
             self.soup.div.unwrap()
 
+        # Remove all tables from the HTML text
+        for table in self.soup.find_all("table"):
+            table.extract()
+
         # Extract the main content
         content = []
         for tag in self.soup.find_all(
@@ -183,8 +191,12 @@ class HTMLExtractor:
         # Remove empty strings from content
         content = [c for c in content if c]
 
+        # Remove duplicate strings
+        final_content = []
+        final_content = [c for c in content if content not in final_content]
+
         # Replace double newlines with single newlines and strip whitespace
-        extracted_content_body = "\n".join(content).replace("\n\n", "\n").strip()
+        extracted_content_body = "\n".join(final_content).replace("\n\n", "\n").strip()
 
         return extracted_content_body
 
@@ -208,6 +220,10 @@ class HTMLExtractor:
             # Provide paragraphing between key headers
             content.append("\n")
             content.append(self.clean_text(tag.text))
+
+        elif tag.name == "strong":
+            for p in tag.find_all("p"):
+                content.append(self.clean_text(p.text))
 
         elif tag.name == "p":
             # Remove all em tags
@@ -272,8 +288,8 @@ class HTMLExtractor:
                     content.append(re.sub(r"\n", " ", cleaned_text))
                 elif "Read these next:" in cleaned_text:
                     content.append(cleaned_text)
-            # Continue extracting text for other elements except for tables
-            elif child.name not in ["div", "span", "table", None]:
+            # Continue extracting text for other elements
+            else:
                 self._extract_text_elements(child, content)
 
     def extract_links(self) -> list[tuple[str, str]]:
