@@ -8,13 +8,13 @@ import { MainClusterTableComponent } from "../../components/cluster/main-cluster
 import { ClusterService } from "../../services/cluster/cluster.service";
 
 
-export interface Cluster {
+export interface ClusterDeprecated {
   clusterId: Number;
   annotationStatus: string;
-  articles: Article[];
+  articles: ArticleDeprecated[];
 }
 
-export interface Article {
+export interface ArticleDeprecated {
   articleId: Number;
   URL: string;
   pillar: string;
@@ -29,14 +29,12 @@ export interface Article {
   styleUrl: "./clusters.component.css",
 })
 export class ClustersComponent {
-  data: Cluster[] = [];
+  data: ClusterDeprecated[] = [];
 
   constructor(private clusterService: ClusterService) {}
 
   ngOnInit(): void {
-    this.clusterService.getCluster().subscribe((res: Cluster[]) => {
-      this.data = res;
-    });
+    this.clusterService.loadData().catch(console.error)
   }
 
 }
