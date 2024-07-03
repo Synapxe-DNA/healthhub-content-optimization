@@ -1,13 +1,15 @@
-import { HttpClient } from "@angular/common/http";
-import {Injectable, OnInit} from "@angular/core";
-import {BehaviorSubject, firstValueFrom, Observable} from "rxjs";
+import {HttpClient} from "@angular/common/http";
+import {AfterViewInit, Injectable, OnInit} from "@angular/core";
+import {BehaviorSubject, firstValueFrom} from "rxjs";
 import {environment} from "../../environments/environment";
 import {Cluster} from "../../types/data/cluster.types";
 import {Filter, FilterGroup} from "../../types/filters.types";
+import {B} from "@angular/cdk/keycodes";
+import axios from "axios";
 
 
 @Injectable({ providedIn: "root" })
-export class ClusterService implements OnInit {
+export class ClusterService {
 
   private $all_clusters:BehaviorSubject<Cluster[]> = new BehaviorSubject<Cluster[]>([])
   private $clusters:BehaviorSubject<Cluster[]> = new BehaviorSubject<Cluster[]>([])
@@ -16,18 +18,19 @@ export class ClusterService implements OnInit {
 
   constructor(
       private http: HttpClient
-  ) {}
+  ) {
 
-  ngOnInit() {
-    this.loadData().catch(console.error)
+    this.$all_clusters.subscribe(val => {
+      this.$clusters.next(val)
+    })
 
-    this.$all_clusters.subscribe(
-        value => this.$clusters.next(this.applyFiltersToClusters(value, this.$filters.value))
-    )
     this.$filters.subscribe(
         filters => this.$clusters.next(this.applyFiltersToClusters(this.$all_clusters.value, filters))
     )
+
+    this.fetchData().catch(console.error)
   }
+
 
   /**
    * Method to apply filters to an array of clusters
@@ -47,8 +50,9 @@ export class ClusterService implements OnInit {
   /**
    * Method to fetch data from the endpoint and update the local state.
    */
-  async loadData():Promise<void>{
-    this.$all_clusters.next(await firstValueFrom(this.http.get<Cluster[]>(`${environment.BACKEND}/clusters`)))
+  async fetchData():Promise<void>{
+    const data = await axios.get<Cluster[]>(`${environment.BACKEND}/clusters`)
+    this.$all_clusters.next(data.data)
   }
 
   /**
@@ -65,17 +69,12 @@ export class ClusterService implements OnInit {
    */
   getCluster(id:string): BehaviorSubject<Cluster> {
 
-    const getClusterWithId = (clusters:Cluster[]):Cluster => {
-      const filtered = clusters.filter(c => c.id===id)
-      if(filtered.length<=1){throw `Cluster with ${id} does not exist!`}
-      if(filtered.length>1){throw `More than one cluster with ${id} exists!`}
-      return filtered[0]
-    }
+    const clusterOfInterest = this.$all_clusters.value.filter(c => c.id===id)[0]
 
-    const cluster = new BehaviorSubject<Cluster>(getClusterWithId(this.$all_clusters.value))
+    const cluster = new BehaviorSubject<Cluster>(clusterOfInterest)
 
     this.$all_clusters.subscribe(clusters => {
-      const clusterOfInterest = getClusterWithId(clusters)
+      const clusterOfInterest = clusters.filter(c=>c.id===id)[0]
       if(clusterOfInterest!==cluster.value){
         cluster.next(clusterOfInterest)
       }
