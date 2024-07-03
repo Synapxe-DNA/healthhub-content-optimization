@@ -41,65 +41,128 @@
   </tr>
   } }
 </table> -->
-<tui-scrollbar waIntersectionRoot class="scrollbar" [hidden]="true">
+<tui-scrollbar waIntersectionRoot class="scrollbar h-full" [hidden]="true">
   <table size="l" tuiTable class="table" [columns]="columns" [direction]="-1">
-    <thead tuiThead>
+    <thead tuiThead fix-head>
       <tr tuiThGroup>
         <th
-          *tuiHead="'articleId'"
+          *tuiHead="'title'"
           rowspan="2"
           tuiTh
+          class="first"
           [sorter]="null"
+          [sticky]="true"
         >
-          Article No.
+          Title
         </th>
+
         <th
-          *tuiHead="'URL'"
+          *tuiHead="'description'"
           rowspan="2"
           tuiTh
           [sorter]="null"
+          [sticky]="true"
+        >
+          Description
+        </th>
+
+        <th
+          *tuiHead="'pillar'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Pillar
+        </th>
+
+        <th
+          *tuiHead="'url'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
         >
           URL
         </th>
+
         <th 
-          *tuiHead="'pillar'" 
+          *tuiHead="'status'" 
           rowspan="2" 
           tuiTh 
           [sorter]="null"
         >
-          Pillar
+          Status
         </th>
+
         <th 
-          *tuiHead="'status'" 
+          *tuiHead="'labels'" 
           rowspan="2" 
           tuiTh
           [sorter]="null"
+          [sticky]="true"
         >
-          Status
+          Labels
+        </th>
+
+        <th
+          *tuiHead="'engagement'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Engagement
+        </th>
+
+        <th
+          *tuiHead="'views'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Views
         </th>
       </tr>
     </thead>
 
     @for (cluster of clusters; track cluster) {
 
-    <tbody [heading]="template"   tuiTbody>
+    <tbody [heading]="template" tuiTbody>
     
       @for (article of cluster.articles; track article) {
       <tr tuiTr>
-        <td *tuiCell="'articleId'" tuiTd class="number text">
-          {{ article.id }}
+        <td *tuiCell="'title'" tuiTd class="number text">
+          {{ article.title }}
         </td>
 
-        <td *tuiCell="'URL'" tuiTd class="number text">
-          {{ article.url }}
+        <td *tuiCell="'description'" tuiTd class="number text">
+          {{ article.description }}
         </td>
 
         <td *tuiCell="'pillar'" tuiTd class="number text">
           {{ article.pillar }}
         </td>
 
+        <td *tuiCell="'url'" tuiTd class="number text">
+          {{ article.url }}
+        </td>
+
         <td *tuiCell="'status'" tuiTd class="number text">
           {{ article.status }}
+        </td>
+
+        <td *tuiCell="'labels'" tuiTd class="number text">
+          {{ article.labels }}
+        </td>
+
+        <td *tuiCell="'engagement'" tuiTd class="number text">
+          {{ article.engagement }}
+        </td>
+
+        <td *tuiCell="'views'" tuiTd class="number text">
+          {{ article.views }}
         </td>
       </tr>
       }
@@ -112,7 +175,7 @@
       [formControl]="clusterSelected"
       (click)="$event.stopPropagation()"
       />
-      Cluster {{cluster.id}}
+      {{cluster.name}}
     </ng-template>
     }
 

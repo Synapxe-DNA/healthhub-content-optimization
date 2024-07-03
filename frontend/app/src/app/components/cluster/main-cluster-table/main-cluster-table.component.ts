@@ -6,6 +6,7 @@ import { TuiTableModule } from '@taiga-ui/addon-table';
 import { TuiLetModule, TuiValidatorModule } from '@taiga-ui/cdk';
 import { Cluster } from '../../../types/data/cluster.types';
 import { ClusterService } from '../../../services/cluster/cluster.service';
+import { Article } from '../../../types/data/article.types';
 
 
 @Component({
@@ -19,7 +20,8 @@ import { ClusterService } from '../../../services/cluster/cluster.service';
 export class MainClusterTableComponent {
   clusters:Cluster[] = [];
   selectedCluster: Number[] = [];
-  readonly columns = ['articleId', 'URL', 'pillar', 'status'] as const;
+  readonly columns = ['id', 'title', 'description', 'author',
+     'pillar', 'url' , 'status', 'labels', 'cover_image_url', 'engagement'] as const;
 
   clusterSelected:FormControl = new FormControl('',Validators.required)
 
@@ -29,7 +31,7 @@ export class MainClusterTableComponent {
   ngOnInit(){
     this.clusterService.getClusters().subscribe(
       res => {
-        this.clusters = res
+        this.clusters = res.splice(0,10)
       }
     )
   }
