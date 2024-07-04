@@ -6,7 +6,9 @@
 
 This visualization shows the current (latest) Kedro pipeline. This will be updated as the pipeline progresses.
 
-<img src="docs/images/kedro-pipeline.png" height="1000">
+<p align="center">
+    <img src="docs/images/kedro-pipeline.png" height="1000">
+</p>
 
 ## Rules and Guidelines
 
@@ -55,22 +57,43 @@ cat requirements.txt | xargs poetry add
 
     * [`02_intermediate/`](data/02_intermediate): contains all intermediate data
 
-        * [`all_contents_standardized/`](data/02_intermediate/all_contents_standardized): contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
+        * `all_contents_standardized/`: contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
 
-        * [`all_contents_extracted/`](data/02_intermediate/all_contents_extracted): contains all extracted data; stored in columns named `related_sections`, `extracted_content_body`, `extracted_links` and `extracted_headers`; below is a brief description what each column represents:
+        * `all_contents_extracted/`: contains all extracted data; stored in columns named `related_sections`, `extracted_content_body`, `extracted_links` and `extracted_headers`; below is a brief description what each column represents:
 
             * `related_sections`: related sections from the HTML content body; includes both "Related" as well as "Read these next"
+
             * `extracted_content_body`: extracted content body from the HTML content body
+
             * `extracted_links`: extracted links from the HTML content body; for example, links from the "Related" and "Read these next" sections
+
             * `extracted_headers`: extracted headers from the HTML content body; headers include all `<h>` tags
 
-        * [`all_extracted_text/`](data/02_intermediate/all_extracted_text): contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
+        * `all_extracted_text/`: contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
 
     * [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
-        * [`merged_data.parquet`](data/03_primary/merged_data.parquet): contains the merged data across all content categories; for more information on the data schema, refer [here](#data-schema)
+        * `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#data-schema)
 
-    * [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\_count)}$
+        * `filtered_data.parquet/`: contains the filtered data and versioned; for more information on the data schema, refer [here](#data-schema)
+
+        * `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#data-schema)
+
+    * [`04_feature/`](data/04_feature): contains the features data
+
+        * `keywords_embeddings/`: contains the documents and keywords embeddings for keyword extraction with KeyBERT
+
+            * `doc_embeddings.pkl`: contains the document embeddings for the articles
+
+            * `word_embeddings.pkl`: contains the word embeddings for the articles
+
+    * [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\\_count)}$
+
+        * `flag_for_removal_by_type.xlsx/`: contains the flagged articles for removal by type saved as an Excel fileand versioned
+
+        * `log_word_counts.html/`: contains the distribution of $\log{(word\\_count)}$ saved as a HTML file and versioned
+
+        * `raw_word_counts.html/`: contains the distribution of raw word counts saved as a HTML file and versioned
 
 - [`notebooks/`](notebooks): contains all notebooks for the project; for preliminary and exploratory analysis; code to be refactored into nodes and pipelines
 
@@ -83,7 +106,7 @@ cat requirements.txt | xargs poetry add
 
         * [`data_processing/`](src/content_optimization/pipelines/data_processing): contains the code for the `data_processing` pipeline; for more information, refer [here](#data-processing)
 
-        * [`data_science/`](src/content_optimization/pipelines/data_science): contains the code for the `data_science` pipeline; for more information, refer [here](#data-science)
+        * [`feature_engineering/`](src/content_optimization/pipelines/feature_engineering): contains the code for the `feature_engineering` pipeline; for more information, refer [here](#feature-engineering)
 
 ## Run the Kedro Project
 
@@ -100,7 +123,7 @@ This will run the entire project for all pipelines.
 ### Data Processing <a id="data-processing"></a>
 
 > [!IMPORTANT]
-> Before running the `data_processing` [pipeline](src/content_optimization/pipelines/data_processing/pipeline.py)), ensure that you have the raw data in the [`data/01_raw/all_contents`](../content-optimization/data/01_raw/all_contents) directory.
+> Before running the `data_processing` [pipeline](src/content_optimization/pipelines/data_processing/pipeline.py), ensure that you have the raw data in the [`data/01_raw/all_contents`](../content-optimization/data/01_raw/all_contents) directory.
 
 You can run the entire `data_processing` pipeline by running:
 
@@ -127,11 +150,35 @@ The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/D
 > [!NOTE]
 > For example in the `data_processing` pipeline, you should run the `standardize_columns_node` first, followed by the `extract_data_node` then `merge_data_node`. After this, you may run the nodes in any order for subsequent runs. This is because there may be intermediate outputs that are required in subsequent nodes.
 
-### Data Science <a id="data-science"></a>
+### Feature Engineering <a id="feature-engineering"></a>
 
-🔧 Work in progress...
+> [!IMPORTANT]
+> Before running the `feature_engineering` [pipeline](src/content_optimization/pipelines/feature_engineering/pipeline.py), ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
 
-## Dataset
+You can run the entire `feature_engineering` pipeline by running:
+
+```bash
+kedro run --pipeline=feature_engineering
+```
+
+If for any reason, you would like to run specific nodes in the `feature_engineering` pipeline, you can run:
+
+```bash
+# Running only the `standardize_columns_node`
+kedro run --nodes="extract_keywords_node"
+```
+
+If you want to run from a particular node to another node, you can run:
+
+```bash
+# Running from `generate_doc_and_word_embeddings_node` to `extract_keywords_node`
+kedro run --from-nodes="generate_doc_and_word_embeddings_node" --to-nodes="extract_keywords_node"
+```
+
+> [!TIP]
+> The `generate_doc_and_word_embeddings_node` node only runs when either the `doc_embeddings.pkl` or `word_embeddings.pkl` files do not exist in the `data/04_feature/keywords_embeddings` directory. If they exist, they are simply loaded from the Kedro catalog. This makes the pipeline run faster.
+
+## Data Schema <a id="data-schema"></a>
 
 <details>
 <summary>Expand for more information</summary>

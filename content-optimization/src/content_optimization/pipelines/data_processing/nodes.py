@@ -67,7 +67,7 @@ def standardize_columns(
         for filename, partition_load_func in all_contents.items():
             # Get content category from filename
             content_category = re.sub(r"export-published-", "", filename.split("_")[0])
-            bar.text(f"Standardizing for {content_category}")
+            bar.text(f"Standardizing: {content_category}")
 
             # Load partition data
             df = partition_load_func()
