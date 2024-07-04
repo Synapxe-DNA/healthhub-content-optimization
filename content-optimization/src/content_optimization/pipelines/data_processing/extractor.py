@@ -1,4 +1,5 @@
 import re
+import string
 import unicodedata
 
 from bs4 import BeautifulSoup, PageElement
@@ -191,12 +192,13 @@ class HTMLExtractor:
         # Remove empty strings from content
         content = [c for c in content if c]
 
-        # Remove duplicate strings
-        final_content = []
-        final_content = [c for c in content if content not in final_content]
+        # # Remove duplicate strings
+        # final_content = []
+        # final_content = [c for c in content if content not in final_content]
 
         # Replace double newlines with single newlines and strip whitespace
-        extracted_content_body = "\n".join(final_content).replace("\n\n", "\n").strip()
+        extracted_content_body = "\n".join(content).replace("\n\n", "\n").strip()
+        # extracted_content_body = "\n".join(final_content).replace("\n\n", "\n").strip()
 
         return extracted_content_body
 
@@ -222,35 +224,48 @@ class HTMLExtractor:
             content.append(self.clean_text(tag.text))
 
         elif tag.name == "strong":
-            for p in tag.find_all("p"):
-                content.append(self.clean_text(p.text))
+            # Find related section within div
+            cleaned_text = self.clean_text(tag.text)
+            if "Related:" in cleaned_text:
+                content.append(re.sub(r"\n", " ", cleaned_text))
+            elif "Read these next:" in cleaned_text:
+                content.append(cleaned_text)
+            for child in tag.children:
+                if child.name == "p":
+                    content.append(self.clean_text(child.text))
+                elif tag.name == "a":
+                    content.append(self.clean_text(child.text))
+
+        elif tag.name == "a":
+            content.append(self.clean_text(tag.text))
 
         elif tag.name == "p":
-            # Remove all em tags
-            for em in tag.find_all("em"):
-                em.extract()
             # Get the remaining text
             text = tag.get_text()
             # Skip sentences about HealthHub app, Google Play, and Apple Store
             if re.search(r"(HealthHub app|Google Play|Apple Store|Parent Hub)", text):
                 return
             # Extract text from related sections
-            if tag.find("strong"):
-                cleaned_text = self.clean_text(tag.text)
-                if "Related:" in cleaned_text:
-                    content.append(re.sub(r"\n", " ", cleaned_text))
-                elif "Read these next:" in cleaned_text:
-                    content.append(cleaned_text)
+            for child in tag.children:
+                if child.name == "strong":
+                    cleaned_text = self.clean_text(tag.text)
+                    if "Related:" in cleaned_text:
+                        content.append(re.sub(r"\n", " ", cleaned_text))
+                    elif "Read these next:" in cleaned_text:
+                        content.append(cleaned_text)
             # Extract remaining text within <p></p>
             cleaned_text = self.clean_text(text)
-            if len(content) > 0 and cleaned_text != content[-1]:
+            if len(content) == 0:
+                content.append(cleaned_text)
+            elif len(content) > 0 and cleaned_text != content[-1]:
                 content.append(cleaned_text)
 
         # For unordered lists
         elif tag.name == "ul":
             # not "ul" so we avoid duplicates
-            for li in tag.find_all("li"):
-                content.append("- " + self.clean_text(li.text))
+            for child in tag.children:
+                if child.name == "li":
+                    content.append("- " + self.clean_text(child.text))
 
         # For ordered lists
         elif tag.name == "ol":
@@ -280,14 +295,10 @@ class HTMLExtractor:
                 self._extract_text_from_container(child, content)
             # Children has no HTML tag
             elif child.name is None:
-                content.append(self.clean_text(child.text))
-            # Find related section within div
-            elif child.find("strong"):
-                cleaned_text = self.clean_text(tag.text)
-                if "Related:" in cleaned_text:
-                    content.append(re.sub(r"\n", " ", cleaned_text))
-                elif "Read these next:" in cleaned_text:
+                cleaned_text = self.clean_text(child.text)
+                if cleaned_text not in string.punctuation:
                     content.append(cleaned_text)
+                content.append("")
             # Continue extracting text for other elements
             else:
                 self._extract_text_elements(child, content)
