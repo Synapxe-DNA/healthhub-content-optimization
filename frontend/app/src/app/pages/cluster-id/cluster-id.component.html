@@ -1,0 +1,55 @@
+<div class="
+flex flex-row justify-start items-stretch h-full
+p-gutter gap-2
+">
+    @switch (viewTabIndex) {
+        @case (0){
+            <app-cluster-graph class="w-full"></app-cluster-graph>
+        }
+        @case (1){
+            <app-cluster-table class="w-full h-full"></app-cluster-table>
+        }
+    }
+
+    <div class="
+    flex flex-col justify-start items-stretch
+    gap-2 w-full max-w-md h-full
+    ">
+
+        <div class="
+        flex flex-row justify-start items-center gap-x-1
+        ">
+            <tui-tabs tuiMobileTabs [(activeItemIndex)]="viewTabIndex" class="w-full">
+                <button tuiTab>Graph</button>
+                <button tuiTab>Table</button>
+            </tui-tabs>
+            <button tuiIconButton size="s" icon="tuiIconFilter" appearance="secondary"></button>
+            <button tuiIconButton size="s" icon="tuiIconAlignLeft" appearance="secondary"></button>
+
+        </div>
+
+        <tui-island class="flex-grow" size="m">
+            <div class="tui-island__content">
+                <div>
+                    <h3 class="tui-island__title">Groups</h3>
+                    <p class="tui-island__paragraph">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+                        labore et dolore magna aliqua.
+                    </p>
+                </div>
+            </div>
+        </tui-island>
+
+        <div class="flex flex-col justify-start items-stretch gap-2">
+            <form [formGroup]="job">
+                <tui-input formControlName="name" tuiTextfieldIcon="tuiIconEdit3">
+                    Job name
+                    <input tuiTextfield>
+                </tui-input>
+            </form>
+            <button tuiButton type="submit" class="w-full" size="m" appearance="primary">Submit</button>
+        </div>
+
+    </div>
+
+</div>
