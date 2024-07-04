@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Injectable } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TuiDataListWrapperModule, TuiInputNumberModule, TuiRadioBlockModule, TuiTextareaModule } from '@taiga-ui/kit';
 import { TuiFormatNumberPipeModule, TuiGroupModule, TuiScrollbarModule, TuiSvgModule } from '@taiga-ui/core';
@@ -7,6 +7,7 @@ import { TuiLetModule, TuiValidatorModule } from '@taiga-ui/cdk';
 import { Cluster } from '../../../types/data/cluster.types';
 import { ClusterService } from '../../../services/cluster/cluster.service';
 import { Article } from '../../../types/data/article.types';
+import { BehaviorSubject } from 'rxjs';
 
 
 @Component({
@@ -23,21 +24,21 @@ export class MainClusterTableComponent {
   readonly columns = ['id', 'title', 'description', 'author',
      'pillar', 'url' , 'status', 'labels', 'cover_image_url', 'engagement'] as const;
 
-  clusterSelected:FormControl = new FormControl('',Validators.required)
-
+  clusterSelectedForm:FormControl = new FormControl('',Validators.required)
 
   constructor(private clusterService:ClusterService){}
 
-  ngOnInit(){
+  ngOnInit() {
     this.clusterService.getClusters().subscribe(
       res => {
         this.clusters = res
       }
     )
-  }
-   
-  trackByIndex(index: number): number {
-      return index;
+    this.clusterSelectedForm.valueChanges.subscribe(
+      res=> {
+        this.clusterService.updateSelectedCluster(res)
+      }
+    )
   }
  
 }

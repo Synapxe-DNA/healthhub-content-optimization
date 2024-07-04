@@ -16,6 +16,8 @@ export class ClusterService {
 
   private $filters:BehaviorSubject<FilterGroup> = new BehaviorSubject<FilterGroup>({})
 
+  private $selectedCluster:BehaviorSubject<String> = new BehaviorSubject<String>('')
+
   constructor(
       private http: HttpClient
   ) {
@@ -106,6 +108,20 @@ export class ClusterService {
     }
   }
 
+  /**
+   * Method to update selected cluster to review.
+   * @param clusterName {string}
+   */
+  updateSelectedCluster(clusterName:string) {
+    this.$selectedCluster.next(clusterName)
+  }
 
+  /**
+   * Method to get a BehaviourSubject for the selected cluster.
+   * @param clusterName {string}
+   */
+  getSelectedCluster() {
+    return this.$selectedCluster
+  }
 
 }

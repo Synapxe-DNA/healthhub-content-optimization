@@ -129,8 +129,8 @@
     <ng-template #template>
       <input
       type="radio"
-      value = {{cluster.id}}
-      [formControl]="clusterSelected"
+      value = {{cluster.name}}
+      [formControl]="clusterSelectedForm"
       (click)="$event.stopPropagation()"
       />
       {{cluster.name}}
@@ -139,4 +139,5 @@
 
   </table>
 </tui-scrollbar>
+
 
