@@ -41,7 +41,7 @@ def standardize_columns(
     Args:
         all_contents (dict[str, Callable[[], Any]]):
             A dictionary containing the raw `partitions.PartitionedDataset`
-            where the keys are the filenames and the values loads the raww excel data as
+            where the keys are the filenames and the values loads the raw excel data as
             `pandas.DataFrame`.
 
         columns_to_add_cfg (dict[str, list[str]]):
