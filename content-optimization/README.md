@@ -57,35 +57,43 @@ cat requirements.txt | xargs poetry add
 
     * [`02_intermediate/`](data/02_intermediate): contains all intermediate data
 
-        * [`all_contents_standardized/`](data/02_intermediate/all_contents_standardized): contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
+        * `all_contents_standardized/`: contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
 
-        * [`all_contents_extracted/`](data/02_intermediate/all_contents_extracted): contains all extracted data; stored in columns named `related_sections`, `extracted_content_body`, `extracted_links` and `extracted_headers`; below is a brief description what each column represents:
+        * `all_contents_extracted/`: contains all extracted data; stored in columns named `related_sections`, `extracted_content_body`, `extracted_links` and `extracted_headers`; below is a brief description what each column represents:
 
             * `related_sections`: related sections from the HTML content body; includes both "Related" as well as "Read these next"
+
             * `extracted_content_body`: extracted content body from the HTML content body
+
             * `extracted_links`: extracted links from the HTML content body; for example, links from the "Related" and "Read these next" sections
+
             * `extracted_headers`: extracted headers from the HTML content body; headers include all `<h>` tags
 
-        * [`all_extracted_text/`](data/02_intermediate/all_extracted_text): contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
+        * `all_extracted_text/`: contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
 
     * [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
-        * [`merged_data.parquet/`](data/03_primary/merged_data.parquet): contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#data-schema)
+        * `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#data-schema)
 
-        * [`filtered_data.parquet/`](data/03_primary/filtered_data.parquet): contains the filtered data and versioned; for more information on the data schema, refer [here](#data-schema)
+        * `filtered_data.parquet/`: contains the filtered data and versioned; for more information on the data schema, refer [here](#data-schema)
 
-        * [`filtered_data_with_keywords.parquet/`](data/03_primary/filtered_data_with_keywords.parquet): contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#data-schema)
+        * `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#data-schema)
 
     * [`04_feature/`](data/04_feature): contains the features data
 
-        * [`keywords_embeddings/`](data/04_feature/keywords_embeddings): contains the documents and keywords embeddings for keyword extraction with KeyBERT
+        * `keywords_embeddings/`: contains the documents and keywords embeddings for keyword extraction with KeyBERT
 
-        * [`keywords_embeddings/`](data/04_feature/keywords_embeddings): contains the documents and keywords embeddings for keyword extraction with KeyBERT
             * `doc_embeddings.pkl`: contains the document embeddings for the articles
 
             * `word_embeddings.pkl`: contains the word embeddings for the articles
 
     * [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\_count)}$
+
+        * `flag_for_removal_by_type.xlsx/`: contains the flagged articles for removal by type saved as an Excel fileand versioned
+
+        * `log_word_counts.html/`: contains the distribution of $\log{(word\_count)}$ saved as a HTML file and versioned
+
+        * `raw_word_counts.html/`: contains the distribution of raw word counts saved as a HTML file and versioned
 
 - [`notebooks/`](notebooks): contains all notebooks for the project; for preliminary and exploratory analysis; code to be refactored into nodes and pipelines
 
