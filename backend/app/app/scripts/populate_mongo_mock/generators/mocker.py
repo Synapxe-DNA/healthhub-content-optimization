@@ -103,28 +103,36 @@ class Mocker:
                 name=f"Cluster {random_str(5)}", article_ids=article_ids, edges=edges
             )
 
+            combine_ids = []
+            ignore_ids = []
+
+            if(bool(random.getrandbits(1))):
+                for id in article_ids:
+                    if(bool(random.getrandbits(1))):
+                        combine_ids.append(id)
+                    else:
+                        ignore_ids.append(id)
+  
+            
+
             combine_jobs = [
                 Combination(
                     name=random_str(16),
-                    article_ids=random.sample(
-                        article_ids,
-                        random.randint(int(len(article_ids) / 2), len(article_ids)),
-                    ),
+                    article_ids=combine_ids,
                 )
             ]
 
+
             ### Removed mocking of ignore jobs to keep mocking process simple.
             ### This can be manually tested on the frontend.
-            # ignore_jobs = [
-            #     Ignore(article_id=x)
-            #     for x in random.sample(
-            #         article_ids, random.randint(0, int(len(article_ids) / 2))
-            #     )
-            # ]
+            ignore_jobs = [
+                Ignore(article_id=x)
+                for x in ignore_ids
+            ]
 
             await self.conn.create_articles(articles)
             await self.conn.create_clusters([cluster])
 
-            if random.uniform(0, 1) > self.percent_processed:
-                await self.conn.create_combine(combine_jobs)
-                await self.conn.create_ignore([Ignore(article_id=articles[-1].id)])
+            # if random.uniform(0, 1) > self.percent_processed:
+            await self.conn.create_combine(combine_jobs)
+            await self.conn.create_ignore(ignore_jobs)
