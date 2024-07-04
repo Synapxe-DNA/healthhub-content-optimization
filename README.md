@@ -176,3 +176,28 @@ The [`lint.yml`](.github/workflows/lint.yml) is a GitHub workflow that kicks off
 
 > [!NOTE]
 > The `pre-commit` will run regardless if you forget to explicitly call it. Nonetheless, it is recommended to call it explicitly so you can make any necessary changes in advanced.
+
+## Running Kedro from Root Directory
+
+It will be very common for you to run the pipeline every time a new update or feature gets added. This will ensure that you are working with the latest intermediate and primary data at all times.
+
+It can then get quite cumbersome to manually delete every sub-directory containing the intermediate or primary data generated from the pipeline every time there is an update.
+
+Therefore, we have provided a simple `make` command to automatically remove all intemediate and primary data before re-running the latest Kedro pipeline:
+
+> [!TIP]
+> To ensure your data directories in your Kedro project are clean, run:
+> ```
+> make clean
+> ```
+> If you want to run Kedro from the root directory, you can run the following command:
+> ```
+> make run
+> ```
+> This will populate all the new intermediate and primary data in the data directories in your Kedro project.
+
+> [!CAUTION]
+> Before running `make clean`, you should review the folders that would be deleted by `make clean`. To do so, run:
+> ```
+> make clean-dry-run
+> ```
