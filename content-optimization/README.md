@@ -178,7 +178,7 @@ kedro run --from-nodes="generate_doc_and_word_embeddings_node" --to-nodes="extra
 > [!TIP]
 > The `generate_doc_and_word_embeddings_node` node only runs when either the `doc_embeddings.pkl` or `word_embeddings.pkl` files do not exist in the `data/04_feature/keywords_embeddings` directory. If they exist, they are simply loaded from the Kedro catalog. This makes the pipeline run faster.
 
-## Dataset
+## Data Schema <a id="data-schema"></a>
 
 <details>
 <summary>Expand for more information</summary>
