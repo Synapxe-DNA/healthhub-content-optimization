@@ -192,21 +192,17 @@ class HTMLExtractor:
         # Remove empty strings from content
         content = [c for c in content if c]
 
-        # # Remove duplicate strings
-        # final_content = []
-        # final_content = [c for c in content if content not in final_content]
-
         # Replace double newlines with single newlines and strip whitespace
         extracted_content_body = "\n".join(content).replace("\n\n", "\n").strip()
-        # extracted_content_body = "\n".join(final_content).replace("\n\n", "\n").strip()
 
         return extracted_content_body
 
     def _extract_text_elements(self, tag: PageElement, content: list[str]) -> None:
         """
-        Helper method to extract the text elements from the given HTML content.
+        Helper method to extract the text elements from the given HTML tag.
 
-        This method extracts the text content from the given HTML content.
+        This method extracts the text content from the various textual elements
+        such as headers, paragraphs, anchors, lists, etc.
 
         Args:
             tag (PageElement): The HTML element to extract the text elements from.
@@ -218,11 +214,13 @@ class HTMLExtractor:
         Note:
             This method is used in `extract_text` method and `_extract_text_from_container` method.
         """
+        # For headings
         if tag.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
             # Provide paragraphing between key headers
             content.append("\n")
             content.append(self.clean_text(tag.text))
 
+        # For texts with strong importance
         elif tag.name == "strong":
             # Find related section within div
             cleaned_text = self.clean_text(tag.text)
@@ -236,9 +234,11 @@ class HTMLExtractor:
                 elif tag.name == "a":
                     content.append(self.clean_text(child.text))
 
+        # Extract texts in anchor tags (e.g. links)
         elif tag.name == "a":
             content.append(self.clean_text(tag.text))
 
+        # For paragraphs
         elif tag.name == "p":
             # Get the remaining text
             text = tag.get_text()
@@ -278,8 +278,8 @@ class HTMLExtractor:
         """
         Helper method to extract text from div and span containers.
 
-        This method recursively processes div, span and blockquote elements, extracting their text content
-        while avoiding duplication. It handles both direct text content and nested elements.
+        This method recursively processes div, span and blockquote elements, extracting their text content.
+        It handles both direct text content and nested elements.
 
         Args:
             tag (PageElement): The BeautifulSoup tag (div or span) to extract text from.
@@ -293,9 +293,10 @@ class HTMLExtractor:
             # Recursive search
             if child.name in ["div", "span", "blockquote"]:
                 self._extract_text_from_container(child, content)
-            # Children has no HTML tag
+            # Child has no HTML tag (i.e. texts in div containers)
             elif child.name is None:
                 cleaned_text = self.clean_text(child.text)
+                # Only extract text that are not solely punctuation
                 if cleaned_text not in string.punctuation:
                     content.append(cleaned_text)
                 content.append("")
