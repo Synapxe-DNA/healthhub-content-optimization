@@ -43,3 +43,23 @@ flag_for_removal_by_type:
   save_args:
     index: false
   versioned: true
+
+filtered_data:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/filtered_data.parquet
+  versioned: true
+
+doc_embeddings:
+  type: pickle.PickleDataset
+  filepath: data/04_feature/keywords_embeddings/doc_embeddings.pkl
+  backend: pickle
+
+word_embeddings:
+  type: pickle.PickleDataset
+  filepath: data/04_feature/keywords_embeddings/word_embeddings.pkl
+  backend: pickle
+
+filtered_data_with_keywords:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/filtered_data_with_keywords.parquet
+  versioned: true
