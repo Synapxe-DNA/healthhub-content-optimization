@@ -69,6 +69,40 @@ If there is no [`poetry.lock`](poetry.lock) file, Poetry will create one after d
 > [!TIP]
 > It is best practice to commit the `poetry.lock` to version control for more reproducible builds. For more information, refer [here](https://python-poetry.org/docs/basic-usage/#:~:text=changes%20in%20dependencies.-,Committing%20your%20poetry.lock%20file%20to%20version%20control,-As%20an%20application).
 
+---
+
+### venv
+
+You can use Python's native virtual environment `venv` to setup the project
+
+```bash
+   # Create a virtual environment
+   python3 -m venv <VENV_NAME>
+```
+
+You can then activate the environment and install the dependencies using the following commands -
+
+For UNIX-based systems (macOS / Linux):
+```bash
+  # Activate virtual environment
+  source <VENV_NAME>/bin/activate
+
+  # Install dependencies
+  pip install -r requirements.txt
+```
+
+For Windows:
+```powershell
+  # Activate virtual environment
+  .\<VENV_NAME>\Scripts\activate
+
+  # Install dependencies
+  pip install -r requirements.txt
+```
+
+
+---
+
 ## File Structure
 
 The exploratory/experimental code for content optimization is stored in the [`notebooks/`](notebooks) folder.
