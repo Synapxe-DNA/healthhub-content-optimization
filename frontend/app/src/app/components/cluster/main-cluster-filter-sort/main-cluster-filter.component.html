@@ -1,0 +1,61 @@
+<button
+    tuiIconButton
+    type="button"
+    class="tui-space_right-3 tui-space_bottom-3"
+    icon="tuiIconFilter"
+    (click)="showFilterDialog(template)"
+></button>
+
+    
+<ng-template
+    #template
+    let-observer
+>   
+    <div class="flex flex-col justify-between">
+        <p class="text-xl text-center">Filter</p>
+        <form class="group" [formGroup]="filterForm">
+            <div tuiGroup class="group flex" [collapsed]="true">
+                <tui-checkbox-block
+                contentAlign="right"
+                formControlName="pending"
+                size="m"
+        
+                >
+                Pending
+                </tui-checkbox-block>
+                <tui-checkbox-block
+                contentAlign="right"
+                formControlName="completed"
+                size="m"
+                class="text-clip"
+                >
+                Completed
+                </tui-checkbox-block>
+        
+            </div>
+            </form>
+        <div>
+            <button
+            size="m"
+            tuiButton
+            type="button"
+            class="tui-space_right-3"
+            (click)="resetClick()"
+        >
+            Reset
+        </button>
+        <button
+            size="m"
+            tuiButton
+            type="button"
+            (click)="filterClick()"
+        >
+            Filter
+        </button>
+        </div>
+    </div>
+    
+</ng-template>
+
+
+
