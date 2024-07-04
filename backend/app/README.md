@@ -46,3 +46,9 @@ A python script has been created to generate mock data. This is runnable using p
 ```bash
 poetry run mock
 ```
+
+### Populate MongoDB with Actual Data
+
+```bash
+poetry run data
+```
