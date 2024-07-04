@@ -4,7 +4,21 @@
 @tailwind utilities;
 
 
+* {
+  box-sizing: border-box !important;
+}
+
 :root {
-  --tui-radius-s: 0.2rem;
-  --tui-radius-m: 0.3rem;
+  --tui-radius-s: 0.1rem;
+  --tui-radius-m: 0.5rem;
+  --tui-radius-l: 0.3rem;
+  --tui-radius-xl: 0.3rem;
+  --tui-shadow: none;
+  --tui-shadow-s: none;
+  --tui-shadow-m: none;
+  --tui-shadow-l: none;
+}
+
+[tuiWrapper][data-appearance="textfield"] {
+  box-shadow: none !important;
 }

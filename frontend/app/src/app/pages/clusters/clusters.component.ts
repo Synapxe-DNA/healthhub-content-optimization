@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 
 import { TuiButtonModule, TuiSvgModule } from "@taiga-ui/core";
@@ -8,13 +8,13 @@ import { MainClusterTableComponent } from "../../components/cluster/main-cluster
 import { ClusterService } from "../../services/cluster/cluster.service";
 
 
-export interface Cluster {
+export interface ClusterDeprecated {
   clusterId: Number;
   annotationStatus: string;
-  articles: Article[];
+  articles: ArticleDeprecated[];
 }
 
-export interface Article {
+export interface ArticleDeprecated {
   articleId: Number;
   URL: string;
   pillar: string;
@@ -28,15 +28,13 @@ export interface Article {
   templateUrl: "./clusters.component.html",
   styleUrl: "./clusters.component.css",
 })
-export class ClustersComponent {
-  data: Cluster[] = [];
+export class ClustersComponent implements OnInit {
+  data: ClusterDeprecated[] = [];
 
   constructor(private clusterService: ClusterService) {}
 
   ngOnInit(): void {
-    this.clusterService.getCluster().subscribe((res: Cluster[]) => {
-      this.data = res;
-    });
+    this.clusterService.getClusters().subscribe(console.log)
   }
 
 }

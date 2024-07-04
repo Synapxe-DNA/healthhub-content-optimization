@@ -1,5 +1,5 @@
 import { Component, Input, ViewChild } from '@angular/core';
-import { Cluster } from '../../../pages/clusters/clusters.component';
+import { ClusterDeprecated } from '../../../pages/clusters/clusters.component';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TuiRadioBlockModule } from '@taiga-ui/kit';
 import { TuiGroupModule } from '@taiga-ui/core';
@@ -12,7 +12,7 @@ import { TuiGroupModule } from '@taiga-ui/core';
   styleUrl: './main-cluster-table.component.css'
 })
 export class MainClusterTableComponent {
-  @Input() clusters: Cluster[] = [];
+  @Input() clusters: ClusterDeprecated[] = [];
   selectedCluster: Number[] = [];
 
   clusterSelected:FormControl = new FormControl('',Validators.required);
