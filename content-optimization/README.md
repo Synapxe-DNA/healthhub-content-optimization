@@ -87,11 +87,11 @@ cat requirements.txt | xargs poetry add
 
             * `word_embeddings.pkl`: contains the word embeddings for the articles
 
-    * [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\_count)}$
+    * [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\\_count)}$
 
         * `flag_for_removal_by_type.xlsx/`: contains the flagged articles for removal by type saved as an Excel fileand versioned
 
-        * `log_word_counts.html/`: contains the distribution of $\log{(word\_count)}$ saved as a HTML file and versioned
+        * `log_word_counts.html/`: contains the distribution of $\log{(word\\_count)}$ saved as a HTML file and versioned
 
         * `raw_word_counts.html/`: contains the distribution of raw word counts saved as a HTML file and versioned
 
