@@ -6,8 +6,6 @@ import { TuiTableModule } from '@taiga-ui/addon-table';
 import { TuiLetModule, TuiValidatorModule } from '@taiga-ui/cdk';
 import { Cluster } from '../../../types/data/cluster.types';
 import { ClusterService } from '../../../services/cluster/cluster.service';
-import { Article } from '../../../types/data/article.types';
-import { BehaviorSubject } from 'rxjs';
 
 
 @Component({

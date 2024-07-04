@@ -21,31 +21,54 @@ export class MainClusterFilterComponent {
 
   FILTER_NAMES = {
     pending:'pending',
-    completed:'completed'
+    completed:'completed',
+    filterCluster: 'filterCluster'
   }
 
-  filterForm: FormGroup = new FormGroup({
+  filterStatusForm: FormGroup = new FormGroup({
     pending: new FormControl(true),
     completed: new FormControl(true),
   });
 
-  constructor(private readonly dialogs: TuiDialogService, private clusterService:ClusterService){}
+  clusters: Cluster[] = []
+
+  filterClusterForm: FormGroup = new FormGroup({});
+
+  constructor(private readonly dialogs: TuiDialogService, private clusterService:ClusterService){
+    this.clusterService.getClusters().subscribe((res:Cluster[])=>{
+      if (this.clusters.length == 0){ // To keep all clusters instead of filtered clusters
+        this.clusters = res
+      }
+      for (let cluster of res) {
+        this.filterClusterForm.addControl(cluster.name, new FormControl(true))
+      }
+    })
+  }
 
   showFilterDialog(content: PolymorpheusContent<TuiDialogContext>): void {
     this.dialogs.open(content).subscribe();
   } 
 
+  /**
+   * Method to run all added filter
+   */
   filterClick() {
     this.removeAllFilters()
+    this.filterStatus()
+    this.filterCluster()
+  }
 
-    let isCompleted:Boolean = this.filterForm.get(this.FILTER_NAMES.completed)?.value
-    let isPending:Boolean = this.filterForm.get(this.FILTER_NAMES.pending)?.value
+  /**
+   * Method to add filter for the selected status
+   */
+  filterStatus() {
+    let isCompleted:Boolean = this.filterStatusForm.get(this.FILTER_NAMES.completed)?.value
+    let isPending:Boolean = this.filterStatusForm.get(this.FILTER_NAMES.pending)?.value
 
     if(isCompleted && isPending){
       this.clusterService.removeFilter(this.FILTER_NAMES.completed);
       this.clusterService.removeFilter(this.FILTER_NAMES.pending);
-    }
-    else if(isCompleted) {     // Filter Completed
+    } else if(isCompleted) {     // Filter Completed
       const completed: Filter = (clusters: Cluster[]) => {
         return clusters.filter(cluster => cluster.articles[0].status.length > 0);
       };
@@ -56,19 +79,44 @@ export class MainClusterFilterComponent {
       };
       this.clusterService.addFilter(this.FILTER_NAMES.pending, pending);
     } 
-
   }
 
+  /**
+   * Method to add filter for the selected clusters
+   */
+  filterCluster() {
+    let clustersSelected:String[] = []
+    for (let cluster of this.clusters) {
+      let selectedCluster:Boolean = this.filterClusterForm.get(cluster.name)?.value
+      if (selectedCluster) {
+        clustersSelected.push(cluster.name)
+      }
+    }
+    const clustersFiltered: Filter = (clusters: Cluster[]) => {
+      return clusters.filter(cluster => clustersSelected.includes(cluster.name));
+    };
+    this.clusterService.addFilter(this.FILTER_NAMES.filterCluster, clustersFiltered);
+  }
+
+  /**
+   * Method to remove all filters
+   */
   removeAllFilters() {
-    for(let filterName in this.FILTER_NAMES) {
-      this.clusterService.removeFilter(filterName);
+    for(let filterStatusName in this.FILTER_NAMES) {
+      this.clusterService.removeFilter(filterStatusName);
     }
   }
 
+  /**
+   * Method to remove all filters and set all checkbox state to true
+   */
   resetClick() {
     this.removeAllFilters()
-    for(let filterName in this.FILTER_NAMES) {
-      this.filterForm.get(filterName)?.setValue(true)
+    for(let filterStatusName in this.FILTER_NAMES) {
+      this.filterStatusForm.get(filterStatusName)?.setValue(true)
+    }
+    for(let cluster of this.clusters) {
+      this.filterClusterForm.get(cluster.name)?.setValue(true)
     }
   }
 

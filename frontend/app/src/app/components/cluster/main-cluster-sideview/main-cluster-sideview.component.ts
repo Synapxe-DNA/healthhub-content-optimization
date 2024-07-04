@@ -36,8 +36,10 @@ export class MainClusterSideviewComponent {
     this.dialogs.open(content).subscribe();
   } 
 
+  /**
+   * Method to navigate to combine page after selecting cluster
+   */
   goToCombinePage(){
-    // Create Book logic
     this.router.navigate(['/combine']);
  }
 
