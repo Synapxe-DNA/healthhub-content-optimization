@@ -2,7 +2,7 @@
     <div class="w-20">
         <label tuiProgressLabel class="w-full">
             <span class="text font-bold">{{statusPercentage}}%</span>
-            <progress tuiProgressBar max="totalClusters" [value]="clustersCompleted" size="m" color="lightgrey"
+            <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="lightgrey"
                 class="border-2"></progress>
         </label>
         <span class="text font-bold">Completed</span>

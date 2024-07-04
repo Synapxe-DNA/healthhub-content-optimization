@@ -31,7 +31,7 @@ export class MainClusterTableComponent {
   ngOnInit(){
     this.clusterService.getClusters().subscribe(
       res => {
-        this.clusters = res.splice(0,10)
+        this.clusters = res
       }
     )
   }
