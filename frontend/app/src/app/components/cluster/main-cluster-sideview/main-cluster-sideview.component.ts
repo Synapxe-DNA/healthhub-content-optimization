@@ -6,6 +6,7 @@ import { TuiButtonModule, TuiDialogContext, TuiDialogService } from '@taiga-ui/c
 import {PolymorpheusContent} from '@tinkoff/ng-polymorpheus';
 import { MainClusterTableComponent } from '../main-cluster-table/main-cluster-table.component';
 import { ClusterService } from '../../../services/cluster/cluster.service';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -19,7 +20,11 @@ export class MainClusterSideviewComponent {
 
   clusterSelected:String = ""
 
-  constructor(private readonly dialogs: TuiDialogService, private clusterSerivce: ClusterService){}
+  constructor(
+    private readonly dialogs: TuiDialogService, 
+    private clusterSerivce: ClusterService, 
+    private router:Router
+  ){}
 
   ngOnInit() {
     this.clusterSerivce.getSelectedCluster().subscribe(res=>{ 
@@ -30,5 +35,10 @@ export class MainClusterSideviewComponent {
   showReviewDialog(content: PolymorpheusContent<TuiDialogContext>): void {
     this.dialogs.open(content).subscribe();
   } 
+
+  goToCombinePage(){
+    // Create Book logic
+    this.router.navigate(['/combine']);
+ }
 
 }

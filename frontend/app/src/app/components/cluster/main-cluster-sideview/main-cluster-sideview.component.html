@@ -11,9 +11,9 @@
         type="button"
         class="tui-space_right-3"
         (click)="showReviewDialog(template)"
-    >
-        Review
-    </button>
+        >
+            Review
+        </button>
     </div>
 </div>
 
@@ -21,8 +21,19 @@
 <ng-template
     #template
     let-observer
->
-    <p>Review have not been implemented yet</p>
-    <p>Cluster selected: {{clusterSelected}}</p>
+>   
+    <div class="flex flex-col items-center">
+        <p class="text-2xl mb-5">Ready to review?</p>
+        <p class="mb-5">Selected: {{clusterSelected}}</p>
+        <button
+        size="m"
+        tuiButton
+        type="button"
+        class="tui-space_right-3"
+        (click)="goToCombinePage();observer.complete()"
+        >
+            Review
+        </button>
+    </div>
 
 </ng-template> 
