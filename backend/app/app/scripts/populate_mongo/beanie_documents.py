@@ -1,6 +1,8 @@
 from typing import List
+
 from beanie import Document, Indexed, Link
 from pydantic import Field
+
 
 class ArticleDocument(Document):
     title: str
@@ -17,10 +19,12 @@ class ArticleDocument(Document):
     engagement: float
     views: int
 
+
 class EdgeDocument(Document):
     start: Link[ArticleDocument]
     end: Link[ArticleDocument]
     weight: float
+
 
 class ClusterDocument(Document):
     name: str
