@@ -43,19 +43,19 @@
           URL
         </th>
 
-        <th 
-          *tuiHead="'status'" 
-          rowspan="2" 
-          tuiTh 
+        <th
+          *tuiHead="'status'"
+          rowspan="2"
+          tuiTh
           [sorter]="null"
           [sticky]="true"
         >
           Status
         </th>
 
-        <th 
-          *tuiHead="'labels'" 
-          rowspan="2" 
+        <th
+          *tuiHead="'labels'"
+          rowspan="2"
           tuiTh
           [sorter]="null"
           [sticky]="true"
@@ -88,7 +88,7 @@
     @for (cluster of clusters; track cluster.id) {
 
     <tbody [heading]="template" tuiTbody>
-    
+
       @for (article of cluster.articles; track article.id) {
       <tr tuiTr>
         <td *tuiCell="'title'" tuiTd class="number text">
@@ -139,5 +139,3 @@
 
   </table>
 </tui-scrollbar>
-
-

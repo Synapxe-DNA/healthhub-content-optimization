@@ -17,5 +17,5 @@ export class MainClusterSortComponent {
 
   showFilterDialog(content: PolymorpheusContent<TuiDialogContext>): void {
     this.dialogs.open(content).subscribe();
-  } 
+  }
 }

@@ -21,20 +21,20 @@ export class MainClusterSideviewComponent {
   clusterSelected:String = ""
 
   constructor(
-    private readonly dialogs: TuiDialogService, 
-    private clusterSerivce: ClusterService, 
+    private readonly dialogs: TuiDialogService,
+    private clusterSerivce: ClusterService,
     private router:Router
   ){}
 
   ngOnInit() {
-    this.clusterSerivce.getSelectedCluster().subscribe(res=>{ 
+    this.clusterSerivce.getSelectedCluster().subscribe(res=>{
       this.clusterSelected=res
     })
   }
 
   showReviewDialog(content: PolymorpheusContent<TuiDialogContext>): void {
     this.dialogs.open(content).subscribe();
-  } 
+  }
 
   /**
    * Method to navigate to combine page after selecting cluster

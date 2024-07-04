@@ -106,14 +106,12 @@ class Mocker:
             combine_ids = []
             ignore_ids = []
 
-            if(bool(random.getrandbits(1))):
+            if bool(random.getrandbits(1)):
                 for id in article_ids:
-                    if(bool(random.getrandbits(1))):
+                    if bool(random.getrandbits(1)):
                         combine_ids.append(id)
                     else:
                         ignore_ids.append(id)
-  
-            
 
             combine_jobs = [
                 Combination(
@@ -122,13 +120,9 @@ class Mocker:
                 )
             ]
 
-
             ### Removed mocking of ignore jobs to keep mocking process simple.
             ### This can be manually tested on the frontend.
-            ignore_jobs = [
-                Ignore(article_id=x)
-                for x in ignore_ids
-            ]
+            ignore_jobs = [Ignore(article_id=x) for x in ignore_ids]
 
             await self.conn.create_articles(articles)
             await self.conn.create_clusters([cluster])

@@ -47,7 +47,7 @@ export class MainClusterFilterComponent {
 
   showFilterDialog(content: PolymorpheusContent<TuiDialogContext>): void {
     this.dialogs.open(content).subscribe();
-  } 
+  }
 
   /**
    * Method to run all added filter
@@ -78,7 +78,7 @@ export class MainClusterFilterComponent {
         return clusters.filter(cluster => cluster.articles[0].status.length == 0);
       };
       this.clusterService.addFilter(this.FILTER_NAMES.pending, pending);
-    } 
+    }
   }
 
   /**
