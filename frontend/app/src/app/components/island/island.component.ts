@@ -11,6 +11,7 @@ import {
 import {NgIf, NgTemplateOutlet} from "@angular/common";
 import {TuiScrollbarModule} from "@taiga-ui/core";
 import {TuiIslandModule} from "@taiga-ui/kit";
+import {TuiOverscrollModule} from "@taiga-ui/cdk";
 
 @Component({
   selector: 'app-island',
@@ -19,7 +20,8 @@ import {TuiIslandModule} from "@taiga-ui/kit";
     NgTemplateOutlet,
     NgIf,
     TuiScrollbarModule,
-    TuiIslandModule
+    TuiIslandModule,
+    TuiOverscrollModule
   ],
   templateUrl: './island.component.html',
   styleUrl: './island.component.css'
@@ -40,7 +42,8 @@ export class IslandComponent implements AfterViewInit{
 
   ngAfterViewInit(){
     if(this.children){
-      this.child.nativeElement.style.height = `${this.container.nativeElement.clientHeight - this.headerTemplate.nativeElement.clientHeight}px`
+      const headerHeight = this.headerTemplate?this.headerTemplate.nativeElement.clientHeight:0
+      this.child.nativeElement.style.height = `${this.container.nativeElement.clientHeight - (headerHeight)}px`
     }
   }
 
