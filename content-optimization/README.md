@@ -44,56 +44,56 @@ cat requirements.txt | xargs poetry add
 
 - [`conf/`](conf): contains all configurations for the project
 
-    * [`base/`](conf/base): contains all configurations for the parameters used in the pipelines
+  - [`base/`](conf/base): contains all configurations for the parameters used in the pipelines
 
-    * [`local/`](conf/local): contains all local configurations for the project like secrets and credentials (not to be checked into version control)
+  - [`local/`](conf/local): contains all local configurations for the project like secrets and credentials (not to be checked into version control)
 
 > [!IMPORTANT]
 > If you find any discrepancies in the extracted or merged data, please [open an issue](https://github.com/Wilsven/healthhub-content-optimization/issues).
 
 - [`data/`](data): contains all data for the project at every stages; there are many sub-directories but here are the notable ones (will be updated as the pipeline progresses)
 
-    * [`01_raw/all_contents/`](data/01_raw/all_contents): contains all raw data
+  - [`01_raw/all_contents/`](data/01_raw/all_contents): contains all raw data
 
-    * [`02_intermediate/`](data/02_intermediate): contains all intermediate data
+  - [`02_intermediate/`](data/02_intermediate): contains all intermediate data
 
-        * `all_contents_standardized/`: contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
+    - `all_contents_standardized/`: contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
 
-        * `all_contents_extracted/`: contains all extracted data; stored in columns named `related_sections`, `extracted_content_body`, `extracted_links` and `extracted_headers`; below is a brief description what each column represents:
+    - `all_contents_extracted/`: contains all extracted data; stored in columns named `related_sections`, `extracted_content_body`, `extracted_links` and `extracted_headers`; below is a brief description what each column represents:
 
-            * `related_sections`: related sections from the HTML content body; includes both "Related" as well as "Read these next"
+      - `related_sections`: related sections from the HTML content body; includes both "Related" as well as "Read these next"
 
-            * `extracted_content_body`: extracted content body from the HTML content body
+      - `extracted_content_body`: extracted content body from the HTML content body
 
-            * `extracted_links`: extracted links from the HTML content body; for example, links from the "Related" and "Read these next" sections
+      - `extracted_links`: extracted links from the HTML content body; for example, links from the "Related" and "Read these next" sections
 
-            * `extracted_headers`: extracted headers from the HTML content body; headers include all `<h>` tags
+      - `extracted_headers`: extracted headers from the HTML content body; headers include all `<h>` tags
 
-        * `all_extracted_text/`: contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
+    - `all_extracted_text/`: contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
 
-    * [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
+  - [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
-        * `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#data-schema)
+    - `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#data-schema)
 
-        * `filtered_data.parquet/`: contains the filtered data and versioned; for more information on the data schema, refer [here](#data-schema)
+    - `filtered_data.parquet/`: contains the filtered data and versioned; for more information on the data schema, refer [here](#data-schema)
 
-        * `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#data-schema)
+    - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#data-schema)
 
-    * [`04_feature/`](data/04_feature): contains the features data
+  - [`04_feature/`](data/04_feature): contains the features data
 
-        * `keywords_embeddings/`: contains the documents and keywords embeddings for keyword extraction with KeyBERT
+    - `keywords_embeddings/`: contains the documents and keywords embeddings for keyword extraction with KeyBERT
 
-            * `doc_embeddings.pkl`: contains the document embeddings for the articles
+      - `doc_embeddings.pkl`: contains the document embeddings for the articles
 
-            * `word_embeddings.pkl`: contains the word embeddings for the articles
+      - `word_embeddings.pkl`: contains the word embeddings for the articles
 
-    * [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\\_count)}$
+  - [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\\_count)}$
 
-        * `flag_for_removal_by_type.xlsx/`: contains the flagged articles for removal by type saved as an Excel fileand versioned
+    - `flag_for_removal_by_type.xlsx/`: contains the flagged articles for removal by type saved as an Excel fileand versioned
 
-        * `log_word_counts.html/`: contains the distribution of $\log{(word\\_count)}$ saved as a HTML file and versioned
+    - `log_word_counts.html/`: contains the distribution of $\log{(word\\_count)}$ saved as a HTML file and versioned
 
-        * `raw_word_counts.html/`: contains the distribution of raw word counts saved as a HTML file and versioned
+    - `raw_word_counts.html/`: contains the distribution of raw word counts saved as a HTML file and versioned
 
 - [`notebooks/`](notebooks): contains all notebooks for the project; for preliminary and exploratory analysis; code to be refactored into nodes and pipelines
 
@@ -102,11 +102,11 @@ cat requirements.txt | xargs poetry add
 
 - [`src/content_optimization/`](src/content_optimization): contains all code for the project; contains the code for respective pipelines
 
-    * [`pipelines/`](src/content_optimization/pipelines): contains all code for the pipelines
+  - [`pipelines/`](src/content_optimization/pipelines): contains all code for the pipelines
 
-        * [`data_processing/`](src/content_optimization/pipelines/data_processing): contains the code for the `data_processing` pipeline; for more information, refer [here](#data-processing)
+    - [`data_processing/`](src/content_optimization/pipelines/data_processing): contains the code for the `data_processing` pipeline; for more information, refer [here](#data-processing)
 
-        * [`feature_engineering/`](src/content_optimization/pipelines/feature_engineering): contains the code for the `feature_engineering` pipeline; for more information, refer [here](#feature-engineering)
+    - [`feature_engineering/`](src/content_optimization/pipelines/feature_engineering): contains the code for the `feature_engineering` pipeline; for more information, refer [here](#feature-engineering)
 
 ## Run the Kedro Project
 
@@ -208,451 +208,454 @@ kedro run --from-nodes="generate_doc_and_word_embeddings_node" --to-nodes="extra
     <details>
         <summary>id</summary>
 
-    - Data Type: `integer`
-    - Description:
-        - Corresponds to the Article ID
-    - Example Values:
-        - 1464154
-    - Null Values Allowed: No
-    - Primary Key: Yes
-    - Foreign Key: No
+  - Data Type: `integer`
+  - Description:
+    - Corresponds to the Article ID
+  - Example Values:
+    - 1464154
+  - Null Values Allowed: No
+  - Primary Key: Yes
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>content_name</summary>
+      <details>
+          <summary>content_name</summary>
 
-    - Data Type: `string`
-    - Description:
-        - Name of the article stored as metadata
-    - Example Values:
-        - Zopiclone
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - Name of the article stored as metadata
+  - Example Values:
+    - Zopiclone
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>title</summary>
+      <details>
+          <summary>title</summary>
 
-    - Data Type: `string`
-    - Description:
-        - Title of the article
-    - Example Values:
-        - deLIGHTS for Diabetic Patients
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - Title of the article
+  - Example Values:
+    - deLIGHTS for Diabetic Patients
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>article_category_names</summary>
+      <details>
+          <summary>article_category_names</summary>
 
-    - Data Type: `string`
-    - Description:
-        - Categories that articles can belong to
-    - Example Values:
-        - Food & Nutrition, Exercise and Fitness
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - Categories that articles can belong to
+  - Example Values:
+    - Food & Nutrition, Exercise and Fitness
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>cover_image_url</summary>
+      <details>
+          <summary>cover_image_url</summary>
 
-    - Data Type: `string`
-    - Description:
-        - URL of the cover image of the article
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - URL of the cover image of the article
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>full_url</summary>
+      <details>
+          <summary>full_url</summary>
 
-    - Data Type: `string`
-    - Description:
-        - URL of the article
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - URL of the article
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>full_url2</summary>
+      <details>
+          <summary>full_url2</summary>
 
-    - Data Type: `string`
-    - Description:
-        - URL of the article (backup)
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - URL of the article (backup)
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>friendly_url</summary>
+      <details>
+          <summary>friendly_url</summary>
 
-    - Data Type: `string`
-    - Description:
-        - File path with reference from content category for redirection
-    - Example Values:
-        - dont-forget-your-form
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - File path with reference from content category for redirection
+  - Example Values:
+    - dont-forget-your-form
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>category_description</summary>
+      <details>
+          <summary>category_description</summary>
 
-    - Data Type: `string`
-    - Description:
-        - Brief Summary of the article that is typically found at the top of the webpage
-    - Example Values:
-        - Learn how your mind affects your physical and emotional health to strengthen your mental well-being.
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - Brief Summary of the article that is typically found at the top of the webpage
+  - Example Values:
+    - Learn how your mind affects your physical and emotional health to strengthen your mental well-being.
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>content_body</summary>
+      <details>
+          <summary>content_body</summary>
 
-    - Data Type: `string`
-    - Description:
-        - HTML element containing the entire article body
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - HTML element containing the entire article body
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>keywords</summary>
+      <details>
+          <summary>keywords</summary>
 
-    - Data Type: `string`
-    - Description:
-        - Article Keywords
-    - Example Values:
-        - ICD-21-Health Services,PER_Parent,PGM_Student Screening,PGM_HealthAmbassador,AGE_Teens,AGE_Young Adult,CHILD_Children,INTEREST_Body Care,
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - Article Keywords
+  - Example Values:
+    - ICD-21-Health Services,PER_Parent,PGM_Student Screening,PGM_HealthAmbassador,AGE_Teens,AGE_Young Adult,CHILD_Children,INTEREST_Body Care,
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>feature_title</summary>
+      <details>
+          <summary>feature_title</summary>
 
-    - Data Type: `string`
-    - Description:
-        - Feature Title of the articles
-    - Example Values:
-        - Recipe: Nonya Curry Infused Patties
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - Feature Title of the articles
+  - Example Values:
+    - Recipe: Nonya Curry Infused Patties
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>pr_name</summary>
+      <details>
+          <summary>pr_name</summary>
 
-    - Data Type: `string`
-    - Description:
-        - Provider Name
-    - Example Values:
-        - Active Health
-        - Health Promotion Board
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: Yes
+  - Data Type: `string`
+  - Description:
+    - Provider Name
+  - Example Values:
+    - Active Health
+    - Health Promotion Board
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: Yes
     </details>
 
-    <details>
-        <summary>alternate_image_text</summary>
+      <details>
+          <summary>alternate_image_text</summary>
 
-    - Data Type: `string`
-    - Description:
-        - Alternate Image text provided to convey the “why” of the image as it relates to the content
-    - Example Values:
-        - Benefits of staying smoke-free
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `string`
+  - Description:
+    - Alternate Image text provided to convey the “why” of the image as it relates to the content
+  - Example Values:
+    - Benefits of staying smoke-free
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>date_modified</summary>
+      <details>
+          <summary>date_modified</summary>
 
-    - Data Type: `timestamp`
-    - Description:
-        - Timestamp of the article when modified
-    - Example Values:
-        - 2022-11-15T08:35:27.0000000Z
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `timestamp`
+  - Description:
+    - Timestamp of the article when modified
+  - Example Values:
+    - 2022-11-15T08:35:27.0000000Z
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>number_of_views</summary>
+      <details>
+          <summary>number_of_views</summary>
 
-    - Data Type: `integer`
-    - Description:
-        - Number of views for the article
-    - Example Values:
-        - 7925
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `integer`
+  - Description:
+    - Number of views for the article
+  - Example Values:
+    - 7925
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>last_month_view_count</summary>
+      <details>
+          <summary>last_month_view_count</summary>
 
-    - Data Type: `integer`
-    - Description:
-        - Number of views over the past month
-    - Example Values:
-        - 63
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `integer`
+  - Description:
+    - Number of views over the past month
+  - Example Values:
+    - 63
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>last_two_months_view</summary>
+      <details>
+          <summary>last_two_months_view</summary>
 
-    - Data Type: `integer`
-    - Description:
-        - Number of views over the past 2 months
-    - Example Values:
-        - 91
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `integer`
+  - Description:
+    - Number of views over the past 2 months
+  - Example Values:
+    - 91
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>page_views</summary>
+      <details>
+          <summary>page_views</summary>
 
-    - Data Type: `integer`
-    - Description:
-        - (Google Analytics) Number of page views
-    - Example Values:
-        - 1138
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `integer`
+  - Description:
+    - (Google Analytics) Number of page views
+  - Example Values:
+    - 1138
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>engagement_rate</summary>
+      <details>
+          <summary>engagement_rate</summary>
 
-    - Data Type: `float`
-    - Description:
-        - (Google Analytics) The percentage of engaged sessions for article
-    - Example Values:
-        - 0.658709107
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `float`
+  - Description:
+    - (Google Analytics) The percentage of engaged sessions for article
+  - Example Values:
+    - 0.658709107
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>bounce_rate</summary>
+      <details>
+          <summary>bounce_rate</summary>
 
-    - Data Type: `float`
-    - Description:
-        - (Google Analytics) The percentage of sessions that were not engaged
-            - Opposite of Engagement Rate
-    - Example Values:
-        - 0.34129089300000004
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `float`
+  - Description:
+    - (Google Analytics) The percentage of sessions that were not engaged
+      - Opposite of Engagement Rate
+  - Example Values:
+    - 0.34129089300000004
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>exit_rate</summary>
+      <details>
+          <summary>exit_rate</summary>
 
-    - Data Type: `float`
-    - Description:
-        - (Google Analytics) The percentage of sessions that ended on a page or screen
-            - Equivalent to the number of exits divided by the number of sessions.
-    - Example Values:
-        - 0.9041850220264317
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `float`
+  - Description:
+    - (Google Analytics) The percentage of sessions that ended on a page or screen
+      - Equivalent to the number of exits divided by the number of sessions.
+  - Example Values:
+    - 0.9041850220264317
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>scroll_percentage</summary>
+      <details>
+          <summary>scroll_percentage</summary>
 
-    - Data Type: `float`
-    - Description:
-        - (Google Analytics) Measures how far users scroll down a page before leaving
-            - Also known as scroll depth
-            - 100% represents that users, on average, scroll to the bottom of the page.
-    - Example Values:
-        - 0.35698594
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `float`
+  - Description:
+    - (Google Analytics) Measures how far users scroll down a page before leaving
+      - Also known as scroll depth
+      - 100% represents that users, on average, scroll to the bottom of the page.
+  - Example Values:
+    - 0.35698594
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>percentage_total_views</summary>
+      <details>
+          <summary>percentage_total_views</summary>
 
-    - Data Type: `float`
-    - Description:
-        - The percentage of views captured by the article within a particular content category
-    - Example Values:
-        - 0.002679191533943097
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `float`
+  - Description:
+    - The percentage of views captured by the article within a particular content category
+  - Example Values:
+    - 0.002679191533943097
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>cumulative_percentage_total_views</summary>
+      <details>
+          <summary>cumulative_percentage_total_views</summary>
 
-    - Data Type: `float`
-    - Description:
-        - The cumulative percentage of views captured within a particular content category
-    - Example Values:
-        - 0.6859483702369595
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `float`
+  - Description:
+    - The cumulative percentage of views captured within a particular content category
+  - Example Values:
+    - 0.6859483702369595
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>content_category</summary>
+      <details>
+          <summary>content_category</summary>
 
-    - Data Type: `string`
-    - Description:
-        - The content category that the article corresponds to on HealthHub
-    - Example Values:
-        - medications
-        - live-healthy-articles
-        - diseases-and-conditions
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: Yes
+  - Data Type: `string`
+  - Description:
+    - The content category that the article corresponds to on HealthHub
+  - Example Values:
+    - medications
+    - live-healthy-articles
+    - diseases-and-conditions
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: Yes
     </details>
 
-    <details>
-        <summary>to_remove</summary>
+      <details>
+          <summary>to_remove</summary>
 
-    - Data Type: `boolean`
-    - Description:
-        - Indicates whether the articles have met the criteria for removal
-            - No content / Dummy content
-            - No extracted content
-    - Example Values:
-        - True/False
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `boolean`
+  - Description:
+    - Indicates whether the articles have met the criteria for removal
+      - No content / Dummy content
+      - No extracted content
+  - Example Values:
+    - True/False
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>has_table</summary>
+      <details>
+          <summary>has_table</summary>
 
-    - Data Type: `boolean`
-    - Description:
-        - Check whether the article has a table element within the content body
-    - Example Values:
-        - True/False
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `boolean`
+  - Description:
+    - Check whether the article has a table element within the content body
+  - Example Values:
+    - True/False
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>has_image</summary>
+      <details>
+          <summary>has_image</summary>
 
-    - Data Type: `boolean`
-    - Description:
-        - Check whether the article has an image element within the content body
-    - Example Values:
-        - True/False
-    - Null Values Allowed: No
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `boolean`
+  - Description:
+    - Check whether the article has an image element within the content body
+  - Example Values:
+    - True/False
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>related_sections</summary>
+      <details>
+          <summary>related_sections</summary>
 
-    - Data Type: `list[string]`
-    - Description:
-        - A list of extracted text within articles that are captured under “Related:” and “Read these next:”
-    - Example Values:
-        - ['How to Eat Right to Feel Right' 'Getting the Fats Right!' 'Banish Nasty Nibbles With Healthy Snacks' 'Getting the Fats Right!' 'Make a Healthier Choice Today!' 'Make Snacking Smart a Healthy Eating Habit']
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `list[string]`
+  - Description:
+    - A list of extracted text within articles that are captured under “Related:” and “Read these next:”
+  - Example Values:
+    - ['How to Eat Right to Feel Right' 'Getting the Fats Right!' 'Banish Nasty Nibbles With Healthy Snacks' 'Getting the Fats Right!' 'Make a Healthier Choice Today!' 'Make Snacking Smart a Healthy Eating Habit']
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>extracted_links</summary>
+      <details>
+          <summary>extracted_links</summary>
 
-    - Data Type: `list[tuple[string, string]]`
-    - Description:
-        - A list of extracted links with the corresponding text from the content body
-    - Example Values:
-        - `[('Child Health Booklet', 'https://www.healthhub.sg/programmes/parent-hub/child-health-booklet')]`
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `list[tuple[string, string]]`
+  - Description:
+    - A list of extracted links with the corresponding text from the content body
+  - Example Values:
+    - `[('Child Health Booklet', 'https://www.healthhub.sg/programmes/parent-hub/child-health-booklet')]`
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>extracted_headers</summary>
+      <details>
+          <summary>extracted_headers</summary>
 
-    - Data Type: `list[tuple[string, string]]`
-    - Description:
-        - A list of headers extracted from the content body based on the `<h*>` tag
-    - Example Values:
-        - `[('What is this medication for?', 'h2'])]`
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
+  - Data Type: `list[tuple[string, string]]`
+  - Description:
+    - A list of headers extracted from the content body based on the `<h*>` tag
+  - Example Values:
+    - `[('What is this medication for?', 'h2'])]`
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
     </details>
 
-    <details>
-        <summary>extracted_content_body</summary>
+      <details>
+          <summary>extracted_content_body</summary>
 
-    - Data Type: `string`
-    - Description:
-        - The extracted text from the `content_body` column
-    - Null Values Allowed: Yes
-    - Primary Key: No
-    - Foreign Key: No
-    </details>
+  - Data Type: `string`
+  - Description:
+    - The extracted text from the `content_body` column
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+  </details>
 
 ### Data Quality and Processing
 
 - **Data Cleaning Process:**
-    * Standardise all column names
-    * Removed columns where all values are `NaN`
-    * Flagged articles with no content or dummy content
-    * Mark articles with tables and images in content body
-    * Extracted content body as clean text from HTML PageElement
-    * Extracted related sections, links, headers
-    * Flagged articles with no extracted content body
-    * Merged all articles across different content categories into one dataframe
+
+  - Standardise all column names
+  - Removed columns where all values are `NaN`
+  - Flagged articles with no content or dummy content
+  - Mark articles with tables and images in content body
+  - Extracted content body as clean text from HTML PageElement
+  - Extracted related sections, links, headers
+  - Flagged articles with no extracted content body
+  - Merged all articles across different content categories into one dataframe
 
 - **Missing Data Handling:**
-    * Left as is for exploration purposes
-    * No data imputation was used
+
+  - Left as is for exploration purposes
+  - No data imputation was used
 
 - **Known Issues or Limitations:**
-    * Issue with handling text extraction within `<div>` containers
+
+  - Issue with handling text extraction within `<div>` containers
 
 - **Data Quality Checks:**
-    * Under [`data/02_intermediate`](data/02_intermediate)
+  - Under [`data/02_intermediate`](data/02_intermediate)
 
 </details>
