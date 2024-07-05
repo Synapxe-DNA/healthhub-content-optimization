@@ -19,6 +19,8 @@
           tuiTh
           [sorter]="null"
           [sticky]="true"
+          [resizable]="true"
+          class="w-3"
         >
           Description
         </th>
@@ -94,8 +96,8 @@
         <td *tuiCell="'title'" tuiTd class="number text">
           {{ article.title }}
         </td>
-
-        <td *tuiCell="'description'" tuiTd class="number text">
+          
+        <td *tuiCell="'description'" tuiTd class="number text max-w-prose break-words">
           {{ article.description }}
         </td>
 
