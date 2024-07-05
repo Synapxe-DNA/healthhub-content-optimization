@@ -1,0 +1,20 @@
+<tui-island class="
+h-full w-full
+overflow-hidden p-0
+">
+    <div #headerTemplate *ngIf="header" class="
+    sticky top-0 p-[1rem]
+    border-b border-[--tui-base-03]
+    ">
+        <ng-container *ngTemplateOutlet="header"></ng-container>
+    </div>
+    <div #container class="h-full overflow-hidden">
+        <div #child class="overflow-y-auto overflow-x-hidden h-0" tuiOverscroll="scroll">
+
+            <tui-scrollbar>
+                <ng-content></ng-content>
+            </tui-scrollbar>
+        </div>
+    </div>
+
+</tui-island>

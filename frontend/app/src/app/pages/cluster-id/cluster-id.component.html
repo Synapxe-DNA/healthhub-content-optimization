@@ -1,0 +1,55 @@
+<div class="
+flex flex-row justify-start items-stretch h-full
+p-gutter gap-2
+max-w-[100vw] overflow-hidden
+">
+    @switch (viewTabIndex) {
+        @case (0){
+            <app-cluster-graph class="w-full"></app-cluster-graph>
+        }
+        @case (1){
+            <app-cluster-table [cluster]="data" class="w-full h-full flex-grow-0"></app-cluster-table>
+        }
+    }
+
+    <div class="
+    flex flex-col justify-start items-stretch
+    gap-2 w-full max-w-md h-full
+    flex-shrink-0
+    ">
+
+        <div class="
+        flex flex-row justify-start items-center gap-x-1
+        ">
+            <tui-tabs tuiMobileTabs [(activeItemIndex)]="viewTabIndex" class="w-full">
+                <button tuiTab>Graph</button>
+                <button tuiTab>Table</button>
+            </tui-tabs>
+            <button tuiIconButton size="s" appearance="secondary">
+                <lucide-icon name="filter" [size]="16"></lucide-icon>
+            </button>
+            <button tuiIconButton size="s" appearance="secondary">
+                <lucide-icon size="16" name="arrow-down-a-z"></lucide-icon>
+            </button>
+
+        </div>
+
+        <app-island class="h-full" [header]="header">
+            <ng-template #header>
+                <h3 class="tui-island__title" [style.margin-bottom]="0">{{ data?.name || "Cluster" }}</h3>
+            </ng-template>
+        </app-island>
+
+        <div class="flex flex-col justify-start items-stretch gap-2">
+            <form [formGroup]="job">
+                <tui-input formControlName="name" tuiTextfieldIcon="tuiIconEdit3">
+                    Job name
+                    <input tuiTextfield>
+                </tui-input>
+            </form>
+            <button tuiButton type="submit" class="w-full" size="m" appearance="primary">Submit</button>
+        </div>
+
+    </div>
+
+</div>
