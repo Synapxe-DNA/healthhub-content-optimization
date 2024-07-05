@@ -1,10 +1,13 @@
-.PHONY: install lint clean-dry-run clean run run-data-processing run-feature-engineering local-db-start local-db-stop
+.PHONY: install lint lint-frontend clean-dry-run clean run run-data-processing run-feature-engineering local-db-start local-db-stop
 
 install:
 	pip install -r requirements.txt
 
 lint:
 	pre-commit run --all-files
+
+lint-frontend:
+	@cd ./frontend/app && npm run lint
 
 clean-dry-run:
 	cd content-optimization && \
