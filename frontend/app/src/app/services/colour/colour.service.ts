@@ -28,9 +28,8 @@ export class ColourService {
    * Method to produce a hashed HSL that is formatted for Fabric.
    * This method also uses memoization to speed up calculations to Theta(1)
    * @param label {string}
-   * @private
    */
-  private stringHSL(label:string): string {
+  stringHSL(label:string): string {
     if(this.memoizedLabelColours.hasOwnProperty(label)){
       return this.memoizedLabelColours[label]
     }
@@ -45,8 +44,18 @@ export class ColourService {
     return formattedHSL
   }
 
-  create(value:string):string {
-    return this.stringHSL(value)
+
+  intensityHSL(val:number, lower:number=0, upper:number=1):string {
+    if(lower>upper){throw "Upper value has to be greater than lower value!"}
+
+    const h = ((Math.max(val, lower)/upper) * 120).toFixed(0)
+    const s = 70
+    const l = 45
+    const a = 20
+
+    return `hsla(${h}, ${s}%, ${l}%, ${a}%)`
   }
+
+
 
 }

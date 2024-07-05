@@ -1,5 +1,5 @@
 <tui-island class="
-h-full w-full max-h-full
+h-full w-full
 overflow-hidden p-0
 ">
     <div #headerTemplate *ngIf="header" class="
@@ -10,8 +10,10 @@ overflow-hidden p-0
     </div>
     <div #container class="h-full overflow-hidden">
         <div #child class="overflow-y-auto overflow-x-hidden h-0" tuiOverscroll="scroll">
-            <ng-content></ng-content>
-            <tui-scrollbar></tui-scrollbar>
+
+            <tui-scrollbar>
+                <ng-content></ng-content>
+            </tui-scrollbar>
         </div>
     </div>
 
