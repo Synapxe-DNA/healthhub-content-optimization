@@ -1,39 +1,131 @@
-<table class="w-full table-auto border-collapse border-2 border-black">
-  <tr class="bg-black [&>th]:text-white">
-    <th class="border-r-2 border-white text-lg text-white">id</th>
-    <th class="border-l-2 border-white text-lg text-white">URL</th>
-    <th class="border-l-2 border-white text-lg text-white">Pillar</th>
-    <th class="border-l-2 border-white text-lg text-white">Status</th>
-  </tr>
-  
-  @for (cluster of clusters; track cluster) {
-  <tr>
-    <th colspan="5" class="border-collapse border-2 border-black bg-gray-400">
-      <div class="relative flex items-center justify-center">
-        <input
-          type="radio"
-          class="v- absolute left-1 scale-150"
-          [formControl]="clusterSelected"
-          value = {{cluster.clusterId}}
-        />
-        <span>Cluster: {{ cluster.clusterId }}</span>
-      </div>
-    </th>
-  </tr>
-  @for (article of cluster.articles; track article) {
-  <tr>
-    <td class="border-collapse border-2 border-black">
-      {{ article.articleId }}
-    </td>
-    <td class="border-collapse border-2 border-black">
-      {{ article.URL }}
-    </td>
-    <td class="border-collapse border-2 border-black">
-      {{ article.pillar }}
-    </td>
-    <td class="border-collapse border-2 border-black">
-      {{ article.status }}
-    </td>
-  </tr>
-  } }
-</table>
+<tui-scrollbar waIntersectionRoot class="scrollbar h-full" [hidden]="true">
+  <table size="l" tuiTable class="table-row" [columns]="columns" [direction]="-1">
+    <thead tuiThead fix-head>
+      <tr tuiThGroup class="[&>th]:text-black">
+        <th
+          *tuiHead="'title'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Title
+        </th>
+
+        <th
+          *tuiHead="'description'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Description
+        </th>
+
+        <th
+          *tuiHead="'pillar'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Pillar
+        </th>
+
+        <th
+          *tuiHead="'status'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Status
+        </th>
+
+        <th
+          *tuiHead="'labels'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Labels
+        </th>
+
+        <th
+          *tuiHead="'engagement'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Engagement
+        </th>
+
+        <th
+          *tuiHead="'views'"
+          rowspan="2"
+          tuiTh
+          [sorter]="null"
+          [sticky]="true"
+        >
+          Views
+        </th>
+      </tr>
+    </thead>
+
+    @for (cluster of clusters; track cluster.id) {
+
+    <tbody [heading]="template" tuiTbody>
+
+      @for (article of cluster.articles; track article.id) {
+      <tr tuiTr>
+        <td *tuiCell="'title'" tuiTd class="number text">
+          <a href="{{article.url}}" class="text-[#0000EE] hover:underline">{{ article.title }}</a>
+        </td>
+          
+        <td *tuiCell="'description'" tuiTd class="number text max-w-prose break-words">
+          {{ article.description }}
+        </td>
+
+        <td *tuiCell="'pillar'" tuiTd class="number text">
+          <app-hash-label [text]="article.pillar" ></app-hash-label>
+        </td>
+
+        <td *tuiCell="'status'" tuiTd class="number text">
+          @if (article.status.length > 0){
+            <app-hash-label [text]="article.status" ></app-hash-label>
+          }
+        </td>
+
+        <td *tuiCell="'labels'" tuiTd class="number text">
+          <div class="flex flex-row justify-start items-start gap-1">
+            @for(tag of sortStrings(article.labels); track tag) {
+                <app-hash-label [text]="tag" ></app-hash-label>
+            }
+          </div>
+        </td>
+
+        <td *tuiCell="'engagement'" tuiTd class="number text">
+          {{ (article.engagement*100).toFixed(1) }}%
+        </td>
+
+        <td *tuiCell="'views'" tuiTd class="number text">
+          {{ article.views }}
+        </td>
+      </tr>
+      }
+    </tbody>
+
+    <ng-template #template>
+      <a href="/clusters/{{cluster.id}}" 
+        (click)="$event.stopPropagation()"
+        class="text-[#0000EE] hover:underline"
+      >
+        {{cluster.name}}
+      </a>
+    </ng-template>
+    }
+
+  </table>
+</tui-scrollbar>

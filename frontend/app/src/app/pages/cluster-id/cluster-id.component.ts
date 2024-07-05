@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {ClusterService} from "../../services/cluster/cluster.service";
 import {Cluster} from "../../types/data/cluster.types";
@@ -9,21 +9,26 @@ import {TuiButtonModule, TuiTextfieldControllerModule} from "@taiga-ui/core";
 import {TUI_IS_ANDROID, TUI_IS_IOS} from '@taiga-ui/cdk';
 import {ClusterTableComponent} from "../../components/cluster/cluster-table/cluster-table.component";
 import {FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
+import {IslandComponent} from "../../components/island/island.component";
+import {LucideAngularModule} from "lucide-angular";
+import {JobService} from "../../services/job-builder/job.service";
 
 @Component({
   selector: 'app-cluster-id',
   standalone: true,
-  imports: [
-    ClusterGraphComponent,
-    TuiButtonModule,
-    TuiTabsModule,
-    TuiMobileTabsModule,
-    ClusterTableComponent,
-    TuiIslandModule,
-    TuiInputModule,
-    ReactiveFormsModule,
-    TuiTextfieldControllerModule
-  ],
+    imports: [
+        ClusterGraphComponent,
+        TuiButtonModule,
+        TuiTabsModule,
+        TuiMobileTabsModule,
+        ClusterTableComponent,
+        TuiIslandModule,
+        TuiInputModule,
+        ReactiveFormsModule,
+        TuiTextfieldControllerModule,
+        IslandComponent,
+        LucideAngularModule
+    ],
   templateUrl: './cluster-id.component.html',
   styleUrl: './cluster-id.component.css',
   providers: [
@@ -49,7 +54,8 @@ export class ClusterIdComponent implements OnInit{
   constructor(
       private route: ActivatedRoute,
       private clusterService: ClusterService,
-      private fb: FormBuilder
+      private fb: FormBuilder,
+      protected jobService: JobService,
   ) {
     this.job = this.fb.group({
       name: ""
@@ -65,8 +71,10 @@ export class ClusterIdComponent implements OnInit{
       this.clusterService.getCluster(id).subscribe(c => {
         if(c){this.loading=false}
         this.data=c
+        this.jobService.initialise(c)
       })
     })
+
 
   }
 

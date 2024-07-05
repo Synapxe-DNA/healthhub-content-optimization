@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FilterPopupComponent } from './filter-popup.component';
+import { MainClusterSortComponent } from './main-cluster-sort.component';
 
-describe('FilterPopupComponent', () => {
-  let component: FilterPopupComponent;
-  let fixture: ComponentFixture<FilterPopupComponent>;
+describe('MainClusterSortComponent', () => {
+  let component: MainClusterSortComponent;
+  let fixture: ComponentFixture<MainClusterSortComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FilterPopupComponent]
+      imports: [MainClusterSortComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(FilterPopupComponent);
+    fixture = TestBed.createComponent(MainClusterSortComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

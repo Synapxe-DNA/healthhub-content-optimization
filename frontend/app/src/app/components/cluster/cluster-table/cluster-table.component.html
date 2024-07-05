@@ -1,4 +1,15 @@
-<app-island [padding]="false" [header]="header">
+<app-island [padding]="false">
+
+    <div *ngIf="cluster" class="
+    flex flex-col items-stretch justify-start
+    divide-y divide-[--tui-base-03]
+    ">
+        @for(article of cluster.articles||[]; track article){
+            <app-article [article]="article" [groupManager]="jobService.getGroupManager(cluster.id)"></app-article>
+        }
+    </div>
+
+
 </app-island>
 
 <ng-template #header>
