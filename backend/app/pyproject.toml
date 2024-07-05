@@ -13,10 +13,10 @@ beanie = "^1.26.0"
 pydantic = "^2.7.4"
 python-dotenv = "^1.0.1"
 poetry-dotenv-plugin = "^0.2.0"
-
-
 bson = "^0.5.10"
 pymongo = "^4.8.0"
+
+
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
 
