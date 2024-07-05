@@ -1,5 +1,5 @@
 """
-This is a boilerplate test file for pipeline 'data_science'
+This is a boilerplate test file for pipeline 'feature_engineering'
 generated using Kedro 0.19.6.
 Please add your pipeline tests here.
 
