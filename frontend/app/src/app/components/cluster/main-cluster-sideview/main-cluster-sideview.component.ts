@@ -5,8 +5,6 @@ import { MainClusterSortComponent } from '../main-cluster-sort/main-cluster-sort
 import { TuiButtonModule, TuiDialogContext, TuiDialogService } from '@taiga-ui/core';
 import {PolymorpheusContent} from '@tinkoff/ng-polymorpheus';
 import { MainClusterTableComponent } from '../main-cluster-table/main-cluster-table.component';
-import { ClusterService } from '../../../services/cluster/cluster.service';
-import { Router } from '@angular/router';
 
 
 @Component({
@@ -22,25 +20,12 @@ export class MainClusterSideviewComponent {
 
   constructor(
     private readonly dialogs: TuiDialogService,
-    private clusterSerivce: ClusterService,
-    private router:Router
   ){}
 
-  ngOnInit() {
-    this.clusterSerivce.getSelectedCluster().subscribe(res=>{
-      this.clusterSelected=res
-    })
-  }
 
   showReviewDialog(content: PolymorpheusContent<TuiDialogContext>): void {
     this.dialogs.open(content).subscribe();
   }
 
-  /**
-   * Method to navigate to combine page after selecting cluster
-   */
-  goToCombinePage(){
-    this.router.navigate(['/combine']);
- }
 
 }

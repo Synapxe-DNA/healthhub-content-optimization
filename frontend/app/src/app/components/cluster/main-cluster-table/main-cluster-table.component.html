@@ -1,12 +1,11 @@
 <tui-scrollbar waIntersectionRoot class="scrollbar h-full" [hidden]="true">
-  <table size="l" tuiTable class="table" [columns]="columns" [direction]="-1">
+  <table size="l" tuiTable class="table-row" [columns]="columns" [direction]="-1">
     <thead tuiThead fix-head>
-      <tr tuiThGroup>
+      <tr tuiThGroup class="[&>th]:text-black">
         <th
           *tuiHead="'title'"
           rowspan="2"
           tuiTh
-          class="first"
           [sorter]="null"
           [sticky]="true"
         >
@@ -19,8 +18,6 @@
           tuiTh
           [sorter]="null"
           [sticky]="true"
-          [resizable]="true"
-          class="w-3"
         >
           Description
         </th>
@@ -33,16 +30,6 @@
           [sticky]="true"
         >
           Pillar
-        </th>
-
-        <th
-          *tuiHead="'url'"
-          rowspan="2"
-          tuiTh
-          [sorter]="null"
-          [sticky]="true"
-        >
-          URL
         </th>
 
         <th
@@ -94,7 +81,7 @@
       @for (article of cluster.articles; track article.id) {
       <tr tuiTr>
         <td *tuiCell="'title'" tuiTd class="number text">
-          {{ article.title }}
+          <a href="{{article.url}}" class="text-[#0000EE] hover:underline">{{ article.title }}</a>
         </td>
           
         <td *tuiCell="'description'" tuiTd class="number text max-w-prose break-words">
@@ -102,23 +89,25 @@
         </td>
 
         <td *tuiCell="'pillar'" tuiTd class="number text">
-          {{ article.pillar }}
-        </td>
-
-        <td *tuiCell="'url'" tuiTd class="number text">
-          {{ article.url }}
+          <app-hash-label [text]="article.pillar" ></app-hash-label>
         </td>
 
         <td *tuiCell="'status'" tuiTd class="number text">
-          {{ article.status }}
+          @if (article.status.length > 0){
+            <app-hash-label [text]="article.status" ></app-hash-label>
+          }
         </td>
 
         <td *tuiCell="'labels'" tuiTd class="number text">
-          {{ article.labels }}
+          <div class="flex flex-row justify-start items-start gap-1">
+            @for(tag of sortStrings(article.labels); track tag) {
+                <app-hash-label [text]="tag" ></app-hash-label>
+            }
+          </div>
         </td>
 
         <td *tuiCell="'engagement'" tuiTd class="number text">
-          {{ article.engagement }}
+          {{ (article.engagement*100).toFixed(1) }}%
         </td>
 
         <td *tuiCell="'views'" tuiTd class="number text">
@@ -129,13 +118,12 @@
     </tbody>
 
     <ng-template #template>
-      <input
-      type="radio"
-      value = {{cluster.name}}
-      [formControl]="clusterSelectedForm"
-      (click)="$event.stopPropagation()"
-      />
-      {{cluster.name}}
+      <a href="/clusters/{{cluster.id}}" 
+        (click)="$event.stopPropagation()"
+        class="text-[#0000EE] hover:underline"
+      >
+        {{cluster.name}}
+      </a>
     </ng-template>
     }
 
