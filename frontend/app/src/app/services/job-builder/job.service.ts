@@ -7,12 +7,10 @@ import {GroupManager} from "../../utiles/group-manager";
 })
 export class JobService {
 
-  groupManagers:{[key:string]:GroupManager} = {}
-
-  constructor() { }
+  groupManagers:Record<string, GroupManager> = {}
 
   initialise(cluster: Cluster){
-    if(!this.groupManagers.hasOwnProperty(cluster.id)){
+    if(!Object.prototype.hasOwnProperty.call(this.groupManagers, cluster.id)){
       this.groupManagers[cluster.id] = new GroupManager(cluster)
     }
   }

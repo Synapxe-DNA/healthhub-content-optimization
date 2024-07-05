@@ -6,6 +6,9 @@ const angular = require("angular-eslint");
 module.exports = tseslint.config(
   {
     files: ["**/*.ts"],
+    ignores: [
+      "src/app/components/graph/graph.component.ts", // This file is just a hack.
+    ],
     extends: [
       eslint.configs.recommended,
       ...tseslint.configs.recommended,
@@ -14,6 +17,7 @@ module.exports = tseslint.config(
     ],
     processor: angular.processInlineTemplates,
     rules: {
+      "@typescript-eslint/no-inferrable-types": "off",
       "@angular-eslint/directive-selector": [
         "error",
         {
@@ -38,6 +42,8 @@ module.exports = tseslint.config(
       ...angular.configs.templateRecommended,
       ...angular.configs.templateAccessibility,
     ],
-    rules: {},
+    rules: {
+      "@angular-eslint/template/elements-content": "off",
+    },
   }
 );
