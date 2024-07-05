@@ -1,19 +1,21 @@
 <div class="
 flex flex-row justify-start items-stretch h-full
 p-gutter gap-2
+max-w-[100vw] overflow-hidden
 ">
     @switch (viewTabIndex) {
         @case (0){
             <app-cluster-graph class="w-full"></app-cluster-graph>
         }
         @case (1){
-            <app-cluster-table class="w-full h-full"></app-cluster-table>
+            <app-cluster-table [cluster]="data" class="w-full h-full flex-grow-0"></app-cluster-table>
         }
     }
 
     <div class="
     flex flex-col justify-start items-stretch
     gap-2 w-full max-w-md h-full
+    flex-shrink-0
     ">
 
         <div class="
@@ -23,22 +25,20 @@ p-gutter gap-2
                 <button tuiTab>Graph</button>
                 <button tuiTab>Table</button>
             </tui-tabs>
-            <button tuiIconButton size="s" icon="tuiIconFilter" appearance="secondary"></button>
-            <button tuiIconButton size="s" icon="tuiIconAlignLeft" appearance="secondary"></button>
+            <button tuiIconButton size="s" appearance="secondary">
+                <lucide-icon name="filter" [size]="16"></lucide-icon>
+            </button>
+            <button tuiIconButton size="s" appearance="secondary">
+                <lucide-icon size="16" name="arrow-down-a-z"></lucide-icon>
+            </button>
 
         </div>
 
-        <tui-island class="flex-grow" size="m">
-            <div class="tui-island__content">
-                <div>
-                    <h3 class="tui-island__title">Groups</h3>
-                    <p class="tui-island__paragraph">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                        labore et dolore magna aliqua.
-                    </p>
-                </div>
-            </div>
-        </tui-island>
+        <app-island class="h-full" [header]="header">
+            <ng-template #header>
+                <h3 class="tui-island__title" [style.margin-bottom]="0">{{ data?.name || "Cluster" }}</h3>
+            </ng-template>
+        </app-island>
 
         <div class="flex flex-col justify-start items-stretch gap-2">
             <form [formGroup]="job">
