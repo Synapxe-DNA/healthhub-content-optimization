@@ -1,5 +1,4 @@
 import { Routes } from "@angular/router";
-import { IndexComponent } from "./pages/index/index.component";
 import { ClustersComponent } from "./pages/clusters/clusters.component";
 import { ImprovementsComponent } from "./pages/improvements/improvements.component";
 import { HarmoniseComponent } from "./pages/harmonise/harmonise.component";

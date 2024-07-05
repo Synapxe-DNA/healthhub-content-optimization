@@ -10,8 +10,8 @@ import {ColourService} from "../../services/colour/colour.service";
 })
 export class HashLabelComponent {
 
-  @Input() text:string="LABEL!"
-  @Input() forceColour:string=""
+  @Input() text="LABEL!"
+  @Input() forceColour=""
 
   constructor(
       protected colour: ColourService

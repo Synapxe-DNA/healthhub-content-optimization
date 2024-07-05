@@ -1,6 +1,6 @@
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ClusterDeprecated } from '../../../pages/clusters/clusters.component';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TuiRadioBlockModule } from '@taiga-ui/kit';
 import { TuiGroupModule } from '@taiga-ui/core';
 
@@ -13,18 +13,15 @@ import { TuiGroupModule } from '@taiga-ui/core';
 })
 export class MainClusterTableComponent {
   @Input() clusters: ClusterDeprecated[] = [];
-  selectedCluster: Number[] = [];
+  selectedCluster: number[] = [];
 
   clusterSelected:FormControl = new FormControl('',Validators.required);
-
-  constructor() {
-  }
-
 
   getCheckboxValues() {
     console.log("Cluster select:" + this.clusterSelected.value)
   }
+
   updateView(){
-    
+    console.log("updateVIew")
   }
 }

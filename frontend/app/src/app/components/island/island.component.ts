@@ -28,10 +28,10 @@ import {TuiOverscrollModule} from "@taiga-ui/cdk";
 })
 export class IslandComponent implements AfterViewInit{
 
-  @Input() padding:boolean = true
-  @Input() scroll:boolean = true
+  @Input() padding = true
+  @Input() scroll = true
 
-  @Input() header?: TemplateRef<any>
+  @Input() header?: TemplateRef<void>
 
   @ViewChild('headerTemplate') headerTemplate!: ElementRef<HTMLDivElement>
   @ViewChild('container') container!: ElementRef<HTMLDivElement>

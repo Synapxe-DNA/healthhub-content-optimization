@@ -44,18 +44,18 @@ export class FilterPopupComponent {
     });
   }
 
-  ngOnInit() {
-    this.filterForm.valueChanges.subscribe(val=>console.log(val))
-  }
-
-
-  ngOnChanges() {
-    if (this.clusters) {
-      const clustersSelected = this.filterForm.controls['clustersSelected'] as FormArray;
-      this.clusters.forEach(cluster => clustersSelected.push(new FormControl(true)));
-      console.log(this.clusters);
-    }
-  }
+  // ngOnInit() {
+  //   this.filterForm.valueChanges.subscribe(val=>console.log(val))
+  // }
+  //
+  //
+  // ngOnChanges() {
+  //   if (this.clusters) {
+  //     const clustersSelected = this.filterForm.controls['clustersSelected'] as FormArray;
+  //     this.clusters.forEach(cluster => clustersSelected.push(new FormControl(true)));
+  //     console.log(this.clusters);
+  //   }
+  // }
 
   filterBtnClicked() {
     this.isFilterBtnClicked = !this.isFilterBtnClicked;

@@ -9,13 +9,13 @@ import { ClusterService } from "../../services/cluster/cluster.service";
 
 
 export interface ClusterDeprecated {
-  clusterId: Number;
+  clusterId: number;
   annotationStatus: string;
   articles: ArticleDeprecated[];
 }
 
 export interface ArticleDeprecated {
-  articleId: Number;
+  articleId: number;
   URL: string;
   pillar: string;
   status: string;

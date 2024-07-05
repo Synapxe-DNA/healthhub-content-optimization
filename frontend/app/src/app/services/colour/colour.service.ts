@@ -5,9 +5,7 @@ import { Injectable } from '@angular/core';
 })
 export class ColourService {
 
-  private memoizedLabelColours: {[key:string]:string} = {}
-
-  constructor() { }
+  private memoizedLabelColours: Record<string, string> = {}
 
   /**
    * Method to hash a string into an int [1, 360]
@@ -30,7 +28,7 @@ export class ColourService {
    * @param label {string}
    */
   stringHSL(label:string): string {
-    if(this.memoizedLabelColours.hasOwnProperty(label)){
+    if (Object.prototype.hasOwnProperty.call(this.memoizedLabelColours, label)) {
       return this.memoizedLabelColours[label]
     }
 
