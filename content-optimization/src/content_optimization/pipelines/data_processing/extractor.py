@@ -14,7 +14,7 @@ class HTMLExtractor:
         soup (BeautifulSoup): A BeautifulSoup object.
     """
 
-    def __init__(self, html_content: str):
+    def __init__(self, html_content: str, content_name: str) -> None:
         """
         Initializes the HTMLExtractor with the given HTML content.
 
@@ -22,6 +22,7 @@ class HTMLExtractor:
             html_content (str): The HTML content to be processed.
         """
         self.soup = self.preprocess_html(html_content)
+        self.content_name = content_name
 
     @classmethod
     def clean_text(cls, text: str) -> str:
@@ -49,6 +50,7 @@ class HTMLExtractor:
         text = text.replace("\u200b", "")  # zero-width space
         text = text.replace("\u2028", "\n")  # line separator
         text = text.replace("\u2029", "\n")  # paragraph separator
+        text = text.replace("_x000D_", "")  # Carriage return
 
         # Replace multiple whitespace with single space
         text = re.sub(r"\s+", " ", text)
@@ -269,8 +271,12 @@ class HTMLExtractor:
 
         # For ordered lists
         elif tag.name == "ol":
+            start_counter = tag.get("start", 1)
+            # print(start_counter)
+            # if start_counter != 1:
+            #     print(self.content_name, tag.text)
             for i, li in enumerate(tag.find_all("li")):
-                content.append(f"{i + 1}. " + self.clean_text(li.text))
+                content.append(f"{int(start_counter) + i}. " + self.clean_text(li.text))
 
     def _extract_text_from_container(
         self, tag: PageElement, content: list[str]

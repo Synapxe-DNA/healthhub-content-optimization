@@ -150,9 +150,10 @@ def extract_data(
 
                 # Get the HTML content
                 html_content = row["content_body"]
+                content_name = row["content_name"]
 
                 # Extract text from HTML using the HTMLExtractor Class
-                extractor = HTMLExtractor(html_content)
+                extractor = HTMLExtractor(html_content, content_name)
                 has_table = extractor.check_for_table()
                 has_image = extractor.check_for_image()
                 related_sections = extractor.extract_related_sections()
