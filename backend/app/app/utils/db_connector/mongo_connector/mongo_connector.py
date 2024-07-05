@@ -76,8 +76,8 @@ class MongoConnector(DbConnector):
         :return: List[str]
         """
         ignored_ids = set()
-        async for record in IgnoreDocument.find_all():
-            ignored_ids.add(str(record.article_id))
+        async for record in IgnoreDocument.find_all(fetch_links=True):
+            ignored_ids.add(str(record.article_id.id))
         return list(ignored_ids)
 
     @staticmethod

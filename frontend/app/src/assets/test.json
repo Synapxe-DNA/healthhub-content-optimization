@@ -223,7 +223,7 @@
         {
           "articleId": 28,
           "URL": "www.healthhub.com/28",
-          "Pillar": "Medications",
+          "pillar": "Medications",
           "status": "Pending"
         },
         {
