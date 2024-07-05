@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {ClusterService} from "../../services/cluster/cluster.service";
 import {Cluster} from "../../types/data/cluster.types";

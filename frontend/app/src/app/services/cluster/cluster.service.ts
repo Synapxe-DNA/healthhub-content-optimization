@@ -1,10 +1,9 @@
 import {HttpClient} from "@angular/common/http";
-import {AfterViewInit, Injectable, OnInit} from "@angular/core";
-import {BehaviorSubject, firstValueFrom} from "rxjs";
+import {Injectable} from "@angular/core";
+import {BehaviorSubject} from "rxjs";
 import {environment} from "../../environments/environment";
 import {Cluster} from "../../types/data/cluster.types";
 import {Filter, FilterGroup} from "../../types/filters.types";
-import {B} from "@angular/cdk/keycodes";
 import axios from "axios";
 
 

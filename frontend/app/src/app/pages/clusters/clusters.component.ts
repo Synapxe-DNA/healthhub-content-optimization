@@ -7,6 +7,7 @@ import { MainClusterTableComponent } from "../../components/cluster/main-cluster
 import { MainClusterSideviewComponent } from "../../components/cluster/main-cluster-sideview/main-cluster-sideview.component";
 
 
+
 @Component({
   selector: "app-clusters",
   standalone: true,

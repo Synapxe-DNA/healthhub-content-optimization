@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild, ViewRef} from '@angular/core';
+import { Component, Input} from '@angular/core';
 import {TuiIslandModule} from "@taiga-ui/kit";
 import {IslandComponent} from "../../island/island.component";
 import {TuiScrollbarModule} from "@taiga-ui/core";

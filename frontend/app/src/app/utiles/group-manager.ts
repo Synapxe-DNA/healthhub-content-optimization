@@ -30,7 +30,7 @@ export class GroupManager {
                     groups.ignore.push(a)
                     break
                 default:
-                    if(groups.hasOwnProperty(a.status)){
+                    if(Object.prototype.hasOwnProperty.call(groups, a.status)){
                         groups[a.status].push(a)
                     } else {
                         groups[a.status] = [a]
@@ -61,7 +61,7 @@ export class GroupManager {
         }
 
         if(article){
-            if(currentGrouping.hasOwnProperty(group)){
+            if(Object.prototype.hasOwnProperty.call(currentGrouping, group)){
                 currentGrouping[group].push(article)
             } else {
                 currentGrouping[group] = [article]

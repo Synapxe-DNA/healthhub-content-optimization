@@ -2,7 +2,7 @@ import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/
 import * as d3 from 'd3';
 
 
-type Node = {
+interface Node {
   id: string;
   x?: number;
   y?: number;
@@ -10,12 +10,12 @@ type Node = {
   fy?: number | null;
 }
 
-type Link = {
+interface Link {
   source: string | Node;
   target: string | Node;
 }
 
-type GraphData = {
+interface GraphData {
   nodes: Node[];
   links: Link[];
 }
@@ -51,11 +51,12 @@ export class GraphComponent implements OnInit, AfterViewInit{
     ]
   }
 
-
-  constructor() {
-  }
+  //
+  // constructor() {
+  // }
 
   ngOnInit() {
+    console.log("graph init")
   }
 
   ngAfterViewInit() {
