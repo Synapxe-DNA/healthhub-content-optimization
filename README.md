@@ -1,3 +1,6 @@
+![PyPI - Python](https://img.shields.io/badge/python-%3E%3D3.12-blue)
+[![License](https://img.shields.io/badge/License-MIT--Clause-green.svg)](https://github.com/Wilsven/healthhub-content-optimization/blob/main/LICENSE)
+
 # Content Optimization for HealthHub
 
 This repository contains the content optimization for HealthHub.
