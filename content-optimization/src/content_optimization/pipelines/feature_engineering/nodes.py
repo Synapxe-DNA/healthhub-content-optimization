@@ -3,44 +3,42 @@ This is a boilerplate pipeline 'feature_engineering'
 generated using Kedro 0.19.6
 """
 
-from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
-from kedro.framework.session import KedroSession
-from kedro.io.core import DatasetError
 from keybert import KeyBERT
+from keyphrase_vectorizers import KeyphraseTfidfVectorizer
+from pytictoc import TicToc
 
 
-def generate_doc_and_word_embeddings(
+def extract_keywords(
     merged_data: pd.DataFrame,
     cfg: dict[str, Any],
     only_confirmed_option: list[str],
     all_option: list[str],
-    keyphrase_ngram_range: list[int, int],
-    min_df: int,
     stop_words: str,
-) -> tuple[pd.DataFrame, np.ndarray, np.ndarray]:
+    workers: int,
+    use_mmr: bool,
+    diversity: float,
+    top_n: int,
+) -> pd.DataFrame:
     """
-    Generate the document and word embeddings for keywords extraction.
+    Extract keywords using KeyBERT model based on the provided parameters and
+    return the DataFrame with the added `keybert_keywords` column containing the keywords.
 
     Args:
         merged_data (pd.DataFrame): The DataFrame containing the merged data.
         cfg (dict[str, Any]): The configuration dictionary containing the options to subset the merged data.
         only_confirmed_option (list[str]): The list of confirmed content categories if option is `only_confirmed`.
         all_option (list[str]): The list of all content categories if option is `all`.
-        keyphrase_ngram_range (list[int, int]): The range of n-grams for keyphrases extraction.
-        min_df (int): The minimum document frequency for keyphrase extraction.
         stop_words (str): The stop words to be used for keyphrase extraction.
-        use_mmr (bool): Flag indicating whether to use Maximal Marginal Relevance.
+        workers (int): Number of workers for spaCy part-of-speech tagging. If set to -1, use all available worker threads of the machine.
+        use_mmr (bool): Whether to use Maximal Marginal Relevance (MMR) for keyphrase extraction.
         diversity (float): The diversity parameter for keyphrase extraction.
-        top_n (int): The number of top keyphrases to extract.
+        top_n (int): The number of top keywords to extract.
 
     Returns:
-        tuple[pd.DataFrame, np.ndarray, np.ndarray]:
-            The tuple containing the DataFrame filtered by content categories, content provider and non-flagged articles,
-            along with the array of document and word embeddings for keyword extraction.
+         pd.DataFrame: The dataframe with the extracted keywords.
     """
     option = cfg["option"]
     contributor = cfg["contributor"]  # TODO: To allow for options other than HPB
@@ -70,76 +68,26 @@ def generate_doc_and_word_embeddings(
             drop=True
         )
 
-    # Check if we already have the `doc_embeddings` and `word_embeddings` saved in the catalog
-    with KedroSession.create(project_path=Path.cwd()) as session:
-        context = session.load_context()
-        catalog = context.catalog
-
-    try:
-        # If they already exists, load the saved embeddings
-        doc_embeddings = catalog.load("doc_embeddings")
-        word_embeddings = catalog.load("word_embeddings")
-        print("Loading...")
-    except (DatasetError, KeyError):
-        print("Generating...")
-        kw_model = KeyBERT()
-        # Extract the raw content body text
-        docs = filtered_data["extracted_content_body"].to_list()
-        doc_embeddings, word_embeddings = kw_model.extract_embeddings(
-            docs,
-            keyphrase_ngram_range=tuple(keyphrase_ngram_range),
-            min_df=min_df,
-            stop_words=stop_words,
-        )
-
-    return filtered_data, doc_embeddings, word_embeddings
-
-
-def extract_keywords(
-    filtered_data: pd.DataFrame,
-    doc_embeddings: np.ndarray,
-    word_embeddings: np.ndarray,
-    keyphrase_ngram_range: list[int, int],
-    min_df: int,
-    stop_words: str,
-    use_mmr: bool,
-    diversity: float,
-    top_n: int,
-) -> pd.DataFrame:
-    """
-    Extract keywords using KeyBERT model based on the provided parameters and
-    return the DataFrame with the added `keybert_keywords` column containing the keywords.
-
-    Args:
-        filtered_data (pd.DataFrame): The dataframe containing the extracted content body.
-        doc_embeddings (np.ndarray): The document embeddings.
-        word_embeddings (np.ndarray): The word embeddings.
-        keyphrase_ngram_range (list[int, int]): The range of n-grams for keyphrases extraction.
-        min_df (int): The minimum document frequency for keyphrase extraction.
-        stop_words (str): The stop words to be used for keyphrase extraction.
-        use_mmr (bool): Whether to use Maximal Marginal Relevance (MMR) for keyphrase extraction.
-        diversity (float): The diversity parameter for keyphrase extraction.
-        top_n (int): The number of top keywords to extract.
-
-    Returns:
-        pd.DataFrame: The dataframe with the extracted keywords.
-    """
-    kw_model = KeyBERT()
-
     # Extract the raw content body text
     docs = filtered_data["extracted_content_body"].to_list()
 
-    keywords = kw_model.extract_keywords(
-        docs,
-        keyphrase_ngram_range=tuple(keyphrase_ngram_range),
-        min_df=min_df,
-        stop_words=stop_words,
-        use_mmr=use_mmr,
-        diversity=diversity,
-        top_n=top_n,
-        doc_embeddings=doc_embeddings,
-        word_embeddings=word_embeddings,
-    )
+    kw_model = KeyBERT()
+    vectorizer = KeyphraseTfidfVectorizer(stop_words=stop_words, workers=workers)
+
+    # Marginally more performant
+    # See: https://github.com/MaartenGr/KeyBERT/issues/156
+    with TicToc():
+        counts = vectorizer.fit(docs)
+        vectorizer.fit = lambda *args, **kwargs: counts
+
+        # If keyphrase vectorizer is specified, `keyphrase_ngram_range` is ignored
+        keywords = kw_model.extract_keywords(
+            docs,
+            use_mmr=use_mmr,
+            diversity=diversity,
+            top_n=top_n,
+            vectorizer=vectorizer,
+        )
 
     # We iterate through the keywords, and reverse the order of the keywords
     # from the closest to the most distant and taking only the keywords themselves,
