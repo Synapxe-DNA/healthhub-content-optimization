@@ -5,6 +5,7 @@ import { ImprovementsComponent } from "./pages/improvements/improvements.compone
 import { HarmoniseComponent } from "./pages/harmonise/harmonise.component";
 import { JobsComponent } from "./pages/jobs/jobs.component";
 import { TestComponent } from "./pages/test/test.component";
+import {ClusterIdComponent} from "./pages/cluster-id/cluster-id.component";
 
 export const routes: Routes = [
   {
@@ -19,6 +20,10 @@ export const routes: Routes = [
         path: "",
         component: ClustersComponent,
       },
+      {
+        path: ":id",
+        component: ClusterIdComponent,
+      }
     ],
   },
   {

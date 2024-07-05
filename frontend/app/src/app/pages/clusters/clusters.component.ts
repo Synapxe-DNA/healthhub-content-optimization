@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 
 import { TuiButtonModule, TuiSvgModule } from "@taiga-ui/core";
@@ -28,13 +28,13 @@ export interface ArticleDeprecated {
   templateUrl: "./clusters.component.html",
   styleUrl: "./clusters.component.css",
 })
-export class ClustersComponent {
+export class ClustersComponent implements OnInit {
   data: ClusterDeprecated[] = [];
 
   constructor(private clusterService: ClusterService) {}
 
   ngOnInit(): void {
-    this.clusterService.loadData().catch(console.error)
+    this.clusterService.getClusters().subscribe(console.log)
   }
 
 }
