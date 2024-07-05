@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "npx ts-prune && ng lint --fix"
   },
   "private": true,
   "dependencies": {
@@ -61,6 +61,7 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
+    "ts-prune": "^0.10.3",
     "typescript": "~5.4.5",
     "typescript-eslint": "8.0.0-alpha.38"
   }

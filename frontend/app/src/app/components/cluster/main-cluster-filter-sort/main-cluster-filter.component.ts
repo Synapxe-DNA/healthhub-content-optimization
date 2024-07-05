@@ -39,7 +39,7 @@ export class MainClusterFilterComponent {
       if (this.clusters.length == 0){ // To keep all clusters instead of filtered clusters
         this.clusters = res
       }
-      for (let cluster of res) {
+      for (const cluster of res) {
         this.filterClusterForm.addControl(cluster.name, new FormControl(true))
       }
     })
@@ -62,8 +62,8 @@ export class MainClusterFilterComponent {
    * Method to add filter for the selected status
    */
   filterStatus() {
-    let isCompleted:Boolean = this.filterStatusForm.get(this.FILTER_NAMES.completed)?.value
-    let isPending:Boolean = this.filterStatusForm.get(this.FILTER_NAMES.pending)?.value
+    const isCompleted:boolean = this.filterStatusForm.get(this.FILTER_NAMES.completed)?.value
+    const isPending:boolean = this.filterStatusForm.get(this.FILTER_NAMES.pending)?.value
 
     if(isCompleted && isPending){
       this.clusterService.removeFilter(this.FILTER_NAMES.completed);
@@ -85,9 +85,9 @@ export class MainClusterFilterComponent {
    * Method to add filter for the selected clusters
    */
   filterCluster() {
-    let clustersSelected:String[] = []
-    for (let cluster of this.clusters) {
-      let selectedCluster:Boolean = this.filterClusterForm.get(cluster.name)?.value
+    const clustersSelected:string[] = []
+    for (const cluster of this.clusters) {
+      const selectedCluster:boolean = this.filterClusterForm.get(cluster.name)?.value
       if (selectedCluster) {
         clustersSelected.push(cluster.name)
       }
@@ -102,7 +102,7 @@ export class MainClusterFilterComponent {
    * Method to remove all filters
    */
   removeAllFilters() {
-    for(let filterStatusName in this.FILTER_NAMES) {
+    for(const filterStatusName in this.FILTER_NAMES) {
       this.clusterService.removeFilter(filterStatusName);
     }
   }
@@ -112,10 +112,10 @@ export class MainClusterFilterComponent {
    */
   resetClick() {
     this.removeAllFilters()
-    for(let filterStatusName in this.FILTER_NAMES) {
+    for(const filterStatusName in this.FILTER_NAMES) {
       this.filterStatusForm.get(filterStatusName)?.setValue(true)
     }
-    for(let cluster of this.clusters) {
+    for(const cluster of this.clusters) {
       this.filterClusterForm.get(cluster.name)?.setValue(true)
     }
   }

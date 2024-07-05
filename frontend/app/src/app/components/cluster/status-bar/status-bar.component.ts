@@ -1,4 +1,4 @@
-import { Component, Input } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { TuiProgressModule } from "@taiga-ui/kit";
 import { ClusterService } from "../../../services/cluster/cluster.service";
 import { Cluster } from "../../../types/data/cluster.types";
@@ -10,7 +10,7 @@ import { Cluster } from "../../../types/data/cluster.types";
   templateUrl: "./status-bar.component.html",
   styleUrl: "./status-bar.component.css",
 })
-export class StatusBarComponent {
+export class StatusBarComponent implements OnInit {
   clustersCompleted = 0;
   clustersPending = 0;
   totalClusters = 0;
@@ -25,7 +25,7 @@ export class StatusBarComponent {
   }
 
   calculateProgress(res: Cluster[]) {
-    for (let c of res) {
+    for (const c of res) {
       if (c.articles[0].status.length > 0) {
         this.clustersCompleted++;
       } else {

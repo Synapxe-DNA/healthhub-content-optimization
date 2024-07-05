@@ -16,7 +16,7 @@ import { MainClusterTableComponent } from '../main-cluster-table/main-cluster-ta
 })
 export class MainClusterSideviewComponent {
 
-  clusterSelected:String = ""
+  clusterSelected:string = ""
 
   constructor(
     private readonly dialogs: TuiDialogService,
