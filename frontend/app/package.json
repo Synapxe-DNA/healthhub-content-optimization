@@ -7,7 +7,11 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "npx ts-prune && ng lint --fix"
+    "lint:prune": "npx ts-prune",
+    "lint:eslint:fix": "ng lint --fix",
+    "lint:eslint": "ng lint",
+    "lint": "npm run lint:prune && npm run lint:eslint:fix",
+    "lint:github": "npm run lint:eslint"
   },
   "private": true,
   "dependencies": {

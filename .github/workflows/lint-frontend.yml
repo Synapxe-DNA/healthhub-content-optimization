@@ -1,0 +1,37 @@
+name: Lint and Check Frontend
+
+on:
+  pull_request:
+    branches:
+      - webapp
+
+
+jobs:
+  frontend_eslint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+          node-version: '20'  # Set this to the node version you are using
+
+    - name: Cache Node Modules
+      uses: actions/cache@v3
+      with:
+        path: frontend/app/node_modules  # Update the path to the node_modules directory
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/app/**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+          
+    - name: Install Dependencies
+      run: npm install
+      working-directory: frontend/app
+
+    - name: Run Lint
+      run: npm run lint:github
+      working-directory: frontend/app
