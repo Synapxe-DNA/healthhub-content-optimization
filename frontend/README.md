@@ -28,5 +28,5 @@ npm run start
 > The minimum `Node` version is `^18.19.1 || ^20.11.1 || ^22.0.0`, stated [here](https://angular.dev/reference/versions).
 > An additional [node version manager `nvm`](https://github.com/nvm-sh/nvm) may be used to run different `Node` versions
 > on your system.
-
+>.
 ---
