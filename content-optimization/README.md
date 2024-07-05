@@ -75,17 +75,9 @@ cat requirements.txt | xargs poetry add
 
     - `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#data-schema)
 
-    - `filtered_data.parquet/`: contains the filtered data and versioned; for more information on the data schema, refer [here](#data-schema)
-
     - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#data-schema)
 
   - [`04_feature/`](data/04_feature): contains the features data
-
-    - `keywords_embeddings/`: contains the documents and keywords embeddings for keyword extraction with KeyBERT
-
-      - `doc_embeddings.pkl`: contains the document embeddings for the articles
-
-      - `word_embeddings.pkl`: contains the word embeddings for the articles
 
   - [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\\_count)}$
 
@@ -167,16 +159,6 @@ If for any reason, you would like to run specific nodes in the `feature_engineer
 # Running only the `standardize_columns_node`
 kedro run --nodes="extract_keywords_node"
 ```
-
-If you want to run from a particular node to another node, you can run:
-
-```bash
-# Running from `generate_doc_and_word_embeddings_node` to `extract_keywords_node`
-kedro run --from-nodes="generate_doc_and_word_embeddings_node" --to-nodes="extract_keywords_node"
-```
-
-> [!TIP]
-> The `generate_doc_and_word_embeddings_node` node only runs when either the `doc_embeddings.pkl` or `word_embeddings.pkl` files do not exist in the `data/04_feature/keywords_embeddings` directory. If they exist, they are simply loaded from the Kedro catalog. This makes the pipeline run faster.
 
 ## Data Schema <a id="data-schema"></a>
 
