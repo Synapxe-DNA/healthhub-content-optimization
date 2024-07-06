@@ -148,12 +148,16 @@ def extract_data(
                 # Replace all forward slashes with hyphens to avoid saving as folders
                 title = re.sub(r"\/", "-", row["title"]).strip()
 
-                # Get the HTML content
-                html_content = row["content_body"]
+                # TODO: Discuss whether to keep this data for monitoring purposes
+                # Get the HTML content and relevant data
                 content_name = row["content_name"]
+                full_url = row["full_url"]
+                html_content = row["content_body"]
 
                 # Extract text from HTML using the HTMLExtractor Class
-                extractor = HTMLExtractor(html_content, content_name)
+                extractor = HTMLExtractor(
+                    content_name, content_category, full_url, html_content
+                )
                 has_table = extractor.check_for_table()
                 has_image = extractor.check_for_image()
                 related_sections = extractor.extract_related_sections()
@@ -172,9 +176,10 @@ def extract_data(
                 # Substitute forbidden characters for filenames with _
                 title = re.sub(r'[<>:"/\\|?*]', "_", title)
 
-                # Truncate title to 25 characters and append the id
+                # TODO: Change back to 25 characters
+                # Truncate title to 50 characters and append the id
                 # See: https://github.com/Wilsven/healthhub-content-optimization/issues/42
-                title = title[:25] + f"_{row['id']}"
+                title = title[:50] + f"_{row['id']}"
 
                 # Store text files in its own folder named `content_category`
                 all_extracted_text[os.path.join(content_category, title)] = (
