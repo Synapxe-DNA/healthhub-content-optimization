@@ -1,8 +1,15 @@
+import logging
 import re
 import string
 import unicodedata
 
 from bs4 import BeautifulSoup, PageElement
+
+# TODO: Remove logger after debugging
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    filename="extractor.log", filemode="w", encoding="utf-8", level=logging.INFO
+)
 
 
 class HTMLExtractor:
@@ -14,15 +21,27 @@ class HTMLExtractor:
         soup (BeautifulSoup): A BeautifulSoup object.
     """
 
-    def __init__(self, html_content: str, content_name: str) -> None:
+    def __init__(
+        self, content_name: str, content_category: str, full_url: str, html_content: str
+    ) -> None:
         """
         Initializes the HTMLExtractor with the given HTML content.
 
         Args:
             html_content (str): The HTML content to be processed.
         """
-        self.soup = self.preprocess_html(html_content)
         self.content_name = content_name
+        self.content_category = content_category
+        self.url = full_url
+        self.soup = self.preprocess_html(html_content)
+
+        logger.info(
+            f"Text Extraction - Extracting `{self.content_name}` within `{self.content_category}`. Link to article - `{self.url}`"
+        )
+
+        # Check how many direct children the HTML has
+        num_children = len(list(self.soup.children))
+        logger.info(f"Text Extraction - {num_children} children detected")
 
     @classmethod
     def clean_text(cls, text: str) -> str:
@@ -54,6 +73,7 @@ class HTMLExtractor:
 
         # Replace multiple whitespace with single space
         text = re.sub(r"\s+", " ", text)
+
         return text.strip()
 
     @classmethod
@@ -73,12 +93,229 @@ class HTMLExtractor:
         # Find all <br> tags and replace them with newline
         for br in soup.find_all("br"):
             br.replace_with("\n")
+            logger.debug("Text Extraction - Replacing br with newline")
 
         # Find all <hr> tags and replace them with newline
         for hr in soup.find_all("hr"):
             hr.replace_with("\n")
+            logger.debug("Text Extraction - Replacing hr with newline")
 
         return soup
+
+    def extract_text(self) -> str:
+        """
+        Extracts the main content from the HTML content.
+
+        Returns:
+            str: The main content body extracted from the HTML content.
+
+        Note:
+            This function unwraps the HTML content if it is contained in a <div>. It then extracts the
+            main content by iterating over the tags in the soup. The following tags are considered:
+
+                - h1, h2, h3, h4, h5, h6: These tags are treated as key headers and are paragraphed between them.
+                - p: This tag is treated as a paragraph. <em> tags are removed from the text.
+                    * If the text does not contain sentences about HealthHub app, Google Play, or Apple Store,
+                    and it contains a strong tag, it is treated differently based on the text content.
+                - ul: This tag is treated as an unordered list. If it is the child of a <div>, it is treated as a list.
+                - ol: This tag is treated as an ordered list.
+                - div: This tag is treated as a text within a div.
+                - span: This tag is treated as a text within a span.
+                - blockquote: This tag is treated as a text within a blockquote.
+
+            The extracted content is stored in a list and then processed. Double newlines are replaced with single
+            newlines and whitespace is stripped. If the processed text is empty, the function attempts to extract the
+            content from the <div> tags.
+        """
+        # Unwrap if the HTML content is contained in a div
+        if self.soup.div is not None:
+            logger.info("Text Extraction - Unwrapping outermost div container")
+            self.soup.div.unwrap()
+
+        # Remove all tables from the HTML text
+        for table in self.soup.find_all("table"):
+            table.extract()
+            logger.debug(f"Text Extraction - Removing table from {self.content_name}")
+
+        # Extract the main content
+        content = []
+        for tag in self.soup.find_all(
+            [
+                "h1",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "h6",
+                "p",
+                "ul",
+                "ol",
+                "div",
+                "span",
+                "blockquote",
+            ],
+            recursive=False,
+        ):
+            # For texts within div and span - recursive search
+            if tag.name in ["div", "span", "blockquote"]:
+                # Changes content via Pass By Reference
+                self._extract_text_from_container(tag, content)
+            # Handles the text for the rest
+            else:
+                self._extract_text_elements(tag, content)
+
+        # Remove empty strings from content
+        content = [c for c in content if c]
+
+        # Replace double newlines with single newlines and strip whitespace
+        extracted_content_body = "\n".join(content).replace("\n\n", "\n").strip()
+
+        return extracted_content_body
+
+    def _extract_text_elements(self, tag: PageElement, content: list[str]) -> None:
+        """
+        Helper method to extract the text elements from the given HTML tag.
+
+        This method extracts the text content from the various textual elements
+        such as headers, paragraphs, anchors, lists, etc.
+
+        Args:
+            tag (PageElement): The HTML element to extract the text elements from.
+            content (list[str]): A list of text elements.
+
+        Returns:
+            None: This method modifies the content list in-place.
+
+        Note:
+            This method is used in `extract_text` method and `_extract_text_from_container` method.
+        """
+        # For headings
+        if tag.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+            # Provide paragraphing between key headers
+            content.append("\n")
+            content.append(self.clean_text(tag.text))
+
+        # For texts with strong importance
+        elif tag.name == "strong":
+            # Find related section within div
+            cleaned_text = self.clean_text(tag.text)
+            if "Related:" in cleaned_text:
+                cleaned_text = re.sub(r"\n", " ", cleaned_text)
+                if len(content) > 0 and cleaned_text != content[-1]:
+                    content.append(cleaned_text)
+            elif "Read these next:" in cleaned_text:
+                if len(content) > 0 and cleaned_text != content[-1]:
+                    content.append(cleaned_text)
+            else:
+                # Handle paragraphs and anchor tags nested within
+                for child in tag.children:
+                    if child.name in ["p", "a"]:
+                        content.append(self.clean_text(child.text))
+                    # else:
+                    #     logger.warning(
+                    #         f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
+                    #     )
+
+        # Extract texts in anchor tags (e.g. links)
+        elif tag.name == "a":
+            content.append(self.clean_text(tag.text))
+
+        # For paragraphs
+        elif tag.name == "p":
+            # Skip sentences about HealthHub app, Google Play, and Apple Store
+            if re.search(
+                r"(HealthHub app|Google Play|Apple Store|Parent Hub)", tag.text
+            ):
+                return
+            # Extract text from related sections
+            for child in tag.children:
+                if child.name == "strong":
+                    self._extract_text_from_container(child, content)
+                elif child.name is None:
+                    cleaned_text = self.clean_text(child.text)
+                    if len(content) == 0:
+                        content.append(cleaned_text)
+                    elif len(content) > 0 and cleaned_text != content[-1]:
+                        content.append(cleaned_text)
+                # else:
+                #     logger.warning(
+                #         f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
+                #     )
+
+        # For unordered lists
+        elif tag.name == "ul":
+            # not "ul" so we avoid duplicates
+            for child in tag.children:
+                if child.name == "li":
+                    content.append("- " + self.clean_text(child.text))
+                # else:
+                #     logger.warning(
+                #         f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
+                #     )
+
+        # For ordered lists
+        elif tag.name == "ol":
+            start_counter = tag.get("start", 1)
+            for i, child in enumerate(tag.children):
+                if child.name == "li":
+                    content.append(
+                        f"{int(start_counter) + i}. " + self.clean_text(child.text)
+                    )
+                # else:
+                #     logger.warning(
+                #         f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
+                #     )
+
+        # elif self.content_category in [
+        #     "cost-and-financing",
+        #     "diseases-and-conditions",
+        #     "live-healthy-articles",
+        #     "medical-care-and-facilities",
+        #     "support-group-and-others",
+        # ]:
+        #     logger.warning(
+        #         f"Text Extraction - Tag {tag.name} not handled within {self._extract_text_elements.__name__}: {tag.text[:25]}"
+        #     )
+
+        return
+
+    def _extract_text_from_container(
+        self, tag: PageElement, content: list[str]
+    ) -> None:
+        """
+        Helper method to extract text from div and span containers.
+
+        This method recursively processes div, span and blockquote elements, extracting their text content.
+        It handles both direct text content and nested elements.
+
+        Args:
+            tag (PageElement): The BeautifulSoup tag (div or span) to extract text from.
+            content (list[str]): The list to append extracted text to.
+
+        Returns:
+            None: This method modifies the content list in-place.
+        """
+        # Check for text within its children
+        for child in tag.children:
+            # Recursive search
+            if child.name in ["div", "span", "blockquote"]:
+                self._extract_text_from_container(child, content)
+            # Child has no HTML tag (i.e. texts in div containers)
+            elif child.name is None:
+                cleaned_text = self.clean_text(child.text)
+                # Only extract text that are not solely punctuation
+                if cleaned_text not in string.punctuation:
+                    content.append(cleaned_text)
+                else:
+                    logger.debug(
+                        f"Text Extraction - Text contains only punctuation - {tag.name} "
+                    )
+            # Continue extracting text for other elements
+            else:
+                logger.debug(
+                    f"Text Extraction - Text Element nested within container - {tag.name} "
+                )
+                self._extract_text_elements(child, content)
 
     def check_for_table(self) -> bool:
         """
@@ -128,187 +365,6 @@ class HTMLExtractor:
                     related_sections.append(self.clean_text(li.text))
 
         return related_sections
-
-    def extract_text(self) -> str:
-        """
-        Extracts the main content from the HTML content.
-
-        Returns:
-            str: The main content body extracted from the HTML content.
-
-        Note:
-            This function unwraps the HTML content if it is contained in a <div>. It then extracts the
-            main content by iterating over the tags in the soup. The following tags are considered:
-
-                - h1, h2, h3, h4, h5, h6: These tags are treated as key headers and are paragraphed between them.
-                - p: This tag is treated as a paragraph. <em> tags are removed from the text.
-                    * If the text does not contain sentences about HealthHub app, Google Play, or Apple Store,
-                    and it contains a strong tag, it is treated differently based on the text content.
-                - ul: This tag is treated as an unordered list. If it is the child of a <div>, it is treated as a list.
-                - ol: This tag is treated as an ordered list.
-                - div: This tag is treated as a text within a div.
-                - span: This tag is treated as a text within a span.
-                - blockquote: This tag is treated as a text within a blockquote.
-
-            The extracted content is stored in a list and then processed. Double newlines are replaced with single
-            newlines and whitespace is stripped. If the processed text is empty, the function attempts to extract the
-            content from the <div> tags.
-        """
-        # Unwrap if the HTML content is contained in a div
-        if self.soup.div is not None:
-            self.soup.div.unwrap()
-
-        # Remove all tables from the HTML text
-        for table in self.soup.find_all("table"):
-            table.extract()
-
-        # Extract the main content
-        content = []
-        for tag in self.soup.find_all(
-            [
-                "h1",
-                "h2",
-                "h3",
-                "h4",
-                "h5",
-                "h6",
-                "p",
-                "ul",
-                "ol",
-                "div",
-                "span",
-                "blockquote",
-            ],
-            recursive=False,
-        ):
-            # For texts within div and span - recursive search
-            if tag.name in ["div", "span", "blockquote"]:
-                # Changes content via Pass By Reference
-                self._extract_text_from_container(tag, content)
-            # Handles the text for the rest
-            else:
-                self._extract_text_elements(tag, content)
-
-            content.append("")  # Add a blank line after each element
-
-        # Remove empty strings from content
-        content = [c for c in content if c]
-
-        # Replace double newlines with single newlines and strip whitespace
-        extracted_content_body = "\n".join(content).replace("\n\n", "\n").strip()
-
-        return extracted_content_body
-
-    def _extract_text_elements(self, tag: PageElement, content: list[str]) -> None:
-        """
-        Helper method to extract the text elements from the given HTML tag.
-
-        This method extracts the text content from the various textual elements
-        such as headers, paragraphs, anchors, lists, etc.
-
-        Args:
-            tag (PageElement): The HTML element to extract the text elements from.
-            content (list[str]): A list of text elements.
-
-        Returns:
-            None: This method modifies the content list in-place.
-
-        Note:
-            This method is used in `extract_text` method and `_extract_text_from_container` method.
-        """
-        # For headings
-        if tag.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
-            # Provide paragraphing between key headers
-            content.append("\n")
-            content.append(self.clean_text(tag.text))
-
-        # For texts with strong importance
-        elif tag.name == "strong":
-            # Find related section within div
-            cleaned_text = self.clean_text(tag.text)
-            if "Related:" in cleaned_text:
-                content.append(re.sub(r"\n", " ", cleaned_text))
-            elif "Read these next:" in cleaned_text:
-                content.append(cleaned_text)
-            for child in tag.children:
-                if child.name == "p":
-                    content.append(self.clean_text(child.text))
-                elif tag.name == "a":
-                    content.append(self.clean_text(child.text))
-
-        # Extract texts in anchor tags (e.g. links)
-        elif tag.name == "a":
-            content.append(self.clean_text(tag.text))
-
-        # For paragraphs
-        elif tag.name == "p":
-            # Get the remaining text
-            text = tag.get_text()
-            # Skip sentences about HealthHub app, Google Play, and Apple Store
-            if re.search(r"(HealthHub app|Google Play|Apple Store|Parent Hub)", text):
-                return
-            # Extract text from related sections
-            for child in tag.children:
-                if child.name == "strong":
-                    cleaned_text = self.clean_text(tag.text)
-                    if "Related:" in cleaned_text:
-                        content.append(re.sub(r"\n", " ", cleaned_text))
-                    elif "Read these next:" in cleaned_text:
-                        content.append(cleaned_text)
-            # Extract remaining text within <p></p>
-            cleaned_text = self.clean_text(text)
-            if len(content) == 0:
-                content.append(cleaned_text)
-            elif len(content) > 0 and cleaned_text != content[-1]:
-                content.append(cleaned_text)
-
-        # For unordered lists
-        elif tag.name == "ul":
-            # not "ul" so we avoid duplicates
-            for child in tag.children:
-                if child.name == "li":
-                    content.append("- " + self.clean_text(child.text))
-
-        # For ordered lists
-        elif tag.name == "ol":
-            start_counter = tag.get("start", 1)
-            # print(start_counter)
-            # if start_counter != 1:
-            #     print(self.content_name, tag.text)
-            for i, li in enumerate(tag.find_all("li")):
-                content.append(f"{int(start_counter) + i}. " + self.clean_text(li.text))
-
-    def _extract_text_from_container(
-        self, tag: PageElement, content: list[str]
-    ) -> None:
-        """
-        Helper method to extract text from div and span containers.
-
-        This method recursively processes div, span and blockquote elements, extracting their text content.
-        It handles both direct text content and nested elements.
-
-        Args:
-            tag (PageElement): The BeautifulSoup tag (div or span) to extract text from.
-            content (list[str]): The list to append extracted text to.
-
-        Returns:
-            None: This method modifies the content list in-place.
-        """
-        # Check for text within its children
-        for child in tag.children:
-            # Recursive search
-            if child.name in ["div", "span", "blockquote"]:
-                self._extract_text_from_container(child, content)
-            # Child has no HTML tag (i.e. texts in div containers)
-            elif child.name is None:
-                cleaned_text = self.clean_text(child.text)
-                # Only extract text that are not solely punctuation
-                if cleaned_text not in string.punctuation:
-                    content.append(cleaned_text)
-                content.append("")
-            # Continue extracting text for other elements
-            else:
-                self._extract_text_elements(child, content)
 
     def extract_links(self) -> list[tuple[str, str]]:
         """
