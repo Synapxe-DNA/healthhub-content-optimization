@@ -27,7 +27,7 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('frontend/app/**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
-          
+
     - name: Install Dependencies
       run: npm install
       working-directory: frontend/app
