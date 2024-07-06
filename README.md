@@ -180,7 +180,7 @@ The [`lint.yml`](.github/workflows/lint.yml) is a GitHub workflow that kicks off
 > [!NOTE]
 > The `pre-commit` will run regardless if you forget to explicitly call it. Nonetheless, it is recommended to call it explicitly so you can make any necessary changes in advanced.
 
-## Working with Kedro from Root Directory
+## Working with Kedro from Root Directory <a id="working-with-kedro-from-root-directory"></a>
 
 ### Cleaning Data Directories
 

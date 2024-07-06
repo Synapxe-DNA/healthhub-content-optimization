@@ -5,7 +5,7 @@
 - Made QoL improvements to Makefile (see previous release [here](#july-4-2024) for more information)
   - Users can now specify which data directory in the Kedro project to clean
   - Users can now specify which pipeline to run from the root directory
-- Usage documented in [README.md](README.md) for interested users
+- Usage documented in [README](README.md#working-with-kedro-from-root-directory) for interested users
 
 ## July 5, 2024 <a id="july-5-2024"></a>
 
