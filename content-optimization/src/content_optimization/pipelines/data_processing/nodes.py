@@ -176,10 +176,9 @@ def extract_data(
                 # Substitute forbidden characters for filenames with _
                 title = re.sub(r'[<>:"/\\|?*]', "_", title)
 
-                # TODO: Change back to 25 characters
-                # Truncate title to 50 characters and append the id
+                # Truncate title to 25 characters and append the id
                 # See: https://github.com/Wilsven/healthhub-content-optimization/issues/42
-                title = title[:50] + f"_{row['id']}"
+                title = title[:25] + f"_{row['id']}"
 
                 # Store text files in its own folder named `content_category`
                 all_extracted_text[os.path.join(content_category, title)] = (
