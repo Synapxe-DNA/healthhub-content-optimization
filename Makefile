@@ -1,4 +1,4 @@
-.PHONY: install lint clean-dry-run clean run local-db-start local-db-stop
+.PHONY: install lint lint-frontend clean-dry-run clean run local-db-start local-db-stop
 
 install:
 	pip install -r requirements.txt
