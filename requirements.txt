@@ -15,7 +15,7 @@ keybert==0.8.5
 matplotlib==3.9.0
 nbqa==1.8.5
 nltk==3.8.1
-notebook
+notebook==6.1.5
 numpy==1.26.4
 openpyxl==3.1.4
 pandas==2.2.2

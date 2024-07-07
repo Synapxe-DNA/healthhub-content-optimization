@@ -1,4 +1,4 @@
-.PHONY: install lint lint-frontend clean-dry-run clean run run-data-processing run-feature-engineering local-db-start local-db-stop
+.PHONY: install lint lint-frontend clean-dry-run clean run local-db-start local-db-stop
 
 install:
 	pip install -r requirements.txt
@@ -9,29 +9,34 @@ lint:
 lint-frontend:
 	@cd ./frontend/app && npm run lint
 
+DIRS ?= data/02_intermediate data/03_primary data/04_feature data/05_model_input data/06_models data/07_model_output
+
 clean-dry-run:
-	cd content-optimization && \
-		find data/02_intermediate -mindepth 1 -type d -print && \
-		find data/03_primary -mindepth 1 -type d -print && \
-		find data/04_feature -mindepth 1 -type d -print
+	@echo "Cleaning"
+	@cd content-optimization && \
+	for dir in $(DIRS); do \
+		echo "Would have cleaned $$dir"; \
+	done
+	@echo "Done!"
 
 clean:
-	cd content-optimization && \
-		find data/02_intermediate -mindepth 1 -type d -exec rm -rf {} + && \
-		find data/03_primary -mindepth 1 -type d -exec rm -rf {} + && \
-		find data/04_feature -mindepth 1 -type d -exec rm -rf {} +
+	@echo "Cleaning"
+	@cd content-optimization && \
+	for dir in $(DIRS); do \
+		echo "Cleaned $$dir"; \
+		find $$dir -mindepth 1 -type d -exec rm -rf {} +; \
+	done
+	@echo "Done!"
+
+PIPELINE ?=
 
 run:
-	cd content-optimization && \
-		kedro run
-
-run-data-processing:
-	cd content-optimization && \
-		kedro run --pipeline=data_processing
-
-run-feature-engineering:
-	cd content-optimization && \
-		kedro run --pipeline=feature_engineering
+	@cd content-optimization && \
+	if [ -z "$(PIPELINE)" ]; then \
+		kedro run; \
+	else \
+		kedro run --pipeline=$(PIPELINE); \
+	fi
 
 #############################
 # Commands to run docker
@@ -44,4 +49,4 @@ local-db-start:
 local-db-stop:
 	@docker-compose --file ./docker/Dockercompose.yaml --env-file ./docker/dockercompose.env.local down hh-mongo
 
-all: install lint clean-dry-run clean run run-data-processing run-feature-engineering local-db-start local-db-stop
+all: install lint clean-dry-run clean run local-db-start local-db-stop
