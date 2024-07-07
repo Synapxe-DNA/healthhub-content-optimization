@@ -3,12 +3,11 @@ import re
 import string
 import unicodedata
 
-from bs4 import BeautifulSoup, PageElement
+from bs4 import BeautifulSoup, NavigableString, PageElement
 
-# TODO: Remove logger after debugging
+# Set up logger in extractor.py
+# Edit conf/logging.yml to see changes
 logger = logging.getLogger(__name__)
-
-logging.basicConfig(filemode="w", encoding="utf-8", level=logging.WARNING)
 
 
 class HTMLExtractor:
@@ -29,18 +28,18 @@ class HTMLExtractor:
         Args:
             html_content (str): The HTML content to be processed.
         """
-        # logger.warning(
-        #     f"Text Extraction - Extracting `{content_name}` within `{content_category}`. Link to article - `{full_url}`"
-        # )
+        logger.debug(
+            f"Text Extraction - Extracting `{content_name}` within `{content_category}`. Link to article - `{full_url}`"
+        )
 
         self.content_name = content_name
         self.content_category = content_category
         self.url = full_url
         self.soup = self.preprocess_html(html_content)
 
-        # # Check how many direct children the HTML has
-        # num_children = len(list(self.soup.children))
-        # logger.info(f"Text Extraction - {num_children} children detected")
+        # Check how many direct children the HTML has
+        num_children = len(list(self.soup.children))
+        logger.debug(f"Text Extraction - {num_children} children detected")
 
     @classmethod
     def clean_text(cls, text: str) -> str:
@@ -89,12 +88,12 @@ class HTMLExtractor:
         """
         soup = BeautifulSoup(html_content, "html.parser")
 
-        # Find all <br> tags and replace them with newline # TODO: Try 2 newlines
+        # Find all <br> tags and replace them with newline
         for br in soup.find_all("br"):
             br.replace_with("\n")
             logger.debug("Text Extraction - Replacing br with newline")
 
-        # Find all <hr> tags and replace them with newline # TODO: Try 2 newlines
+        # Find all <hr> tags and replace them with newline
         for hr in soup.find_all("hr"):
             hr.replace_with("\n")
             logger.debug("Text Extraction - Replacing hr with newline")
@@ -163,13 +162,40 @@ class HTMLExtractor:
             else:
                 self._extract_text_elements(tag, content)
 
+        # Clean up content fragments
+        cleaned_content = self._clean_up_fragments(content)
+
+        # Replace double newlines with single newlines and strip whitespace
+        extracted_content_body = (
+            "\n".join(cleaned_content).replace("\n\n", "\n").strip()
+        )
+
+        return extracted_content_body
+
+    @classmethod
+    def _clean_up_fragments(cls, content: list[str]) -> list[str]:
+        threshold = 3
         # Remove empty strings from content
         content = [c for c in content if c]
 
-        # Replace double newlines with single newlines and strip whitespace
-        extracted_content_body = "\n".join(content).replace("\n\n", "\n").strip()
+        result = []
+        for i in range(len(content)):
+            # Append the first element
+            if i == 0:
+                result.append(content[i])
+            # Handle self-made bullet points
+            elif result[-1] != "\n" and len(result[-1]) < threshold:
+                result[-1] = result[-1] + " " + content[i]
+            # Handle nested bullet points
+            elif result[-1] == "\t":
+                result[-1] = result[-1] + content[i]
+            # Concatenate strings if the 2nd one starts with a punctuation
+            elif content[i][0] in [".", ",", ":"]:
+                result[-1] = result[-1] + content[i]
+            else:
+                result.append(content[i])
 
-        return extracted_content_body
+        return result
 
     def _extract_text_elements(self, tag: PageElement, content: list[str]) -> None:
         """
@@ -209,53 +235,20 @@ class HTMLExtractor:
         elif tag.name == "em":
             self._extract_text_from_em(tag, content)
 
+        # For unordered lists
+        elif tag.name == "ul":
+            self._extract_text_from_ul(tag, content)
+
+        # For ordered lists
+        elif tag.name == "ol":
+            self._extract_text_from_ol(tag, content)
+
         # For texts in anchor tags (e.g. links)
         elif tag.name == "a":
             if len(content) > 0 and content[-1] != "\n":
                 content[-1] = content[-1] + " " + self.clean_text(tag.text)
             else:
                 content.append(self.clean_text(tag.text))
-
-        # For unordered lists
-        elif tag.name == "ul":
-            # not "ul" so we avoid duplicates
-            for child in tag.children:
-                if child.name == "li":
-                    content.append("- " + self.clean_text(child.text))
-                elif child.name is None:
-                    # TODO: handle edge case within ul
-                    cleaned_text = self.clean_text(child.text)
-                    if cleaned_text != "":
-                        content.append(cleaned_text)
-                # TODO: Check impact of ul
-                else:
-                    logger.warning(
-                        f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
-                    )
-
-            content.append("\n")
-
-        # For ordered lists
-        elif tag.name == "ol":
-            start_counter = tag.get("start", 1)
-            # TODO: Fix Enumeration in Extracted Text
-            for i, child in enumerate(tag.children):
-                if child.name == "li":
-                    content.append(
-                        f"{int(start_counter) + i}. " + self.clean_text(child.text)
-                    )
-                elif child.name is None:
-                    cleaned_text = self.clean_text(child.text)
-                    # TODO: handle edge case within ol
-                    if cleaned_text != "":
-                        content.append(cleaned_text)
-                # TODO: Check impact of ol
-                else:
-                    logger.warning(
-                        f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
-                    )
-
-            content.append("\n")
 
         # For lists
         elif tag.name == "li":
@@ -277,26 +270,21 @@ class HTMLExtractor:
         elif tag.name == "sup":
             content.append(self.clean_text(tag.text))
 
-        # # Skip tags
-        # elif tag.name in ["ins", "sub", "iframe", "style"]:
-        #     pass
-        #
-        # # Monitor edge cases that are not handled
-        # elif self.content_category in [
-        #     "cost-and-financing",
-        #     "diseases-and-conditions",
-        #     "live-healthy-articles",
-        #     "medical-care-and-facilities",
-        #     "support-group-and-others",
-        # ]:
-        #     logger.warning(
-        #         f"Text Extraction - Tag {tag.name} not handled within {self._extract_text_elements.__name__}: {tag.text[:25]}"
-        #     )
-        #     # TODO: Remove before commiting
-        #     cleaned_text = self.clean_text(tag.text)
-        #     if cleaned_text != "":
-        #         print(tag.name, self.content_name, self.url)
-        #         print(cleaned_text, end="\n\n")
+        # Skip tags
+        elif tag.name in ["ins", "sub", "iframe", "style"]:
+            pass
+
+        # Monitor edge cases that are not handled
+        elif self.content_category in [
+            "cost-and-financing",
+            "diseases-and-conditions",
+            "live-healthy-articles",
+            "medical-care-and-facilities",
+            "support-group-and-others",
+        ]:
+            logger.debug(
+                f"Text Extraction - Tag {tag.name} not handled within {self._extract_text_elements.__name__}: {tag.text[:25]}"
+            )
 
     def _extract_text_from_strong(self, tag: PageElement, content: list[str]) -> None:
         # Find related section within strong
@@ -316,7 +304,6 @@ class HTMLExtractor:
                     self._extract_text_elements(child, content)
                 # Return to _extract_text_element in if unordered list is detected
                 elif child.name in ["ul"]:
-                    # TODO: Check impact of ul tags
                     self._extract_text_elements(child, content)
                 # Extract text within strong
                 elif child.name is None:
@@ -341,7 +328,7 @@ class HTMLExtractor:
                     continue
                 # Monitor for missed edge cases
                 else:
-                    logger.warning(
+                    logger.debug(
                         f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
                     )
 
@@ -404,13 +391,24 @@ class HTMLExtractor:
                 ]:
                     continue
                 else:
-                    logger.warning(
+                    logger.debug(
                         f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
                     )
         return
 
+    def _extract_alt_text_from_img(self, tag: PageElement, content: list[str]) -> None:
+        # Note: In some articles, the img alternate text is the same as the header
+        if tag.name == "img":
+            alt_text = tag.get("alt", None)
+            if alt_text is None:
+                return
+            cleaned_text = self.clean_text(alt_text)
+            if len(content) > 0 and cleaned_text.lower() in content[-1].lower():
+                content.append(self.clean_text(alt_text))
+        return
+
     def _extract_text_from_em(self, tag: PageElement, content: list[str]) -> None:
-        # TODO: Remove `Image courtesy` or `Photo courtesy` string ('Photo courtesy' unresolved)
+        # FIXME: Remove `Image courtesy` or `Photo courtesy` string ('Photo courtesy' unresolved)
         for child in tag.children:
             if "Image Courtesy" in child.text or "Photo Courtesy" in child.text:
                 continue
@@ -423,20 +421,87 @@ class HTMLExtractor:
             elif child.name == "span":
                 self._extract_text_from_container(child, content)
             else:
-                logger.warning(
+                logger.debug(
                     f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
                 )
 
-    def _extract_alt_text_from_img(self, tag: PageElement, content: list[str]) -> None:
-        # Note: In some articles, the img alternate text is the same as the header
-        if tag.name == "img":
-            alt_text = tag.get("alt", None)
-            if alt_text is None:
-                return
-            cleaned_text = self.clean_text(alt_text)
-            if len(content) > 0 and cleaned_text.lower() in content[-1].lower():
-                content.append(self.clean_text(alt_text))
-        return
+    def _extract_text_from_ul(self, tag: PageElement, content: list[str]) -> None:
+        # Unwrap span tags within ul tags
+        while tag.span is not None:
+            tag.span.unwrap()
+
+        # Unwrap div tags within ul tags
+        while tag.div is not None:
+            tag.div.unwrap()
+
+        # Unwrap a tags within ul
+        while tag.a is not None:
+            tag.a.unwrap()
+
+        # Unwrap strong tags within ul
+        while tag.strong is not None:
+            tag.strong.unwrap()
+
+        for child in tag.children:
+            if child.name == "li":
+                # Unwrap span tags within li
+                while not isinstance(child, NavigableString) and child.span is not None:
+                    child.span.unwrap()
+                # Unwrap a tags within li
+                while not isinstance(child, NavigableString) and child.a is not None:
+                    child.a.unwrap()
+                while (
+                    not isinstance(child, NavigableString) and child.strong is not None
+                ):
+                    child.strong.unwrap()
+                content.append("- " + self.clean_text(child.text))
+            elif child.name is None:
+                cleaned_text = self.clean_text(child.text)
+                if cleaned_text != "":
+                    content.append("\t")
+                    content.append(cleaned_text)
+            elif child.name in ["p", "ul", "ol", "h2", "h3"]:
+                cleaned_text = self.clean_text(child.text)
+                if cleaned_text != "":
+                    content.append("\t")
+                    self._extract_text_elements(child, content)
+            elif child.name == "img":
+                self._extract_alt_text_from_img(child, content)
+            else:
+                logger.debug(
+                    f"Text Extraction - Tag {child.name} not handled within {tag.name}: {cleaned_text[:25]}"
+                )
+
+        content.append("\n")
+
+    def _extract_text_from_ol(self, tag: PageElement, content: list[str]) -> None:
+        # Unwrap span tags within ol
+        while tag.span is not None:
+            tag.span.unwrap()
+
+        # Extract text from children
+        start_counter = tag.get("start", 1)
+        for i, child in enumerate(tag.children):
+            if child.name == "li":
+                content.append(
+                    f"{int(start_counter) + i}. " + self.clean_text(child.text)
+                )
+            elif child.name is None:
+                cleaned_text = self.clean_text(child.text)
+                if cleaned_text != "":
+                    content.append("\t")
+                    content.append(cleaned_text)
+            elif child.name in ["ul", "ol", "p", "h4"]:
+                cleaned_text = self.clean_text(child.text)
+                if cleaned_text != "":
+                    content.append("\t")
+                    self._extract_text_elements(child, content)
+            else:
+                logger.debug(
+                    f"Text Extraction - Tag {child.name} not handled within {tag.name}: {child.text[:25]}"
+                )
+
+        content.append("\n")
 
     def _extract_text_from_container(
         self, tag: PageElement, content: list[str]
@@ -471,7 +536,7 @@ class HTMLExtractor:
                 else:
                     cleaned_text = self.clean_text(child.text)
                     if cleaned_text != "":
-                        logger.warning(
+                        logger.debug(
                             f"Text Extraction - Text not handled within container - {child.name}: {child.text[:25]}"
                         )
             # Continue extracting text for other elements
