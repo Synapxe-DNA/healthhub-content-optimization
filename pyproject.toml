@@ -41,8 +41,6 @@ scipy = "1.12.0"
 seaborn = "0.13.2"
 sentence-transformers = "3.0.1"
 transformers = "4.41.2"
-beanie = "^1.26.0"
-motor = "^3.5.0"
 
 
 [tool.poetry.group.dev.dependencies]
