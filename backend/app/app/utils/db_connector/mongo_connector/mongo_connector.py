@@ -14,7 +14,7 @@ from app.utils.db_connector.mongo_connector.beanie_documents import (
     IgnoreDocument,
 )
 from beanie import init_beanie
-from bson import ObjectId
+from bson.objectid import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 
