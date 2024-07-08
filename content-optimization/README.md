@@ -160,10 +160,7 @@ If for any reason, you would like to run specific nodes in the `feature_engineer
 kedro run --nodes="extract_keywords_node"
 ```
 
-## Data Schema <a id="data-schema"></a>
-
-<details>
-<summary>Expand for more information</summary>
+## Dataset <a id="dataset"></a>
 
 ### General Information
 
@@ -185,10 +182,14 @@ kedro run --nodes="extract_keywords_node"
 - **Number of Rows:** 2613
 - **Number of Columns:** 33
 - **Subject Area/Domain:** Health Hub Articles
-- **Column Details:**
 
-    <details>
-        <summary>id</summary>
+#### **Columns**
+
+<details>
+  <summary>Expand for more information</summary>
+
+- **`id`**
+  <details>
 
   - Data Type: `integer`
   - Description:
@@ -198,10 +199,11 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: Yes
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>content_name</summary>
+  </details>
+
+- **`content_name`**
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -211,10 +213,11 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>title</summary>
+  </details>
+
+- **`title`**
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -224,10 +227,11 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>article_category_names</summary>
+  </details>
+
+- **`article_category_names`**
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -237,10 +241,11 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>cover_image_url</summary>
+  </details>
+
+- **`cover_image_url`**
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -248,10 +253,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>full_url</summary>
+  </details>
+
+- **`full_url`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -259,10 +266,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>full_url2</summary>
+  </details>
+
+- **`full_url2`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -270,10 +279,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>friendly_url</summary>
+  </details>
+
+- **`friendly_url`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -283,10 +294,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>category_description</summary>
+  </details>
+
+- **`category_description`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -296,10 +309,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>content_body</summary>
+  </details>
+
+- **`content_body`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -307,10 +322,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>keywords</summary>
+  </details>
+
+- **`keywords`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -320,10 +337,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>feature_title</summary>
+  </details>
+
+- **`feature_title`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -333,10 +352,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>pr_name</summary>
+  </details>
+
+- **`pr_name`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -347,10 +368,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: Yes
-    </details>
 
-      <details>
-          <summary>alternate_image_text</summary>
+  </details>
+
+- **`alternate_image_text`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -360,10 +383,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>date_modified</summary>
+  </details>
+
+- **`date_modified`**
+
+  <details>
 
   - Data Type: `timestamp`
   - Description:
@@ -373,23 +398,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>number_of_views</summary>
+  </details>
 
-  - Data Type: `integer`
-  - Description:
-    - Number of views for the article
-  - Example Values:
-    - 7925
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-    </details>
+- **`last_month_view_count`**
 
-      <details>
-          <summary>last_month_view_count</summary>
+  <details>
 
   - Data Type: `integer`
   - Description:
@@ -399,10 +413,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>last_two_months_view</summary>
+  </details>
+
+- **`last_two_months_view`**
+
+  <details>
 
   - Data Type: `integer`
   - Description:
@@ -412,10 +428,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>page_views</summary>
+  </details>
+
+- **`page_views`**
+
+  <details>
 
   - Data Type: `integer`
   - Description:
@@ -425,10 +443,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>engagement_rate</summary>
+  </details>
+
+- **`engagement_rate`**
+
+  <details>
 
   - Data Type: `float`
   - Description:
@@ -438,10 +458,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>bounce_rate</summary>
+  </details>
+
+- **`bounce_rate`**
+
+  <details>
 
   - Data Type: `float`
   - Description:
@@ -452,10 +474,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>exit_rate</summary>
+  </details>
+
+- **`exit_rate`**
+
+  <details>
 
   - Data Type: `float`
   - Description:
@@ -466,10 +490,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>scroll_percentage</summary>
+  </details>
+
+- **`scroll_percentage`**
+
+  <details>
 
   - Data Type: `float`
   - Description:
@@ -481,10 +507,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>percentage_total_views</summary>
+  </details>
+
+- **`percentage_total_views`**
+
+  <details>
 
   - Data Type: `float`
   - Description:
@@ -494,10 +522,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>cumulative_percentage_total_views</summary>
+  </details>
+
+- **`cumulative_percentage_total_views`**
+
+  <details>
 
   - Data Type: `float`
   - Description:
@@ -507,10 +537,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>content_category</summary>
+  </details>
+
+- **`content_category`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -522,10 +554,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: Yes
-    </details>
 
-      <details>
-          <summary>to_remove</summary>
+  </details>
+
+- **`to_remove`**
+
+  <details>
 
   - Data Type: `boolean`
   - Description:
@@ -537,10 +571,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>has_table</summary>
+  </details>
+
+- **`has_table`**
+
+  <details>
 
   - Data Type: `boolean`
   - Description:
@@ -550,10 +586,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: No
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>has_image</summary>
+  </details>
+
+- **`has_image`**
+
+  <details>
 
   - Data Type: `boolean`
   - Description:
@@ -561,12 +599,13 @@ kedro run --nodes="extract_keywords_node"
   - Example Values:
     - True/False
   - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-    </details>
+  - Primary Key: No - Foreign Key: No
 
-      <details>
-          <summary>related_sections</summary>
+  </details>
+
+- **`related_sections`**
+
+  <details>
 
   - Data Type: `list[string]`
   - Description:
@@ -576,10 +615,12 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
-    </details>
 
-      <details>
-          <summary>extracted_links</summary>
+  </details>
+
+- **`extracted_links`**
+
+  <details>
 
   - Data Type: `list[tuple[string, string]]`
   - Description:
@@ -588,11 +629,13 @@ kedro run --nodes="extract_keywords_node"
     - `[('Child Health Booklet', 'https://www.healthhub.sg/programmes/parent-hub/child-health-booklet')]`
   - Null Values Allowed: Yes
   - Primary Key: No
-  - Foreign Key: No
-    </details>
+    - Foreign Key: No
 
-      <details>
-          <summary>extracted_headers</summary>
+  </details>
+
+- **`extracted_headers`**
+
+  <details>
 
   - Data Type: `list[tuple[string, string]]`
   - Description:
@@ -601,11 +644,13 @@ kedro run --nodes="extract_keywords_node"
     - `[('What is this medication for?', 'h2'])]`
   - Null Values Allowed: Yes
   - Primary Key: No
-  - Foreign Key: No
-    </details>
+    - Foreign Key: No
 
-      <details>
-          <summary>extracted_content_body</summary>
+  </details>
+
+- **`extracted_content_body`**
+
+  <details>
 
   - Data Type: `string`
   - Description:
@@ -613,31 +658,38 @@ kedro run --nodes="extract_keywords_node"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
+
   </details>
+
+</details>
 
 ### Data Quality and Processing
 
-- **Data Cleaning Process:**
+<details>
+  <summary>Expand for more information</summary>
 
-  - Standardise all column names
-  - Removed columns where all values are `NaN`
-  - Flagged articles with no content or dummy content
-  - Mark articles with tables and images in content body
-  - Extracted content body as clean text from HTML PageElement
-  - Extracted related sections, links, headers
-  - Flagged articles with no extracted content body
-  - Merged all articles across different content categories into one dataframe
+#### Data Cleaning Process
 
-- **Missing Data Handling:**
+1. Standardise all column names
+2. Removed columns where all values are `NaN`
+3. Flagged articles with no content or dummy content
+4. Mark articles with tables and images in content body
+5. Extracted content body as clean text from HTML PageElement
+6. Extracted related sections, links, headers
+7. Flagged articles with no extracted content body
+8. Merged all articles across different content categories into one dataframe
 
-  - Left as is for exploration purposes
-  - No data imputation was used
+#### Missing Data Handling
 
-- **Known Issues or Limitations:**
+- Left as is for exploration purposes
+- No data imputation was used
 
-  - Issue with handling text extraction within `<div>` containers
+#### Known Issues or Limitations
 
-- **Data Quality Checks:**
-  - Under [`data/02_intermediate`](data/02_intermediate)
+- Issue with handling text extraction within `<div>` containers
+
+#### Data Quality Checks
+
+- Under [`data/02_intermediate`](data/02_intermediate)
 
 </details>
