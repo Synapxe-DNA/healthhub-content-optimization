@@ -1,3 +1,9 @@
+<tui-table-pagination
+    [total]="total"
+    [(page)]="page"
+    [(size)]="size"
+    (paginationChange)="updatePagination()"
+></tui-table-pagination>
 <tui-scrollbar waIntersectionRoot class="scrollbar h-full" [hidden]="true">
   <table size="l" tuiTable class="table-row" [columns]="columns" [direction]="-1">
     <thead tuiThead fix-head>
@@ -74,7 +80,7 @@
       </tr>
     </thead>
 
-    @for (cluster of clusters; track cluster.id) {
+    @for (cluster of paginatedClusters; track cluster.id) {
 
     <tbody [heading]="template" tuiTbody>
 
@@ -118,14 +124,21 @@
     </tbody>
 
     <ng-template #template>
-      <a href="/clusters/{{cluster.id}}" 
+      <div class="flex flex-row justify-between">
+        <a href="/clusters/{{cluster.id}}" 
         (click)="$event.stopPropagation()"
         class="text-[#0000EE] hover:underline"
-      >
-        {{cluster.name}}
-      </a>
+        >
+          {{cluster.name}}
+        </a>
+        <span class="ml-[80rem]">
+          Articles: {{cluster.articles.length}}
+        </span>
+      </div>
+
     </ng-template>
     }
 
   </table>
+  
 </tui-scrollbar>

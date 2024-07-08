@@ -11,13 +11,15 @@ import {
   TuiRadioBlockModule,
   TuiTextareaModule,
 } from "@taiga-ui/kit";
+
+import {ScrollingModule} from '@angular/cdk/scrolling';
 import {
   TuiFormatNumberPipeModule,
   TuiGroupModule,
   TuiScrollbarModule,
   TuiSvgModule,
 } from "@taiga-ui/core";
-import { TuiTableModule } from "@taiga-ui/addon-table";
+import { TuiTableModule, TuiTablePaginationModule } from "@taiga-ui/addon-table";
 import { TuiLetModule, TuiValidatorModule } from "@taiga-ui/cdk";
 import { Cluster } from "../../../types/data/cluster.types";
 import { ClusterService } from "../../../services/cluster/cluster.service";
@@ -40,14 +42,21 @@ import { HashLabelComponent } from "../../hash-label/hash-label.component";
     TuiInputNumberModule,
     TuiValidatorModule,
     TuiSvgModule,
-    HashLabelComponent
+    HashLabelComponent,
+    ScrollingModule,
+    TuiTablePaginationModule
   ],
   templateUrl: "./main-cluster-table.component.html",
   styleUrl: "./main-cluster-table.component.css",
 })
 export class MainClusterTableComponent {
   clusters: Cluster[] = [];
-  selectedCluster: Number[] = [];
+  paginatedClusters: Cluster[] = []
+
+  page: number = 0;
+  size: number = 10;
+  total: number = 100
+
   readonly columns = [
     "id",
     "title",
@@ -68,11 +77,23 @@ export class MainClusterTableComponent {
 
   ngOnInit() {
     this.clusterService.getClusters().subscribe((res) => {
-      this.clusters = res;
+      this.clusters = res
+      this.total = this.clusters.length
+      this.updatePagination()
     });
   }
 
   sortStrings(vals:string[]):string[]{
     return vals.sort((a,b)=>a.localeCompare(b))
+  }
+
+  sortClusterSize(vals:Cluster[]):Cluster[]{
+    return vals.sort((a,b)=> a.articles.length - b.articles.length)
+  }
+
+  updatePagination() {
+    const startIndex = this.page * this.size;
+    const endIndex = startIndex + this.size;
+    this.paginatedClusters = this.clusters.slice(startIndex, endIndex);
   }
 }
