@@ -25,10 +25,10 @@ instance. To start or stop the Mongo DB, run the following commands in the root 
 
 ```bash
 # Starts Mongo DB
-make local-start-db
+make local-db-start
 
 # Stops Mongo DB
-make local-stop-db
+make local-db-stop
 ```
 
 When connecting to Mongo DB, the following connection string can be used. Replace the variables in the connection

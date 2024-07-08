@@ -2,9 +2,10 @@
 This file contains the Beanie document types used to interacting with the DB.
 """
 
-from typing import List
+from typing import List, Optional
 
 from beanie import Document, Indexed, Link
+from beanie.odm.fields import PydanticObjectId
 from pydantic import Field
 
 
@@ -15,8 +16,7 @@ class ClusterDocument(Document):
 
 
 class ArticleDocument(Document):
-    id: str
-
+    id: Optional[PydanticObjectId] = Field(None, alias="_id")
     title: str
     description: str
     author: Indexed(str)

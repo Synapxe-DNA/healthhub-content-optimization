@@ -68,4 +68,4 @@ lint.select = [
     "PL",  # Pylint
     "T201", # Print Statement
 ]
-lint.ignore = ["E501", "I001", "PLR0912", "T201"]  # Ruff format takes care of line-too-long
+lint.ignore = ["E501", "I001", "PLR0912", "PLR0913", "T201"]  # Ruff format takes care of line-too-long

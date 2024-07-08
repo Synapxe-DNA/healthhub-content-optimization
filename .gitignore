@@ -1,16 +1,21 @@
 .DS_Store
-artifacts/notebooks/*.ipynb
-artifacts/outputs/*.png
-artifacts/outputs/*.csv
-artifacts/outputs/*.html
-artifacts/outputs/*_graph
-data/healthhub_small_clean/*.parquet
-data/healthhub_small_clean/*.pkl
+
+# Exclude everything in sub-directories of artifacts and data
+# folder except for Excel files which stores the scores
+artifacts/notebooks/*
+artifacts/outputs/*
+!artifacts/outputs/*.xlsx
+data/healthhub_small_clean/*
 data/*
-!data/healthhub_small
-!data/healthhub_small_clean
+
+# Exclude these personal folders and files
 experiments
 *.model
+
+# Exclude these files and folders
+!.gitkeep
+!data/healthhub_small
+!data/healthhub_small_clean
 
 # Files from frontend
 frontend/app/node_modules/
@@ -24,6 +29,11 @@ frontend/app/node_modules
 frontend/app/npm-debug.log
 frontend/app/yarn-error.log
 frontend/app/.editorconfig
+frontend/app/**/environment.*
+
+# Files from backend
+backend/app/**/*.pkl
+backend/app/**/*.parquet
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -192,3 +202,6 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
+
+# Excel files
+*.xlsx
