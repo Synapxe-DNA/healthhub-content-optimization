@@ -1,5 +1,11 @@
 # Changelog
 
+## July 8, 2024 <a id="july-8-2024"></a>
+
+- Overhauled Text Extraction Pipeline to handle edge cases across the chosen 5 content categories
+- Added logging statements to monitor for edge cases during extraction (only during development)
+- Added new column `extracted_img_alt_text` to preserve alternate texts present in images
+
 ## July 6, 2024 <a id="july-6-2024"></a>
 
 - Made QoL improvements to Makefile (see previous release [here](#july-4-2024) for more information)
