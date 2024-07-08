@@ -138,6 +138,7 @@ def extract_data(
             df["related_sections"] = None
             df["extracted_links"] = None
             df["extracted_headers"] = None
+            df["extracted_img_alt_text"] = None
             df["extracted_content_body"] = None
 
             for index, row in df.iterrows():
@@ -148,8 +149,7 @@ def extract_data(
                 # Replace all forward slashes with hyphens to avoid saving as folders
                 title = re.sub(r"\/", "-", row["title"]).strip()
 
-                # TODO: Discuss whether to keep this data for monitoring purposes
-                # Get the HTML content and relevant data
+                # Get the HTML content for extraction and relevant data for logging
                 content_name = row["content_name"]
                 full_url = row["full_url"]
                 html_content = row["content_body"]
@@ -163,6 +163,7 @@ def extract_data(
                 related_sections = extractor.extract_related_sections()
                 extracted_links = extractor.extract_links()
                 extracted_headers = extractor.extract_headers()
+                extracted_img_alt_text = extractor.extract_alt_text_from_img()
                 extracted_content_body = extractor.extract_text()
 
                 # Store extracted data into the dataframe
@@ -171,6 +172,7 @@ def extract_data(
                 df.at[index, "related_sections"] = related_sections
                 df.at[index, "extracted_links"] = extracted_links
                 df.at[index, "extracted_headers"] = extracted_headers
+                df.at[index, "extracted_img_alt_text"] = extracted_img_alt_text
                 df.at[index, "extracted_content_body"] = extracted_content_body
 
                 # Substitute forbidden characters for filenames with _
