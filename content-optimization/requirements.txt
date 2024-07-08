@@ -1,3 +1,4 @@
+alive_progress==3.1.5
 ipython>=8.10
 jupyterlab>=3.0
 kedro~=0.19.6
@@ -5,8 +6,12 @@ kedro-datasets>=3.0; python_version >= "3.9"
 kedro-datasets>=1.0; python_version < "3.9"
 kedro-telemetry>=0.3.1
 kedro-viz>=6.7.0
+keybert==0.8.5
+keyphrase-vectorizers==0.0.13
 notebook
+pandas==2.2.2
 pytest~=7.2
 pytest-cov~=3.0
 pytest-mock>=1.7.1, <2.0
+pytictoc==1.5.3
 ruff~=0.1.8
