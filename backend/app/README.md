@@ -49,6 +49,10 @@ poetry run mock
 
 ### Populate MongoDB with Actual Data
 
+Place `merged_data.parquet`, `{MODEL_NAME}_neo4j_edges.pkl` and `{MODEL_NAME}_neo4j_predicted_cluster.pkl` within the `app/data` folder.
+
 ```bash
 poetry run data
 ```
+> [!NOTE]
+> Ensure that the `storage` database is cleared before each run.

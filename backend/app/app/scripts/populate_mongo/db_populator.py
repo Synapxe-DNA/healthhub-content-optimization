@@ -1,9 +1,12 @@
 import pandas as pd
+from app.utils.db_connector.mongo_connector.beanie_documents import (
+    ArticleDocument,
+    ClusterDocument,
+    EdgeDocument,
+)
 from beanie import init_beanie
 from beanie.operators import In
 from motor.motor_asyncio import AsyncIOMotorClient
-
-from .beanie_documents import ArticleDocument, ClusterDocument, EdgeDocument
 
 
 class DBPopulator:
@@ -73,9 +76,9 @@ class DBPopulator:
         await self.init_db()
         all_edges = []
         edges_df = pd.read_pickle(self.edges_file_path)
-        for _, row in edges_df.iterrows():
-            node_1 = row.get("node_1")
-            node_2 = row.get("node_2")
+        for row in edges_df:
+            node_1 = row.get("node_1_title")
+            node_2 = row.get("node_2_title")
             articles_pair = await ArticleDocument.find(
                 In(ArticleDocument.title, [node_1, node_2])
             ).to_list()

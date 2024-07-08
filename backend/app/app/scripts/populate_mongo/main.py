@@ -19,10 +19,10 @@ async def __main():
 
     articles_file_path = os.path.join("app", "data", "merged_data.parquet")
     edges_file_path = os.path.join(
-        "app", "data", "all-mpnet-base-v2_neo4j_edges.pkl"
+        "app", "data", "nomic-embed-text-v1.5_neo4j_edges.pkl"
     )  # To be edited
     cluster_file_path = os.path.join(
-        "app", "data", "all-mpnet-base-v2_neo4j_pred_cluster.pkl"
+        "app", "data", "nomic-embed-text-v1.5_neo4j_predicted_clusters.pkl"
     )  # To be edited
     db_populator = DBPopulator(
         conn, articles_file_path, edges_file_path, cluster_file_path
