@@ -574,7 +574,7 @@ kedro run --nodes="extract_keywords_node"
 
   </details>
 
-- **`type`**
+- **`remove_type`**
 
   <details>
 
