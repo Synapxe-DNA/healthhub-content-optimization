@@ -17,11 +17,21 @@ Follow the [installation guide](https://neo4j.com/docs/operations-manual/current
     - Set the password to be the same as specified in the `.env` file
 
 3. Create Database
-    - Create a database with the name specified in the `CONTENT_CATEGORY` variable in `cluster_evaluation.ipynb`
+    - Create a database with the name specified in the `CONTENT_CATEGORY` variable in `clustering.ipynb`
 
 4. Install GDS Library Plugins:
     - Follow the instructions in the [Neo4j GDS Library Installation Guide](https://neo4j.com/docs/graph-data-science/current/installation/neo4j-desktop/) to install the GDS library plugins
 
-## Additional Instructions
-- Ensure Neo4j is installed in the virtual environment
-- Place embedding files in the `data/07_model_output` directory
+## Clustering notebooks
+1. sbert_embeddings.ipynb
+    - Description: Generates embeddings from selected columns.
+
+2. clustering.ipynb
+    - Description: Runs clustering using neo4j gds.
+    - Note: 
+        - Ensure Neo4j is installed in the virtual environment
+        - Setup of neo4j database required
+        - Current notebook only uses 1 column for clustering (extracted_body_content). Refinement  needed depending on methodology to use multiple columns for clustering 
+
+3. cluster_viz.ipynb
+    - Description: Visualisation of clusters using pyvis, for qualitative evaluation
