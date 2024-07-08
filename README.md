@@ -169,7 +169,7 @@ pm.execute_notebook(
 
 Every time you complete a feature or change on a branch and want to push it to GitHub to make a pull request, you need to ensure you lint your code.
 
-You can simply run the command `pre-commit run --all-files` to lint your code. For more information, refer to the [pre-commit docs](https://pre-commit.com/). To see what linters are used, refer to the [`.pre-commit-config.yaml`](.pre-commit-config.yaml) YAML file.
+You can simply run the command `pre-commit run --all-files` to lint your code. Otherwise, you can also run `pre-commit install` to set up git hooks that run them automatically before every commit. For more information, refer to the [pre-commit docs](https://pre-commit.com/). To see what linters are used, refer to the [`.pre-commit-config.yaml`](.pre-commit-config.yaml) YAML file.
 
 Alternatively, there is a [`Makefile`](Makefile) that can also lint your code base when you run the simpler command `make lint`.
 
