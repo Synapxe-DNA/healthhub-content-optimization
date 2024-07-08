@@ -9,7 +9,7 @@ async def create_mongo_db_connector():
         password=os.getenv("MONGO_PASSWORD"),
         host=os.getenv("MONGO_HOST"),
         port=os.getenv("MONGO_PORT"),
-        db_name="mock",
+        db_name="storage",
     )
     await connector.connect()
     return connector

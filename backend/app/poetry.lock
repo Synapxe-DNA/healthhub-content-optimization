@@ -55,6 +55,20 @@ queue = ["beanie-batteries-queue (>=0.2)"]
 test = ["asgi-lifespan (>=1.0.1)", "dnspython (>=2.1.0)", "fastapi (>=0.100)", "flake8 (>=3)", "httpx (>=0.23.0)", "pre-commit (>=2.3.0)", "pydantic-extra-types (>=2)", "pydantic-settings (>=2)", "pydantic[email]", "pyright (>=0)", "pytest (>=6.0.0)", "pytest-asyncio (>=0.21.0)", "pytest-cov (>=2.8.1)"]
 
 [[package]]
+name = "bson"
+version = "0.5.10"
+description = "BSON codec for Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "bson-0.5.10.tar.gz", hash = "sha256:d6511b2ab051139a9123c184de1a04227262173ad593429d21e443d6462d6590"},
+]
+
+[package.dependencies]
+python-dateutil = ">=2.4.0"
+six = ">=1.9.0"
+
+[[package]]
 name = "build"
 version = "1.2.1"
 description = "A simple, correct Python build frontend"
@@ -2690,4 +2704,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "c52423020559b3fd3fe3bdc0a701d23719cd87f1f7dbaa831cc357f3ae6768cf"
+content-hash = "bd3b90f9c9f19daa8443d1ce6fd31f52ba7f68221a35bbef1970d4cace072c0f"

@@ -14,6 +14,8 @@ class Article(BaseModel):
 
     status: str = Field(default="")
 
+    updated: str = Field(default="")
+
     # Article peripheral information
     labels: List[str] = Field(default=[])
     cover_image_url: str = Field(default="")
