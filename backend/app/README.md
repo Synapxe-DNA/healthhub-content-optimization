@@ -61,7 +61,7 @@ Ensure that docker with MongoDB is configured and running before proceeding. If 
 2. Ensure Clean Database
     - Before populating MongoDB, ensure that the `storage` database is cleared before each run to avoid data duplication. This can be done in the MongoDB Compass UI.
 
-3. Run the Command 
+3. Run the Command
     ```bash
     poetry run data
     ```
