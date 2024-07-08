@@ -11,15 +11,15 @@ relative
         <div class="col-span-2 flex flex-col justify-between items-stretch gap-4 flex-shrink">
             <div class="flex flex-col justify-start items-stretch">
                 <h6 class="tui-text_body-m font-medium">
-                    <a [href]="article.url">{{ article.title }}</a>
+                    <a [href]="article.url" target="_blank">{{ article.title }}</a>
                 </h6>
                 <p class="tui-text_body-m opacity-50 break-words hyphens-auto ">{{ article.description }}</p>
             </div>
             <div class="grid grid-cols-6 gap-2">
-                <app-article-attribute class="col-span-1" title="Pillar">
+                <app-article-attribute class="col-span-2" title="Pillar">
                     <app-hash-label [text]="article.pillar"></app-hash-label>
                 </app-article-attribute>
-                <app-article-attribute class="col-span-5" title="Tags">
+                <app-article-attribute class="col-span-3" title="Tags">
                     @for(tag of sortStrings(article.labels); track tag){
                         <app-hash-label [text]="tag"></app-hash-label>
                     }
@@ -29,21 +29,64 @@ relative
         </div>
         <div class="grid grid-cols-2 gap-4 pl-4 flex-shrink-0">
             <app-article-attribute title="Contributor">{{ article.author }}</app-article-attribute>
-            <app-article-attribute title="Published">DD-MM-YYYY</app-article-attribute>
+            <app-article-attribute title="Reviewed">{{ article.updated | date }}</app-article-attribute>
             <app-article-attribute title="Engagement Rate">{{ (article.engagement*100).toFixed(1) }}%</app-article-attribute>
             <app-article-attribute title="Total Views">{{ article.views }}</app-article-attribute>
 
             <app-article-attribute title="Similarity">
                 <app-hash-label text="XX%" />
             </app-article-attribute>
-            <app-article-attribute title="Group">
-                <app-hash-label [text]="groupManager.findArticleGroup(article.id)" />
+            <app-article-attribute title="Sub Group">
+                <app-hash-label [text]="subgroup" />
             </app-article-attribute>
         </div>
     </div>
 
     <div class="absolute top-1 right-1">
-        <button tuiIconButton appearance="icon" size="s"><lucide-icon name="ellipsis" [size]="16"></lucide-icon></button>
+
+
+        <tui-hosted-dropdown [content]="addToSubGroupDropdown">
+            <button tuiIconButton appearance="icon" size="s"><lucide-icon name="ellipsis" [size]="16"></lucide-icon></button>
+        </tui-hosted-dropdown>
     </div>
 
 </div>
+
+
+<ng-template #addToSubGroupDropdown let-activeZone>
+    <tui-data-list tuiDataListDropdownManager [tuiActiveZoneParent]="activeZone">
+        <tui-opt-group label="Move to">
+
+            @for(name of addableGroupNames; track name){
+                <button tuiOption class="capitalize" (click)="assignArticle(article.id, name)">{{name}}</button>
+            }
+
+            <button
+            tuiDropdownAlign="right"
+            tuiDropdownSided
+            tuiOption
+            [tuiDropdown]="createNew"
+            [tuiDropdownManual]="false"
+            class="flex flex-row justify-between items-center min-w-[18ch]">
+                New sub group
+            </button>
+
+        </tui-opt-group>
+        <tui-opt-group label="Danger">
+            <button tuiOption (click)="assignArticle(article.id, 'ignore')">Mark as individual</button>
+        </tui-opt-group>
+    </tui-data-list>
+
+    <ng-template #createNew>
+        <form [formGroup]="createNewSubgroupForm" class="flex flex-row gap-1 p-2">
+            <tui-input tuiTextfieldSize="m" formControlName="name" class="w-[24ch]">
+                Sub group name
+            </tui-input>
+            <button tuiIconButton size="m" appearance="secondary" (click)="assignArticle(article.id, createNewSubgroupForm.value['name'])">
+                <lucide-icon name="plus"></lucide-icon>
+            </button>
+        </form>
+    </ng-template>
+</ng-template>
+
+

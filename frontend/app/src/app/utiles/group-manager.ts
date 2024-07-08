@@ -45,6 +45,25 @@ export class GroupManager {
         return this.$groups
     }
 
+    getAddableGroupingNames():BehaviorSubject<string[]>{
+
+        const filterAddableNames = (val: string[]):string[] => {
+            const nonAddableNames = ['ignore', 'combine']
+            return val.filter(n => nonAddableNames.indexOf(n)<0)
+        }
+
+        const returnable = new BehaviorSubject<string[]>(filterAddableNames(Object.keys(this.$groups.value)))
+
+        this.$groups.subscribe(v => {
+            if(Object.keys(v)!==returnable.value){
+                returnable.next(filterAddableNames(Object.keys(v)))
+            }
+        })
+
+        return returnable
+
+    }
+
     assignArticle(id:string, group:string):void {
         let article:Article|undefined = undefined
 
@@ -56,6 +75,7 @@ export class GroupManager {
             const index = currentGrouping[groupName].findIndex(a => a.id===id)
             if(index>=0){
                 article = currentGrouping[groupName][index]
+                currentGrouping[groupName].splice(index, 1)
                 break
             }
         }
@@ -69,19 +89,44 @@ export class GroupManager {
 
             this.$groups.next(currentGrouping)
         }
+
+        console.log(this.$groups.value)
     }
 
     findArticleGroup(id:string):string {
 
         for(const groupName in this.$groups.value){
             if(this.$groups.value[groupName].findIndex(a=>a.id===id)>=0){
-                return groupName
+                switch(groupName){
+                    // case "default":
+                    //     return "Sub Group 1"
+                    default:
+                        return groupName
+                }
             }
         }
 
-
         return ArticleStatus.Default
     }
+
+    findArticleGroupBehaviourSubject(id:string):BehaviorSubject<string>{
+
+        const resBS = new BehaviorSubject(this.findArticleGroup(id))
+
+        this.$groups.subscribe(_ => {
+            const updatedGroup = this.findArticleGroup(id)
+            console.log(updatedGroup)
+            if(updatedGroup!==resBS.value){
+                resBS.next(updatedGroup)
+            }
+        })
+
+        return resBS
+
+    }
+
+
+
 
 
 }

@@ -1,11 +1,21 @@
-import {Component, Input} from '@angular/core';
+import {AfterViewInit, Component, Inject, Input} from '@angular/core';
 import {Article} from "../../types/data/article.types";
 import {ArticleAttributeComponent} from "./article-attribute/article-attribute.component";
 import {NgIf} from "@angular/common";
 import {HashLabelComponent} from "../hash-label/hash-label.component";
-import {TuiButtonModule} from "@taiga-ui/core";
+import {
+  TuiButtonModule,
+  TuiDataListModule, TuiDialogContext, TuiDialogService, TuiDropdownModule,
+  TuiHostedDropdownModule, TuiSvgModule,
+  TuiTextfieldControllerModule
+} from "@taiga-ui/core";
 import {LucideAngularModule} from "lucide-angular";
 import {GroupManager} from "../../utiles/group-manager";
+import {DatePipe} from "../../pipes/date/date.pipe";
+import {TuiDataListDropdownManagerModule, TuiInputModule, TuiIslandModule} from "@taiga-ui/kit";
+import {TuiActiveZoneModule} from "@taiga-ui/cdk";
+import {FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
+import {PolymorpheusContent} from "@tinkoff/ng-polymorpheus";
 
 @Component({
   selector: 'app-article',
@@ -15,19 +25,58 @@ import {GroupManager} from "../../utiles/group-manager";
     NgIf,
     HashLabelComponent,
     TuiButtonModule,
-    LucideAngularModule
+    LucideAngularModule,
+    TuiHostedDropdownModule,
+    TuiDataListModule,
+    DatePipe,
+    TuiTextfieldControllerModule,
+    TuiSvgModule,
+    TuiDropdownModule,
+    TuiDataListDropdownManagerModule,
+    TuiActiveZoneModule,
+    ReactiveFormsModule,
+    TuiInputModule,
+    TuiIslandModule
   ],
   templateUrl: './article.component.html',
   styleUrl: './article.component.css'
 })
-export class ArticleComponent {
+export class ArticleComponent implements AfterViewInit {
 
   @Input() article!:Article
-  
   @Input() groupManager!:GroupManager
+
+  subgroup:string = "Default"
+
+  addableGroupNames:string[] = []
+  createNewSubgroupForm:FormGroup
+
+  constructor(
+      private fb: FormBuilder,
+  ) {
+    this.createNewSubgroupForm = this.fb.group({
+      name:""
+    })
+  }
+
+  ngAfterViewInit() {
+    this.groupManager.getAddableGroupingNames().subscribe(v => {
+      this.addableGroupNames=v
+    })
+
+    this.groupManager.findArticleGroupBehaviourSubject(this.article.id).subscribe(n => {
+      this.subgroup=n
+    })
+  }
 
   sortStrings(vals:string[]):string[]{
     return vals.sort((a,b)=>a.localeCompare(b))
+  }
+
+  assignArticle(articleId:string, group:string=""){
+    if(group){
+      this.groupManager.assignArticle(articleId, group)
+    }
   }
 
 }
