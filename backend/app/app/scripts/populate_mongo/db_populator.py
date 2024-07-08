@@ -62,6 +62,7 @@ class DBPopulator:
                 author=row.get("pr_name", "").strip(),
                 pillar=row.get("content_category", "").strip(),
                 url=row.get("full_url", "").strip(),
+                updated=row.get("date_modified", ""),
                 labels=row.get("keywords", []),
                 cover_image_url=row.get("cover_image_url", "").strip(),
                 engagement=row.get("engagement_rate", -1.0),

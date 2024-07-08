@@ -21,9 +21,9 @@ class ArticleDocument(Document):
     description: str
     author: Indexed(str)
     pillar: Indexed(str)
-    url: str
+    url: Indexed(str)
 
-    status: str = Field(default="")
+    updated: str
 
     labels: List[str]
     cover_image_url: str
