@@ -29,6 +29,11 @@ frontend/app/node_modules
 frontend/app/npm-debug.log
 frontend/app/yarn-error.log
 frontend/app/.editorconfig
+frontend/app/**/environment.*
+
+# Files from backend
+backend/app/**/*.pkl
+backend/app/**/*.parquet
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
