@@ -574,6 +574,22 @@ kedro run --nodes="extract_keywords_node"
 
   </details>
 
+- **`type`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - Indicates reason for removal if article is flagged
+  - Example Values:
+    - No HTML Tags
+    - Excel Error
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
 - **`has_table`**
 
   <details>
@@ -642,6 +658,21 @@ kedro run --nodes="extract_keywords_node"
     - A list of headers extracted from the content body based on the `<h*>` tag
   - Example Values:
     - `[('What is this medication for?', 'h2'])]`
+  - Null Values Allowed: Yes
+  - Primary Key: No
+    - Foreign Key: No
+
+  </details>
+
+- **`extracted_img_alt_text`**
+
+  <details>
+
+  - Data Type: `list[string]`
+  - Description:
+    - A list of alternate text extracted from images based on the `<img>` tag
+  - Example Values:
+    - `['cabbage']`
   - Null Values Allowed: Yes
   - Primary Key: No
     - Foreign Key: No
