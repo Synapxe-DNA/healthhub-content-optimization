@@ -717,7 +717,8 @@ class HTMLExtractor:
             if cleaned_text != "":
                 extracted_alt_text.append(cleaned_text)
 
-        return extracted_alt_text
+        # Return unique elements
+        return list(set(extracted_alt_text))
 
     def extract_headers(self) -> list[tuple[str, str]]:
         """
