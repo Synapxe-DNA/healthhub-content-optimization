@@ -12,13 +12,12 @@ fastapi = "^0.111.0"
 pydantic = "^2.7.4"
 python-dotenv = "^1.0.1"
 poetry-dotenv-plugin = "^0.2.0"
-
-
 pymongo = "^4.8.0"
 beanie = "^1.26.0"
 pandas = "^2.2.2"
 pyarrow = "^16.1.0"
 fastparquet = "^2024.5.0"
+
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
 
