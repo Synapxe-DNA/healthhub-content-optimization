@@ -106,12 +106,12 @@ def flag_articles_to_remove_before_extraction(
         )
     ].index
 
-    df["type"] = None
+    df["remove_type"] = None
 
-    # Set type for all indexes
-    df.loc[na_indexes, "type"] = "NaN"
-    df.loc[excel_error_indexes, "type"] = "Excel Error"
-    df.loc[no_tags_indexes, "type"] = "No HTML Tags"
+    # Set remove_type for all indexes
+    df.loc[na_indexes, "remove_type"] = "NaN"
+    df.loc[excel_error_indexes, "remove_type"] = "Excel Error"
+    df.loc[no_tags_indexes, "remove_type"] = "No HTML Tags"
 
     return df
 
@@ -125,7 +125,7 @@ def flag_no_extracted_content(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame:
-            The modified DataFrame with the `to_remove` and `type` columns updated. The `type`
+            The modified DataFrame with the `to_remove` and `remove_type` columns updated. The `remove_type`
             column is updated with the type of "No Extracted Content".
     """
     no_extracted_content_indexes = df.query("extracted_content_body == ''").index
@@ -133,8 +133,8 @@ def flag_no_extracted_content(df: pd.DataFrame) -> pd.DataFrame:
     # Update `to_remove`
     df.loc[no_extracted_content_indexes, "to_remove"] = True
 
-    # Set type for all indexes
-    df.loc[no_extracted_content_indexes, "type"] = "No Extracted Content"
+    # Set remove_type for all indexes
+    df.loc[no_extracted_content_indexes, "remove_type"] = "No Extracted Content"
 
     return df
 
@@ -154,7 +154,7 @@ def flag_duplicated(df: pd.DataFrame, column: str) -> pd.DataFrame:
     Returns:
         pd.DataFrame:
             The DataFrame with a new column `to_remove` indicating whether a row
-            should be removed. The `type` column is also updated with the type of
+            should be removed. The `remove_type` column is also updated with the type of
             "Duplicated Content" or "Duplicated URL".
 
     Raises:
@@ -191,8 +191,8 @@ def flag_duplicated(df: pd.DataFrame, column: str) -> pd.DataFrame:
                 # Update `to_remove`
                 df.at[j, "to_remove"] = True
 
-                # Set type for all indexes (either "Duplicated Content" or "Duplicated URL")
-                df.at[j, "type"] = value
+                # Set remove_type for all indexes (either "Duplicated Content" or "Duplicated URL")
+                df.at[j, "remove_type"] = value
 
     return df
 
@@ -212,13 +212,13 @@ def flag_below_word_count_cutoff(
     Returns:
         pd.DataFrame:
             The DataFrame with a new column `to_remove` indicating whether an article should be
-            removed. The `type` column is also updated with the type of "Below Word Count".
+            removed. The `remove_type` column is also updated with the type of "Below Word Count".
 
     """
     indexes = df.query(
         "extracted_content_body.notna() "
-        "and type != 'Duplicated Content' "
-        "and type != 'Duplicated URL'"
+        "and remove_type != 'Duplicated Content' "
+        "and remove_type != 'Duplicated URL'"
     )["extracted_content_body"].apply(
         lambda x: len(x.split()) > 0 and len(x.split()) <= word_count_cutoff
     )
@@ -229,8 +229,8 @@ def flag_below_word_count_cutoff(
     # Update `to_remove`
     df.loc[word_count_indexes, "to_remove"] = True
 
-    # Set type for all indexes
-    df.loc[word_count_indexes, "type"] = "Below Word Count"
+    # Set remove_type for all indexes
+    df.loc[word_count_indexes, "remove_type"] = "Below Word Count"
 
     return df
 
