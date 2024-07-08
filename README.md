@@ -199,17 +199,17 @@ make clean
 For more control, you may specify the directory you want to clean:
 
 ```
-make clean DIRS="data/02_intermediate"
+make clean DIRS=data/02_intermediate
 ```
 
-You may even speficy multiple directories to clean:
+You may even specify multiple directories to clean:
 
 ```
 make clean DIRS="data/02_intermediate data/03_primary data/04_feature"
 ```
 
 > [!NOTE]
-> By default, `make clean` looks into all data directories of your Kedro project and cleans them. See [here](Makefile) for more information. When you specify the data directories you want to clean, ensure the directories are space separated and wrapped in quotes.
+> By default, `make clean` looks into all data directories of your Kedro project and cleans them. See [here](Makefile) for more information. When you specify the data directories you want to clean, ensure the directories are enclosed in double quotes and space separated.
 
 > [!CAUTION]
 > Before running any of the `make clean` commands above, you should review the directories that would be cleaned. To do so, run:
@@ -221,7 +221,7 @@ make clean DIRS="data/02_intermediate data/03_primary data/04_feature"
 > or run:
 >
 > ```
-> make clean-dry-run DIRS="data/02_intermediate"
+> make clean-dry-run DIRS=data/02_intermediate
 > ```
 
 ### Running Kedro
