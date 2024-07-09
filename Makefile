@@ -6,24 +6,16 @@ install:
 lint:
 	pre-commit run --all-files
 
+
+# List of directories to operate on
 DIRS ?= data/02_intermediate data/03_primary data/04_feature data/05_model_input data/06_models data/07_model_output
 
 clean-dry-run:
-	@echo "Cleaning"
-	@cd content-optimization && \
-	for dir in $(DIRS); do \
-		echo "Would have cleaned $$dir"; \
-	done
-	@echo "Done!"
+	@python script.py --dry-run --dir $(DIRS)
 
 clean:
-	@echo "Cleaning"
-	@cd content-optimization && \
-	for dir in $(DIRS); do \
-		echo "Cleaned $$dir"; \
-		find $$dir -mindepth 1 -type d -exec rm -rf {} +; \
-	done
-	@echo "Done!"
+	@python script.py --dir $(DIRS)
+
 
 PIPELINE ?=
 
