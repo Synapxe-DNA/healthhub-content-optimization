@@ -1,4 +1,4 @@
-<app-island [padding]="false">
+<app-island [padding]="false" [header]="header">
 
     <div *ngIf="cluster" class="
     flex flex-col items-stretch justify-start
@@ -15,5 +15,13 @@
 <ng-template #header>
     <div class="flex flex-row justify-between items-center">
         <h3 class="tui-island__title" [style.margin-bottom]="0">Articles</h3>
+        <div class="flex flex-row justify-end items-center gap-1">
+            <button tuiIconButton size="s" appearance="outline">
+                <lucide-icon name="filter" [size]="16"></lucide-icon>
+            </button>
+            <button tuiIconButton size="s" appearance="outline">
+                <lucide-icon name="arrow-down-a-z" [size]="16"></lucide-icon>
+            </button>
+        </div>
     </div>
 </ng-template>

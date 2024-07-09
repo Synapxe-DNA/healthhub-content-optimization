@@ -16,6 +16,7 @@ import {TuiDataListDropdownManagerModule, TuiInputModule, TuiIslandModule} from 
 import {TuiActiveZoneModule} from "@taiga-ui/cdk";
 import {FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
 import {PolymorpheusContent} from "@tinkoff/ng-polymorpheus";
+import {ArticleMoreComponent} from "./article-more/article-more.component";
 
 @Component({
   selector: 'app-article',
@@ -36,7 +37,8 @@ import {PolymorpheusContent} from "@tinkoff/ng-polymorpheus";
     TuiActiveZoneModule,
     ReactiveFormsModule,
     TuiInputModule,
-    TuiIslandModule
+    TuiIslandModule,
+    ArticleMoreComponent
   ],
   templateUrl: './article.component.html',
   styleUrl: './article.component.css'
@@ -46,7 +48,7 @@ export class ArticleComponent implements AfterViewInit {
   @Input() article!:Article
   @Input() groupManager!:GroupManager
 
-  subgroup:string = "Default"
+  subgroup:string = "default"
 
   addableGroupNames:string[] = []
   createNewSubgroupForm:FormGroup
@@ -60,9 +62,6 @@ export class ArticleComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.groupManager.getAddableGroupingNames().subscribe(v => {
-      this.addableGroupNames=v
-    })
 
     this.groupManager.findArticleGroupBehaviourSubject(this.article.id).subscribe(n => {
       this.subgroup=n
@@ -73,10 +72,6 @@ export class ArticleComponent implements AfterViewInit {
     return vals.sort((a,b)=>a.localeCompare(b))
   }
 
-  assignArticle(articleId:string, group:string=""){
-    if(group){
-      this.groupManager.assignArticle(articleId, group)
-    }
-  }
+
 
 }

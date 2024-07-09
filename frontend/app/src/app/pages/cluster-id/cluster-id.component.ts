@@ -66,12 +66,14 @@ export class ClusterIdComponent implements OnInit{
 
     // Fetch data upon URL change
     this.route.paramMap.subscribe(p => {
-      const id = p.get('id')
+      const id = p.get('id') || ""
       if(!id){throw "ID not present!"}
       this.clusterService.getCluster(id).subscribe(c => {
-        if(c){this.loading=false}
-        this.data=c
-        this.jobService.initialise(c)
+        if(c){
+            this.loading=false
+            this.data=c
+            this.jobService.initialise(c)
+        }
       })
     })
 
