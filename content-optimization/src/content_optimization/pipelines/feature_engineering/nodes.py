@@ -5,11 +5,19 @@ generated using Kedro 0.19.6
 
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from keybert import KeyBERT
 from keyphrase_vectorizers import KeyphraseTfidfVectorizer
+from alive_progress import alive_bar
 from pytictoc import TicToc
-
+from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer
+from nltk.tokenize import sent_tokenize
+from content_optimization.pipelines.feature_engineering.utils import (
+    split_into_chunks,
+    pool_embeddings
+)
 
 def extract_keywords(
     merged_data: pd.DataFrame,
@@ -104,3 +112,164 @@ def extract_keywords(
     filtered_data_with_keywords[f"keywords_{model}"] = keywords
 
     return filtered_data_with_keywords
+
+def generate_embeddings(
+    filtered_data_with_keywords: pd.DataFrame,
+    model: str,
+    owner: str,
+    trust_remote_code: bool,
+    pooling_strategy: str,
+    columns_to_emb: dict[str, list[float]],
+) -> pd.DataFrame:
+    """
+
+    Args:
+
+    Returns:
+
+    """
+    
+    df_filtered = filtered_data_with_keywords.copy()
+
+    cols_to_keep = [
+        "id",
+        "content_name",
+        "title",
+        "article_category_names",
+        "cover_image_url",
+        "full_url",
+        "category_description",
+        "content_body",
+        "feature_title",
+        "pr_name",
+        "date_modified",
+        "page_views",
+        "engagement_rate",
+        "content_category",
+        "has_table",
+        "has_image",
+        "related_sections",
+        "extracted_links",
+        "extracted_headers",
+        "extracted_content_body",
+        "keywords_all-MiniLM-L6-v2",
+    ]
+
+    df_filtered = df_filtered.loc[:, cols_to_keep]
+    df_filtered["keywords_all-MiniLM-L6-v2"] = df_filtered[
+        "keywords_all-MiniLM-L6-v2"
+    ].apply(lambda x: str(x).replace("[", "").replace("]", ""))
+
+    # Load the tokenizer and model
+    if trust_remote_code:
+        sentence_transformer = SentenceTransformer(
+            f"{owner}/{model}", trust_remote_code=True
+        )
+    else:
+        sentence_transformer = SentenceTransformer(f"{owner}/{model}")
+    tokenizer = AutoTokenizer.from_pretrained(f"{owner}/{model}")
+    max_length = sentence_transformer.max_seq_length
+
+    embedding_dict = {col: [] for col in columns_to_emb}
+
+    embeddings_data = df_filtered.copy()
+
+    with alive_bar(
+        (embeddings_data["id"].nunique() * len(embedding_dict)), force_tty=True
+    ) as bar:
+        for col_name, embedding_list in embedding_dict.items():
+            for id in embeddings_data["id"].unique():
+                text = embeddings_data.query("id == @id")[col_name].values[0]
+
+                if not text:
+                    # Store empty array
+                    dim = sentence_transformer.get_sentence_embedding_dimension()
+                    embeddings = np.empty((dim,), dtype=np.float32)
+                else:
+                    # Step 1: Split the article into sentences
+                    sentences = sent_tokenize(text)
+
+                    # Step 2: Tokenize sentences and split into chunks of max 256 tokens
+                    chunks = split_into_chunks(sentences, max_length, tokenizer)
+
+                    # Step 3: Encode each chunk to get their embeddings
+                    chunk_embeddings = [
+                        sentence_transformer.encode(chunk) for chunk in chunks
+                    ]
+
+                    # Step 4: Aggregate chunk embeddings to form a single embedding for the entire article
+                    embeddings = pool_embeddings(
+                        chunk_embeddings, strategy=pooling_strategy
+                    )
+
+                indices = embeddings_data.query("id == @id").index.values
+
+                for _ in range(len(indices)):
+                    embedding_list.append(embeddings)
+
+                bar()
+            
+            print(f"{col_name} embeddings generation completed")
+
+    for col_name, embedding_list in embedding_dict.items():
+        embedding_col = f"{col_name}_embeddings"
+        embeddings_data[embedding_col] = embedding_list
+
+    return embeddings_data
+
+def combine_embeddings_by_weightage(
+    embeddings_data: pd.DataFrame,
+    embeddings_weightage: dict[str, int],
+) -> pd.DataFrame:
+    """
+
+    Args:
+
+    Returns:
+
+    """
+    embeddings_df = embeddings_data.copy()
+
+    embeddings_df["combined_embeddings"] = (
+        embeddings_df["title_embeddings"] * embeddings_weightage["title"]
+        + embeddings_df["article_category_names_embeddings"]
+        * embeddings_weightage["article_category_names"]
+        + embeddings_df["category_description_embeddings"]
+        * embeddings_weightage["category_description"]
+        + embeddings_df["extracted_content_body_embeddings"]
+        * embeddings_weightage["extracted_content_body"]
+        + embeddings_df["keywords_all-MiniLM-L6-v2_embeddings"]
+        * embeddings_weightage["keywords_all-MiniLM-L6-v2"]
+    )
+
+    weighted_embeddings = embeddings_df[
+        [
+            "id",
+            "title",
+            "full_url",
+            "extracted_content_body",
+            "category_description",
+            "keywords_all-MiniLM-L6-v2",
+            "title_embeddings",
+            "article_category_names_embeddings",
+            "category_description_embeddings",
+            "extracted_content_body_embeddings",
+            "keywords_all-MiniLM-L6-v2_embeddings",
+            "combined_embeddings",
+        ]
+    ]
+
+    weighted_embeddings = weighted_embeddings.rename(
+        columns={
+            "extracted_content_body": "content",
+            "category_description": "meta_description",
+            "title_embeddings": "vector_title",
+            "article_category_names_embeddings": "vector_article_category_names",
+            "category_description_embeddings": "vector_category_description",
+            "extracted_content_body_embeddings": "vector_extracted_content_body",
+            "keywords_all-MiniLM-L6-v2_embeddings": "vector_keywords",
+            "combined_embeddings": "vector_combined",
+        }
+    )
+
+    return weighted_embeddings

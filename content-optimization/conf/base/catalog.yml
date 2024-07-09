@@ -48,3 +48,13 @@ filtered_data_with_keywords:
   type: pandas.ParquetDataset
   filepath: data/03_primary/filtered_data_with_keywords.parquet
   versioned: true
+
+embeddings_data:
+  type: pandas.ParquetDataset
+  filepath: data/04_feature/embeddings_data.parquet
+  versioned: false
+
+weighted_embeddings:
+  type: pickle.PickleDataset
+  filepath: data/04_feature/weighted_embeddings.pkl
+  versioned: false
