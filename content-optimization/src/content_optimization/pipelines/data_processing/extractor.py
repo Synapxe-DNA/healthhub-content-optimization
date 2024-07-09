@@ -181,8 +181,7 @@ class HTMLExtractor:
 
         return extracted_content_body
 
-    @classmethod
-    def _clean_up_fragments(cls, content: list[str], threshold: int = 5) -> list[str]:
+    def _clean_up_fragments(self, content: list[str], threshold: int = 5) -> list[str]:
         """
         Cleans up content fragments after extraction
 
@@ -199,21 +198,29 @@ class HTMLExtractor:
 
         result = []
         for i in range(len(content)):
+            fragment = content[i]
+            # # Monitor for very short fragments (using 2 * threshold as criteria)
+            # # NOTE: The log is commented out as it is only used during development
+            # if 2 * threshold >= len(fragment) > 1:
+            #     logger.debug(f"Text Extraction - Short Text detected in {self.content_name}: {fragment}")
             # Append the first element
             if i == 0:
-                result.append(content[i])
+                result.append(fragment)
+            # Skip duplicate fragments
+            elif content[i] == result[-1]:
+                continue
             # Handle self-made bullet points
             elif result[-1] != "\n" and len(result[-1]) < threshold:
-                result[-1] = result[-1] + " " + content[i]
+                result[-1] = result[-1] + " " + fragment
             # Handle nested bullet points
             elif result[-1] == "\t":
-                result[-1] = result[-1] + content[i]
-            # Concatenate strings if the 2nd one starts with a punctuation
-            elif content[i][0] in [".", ",", ":"]:
-                result[-1] = result[-1] + content[i]
+                result[-1] = result[-1] + " " + fragment
+            # Concatenate strings if the latter starts with the punctuation stated below
+            elif fragment[0] in [".", ",", ":", ")", "?"]:
+                result[-1] = result[-1] + fragment
             # Add back remaining content fragments
             else:
-                result.append(content[i])
+                result.append(fragment)
 
         return result
 
@@ -341,7 +348,14 @@ class HTMLExtractor:
                 # Extract text within strong
                 elif child.name is None:
                     # Join text with previous element if punctuation is detected
-                    if cleaned_text != "" and cleaned_text[0] in string.punctuation:
+                    if (
+                        cleaned_text != ""
+                        and len(content) > 0
+                        and len(content[-1]) > 0
+                        and content[-1][-1] in string.punctuation
+                    ):
+                        content.append(cleaned_text)
+                    elif cleaned_text != "" and cleaned_text[0] in string.punctuation:
                         content[-1] = content[-1] + cleaned_text
                     elif cleaned_text != "":
                         content.append(cleaned_text)
@@ -390,7 +404,15 @@ class HTMLExtractor:
                 elif child.name == "em":
                     # Note: Text can be either words or paragraphs - Impact formatting
                     cleaned_text = self.clean_text(child.text)
-                    if cleaned_text != "":
+                    # Skip empty text
+                    if cleaned_text == "":
+                        continue
+                    # If text contains the `Related:` section
+                    if "Related:" in cleaned_text:
+                        content.append(cleaned_text)
+                    elif len(content) > 0 and cleaned_text != content[-1]:
+                        content[-1] = content[-1] + " " + cleaned_text
+                    else:
                         content.append(self.clean_text(cleaned_text))
                 # Extract text in span containers
                 elif child.name == "span":
@@ -572,13 +594,12 @@ class HTMLExtractor:
             tag.span.unwrap()
 
         # Extract text from children
-        start_counter = tag.get("start", 1)
-        for i, child in enumerate(tag.children):
+        counter = int(tag.get("start", 1))
+        for child in tag.children:
             # Extract text within bullet points
             if child.name == "li":
-                content.append(
-                    f"{int(start_counter) + i}. " + self.clean_text(child.text)
-                )
+                content.append(f"{counter}. " + self.clean_text(child.text))
+                counter += 1
             # Extract text within ol
             # Note: Indents must be preserved
             elif child.name is None:
