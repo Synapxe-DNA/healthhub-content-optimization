@@ -1,0 +1,39 @@
+<tui-hosted-dropdown [content]="addToSubGroupDropdown">
+    <button tuiIconButton appearance="icon" size="s"><lucide-icon name="ellipsis" [size]="16"></lucide-icon></button>
+</tui-hosted-dropdown>
+
+
+
+<ng-template #addToSubGroupDropdown let-activeZone>
+    <tui-data-list tuiDataListDropdownManager [tuiActiveZoneParent]="activeZone">
+        <tui-opt-group label="Move to">
+
+            @for(name of addableGroupNames; track name){
+                <button tuiOption class="capitalize" (click)="assignArticle(name)">{{name}}</button>
+            }
+
+            <button
+                    tuiOption
+                    [tuiDropdown]="createNew"
+                    [tuiDropdownManual]="false"
+                    class="flex flex-row justify-between items-center min-w-[18ch]">
+                New sub group
+            </button>
+
+        </tui-opt-group>
+        <tui-opt-group label="Danger">
+            <button tuiOption (click)="assignArticle('ignore')">Ignore article</button>
+        </tui-opt-group>
+    </tui-data-list>
+
+    <ng-template #createNew>
+        <form [formGroup]="createNewSubgroupForm" class="flex flex-row gap-1 p-2">
+            <tui-input tuiTextfieldSize="m" formControlName="name" class="w-[24ch]">
+                Sub group name
+            </tui-input>
+            <button tuiIconButton size="m" appearance="secondary" (click)="assignArticle(createNewSubgroupForm.value['name'])">
+                <lucide-icon name="plus"></lucide-icon>
+            </button>
+        </form>
+    </ng-template>
+</ng-template>
