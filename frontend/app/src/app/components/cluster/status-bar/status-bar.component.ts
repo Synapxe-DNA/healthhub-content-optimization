@@ -2,6 +2,7 @@ import { Component, Input } from "@angular/core";
 import { TuiProgressModule } from "@taiga-ui/kit";
 import { ClusterService } from "../../../services/cluster/cluster.service";
 import { Cluster } from "../../../types/data/cluster.types";
+import { ArticleStatus } from "../../../types/data/article.types";
 
 @Component({
   selector: "app-status-bar",
@@ -16,6 +17,11 @@ export class StatusBarComponent {
   totalClusters = 0;
   statusPercentage = 0;
 
+  articlesCombined = 0;
+  articlesIgnored = 0;
+  articlesNotReviewed = 0;
+  totalArticles = 0;
+
   constructor(private clusterService: ClusterService) {}
 
   ngOnInit(): void {
@@ -25,6 +31,11 @@ export class StatusBarComponent {
   }
 
   calculateProgress(res: Cluster[]) {
+    this.calculateCompletion(res)
+    this.calculateArticleStatus(res)
+  }
+
+  calculateCompletion(res: Cluster[]) {
     for (let c of res) {
       if (c.articles[0].status.length > 0) {
         this.clustersCompleted++;
@@ -34,5 +45,20 @@ export class StatusBarComponent {
     }
     this.totalClusters = this.clustersCompleted + this.clustersPending
     this.statusPercentage = parseFloat(((this.clustersCompleted/this.totalClusters) * 100).toFixed(2))
+  }
+
+  calculateArticleStatus(res: Cluster[]) {
+    for (let c of res) {
+      this.totalArticles += c.articles.length
+      for (let a of c.articles) {
+        if (a.status == ArticleStatus.Combined) {
+          this.articlesCombined++
+        }
+        if (a.status == ArticleStatus.Ignored) {
+          this.articlesIgnored++
+        }
+      }
+    }
+    this.articlesNotReviewed = this.totalArticles - this.articlesCombined - this.articlesIgnored
   }
 }
