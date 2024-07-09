@@ -17,7 +17,6 @@ import {AccordionComponent} from "../../components/accordian/accordion.component
 import {NgForOf, NgIf} from "@angular/common";
 import {ArticleListItemComponent} from "../../components/article-list-item/article-list-item.component";
 import {GroupManager} from "../../utiles/group-manager";
-import {groups} from "d3";
 
 @Component({
   selector: 'app-cluster-id',

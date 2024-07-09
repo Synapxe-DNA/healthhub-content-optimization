@@ -1,11 +1,11 @@
-import {AfterViewInit, Component, Inject, Input} from '@angular/core';
+import {AfterViewInit, Component, Input} from '@angular/core';
 import {Article} from "../../types/data/article.types";
 import {ArticleAttributeComponent} from "./article-attribute/article-attribute.component";
 import {NgIf} from "@angular/common";
 import {HashLabelComponent} from "../hash-label/hash-label.component";
 import {
   TuiButtonModule,
-  TuiDataListModule, TuiDialogContext, TuiDialogService, TuiDropdownModule,
+  TuiDataListModule, TuiDropdownModule,
   TuiHostedDropdownModule, TuiSvgModule,
   TuiTextfieldControllerModule
 } from "@taiga-ui/core";
@@ -15,7 +15,6 @@ import {DatePipe} from "../../pipes/date/date.pipe";
 import {TuiDataListDropdownManagerModule, TuiInputModule, TuiIslandModule} from "@taiga-ui/kit";
 import {TuiActiveZoneModule} from "@taiga-ui/cdk";
 import {FormBuilder, FormGroup, ReactiveFormsModule} from "@angular/forms";
-import {PolymorpheusContent} from "@tinkoff/ng-polymorpheus";
 import {ArticleMoreComponent} from "./article-more/article-more.component";
 
 @Component({

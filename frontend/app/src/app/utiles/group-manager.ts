@@ -138,7 +138,7 @@ export class GroupManager {
 
         // Subscribe to the $groups observable to update the BehaviorSubject value
         // whenever the groups data changes
-        this.$groups.subscribe(_ => {
+        this.$groups.subscribe(() => {
             const updatedGroup = this.findArticleGroup(id)
             // Check if the updated group is different from the current BehaviorSubject value
             if(updatedGroup !== resBS.value){

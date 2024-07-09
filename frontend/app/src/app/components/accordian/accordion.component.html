@@ -1,6 +1,7 @@
 <section class="w-full">
 
-    <div (click)="toggleExpand()" class="
+    <button type="button" (click)="toggleExpand()" class="
+    w-full
     flex flex-row justify-between items-center
     bg-gray-50 pl-[1rem]
     cursor-pointer border-b border-[--tui-base-03]
@@ -14,7 +15,7 @@
             {{isExpand?'rotate-180':''}}
             "></button>
         </span>
-    </div>
+    </button>
 
     <div class="
     overflow-hidden

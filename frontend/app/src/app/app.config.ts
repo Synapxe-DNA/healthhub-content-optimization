@@ -2,7 +2,7 @@ import {
   BrowserAnimationsModule,
   provideAnimations,
 } from "@angular/platform-browser/animations";
-import {TuiDriver, TuiRootModule} from "@taiga-ui/core";
+import {TuiRootModule} from "@taiga-ui/core";
 import { ApplicationConfig, importProvidersFrom } from "@angular/core";
 import { provideRouter } from "@angular/router";
 
