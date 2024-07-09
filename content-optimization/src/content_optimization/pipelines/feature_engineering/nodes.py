@@ -119,14 +119,22 @@ def generate_embeddings(
     owner: str,
     trust_remote_code: bool,
     pooling_strategy: str,
-    columns_to_emb: dict[str, list[float]],
+    columns_to_emb: list[str],
 ) -> pd.DataFrame:
     """
+    Generates embeddings on columns specified in columns_to_emb and 
+    returns a DataFrame with added embeddings columns
 
     Args:
+        filtered_data_with_keywords (pd.DataFrame): The filtered DataFrame with extracted keywords.
+        model (str): Embedding model.
+        owner (str): Owner of embedding model.
+        trust_remote_code (bool): Specifies if trust_remote_code is required.
+        pooling_strategy (str): Pooling strategy of chunk embeddings.
+        columns_to_emb (list[str]): List of column names to generate embeddings.
 
     Returns:
-
+        pd.DataFrame: The DataFrame with the generated embeddings.
     """
     
     df_filtered = filtered_data_with_keywords.copy()
@@ -222,11 +230,16 @@ def combine_embeddings_by_weightage(
     embeddings_weightage: dict[str, int],
 ) -> pd.DataFrame:
     """
+    Generates weighted embeddings on based on the provided parameters and
+    returns a DataFrame with added 'combined_embeddings' column containing 
+    the weighted embeddings.
 
     Args:
+        embeddings_data (pd.DataFrame): The DataFrame with the generated embeddings.
+        embeddings_weightage (dict[str, int]): A dictionary containing the weightage of each embedding columns to use. 
 
     Returns:
-
+        pd.DataFrame: The DataFrame with the weighted embeddings.
     """
     embeddings_df = embeddings_data.copy()
 
