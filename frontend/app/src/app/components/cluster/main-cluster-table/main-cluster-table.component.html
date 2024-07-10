@@ -124,34 +124,31 @@
         }
       </tbody>
 
-      <ng-template #template class="sticky">
+      <ng-template #template>
         <div class="relative">
-          <a href="/clusters/{{cluster.id}}" 
-          (click)="$event.stopPropagation()"
-          class="text-[#0000EE] hover:underline"
-          >
-            {{cluster.name}}
-          </a>
-          <div class="px-2 
-            border-2 border-solid border-black 
-            flex-row inline-flex
-            absolute left-[35rem]"
-          >
-            <div class="border-r-2 border-solid border-black 
-              px-2
-              text-nowrap"
+          <div class="w-[67rem] text-left inline-block">
+            <a href="/clusters/{{cluster.id}}" 
+            (click)="$event.stopPropagation()"
+            class="text-[#0000EE] hover:underline"
             >
-              Status: 
+              {{cluster.name}}
+            </a>
+          </div>
+          <div class="px-2 
+            flex-row inline-flex
+            mr-2"
+          >
+
               @if (getClusterStatus(cluster)) {
-                <p class="text-green-500 inline">Completed</p> 
+                <p class="text-white bg-[#4ac99b] inline p-1 rounded">Completed</p> 
               } 
               @else {
-                <p class="text-red-500 inline">Pending</p> 
+                <p class="text-white bg-[#ed656e] inline p-1 rounded">Pending</p> 
               }
-            </div>
-            <div class="px-2 text-nowrap">
-              Articles: {{cluster.articles.length}}
-            </div>
+
+              <p class="text-white bg-blue-400 inline p-1 ml-3 rounded"> Articles: {{cluster.articles.length}}</p>
+
+
           </div>
         </div>
 
