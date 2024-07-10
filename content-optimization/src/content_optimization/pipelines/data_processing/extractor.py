@@ -63,6 +63,9 @@ class HTMLExtractor:
         Note:
             This method is being used in all extractor methods.
         """
+        # Replace dash in unicode
+        text = text.replace("\u2013", "-")  # Replace dashes
+
         # Normalize Unicode characters
         text = unicodedata.normalize("NFKD", text)
         # Use ASCII encoding to handle special symbols e.g. copyright \xa9
@@ -722,6 +725,40 @@ class HTMLExtractor:
 
         return related_sections
 
+    # TODO: Write docstrings and comments
+    def extract_tables(self) -> list[list[list[str]]]:
+        tables = []
+        for table in self.soup.find_all("table"):
+            processed_table = self._process_table(table)
+            tables.append(processed_table)
+
+        return tables if tables else None
+
+    def _process_table(self, table_html: PageElement) -> list[list[str]]:
+        # Note: Does not account for rowspan and colspan in processing the table
+        table = []
+
+        # Skip empty tables - Empty table in All You Need to Know About Childhood Immunisations
+        if table_html.find_all("tr") == []:
+            return None
+        # Get all headers of the table
+        headers = [
+            self.clean_text(header.get_text())
+            for header in table_html.find_all("tr")[0]
+        ]
+        # Remove empty spaces in headers
+        headers = list(filter(lambda k: " " in k, headers))
+        # Append headers
+        table.append(headers)
+
+        # Append values for each row
+        for row in table_html.find_all("tr")[1:]:
+            cols = row.find_all("td")
+            cols = [self.clean_text(ele.get_text()) for ele in cols]
+            table.append(cols)
+
+        return table
+
     def extract_links(self) -> list[tuple[str, str]]:
         """
         Extracts the title and URL from all the anchor tags in the HTML content.
@@ -731,7 +768,7 @@ class HTMLExtractor:
                 A list of tuples containing the title and URL of each anchor tag.
 
         Note:
-            Footnotes to references sections are ignored.
+            Footnotes to references sections and online forms are ignored.
         """
         extracted_links = []
 
@@ -757,6 +794,25 @@ class HTMLExtractor:
 
         return extracted_links
 
+    def extract_headers(self) -> list[tuple[str, str]]:
+        """
+        Extracts the headers from the HTML content.
+
+        Returns:
+            list[tuple[str, str]]:
+                A list of tuples containing the text and tag name of
+                each header found in the HTML content.
+        """
+        extracted_headers = []
+
+        for title in self.soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
+            tag = title.name
+            text = self.clean_text(title.get_text())
+            record = text, tag
+            extracted_headers.append(record)
+
+        return extracted_headers
+
     def extract_alt_text_from_img(self) -> list[str]:
         """
         Extracts the alternate text from images
@@ -780,22 +836,3 @@ class HTMLExtractor:
 
         # Return unique elements
         return list(set(extracted_alt_text))
-
-    def extract_headers(self) -> list[tuple[str, str]]:
-        """
-        Extracts the headers from the HTML content.
-
-        Returns:
-            list[tuple[str, str]]:
-                A list of tuples containing the text and tag name of
-                each header found in the HTML content.
-        """
-        extracted_headers = []
-
-        for title in self.soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
-            tag = title.name
-            text = self.clean_text(title.get_text())
-            record = text, tag
-            extracted_headers.append(record)
-
-        return extracted_headers
