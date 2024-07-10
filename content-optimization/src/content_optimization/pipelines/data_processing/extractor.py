@@ -738,12 +738,22 @@ class HTMLExtractor:
         # Extract title/text and links from anchor tags
         for link in self.soup.find_all("a"):
             url = link.get("href")
-            # Ignore footnotes
-            if url != "#footnotes":
-                text = link.get("title") or link.get_text()
-                cleaned_text = self.clean_text(text)
-                record = cleaned_text, url
-                extracted_links.append(record)
+            # Skip incorrectly formatted urls or footnotes
+            if url is None or re.search(r"#footnote\w+", url):
+                continue
+            # Extract text
+            text = link.get("title") or link.get_text()
+            cleaned_text = self.clean_text(text)
+            # Skip links to forms
+            if re.search(r"online form", cleaned_text):
+                continue
+
+            # NOTE: These logs are commented out as it is only used during development
+            # logger.debug(f"Link Extraction - text: {cleaned_text}, url: {url}")
+
+            # Store text, url into extracted_links
+            record = cleaned_text, url
+            extracted_links.append(record)
 
         return extracted_links
 
