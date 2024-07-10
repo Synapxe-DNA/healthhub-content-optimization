@@ -13,6 +13,7 @@ from content_optimization.pipelines.data_processing.extractor import HTMLExtract
 from content_optimization.pipelines.data_processing.utils import (
     flag_articles_to_remove_after_extraction,
     flag_articles_to_remove_before_extraction,
+    flag_articles_with_keyword,
     select_and_rename_columns,
 )
 
@@ -194,6 +195,9 @@ def extract_data(
             # After extraction, we flag to remove articles with no content,
             # duplicated content, duplicated URL or below word count cutoff
             df = flag_articles_to_remove_after_extraction(df, word_count_cutoff)
+
+            # Flag recipe articles using a keyword search
+            df = flag_articles_with_keyword(df, "recipe")
 
             # Store dataframes in a parquet file named `content_category`
             all_contents_extracted[content_category] = df
