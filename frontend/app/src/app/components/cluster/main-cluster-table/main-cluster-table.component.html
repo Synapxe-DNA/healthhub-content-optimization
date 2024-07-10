@@ -1,4 +1,4 @@
-<div class="flex flex-col">
+<div class="flex flex-col w-full">
   <tui-table-pagination
     [total]="total"
     [(page)]="page"
@@ -6,7 +6,7 @@
     (paginationChange)="updatePagination()"
   ></tui-table-pagination>
   <tui-scrollbar waIntersectionRoot class="scrollbar" [hidden]="false">
-    <table size="l" tuiTable class="table-row" [columns]="columns" [direction]="-1">
+    <table size="l" tuiTable class="w-full" [columns]="columns" [direction]="-1">
       <thead tuiThead fix-head>
         <tr tuiThGroup class="[&>th]:text-black">
           <th
@@ -124,18 +124,37 @@
         }
       </tbody>
 
-      <ng-template #template>
-        <div class="flex flex-row justify-between relative w-full">
+      <ng-template #template class="sticky">
+        <div class="relative">
           <a href="/clusters/{{cluster.id}}" 
           (click)="$event.stopPropagation()"
           class="text-[#0000EE] hover:underline"
           >
             {{cluster.name}}
           </a>
-          <span class="relative right-0">
-            Articles: {{cluster.articles.length}}
-          </span>
+          <div class="px-2 
+            border-2 border-solid border-black 
+            flex-row inline-flex
+            absolute left-[35rem]"
+          >
+            <div class="border-r-2 border-solid border-black 
+              px-2
+              text-nowrap"
+            >
+              Status: 
+              @if (getClusterStatus(cluster)) {
+                <p class="text-green-500 inline">Completed</p> 
+              } 
+              @else {
+                <p class="text-red-500 inline">Pending</p> 
+              }
+            </div>
+            <div class="px-2 text-nowrap">
+              Articles: {{cluster.articles.length}}
+            </div>
+          </div>
         </div>
+
 
       </ng-template>
       }

@@ -96,4 +96,8 @@ export class MainClusterTableComponent {
     const endIndex = startIndex + this.size;
     this.paginatedClusters = this.clusters.slice(startIndex, endIndex);
   }
+
+  getClusterStatus(cluster:Cluster):boolean {
+    return cluster.articles[0].status.length > 0
+  }
 }

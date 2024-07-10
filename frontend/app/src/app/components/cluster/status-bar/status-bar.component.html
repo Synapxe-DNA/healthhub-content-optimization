@@ -1,6 +1,6 @@
 <div class="flex flex-col items-center">
     <div class="w-full flex flex-col items-center my-9">
-        <span class="text font-bold text-sm my-1">Clusters Completed</span>
+        <span class="text font-bold text-sm my-1 text-center">Clusters Completed</span>
         <label tuiProgressLabel class="w-3/4">
             <span class="text font-bold">{{statusPercentage}}%</span>
             <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="var(--tui-success-fill)"
@@ -8,7 +8,7 @@
         </label>
     </div>
     <div class="w-full flex flex-col items-center my-9">
-        <span class="text font-bold text-sm my-1">Articles Combined</span>
+        <span class="text font-bold text-sm my-1 text-center">Articles Combined</span>
         <label tuiProgressLabel class="w-3/4">
             <span class="text font-bold">{{articlesCombined}}/{{totalArticles}}</span>
             <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="var(--tui-info-fill)"
@@ -16,7 +16,7 @@
         </label>
     </div>
     <div class="w-full flex flex-col items-center my-9">
-        <span class="text font-bold text-sm my-1">Articles Ignored</span>
+        <span class="text font-bold text-sm my-1 text-center">Articles Ignored</span>
         <label tuiProgressLabel class="w-3/4">
             <span class="text font-bold">{{articlesIgnored}}/{{totalArticles}}</span>
             <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="var(--tui-neutral-fill-night)"
@@ -24,7 +24,7 @@
         </label>
     </div>
     <div class="w-full flex flex-col items-center my-9">
-        <span class="text font-bold text-sm my-1">Articles not reviewed</span>
+        <span class="text font-bold text-sm my-1 text-center">Articles not reviewed</span>
         <label tuiProgressLabel class="w-3/4">
             <span class="text font-bold">{{articlesNotReviewed}}/{{totalArticles}}</span>
             <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="var(--tui-error-bg-hover)"
