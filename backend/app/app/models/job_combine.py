@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 from app.models.article import Article
@@ -10,6 +10,6 @@ class JobCombine(BaseModel):
     group_name: str
     sub_group_name: str
     original_articles: List[Article]
-    generated_article: Article
+    generated_article: Optional[Article]
 
 
