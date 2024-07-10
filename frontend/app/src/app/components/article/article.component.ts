@@ -47,11 +47,8 @@ export class ArticleComponent implements AfterViewInit {
   @Input() article!:Article
   @Input() groupManager!:GroupManager
 
-  @Input() isCard:boolean = false
-
   subgroup:string = "default"
 
-  addableGroupNames:string[] = []
   createNewSubgroupForm:FormGroup
 
   constructor(
