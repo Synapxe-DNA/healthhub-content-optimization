@@ -9,7 +9,7 @@ from app.models.ignore import Optimise
 from app.utils.db_connector.mongo_connector.beanie_documents import (
     ArticleDocument,
     ClusterDocument,
-    CombinationDocument,
+    JobCombineDocument,
     EdgeDocument,
     IgnoreDocument,
 )
@@ -64,7 +64,7 @@ class MongoConnector(DbConnector):
                 ClusterDocument,
                 ArticleDocument,
                 EdgeDocument,
-                CombinationDocument,
+                JobCombineDocument,
                 IgnoreDocument,
             ],
         )
@@ -87,8 +87,8 @@ class MongoConnector(DbConnector):
         :return: List[str]
         """
         combined_ids = set()
-        async for c in CombinationDocument.find_all(fetch_links=True):
-            combined_ids.update([str(x.id) for x in c.article_ids])
+        async for c in JobCombineDocument.find_all(fetch_links=True):
+            combined_ids.update([str(x.id) for x in c.original_articles])
 
         return list(combined_ids)
 
@@ -152,7 +152,7 @@ class MongoConnector(DbConnector):
                         engagement=a.engagement_rate,
                         views=a.number_of_views,
                     )
-                    for a in c.article_ids
+                    for a in c.original_articles
                 ],
                 edges=[
                     Edge(
@@ -326,7 +326,7 @@ class MongoConnector(DbConnector):
         """
 
         for c in combination:
-            await CombinationDocument(name=c.name, article_ids=c.article_ids).create()
+            await JobCombineDocument(name=c.name, article_ids=c.article_ids).create()
 
     async def read_combine_all(self) -> List[CombinationPopulated]:
         """
@@ -368,10 +368,10 @@ class MongoConnector(DbConnector):
                         engagement=a.engagement_rate,
                         views=a.number_of_views,
                     )
-                    for a in c.article_ids
+                    for a in c.original_articles
                 ],
             )
-            async for c in CombinationDocument.find_all(fetch_links=True)
+            async for c in JobCombineDocument.find_all(fetch_links=True)
         ]
 
     async def read_combine(self, combine_id: str) -> CombinationPopulated:
@@ -391,8 +391,8 @@ class MongoConnector(DbConnector):
                 return "COMBINED"
             return ""
 
-        combine_doc = await CombinationDocument.find(
-            CombinationDocument.id == ObjectId(combine_id), fetch_links=True
+        combine_doc = await JobCombineDocument.find(
+            JobCombineDocument.id == ObjectId(combine_id), fetch_links=True
         ).to_list()
 
         # TODO [BUG] Linting fix needed
@@ -416,7 +416,7 @@ class MongoConnector(DbConnector):
                     engagement=a.engagement_rate,
                     views=a.number_of_views,
                 )
-                for a in combine_doc[0].article_ids
+                for a in combine_doc[0].original_articles
             ],
         )
 
