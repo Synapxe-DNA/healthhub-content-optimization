@@ -217,7 +217,11 @@ def combine_embeddings_by_weightage(
 
     Args:
         embeddings_data (pd.DataFrame): The DataFrame with the generated embeddings.
-        embeddings_weightage (dict[str, int]): A dictionary containing the weightage of each embedding columns to use.
+        title_weight (float): Weightage of title embeddings to use to compute combined embeddings.
+        article_category_names_weight (float): Weightage of article_category_names embeddings to use to compute combined embeddings.
+        category_description_weight (float): Weightage of category_description embeddings to use to compute combined embeddings.
+        extracted_content_body_weight (float): Weightage of extracted_content_body embeddings to use to compute combined embeddings.
+        keywords_weight (float): Weightage of keywords embeddings to use to compute combined embeddings.
 
     Returns:
         pd.DataFrame: The DataFrame with the weighted embeddings.
