@@ -9,4 +9,3 @@ neo4j_config:
   database: live-healthy-articles
 
 content_contributor: Health Promotion Board
-model_name: nomic-embed-text-v1.5

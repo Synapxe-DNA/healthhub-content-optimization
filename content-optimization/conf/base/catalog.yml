@@ -65,24 +65,51 @@ ground_truth_data:
 
 pred_cluster:
   type: pandas.CSVDataset
-  filepath: 07_model_output/live-healthy-articles/predicted_cluster.csv
+  filepath: data/07_model_output/live-healthy-articles/predicted_cluster.csv
 
 clustered_nodes:
   type: pandas.CSVDataset
-  filepath: 07_model_output/live-healthy-articles/neo_4j_clustered_data.csv
+  filepath: data/07_model_output/live-healthy-articles/neo_4j_clustered_data.csv
 
 unclustered_nodes:
   type: pandas.CSVDataset
-  filepath: 07_model_output/live-healthy-articles/neo_4j_unclustered_data.csv
+  filepath: data/07_model_output/live-healthy-articles/neo_4j_unclustered_data.csv
 
 cluster_articles_dict:
   type: pickle.PickleDataset
-  filepath: 07_model_output/live-healthy-articles/neo4j_predicted_clusters.pkl
+  filepath: data/07_model_output/live-healthy-articles/neo4j_predicted_clusters.pkl
 
 edges_dict:
   type: pickle.PickleDataset
-  filepath: 07_model_output/live-healthy-articles/eo4j_edges.pkl
+  filepath: data/07_model_output/live-healthy-articles/neo4j_edges.pkl
 
 metrics:
   type: pandas.CSVDataset
-  filepath: 07_model_output/live-healthy-articles/metrics.csv
+  filepath: data/07_model_output/live-healthy-articles/metrics.csv
+
+
+# For clustering_weighted_sim
+# Repeated as nodes output cannot be the same name
+pred_cluster_sim:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/live-healthy-articles/predicted_cluster.csv
+
+clustered_nodes_sim:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/live-healthy-articles/neo_4j_clustered_data.csv
+
+unclustered_nodes_sim:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/live-healthy-articles/neo_4j_unclustered_data.csv
+
+cluster_articles_dict_sim:
+  type: pickle.PickleDataset
+  filepath: data/07_model_output/live-healthy-articles/neo4j_predicted_clusters.pkl
+
+edges_dict_sim:
+  type: pickle.PickleDataset
+  filepath: data/07_model_output/live-healthy-articles/neo4j_edges.pkl
+
+metrics_2:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/live-healthy-articles/metrics.csv

@@ -20,6 +20,8 @@ def create_graph_nodes(tx, doc):
         vector_title: $vector_title,
         vector_category: $vector_category,
         vector_desc: $vector_desc,
+        vector_kws: $vector_keywords,
+        vector_combined: $vector_combined,
         ground_truth: $ground_truth
     })""",
         id=doc["id"],
@@ -31,15 +33,17 @@ def create_graph_nodes(tx, doc):
         vector_category=doc["vector_article_category_names"],
         vector_desc=doc["vector_category_description"],
         vector_body=doc["vector_extracted_content_body"],
+        vector_combined=doc["vector_combined"],
+        vector_keywords=doc["vector_keywords"],
         ground_truth=doc["ground_truth_cluster"],
     )
 
-def calculate_similarity(tx):
+def calculate_similarity_weighted_embeddings(tx):
     logging.info("Create edges")
     query = """
         MATCH (a:Article), (b:Article)
         WHERE a.id < b.id
-        WITH a, b, gds.similarity.cosine(a.vector_body, b.vector_body) AS similarity
+        WITH a, b, gds.similarity.cosine(a.vector_combined, b.vector_combined) AS similarity
         RETURN a.id AS node_1_id,
             b.id AS node_2_id,
             a.title AS node_1_title, 
@@ -50,6 +54,25 @@ def calculate_similarity(tx):
         """
     result = tx.run(query)
     return [record for record in result]
+
+def calculate_similarity_weighted_average(tx,col_1='vector_body', col_2='vector_kws',weight_1=0.5, weight_2=0.5):
+    query = f"""
+    MATCH (a:Article), (b:Article)
+            WHERE a.id < b.id
+            WITH a, b, gds.similarity.cosine(a.{col_1}, b.{col_1}) AS similarity_body,
+                gds.similarity.cosine(a.{col_2}, b.{col_2}) AS similarity_keywords
+            RETURN a.id AS node_1_id,
+                b.id AS node_2_id,
+                a.title AS node_1_title, 
+                b.title AS node_2_title,
+                a.ground_truth AS node_1_ground_truth, 
+                b.ground_truth AS node_2_ground_truth,
+                {weight_1}*similarity_body + {weight_2}*similarity_keywords AS weighted_similarity
+            ORDER BY similarity_body DESC
+    """.format(col_1, col_2, weight_1, weight_2)
+    result = tx.run(query)
+    return [record for record in result]
+
 
 def median_threshold(sim_result):
     df = pd.DataFrame(sim_result, columns=["node_1_id", "node_2_id", "node_1_title", "node_2_title","node_1_ground_truth", "node_2_ground_truth", "edge_weight"])
