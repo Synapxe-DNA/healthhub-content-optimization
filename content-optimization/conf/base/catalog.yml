@@ -48,3 +48,41 @@ filtered_data_with_keywords:
   type: pandas.ParquetDataset
   filepath: data/03_primary/filtered_data_with_keywords.parquet
   versioned: true
+
+embedding_data:
+  type: pandas.ParquetDataset
+  filepath: data/04_feature/embeddings_data.parquet
+
+weighted_embeddings:
+  type: pickle.PickleDataset
+  filepath: data/04_feature/weighted_embeddings.pkl
+
+ground_truth_data:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/Synapxe Content Prioritisation - Live Healthy_020724.xlsx
+  load_args:
+    sheet_name: 2
+
+pred_cluster:
+  type: pandas.CSVDataset
+  filepath: 07_model_output/live-healthy-articles/predicted_cluster.csv
+
+clustered_nodes:
+  type: pandas.CSVDataset
+  filepath: 07_model_output/live-healthy-articles/neo_4j_clustered_data.csv
+
+unclustered_nodes:
+  type: pandas.CSVDataset
+  filepath: 07_model_output/live-healthy-articles/neo_4j_unclustered_data.csv
+
+cluster_articles_dict:
+  type: pickle.PickleDataset
+  filepath: 07_model_output/live-healthy-articles/neo4j_predicted_clusters.pkl
+
+edges_dict:
+  type: pickle.PickleDataset
+  filepath: 07_model_output/live-healthy-articles/eo4j_edges.pkl
+
+metrics:
+  type: pandas.CSVDataset
+  filepath: 07_model_output/live-healthy-articles/metrics.csv

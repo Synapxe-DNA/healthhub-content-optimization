@@ -3,3 +3,10 @@
 #
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
+
+neo4j_config:
+  uri: neo4j://localhost:7687
+  database: live-healthy-articles
+
+content_contributor: Health Promotion Board
+model_name: nomic-embed-text-v1.5
