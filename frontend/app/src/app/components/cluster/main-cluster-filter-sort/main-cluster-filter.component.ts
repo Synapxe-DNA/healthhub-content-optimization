@@ -6,13 +6,14 @@ import { TuiCheckboxBlockModule } from '@taiga-ui/kit';
 import { ClusterService } from '../../../services/cluster/cluster.service';
 import { Filter } from '../../../types/filters.types';
 import { Cluster } from '../../../types/data/cluster.types';
+import { KeyValuePipe } from '@angular/common';
 
 
 
 @Component({
   selector: 'app-main-cluster-filter',
   standalone: true,
-  imports: [TuiSvgModule, TuiButtonModule, FormsModule, TuiGroupModule, ReactiveFormsModule, TuiCheckboxBlockModule],
+  imports: [TuiSvgModule, TuiButtonModule, FormsModule, TuiGroupModule, ReactiveFormsModule, TuiCheckboxBlockModule, KeyValuePipe],
   templateUrl: './main-cluster-filter.component.html',
   styleUrl: './main-cluster-filter.component.css'
 })

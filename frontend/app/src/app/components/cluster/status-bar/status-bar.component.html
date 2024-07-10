@@ -1,10 +1,34 @@
-<div class="flex justify-center">
-    <div class="w-20">
-        <label tuiProgressLabel class="w-full">
+<div class="flex flex-col items-center">
+    <div class="w-full flex flex-col items-center my-9">
+        <span class="text font-bold text-sm my-1 text-center">Clusters Completed</span>
+        <label tuiProgressLabel class="w-3/4">
             <span class="text font-bold">{{statusPercentage}}%</span>
-            <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="lightgrey"
+            <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="var(--tui-success-fill)"
                 class="border-2"></progress>
         </label>
-        <span class="text font-bold">Completed</span>
+    </div>
+    <div class="w-full flex flex-col items-center my-9">
+        <span class="text font-bold text-sm my-1 text-center">Articles Combined</span>
+        <label tuiProgressLabel class="w-3/4">
+            <span class="text font-bold">{{articlesCombined}}/{{totalArticles}}</span>
+            <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="var(--tui-info-fill)"
+                class="border-2"></progress>
+        </label>
+    </div>
+    <div class="w-full flex flex-col items-center my-9">
+        <span class="text font-bold text-sm my-1 text-center">Articles Ignored</span>
+        <label tuiProgressLabel class="w-3/4">
+            <span class="text font-bold">{{articlesIgnored}}/{{totalArticles}}</span>
+            <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="var(--tui-neutral-fill-night)"
+                class="border-2"></progress>
+        </label>
+    </div>
+    <div class="w-full flex flex-col items-center my-9">
+        <span class="text font-bold text-sm my-1 text-center">Articles not reviewed</span>
+        <label tuiProgressLabel class="w-3/4">
+            <span class="text font-bold">{{articlesNotReviewed}}/{{totalArticles}}</span>
+            <progress tuiProgressBar [max]="totalClusters" [value]="clustersCompleted" size="m" color="#ed656e"
+                class="border-2"></progress>
+        </label>
     </div>
 </div>

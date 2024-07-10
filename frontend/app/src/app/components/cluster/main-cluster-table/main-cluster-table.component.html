@@ -1,131 +1,161 @@
-<tui-scrollbar waIntersectionRoot class="scrollbar h-full" [hidden]="true">
-  <table size="l" tuiTable class="table-row" [columns]="columns" [direction]="-1">
-    <thead tuiThead fix-head>
-      <tr tuiThGroup class="[&>th]:text-black">
-        <th
-          *tuiHead="'title'"
-          rowspan="2"
-          tuiTh
-          [sorter]="null"
-          [sticky]="true"
-        >
-          Title
-        </th>
+<div class="flex flex-col w-full">
+  <tui-table-pagination
+    [total]="total"
+    [(page)]="page"
+    [(size)]="size"
+    (paginationChange)="updatePagination()"
+  ></tui-table-pagination>
+  <tui-scrollbar waIntersectionRoot class="scrollbar" [hidden]="false">
+    <table size="l" tuiTable class="w-full" [columns]="columns" [direction]="-1">
+      <thead tuiThead fix-head>
+        <tr tuiThGroup class="[&>th]:text-black">
+          <th
+            *tuiHead="'title'"
+            rowspan="2"
+            tuiTh
+            [sorter]="null"
+            [sticky]="true"
+          >
+            Title
+          </th>
 
-        <th
-          *tuiHead="'description'"
-          rowspan="2"
-          tuiTh
-          [sorter]="null"
-          [sticky]="true"
-        >
-          Description
-        </th>
+          <th
+            *tuiHead="'description'"
+            rowspan="2"
+            tuiTh
+            [sorter]="null"
+            [sticky]="true"
+          >
+            Description
+          </th>
 
-        <th
-          *tuiHead="'pillar'"
-          rowspan="2"
-          tuiTh
-          [sorter]="null"
-          [sticky]="true"
-        >
-          Pillar
-        </th>
+          <th
+            *tuiHead="'pillar'"
+            rowspan="2"
+            tuiTh
+            [sorter]="null"
+            [sticky]="true"
+          >
+            Pillar
+          </th>
 
-        <th
-          *tuiHead="'status'"
-          rowspan="2"
-          tuiTh
-          [sorter]="null"
-          [sticky]="true"
-        >
-          Status
-        </th>
+          <th
+            *tuiHead="'status'"
+            rowspan="2"
+            tuiTh
+            [sorter]="null"
+            [sticky]="true"
+          >
+            Status
+          </th>
 
-        <th
-          *tuiHead="'labels'"
-          rowspan="2"
-          tuiTh
-          [sorter]="null"
-          [sticky]="true"
-        >
-          Labels
-        </th>
+          <th
+            *tuiHead="'labels'"
+            rowspan="2"
+            tuiTh
+            [sorter]="null"
+            [sticky]="true"
+          >
+            Labels
+          </th>
 
-        <th
-          *tuiHead="'engagement'"
-          rowspan="2"
-          tuiTh
-          [sorter]="null"
-          [sticky]="true"
-        >
-          Engagement
-        </th>
+          <th
+            *tuiHead="'engagement'"
+            rowspan="2"
+            tuiTh
+            [sorter]="null"
+            [sticky]="true"
+          >
+            Engagement
+          </th>
 
-        <th
-          *tuiHead="'views'"
-          rowspan="2"
-          tuiTh
-          [sorter]="null"
-          [sticky]="true"
-        >
-          Views
-        </th>
-      </tr>
-    </thead>
+          <th
+            *tuiHead="'views'"
+            rowspan="2"
+            tuiTh
+            [sorter]="null"
+            [sticky]="true"
+          >
+            Views
+          </th>
+        </tr>
+      </thead>
 
-    @for (cluster of clusters; track cluster.id) {
+      @for (cluster of paginatedClusters; track cluster.id) {
 
-    <tbody [heading]="template" tuiTbody>
+      <tbody class="w-full" [heading]="template" tuiTbody>
 
-      @for (article of cluster.articles; track article.id) {
-      <tr tuiTr>
-        <td *tuiCell="'title'" tuiTd class="number text">
-          <a href="{{article.url}}" class="text-[#0000EE] hover:underline">{{ article.title }}</a>
-        </td>
-          
-        <td *tuiCell="'description'" tuiTd class="number text max-w-prose break-words">
-          {{ article.description }}
-        </td>
+        @for (article of cluster.articles; track article.id) {
+        <tr tuiTr>
+          <td *tuiCell="'title'" tuiTd class="number text">
+            <a href="{{article.url}}" class="text-[#0000EE] hover:underline">{{ article.title }}</a>
+          </td>
+            
+          <td *tuiCell="'description'" tuiTd class="number text max-w-prose break-words">
+            {{ article.description }}
+          </td>
 
-        <td *tuiCell="'pillar'" tuiTd class="number text">
-          <app-hash-label [text]="article.pillar" ></app-hash-label>
-        </td>
+          <td *tuiCell="'pillar'" tuiTd class="number text">
+            <app-hash-label [text]="article.pillar" ></app-hash-label>
+          </td>
 
-        <td *tuiCell="'status'" tuiTd class="number text">
-          @if (article.status.length > 0){
-            <app-hash-label [text]="article.status" ></app-hash-label>
-          }
-        </td>
-
-        <td *tuiCell="'labels'" tuiTd class="number text">
-          <div class="flex flex-row justify-start items-start gap-1">
-            @for(tag of sortStrings(article.labels); track tag) {
-                <app-hash-label [text]="tag" ></app-hash-label>
+          <td *tuiCell="'status'" tuiTd class="number text">
+            @if (article.status.length > 0){
+              <app-hash-label [text]="article.status" ></app-hash-label>
             }
+          </td>
+
+          <td *tuiCell="'labels'" tuiTd class="number text">
+            <div class="flex flex-row justify-start items-start gap-1">
+              @for(tag of sortStrings(article.labels); track tag) {
+                  <app-hash-label [text]="tag" ></app-hash-label>
+              }
+            </div>
+          </td>
+
+          <td *tuiCell="'engagement'" tuiTd class="number text">
+            {{ (article.engagement*100).toFixed(1) }}%
+          </td>
+
+          <td *tuiCell="'views'" tuiTd class="number text">
+            {{ article.views }}
+          </td>
+        </tr>
+        }
+      </tbody>
+
+      <ng-template #template>
+        <div class="relative">
+          <div class="w-[67rem] text-left inline-block">
+            <a href="/clusters/{{cluster.id}}" 
+            (click)="$event.stopPropagation()"
+            class="text-[#0000EE] hover:underline"
+            >
+              {{cluster.name}}
+            </a>
           </div>
-        </td>
+          <div class="px-2 
+            flex-row inline-flex
+            mr-2"
+          >
 
-        <td *tuiCell="'engagement'" tuiTd class="number text">
-          {{ (article.engagement*100).toFixed(1) }}%
-        </td>
+              @if (getClusterStatus(cluster)) {
+                <p class="text-white bg-[#4ac99b] inline p-1 rounded">Completed</p> 
+              } 
+              @else {
+                <p class="text-white bg-[#ed656e] inline p-1 rounded">Pending</p> 
+              }
 
-        <td *tuiCell="'views'" tuiTd class="number text">
-          {{ article.views }}
-        </td>
-      </tr>
+              <p class="text-white bg-blue-400 inline p-1 ml-3 rounded"> Articles: {{cluster.articles.length}}</p>
+
+
+          </div>
+        </div>
+
+
+      </ng-template>
       }
-    </tbody>
 
-    <ng-template #template>
-      <a href="/clusters/{{cluster.id}}" 
-        (click)="$event.stopPropagation()"
-        class="text-[#0000EE] hover:underline"
-      >
-        {{cluster.name}}
-      </a>
-    </ng-template>
-    }
-
-  </table>
-</tui-scrollbar>
+    </table>
+  </tui-scrollbar>
+</div>

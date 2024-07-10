@@ -5,6 +5,7 @@ import {environment} from "../../environments/environment";
 import {Cluster} from "../../types/data/cluster.types";
 import {Filter, FilterGroup} from "../../types/filters.types";
 import axios from "axios";
+import { Sorter } from "../../types/sorter.types";
 
 
 @Injectable({ providedIn: "root" })
@@ -14,6 +15,8 @@ export class ClusterService {
   private $clusters:BehaviorSubject<Cluster[]> = new BehaviorSubject<Cluster[]>([])
 
   private $filters:BehaviorSubject<FilterGroup> = new BehaviorSubject<FilterGroup>({})
+  private $sorter:BehaviorSubject<Sorter> = new BehaviorSubject<Sorter>(()=>[])
+
 
   constructor(
       private http: HttpClient
@@ -25,6 +28,10 @@ export class ClusterService {
 
     this.$filters.subscribe(
         filters => this.$clusters.next(this.applyFiltersToClusters(this.$all_clusters.value, filters))
+    )
+
+    this.$sorter.subscribe(
+      sorter => this.$clusters.next(this.applySortToClusters(this.$all_clusters.value, sorter))
     )
 
     this.fetchData().catch(console.error)
@@ -103,6 +110,27 @@ export class ClusterService {
       delete filterGroup[name]
       this.$filters.next(filterGroup)
     }
+  }
+
+  /**
+   * Method to apply sorts to an array of clusters
+   * @param clusters {Cluster[]}
+   * @param filters {FilterGroup}
+   * @return {Cluster[]}
+   * @private
+   */
+  private applySortToClusters(clusters:Cluster[], sorter:Sorter):Cluster[] {
+    let sorted = clusters
+    sorted = sorter(sorted)
+    return sorted
+  }
+
+  /**
+   * Method to update the sort
+   * @param sorter Anonymous function to apply sort
+   */
+  updateSort(sorter:Sorter) {
+    this.$sorter.next(sorter)
   }
 
 }

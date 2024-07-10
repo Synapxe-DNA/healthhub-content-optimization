@@ -10,8 +10,45 @@
 <ng-template
     #template
     let-observer
->
-    <p>Sort have not been implemented yet</p>
+>   
+    <div class="flex flex-col items-center">
+        <tui-tiles
+        class="tiles w-full"
+        [(order)]="order"
+        >   
+            @for (item of sortItems | keyvalue ;track item; let index = $index;) {
+                <tui-tile
+                    tuiTileHandle
+                    class="tile h-10 w-30 m-5"
+                    [style.order]="order.get(index)"
+                >
+                    <div class="content border-2 border-solid border-black h-full w-full flex flex-row justify-between items-center p-2">
+                        <div> {{ item.key }}</div>
+                        <button
+                            tuiIconButton
+                            type="button"
+                            icon={{getIcon(item.value.state)}}
+                            size="xs"
+                            (click)="changeSort(item.key)"
+
+                        ></button>
+                    
+                    </div>
+                </tui-tile>
+            }
+        </tui-tiles>
+        <button
+        appearance="primary"
+        tuiButton
+        type="button"
+        class="mt-10"
+        (click)="sortClusters()"
+        >
+            Sort
+        </button>
+        
+    </div>
+    
 
 
 </ng-template>
