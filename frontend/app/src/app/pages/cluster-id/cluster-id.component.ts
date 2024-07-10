@@ -15,7 +15,7 @@ import {JobService} from "../../services/job-builder/job.service";
 import {Groups} from "../../types/group.types";
 import {AccordionComponent} from "../../components/accordian/accordion.component";
 import {NgForOf, NgIf} from "@angular/common";
-import {ArticleListItemComponent} from "../../components/article-list-item/article-list-item.component";
+import {ArticleListItemComponent} from "../../components/article/article-list-item/article-list-item.component";
 import {GroupManager} from "../../utiles/group-manager";
 
 @Component({
