@@ -254,3 +254,62 @@ def flag_articles_to_remove_after_extraction(
     df = flag_below_word_count_cutoff(df, word_count_cutoff)
 
     return df
+
+
+def flag_articles_with_keyword(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
+    """
+    This function creates a new boolean column in the DataFrame indicating whether
+    the specified keyword is present in any of the relevant text fields of each article.
+
+    The function searches for the keyword in the following columns:
+    - content_name
+    - title
+    - keywords
+    - category_description
+    - extracted_content_body
+
+    The new column is named 'is_{keyword}' and contains True if the keyword is found
+    in any of the above fields, False otherwise.
+
+    Args:
+        df (pd.DataFrame): The input DataFrame containing article information.
+        keyword (str): The keyword to search for in the articles.
+
+    Returns:
+        pd.DataFrame: The input DataFrame with an additional boolean column indicating
+                      the presence of the keyword in each article.
+
+    Note: The function uses regex to match whole words only, preventing partial matches.
+    """
+    # Create keyword column
+    col = f"is_{keyword}"
+    df[col] = None
+
+    # Create regex pattern
+    match_keyword = r"\b" + keyword + r"\b"
+    pattern = re.compile(match_keyword)
+    for index, row in df.iterrows():
+        # Columns of Interest to find keyword
+        content_name = row["content_name"]
+        title = row["title"]
+        keywords = row["keywords"] if row["keywords"] is not None else ""
+        category_description = (
+            row["category_description"]
+            if row["category_description"] is not None
+            else ""
+        )
+        extracted_content_body = (
+            row["extracted_content_body"]
+            if row["extracted_content_body"] is not None
+            else ""
+        )
+        # Assign boolean value
+        df.at[index, col] = (
+            bool(pattern.search(content_name))
+            or bool(pattern.search(title))
+            or bool(pattern.search(keywords))
+            or bool(pattern.search(category_description))
+            or bool(pattern.search(extracted_content_body))
+        )
+
+    return df
