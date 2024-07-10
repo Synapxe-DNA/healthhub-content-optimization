@@ -40,6 +40,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "params:embeddings.owner",
                     "params:embeddings.trust_remote_code",
                     "params:embeddings.pooling_strategy",
+                    "params:columns_to_keep_emb",
                     "params:columns_to_emb",
                 ],
                 outputs="embeddings_data",
@@ -47,7 +48,14 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=combine_embeddings_by_weightage,
-                inputs=["embeddings_data", "params:embeddings_weightage"],
+                inputs=[
+                    "embeddings_data",
+                    "params:embeddings_weightage.title",
+                    "params:embeddings_weightage.article_category_names",
+                    "params:embeddings_weightage.category_description",
+                    "params:embeddings_weightage.extracted_content_body",
+                    "params:embeddings_weightage.keywords",
+                ],
                 outputs="weighted_embeddings",
                 name="combine_embeddings_by_weightage",
             ),

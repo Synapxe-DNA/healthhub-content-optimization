@@ -7,17 +7,18 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from alive_progress import alive_bar
+from content_optimization.pipelines.feature_engineering.utils import (
+    pool_embeddings,
+    split_into_chunks,
+)
 from keybert import KeyBERT
 from keyphrase_vectorizers import KeyphraseTfidfVectorizer
-from alive_progress import alive_bar
+from nltk.tokenize import sent_tokenize
 from pytictoc import TicToc
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
-from nltk.tokenize import sent_tokenize
-from content_optimization.pipelines.feature_engineering.utils import (
-    split_into_chunks,
-    pool_embeddings
-)
+
 
 def extract_keywords(
     merged_data: pd.DataFrame,
@@ -113,16 +114,18 @@ def extract_keywords(
 
     return filtered_data_with_keywords
 
+
 def generate_embeddings(
     filtered_data_with_keywords: pd.DataFrame,
     model: str,
     owner: str,
     trust_remote_code: bool,
     pooling_strategy: str,
+    columns_to_keep_emb: list[str],
     columns_to_emb: list[str],
 ) -> pd.DataFrame:
     """
-    Generates embeddings on columns specified in columns_to_emb and 
+    Generates embeddings on columns specified in columns_to_emb and
     returns a DataFrame with added embeddings columns
 
     Args:
@@ -136,34 +139,10 @@ def generate_embeddings(
     Returns:
         pd.DataFrame: The DataFrame with the generated embeddings.
     """
-    
+
     df_filtered = filtered_data_with_keywords.copy()
 
-    cols_to_keep = [
-        "id",
-        "content_name",
-        "title",
-        "article_category_names",
-        "cover_image_url",
-        "full_url",
-        "category_description",
-        "content_body",
-        "feature_title",
-        "pr_name",
-        "date_modified",
-        "page_views",
-        "engagement_rate",
-        "content_category",
-        "has_table",
-        "has_image",
-        "related_sections",
-        "extracted_links",
-        "extracted_headers",
-        "extracted_content_body",
-        "keywords_all-MiniLM-L6-v2",
-    ]
-
-    df_filtered = df_filtered.loc[:, cols_to_keep]
+    df_filtered = df_filtered.loc[:, columns_to_keep_emb]
     df_filtered["keywords_all-MiniLM-L6-v2"] = df_filtered[
         "keywords_all-MiniLM-L6-v2"
     ].apply(lambda x: str(x).replace("[", "").replace("]", ""))
@@ -182,10 +161,9 @@ def generate_embeddings(
 
     embeddings_data = df_filtered.copy()
 
-    with alive_bar(
-        (embeddings_data["id"].nunique() * len(embedding_dict)), force_tty=True
-    ) as bar:
-        for col_name, embedding_list in embedding_dict.items():
+    for col_name, embedding_list in embedding_dict.items():
+        with alive_bar((embeddings_data["id"].nunique()), force_tty=True) as bar:
+            print(f"Generating embeddings for {col_name}")
             for id in embeddings_data["id"].unique():
                 text = embeddings_data.query("id == @id")[col_name].values[0]
 
@@ -216,8 +194,6 @@ def generate_embeddings(
                     embedding_list.append(embeddings)
 
                 bar()
-            
-            print(f"{col_name} embeddings generation completed")
 
     for col_name, embedding_list in embedding_dict.items():
         embedding_col = f"{col_name}_embeddings"
@@ -225,18 +201,23 @@ def generate_embeddings(
 
     return embeddings_data
 
+
 def combine_embeddings_by_weightage(
     embeddings_data: pd.DataFrame,
-    embeddings_weightage: dict[str, int],
+    title_weight: float,
+    article_category_names_weight: float,
+    category_description_weight: float,
+    extracted_content_body_weight: float,
+    keywords_weight: float,
 ) -> pd.DataFrame:
     """
     Generates weighted embeddings on based on the provided parameters and
-    returns a DataFrame with added 'combined_embeddings' column containing 
+    returns a DataFrame with added 'combined_embeddings' column containing
     the weighted embeddings.
 
     Args:
         embeddings_data (pd.DataFrame): The DataFrame with the generated embeddings.
-        embeddings_weightage (dict[str, int]): A dictionary containing the weightage of each embedding columns to use. 
+        embeddings_weightage (dict[str, int]): A dictionary containing the weightage of each embedding columns to use.
 
     Returns:
         pd.DataFrame: The DataFrame with the weighted embeddings.
@@ -244,15 +225,13 @@ def combine_embeddings_by_weightage(
     embeddings_df = embeddings_data.copy()
 
     embeddings_df["combined_embeddings"] = (
-        embeddings_df["title_embeddings"] * embeddings_weightage["title"]
+        embeddings_df["title_embeddings"] * title_weight
         + embeddings_df["article_category_names_embeddings"]
-        * embeddings_weightage["article_category_names"]
-        + embeddings_df["category_description_embeddings"]
-        * embeddings_weightage["category_description"]
+        * article_category_names_weight
+        + embeddings_df["category_description_embeddings"] * category_description_weight
         + embeddings_df["extracted_content_body_embeddings"]
-        * embeddings_weightage["extracted_content_body"]
-        + embeddings_df["keywords_all-MiniLM-L6-v2_embeddings"]
-        * embeddings_weightage["keywords_all-MiniLM-L6-v2"]
+        * extracted_content_body_weight
+        + embeddings_df["keywords_all-MiniLM-L6-v2_embeddings"] * keywords_weight
     )
 
     weighted_embeddings = embeddings_df[
