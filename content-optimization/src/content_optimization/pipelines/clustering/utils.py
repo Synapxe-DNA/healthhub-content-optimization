@@ -38,23 +38,6 @@ def create_graph_nodes(tx, doc):
         ground_truth=doc["ground_truth_cluster"],
     )
 
-# def calculate_similarity_weighted_embeddings(tx):
-#     logging.info("Create edges")
-#     query = """
-        # MATCH (a:Article), (b:Article)
-        # WHERE a.id < b.id
-        # WITH a, b, gds.similarity.cosine(a.vector_combined, b.vector_combined) AS similarity
-        # RETURN a.id AS node_1_id,
-        #     b.id AS node_2_id,
-        #     a.title AS node_1_title, 
-        #     b.title AS node_2_title,
-        #     a.ground_truth AS node_1_ground_truth, 
-        #     b.ground_truth AS node_2_ground_truth,
-        #     similarity AS edge_weight
-#         """
-#     result = tx.run(query)
-#     return [record for record in result]
-
 def clustering_neo4j(tx, weight_title, weight_cat, weight_desc,weight_body,weight_combined,weight_kws):
     query = f"""
     MATCH (a:Article), (b:Article)

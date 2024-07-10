@@ -47,7 +47,7 @@ def merge_ground_truth_to_data(ground_truth_data, content_contributor, weighted_
     )
     return articles_df
 
-def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, embeddings_weightage):
+def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, weight_title, weight_cat, weight_desc, weight_body, weight_combined, weight_kws):
     conf_path = str(str(Path(os.getcwd()) / settings.CONF_SOURCE))
     config_loader = OmegaConfigLoader(conf_source=conf_path)
     credentials = config_loader["credentials"]
@@ -64,7 +64,7 @@ def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, emb
             session.execute_write(clear_db)  # Clear the database
             for doc in documents:
                 session.execute_write(create_graph_nodes, doc)
-            sim_result = session.execute_write(lambda tx: clustering_neo4j(tx, embeddings_weightage['weight_title'], embeddings_weightage['weight_cat'], embeddings_weightage['weight_desc'],embeddings_weightage['weight_body'],embeddings_weightage['weight_combined'],embeddings_weightage['weight_kws']))
+            sim_result = session.execute_write(lambda tx: clustering_neo4j(tx, weight_title, weight_cat, weight_desc, weight_body, weight_combined, weight_kws))
             threshold = median_threshold(sim_result)
             session.execute_write(create_sim_edges, threshold)
             session.execute_write(drop_graph_projection)

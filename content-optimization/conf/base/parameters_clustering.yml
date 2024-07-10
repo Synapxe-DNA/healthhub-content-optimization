@@ -10,7 +10,7 @@ neo4j_config:
 
 content_contributor: Health Promotion Board
 
-embeddings_weightage:
+sim_weightage:
   weight_title: 0
   weight_cat: 0.5
   weight_desc: 0

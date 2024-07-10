@@ -23,7 +23,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=[
                     "merged_df_with_groundtruth",
                     "params:neo4j_config",
-                    "params:embeddings_weightage"
+                    "params:sim_weightage.weight_title",
+                    "params:sim_weightage.weight_cat",
+                    "params:sim_weightage.weight_desc",
+                    "params:sim_weightage.weight_body",
+                    "params:sim_weightage.weight_combined",
+                    "params:sim_weightage.weight_kws"
                 ],
                 outputs=["pred_cluster", "clustered_nodes", "unclustered_nodes", "cluster_articles_dict", "edges_dict", "metrics"],
                 name="clustering_weighted_embeddings"
