@@ -281,25 +281,28 @@ def flag_articles_with_keyword(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
 
     Note: The function uses regex to match whole words only, preventing partial matches.
     """
+    # Convert keyword to lowercase
+    keyword = keyword.lower()
     # Create keyword column
     col = f"is_{keyword}"
     df[col] = None
 
     # Create regex pattern
+    # TODO: Explore what should be the match keyword for the regex search
     match_keyword = r"\b" + keyword + r"\b"
     pattern = re.compile(match_keyword)
     for index, row in df.iterrows():
         # Columns of Interest to find keyword
-        content_name = row["content_name"]
-        title = row["title"]
-        keywords = row["keywords"] if row["keywords"] is not None else ""
+        content_name = row["content_name"].lower()
+        title = row["title"].lower()
+        keywords = row["keywords"].lower() if row["keywords"] is not None else ""
         category_description = (
-            row["category_description"]
+            row["category_description"].lower()
             if row["category_description"] is not None
             else ""
         )
         extracted_content_body = (
-            row["extracted_content_body"]
+            row["extracted_content_body"].lower()
             if row["extracted_content_body"] is not None
             else ""
         )
