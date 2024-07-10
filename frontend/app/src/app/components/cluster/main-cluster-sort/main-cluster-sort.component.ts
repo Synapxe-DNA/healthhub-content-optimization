@@ -1,11 +1,9 @@
-import { Component } from '@angular/core';
-import { TuiButtonModule, TuiDataListModule, TuiDialogContext, TuiDialogService, TuiDropdownModule, TuiHostedDropdownModule, TuiSvgModule } from '@taiga-ui/core';
+import { Component, OnInit } from '@angular/core';
+import { TuiButtonModule, TuiDialogContext, TuiDialogService, TuiSvgModule } from '@taiga-ui/core';
 import {PolymorpheusContent} from '@tinkoff/ng-polymorpheus';
 
 import { ClusterService } from '../../../services/cluster/cluster.service';
-import { TuiReorderModule } from '@taiga-ui/addon-table';
-import { TuiComboBoxModule, TuiDataListWrapperModule, TuiSelectModule, TuiTilesModule } from '@taiga-ui/kit';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TuiTilesModule } from '@taiga-ui/kit';
 import { CommonModule } from '@angular/common';
 import { Cluster } from '../../../types/data/cluster.types';
 import { Sorter } from '../../../types/sorter.types';
@@ -16,7 +14,7 @@ interface SortItem {
   sortMethod: (a:Cluster,b:Cluster)=> number
 }
 
-type SortItems = { [key: string]: SortItem };
+type SortItems = Record<string, SortItem>;
 
 @Component({
   selector: 'app-main-cluster-sort',
@@ -25,7 +23,7 @@ type SortItems = { [key: string]: SortItem };
   templateUrl: './main-cluster-sort.component.html',
   styleUrl: './main-cluster-sort.component.css'
 })
-export class MainClusterSortComponent {
+export class MainClusterSortComponent implements OnInit {
 
   /**
    * 0 => same
@@ -79,7 +77,7 @@ export class MainClusterSortComponent {
    * Method used to change the icon of the button to ascending/descending
    * 
    */
-  getIcon(state:Boolean){
+  getIcon(state:boolean){
     if (state) {
       return 'tuiIconChevronUp'
     } else {
@@ -94,7 +92,7 @@ export class MainClusterSortComponent {
     const sortOrder:string[] = []
 
     for (let i = 0; i < this.numOfSorts; i++) { // Used to get the sorting method order
-      for (let item in this.sortItems) {
+      for (const item in this.sortItems) {
         if (this.order.get(this.sortItems[item].index) == i) {
           sortOrder.push(item)
           break

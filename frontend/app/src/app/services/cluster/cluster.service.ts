@@ -15,7 +15,7 @@ export class ClusterService {
   private $clusters:BehaviorSubject<Cluster[]> = new BehaviorSubject<Cluster[]>([])
 
   private $filters:BehaviorSubject<FilterGroup> = new BehaviorSubject<FilterGroup>({})
-  private $sorter:BehaviorSubject<Sorter> = new BehaviorSubject<Sorter>((arg0:Cluster[])=>[])
+  private $sorter:BehaviorSubject<Sorter> = new BehaviorSubject<Sorter>(()=>[])
 
 
   constructor(

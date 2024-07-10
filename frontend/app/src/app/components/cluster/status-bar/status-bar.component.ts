@@ -36,7 +36,7 @@ export class StatusBarComponent implements OnInit {
   }
 
   calculateCompletion(res: Cluster[]) {
-    for (let c of res) {
+    for (const c of res) {
       if (c.articles[0].status.length > 0) {
         this.clustersCompleted++;
       } else {
@@ -48,9 +48,9 @@ export class StatusBarComponent implements OnInit {
   }
 
   calculateArticleStatus(res: Cluster[]) {
-    for (let c of res) {
+    for (const c of res) {
       this.totalArticles += c.articles.length
-      for (let a of c.articles) {
+      for (const a of c.articles) {
         if (a.status == ArticleStatus.Combined) {
           this.articlesCombined++
         }
