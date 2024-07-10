@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, Input, AfterViewInit} from '@angular/core';
 import {GroupManager} from "../../../utiles/group-manager";
 import {Article} from "../../../types/data/article.types";
 import {FormBuilder, FormGroup} from "@angular/forms";
@@ -21,7 +21,7 @@ import {NgIf} from "@angular/common";
   templateUrl: './article-card.component.html',
   styleUrl: './article-card.component.css'
 })
-export class ArticleCardComponent {
+export class ArticleCardComponent implements AfterViewInit {
 
   @Input() article!:Article
   @Input() groupManager!:GroupManager
