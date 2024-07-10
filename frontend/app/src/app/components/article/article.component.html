@@ -17,21 +17,21 @@ relative
             </div>
             <div class="grid grid-cols-6 gap-2">
                 <app-article-attribute class="col-span-2" title="Pillar">
-                    <app-hash-label [text]="article.pillar"></app-hash-label>
+                    <app-hash-label [text]="article.pr_name"></app-hash-label>
                 </app-article-attribute>
                 <app-article-attribute class="col-span-3" title="Tags">
-                    @for(tag of sortStrings(article.labels); track tag){
+                    @for(tag of sortStrings(article.keywords); track tag){
                         <app-hash-label [text]="tag"></app-hash-label>
                     }
-                    <app-hash-label text="None" forceColour="#eee" *ngIf="!article.labels.length"></app-hash-label>
+                    <app-hash-label text="None" forceColour="#eee" *ngIf="!article.keywords.length"></app-hash-label>
                 </app-article-attribute>
             </div>
         </div>
         <div class="grid grid-cols-2 gap-4 pl-4 flex-shrink-0">
-            <app-article-attribute title="Contributor">{{ article.author }}</app-article-attribute>
-            <app-article-attribute title="Reviewed">{{ article.updated | date }}</app-article-attribute>
-            <app-article-attribute title="Engagement Rate">{{ (article.engagement*100).toFixed(1) }}%</app-article-attribute>
-            <app-article-attribute title="Total Views">{{ article.views }}</app-article-attribute>
+            <app-article-attribute title="Contributor">{{ article.pr_name }}</app-article-attribute>
+            <app-article-attribute title="Reviewed">{{ article.data_modified | date }}</app-article-attribute>
+            <app-article-attribute title="Engagement Rate">{{ (article.engagement_rate*100).toFixed(1) }}%</app-article-attribute>
+            <app-article-attribute title="Total Views">{{ article.number_of_views }}</app-article-attribute>
 
             <app-article-attribute title="Similarity">
                 <app-hash-label text="XX%" />

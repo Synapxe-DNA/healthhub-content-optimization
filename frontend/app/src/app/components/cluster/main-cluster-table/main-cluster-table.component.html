@@ -96,7 +96,7 @@
           </td>
 
           <td *tuiCell="'pillar'" tuiTd class="number text">
-            <app-hash-label [text]="article.pillar" ></app-hash-label>
+            <app-hash-label [text]="article.pr_name" ></app-hash-label>
           </td>
 
           <td *tuiCell="'status'" tuiTd class="number text">
@@ -107,18 +107,18 @@
 
           <td *tuiCell="'labels'" tuiTd class="number text">
             <div class="flex flex-row justify-start items-start gap-1">
-              @for(tag of sortStrings(article.labels); track tag) {
+              @for(tag of sortStrings(article.keywords); track tag) {
                   <app-hash-label [text]="tag" ></app-hash-label>
               }
             </div>
           </td>
 
           <td *tuiCell="'engagement'" tuiTd class="number text">
-            {{ (article.engagement*100).toFixed(1) }}%
+            {{ (article.engagement_rate*100).toFixed(1) }}%
           </td>
 
           <td *tuiCell="'views'" tuiTd class="number text">
-            {{ article.views }}
+            {{ article.number_of_views }}
           </td>
         </tr>
         }

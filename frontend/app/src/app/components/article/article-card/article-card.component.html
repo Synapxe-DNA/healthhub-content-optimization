@@ -17,19 +17,19 @@ p-[1rem]
     </div>
 
     <app-article-attribute title="Author">
-        {{article.author}}
+        {{article.pr_name}}
     </app-article-attribute>
 
     <app-article-attribute title="Reviewed">
-        {{article.updated | date}}
+        {{article.data_modified | date}}
     </app-article-attribute>
 
     <app-article-attribute title="Engagement">
-        {{(article.engagement*100).toFixed(1) }}%
+        {{(article.engagement_rate*100).toFixed(1) }}%
     </app-article-attribute>
 
     <app-article-attribute title="Total Views">
-        {{ article.views }}
+        {{ article.number_of_views }}
     </app-article-attribute>
 
     <app-article-attribute title="Similarity">
@@ -41,10 +41,10 @@ p-[1rem]
     </app-article-attribute>
 
     <app-article-attribute class="col-span-2" title="Tags">
-        @for(tag of sortStrings(article.labels); track tag){
+        @for(tag of sortStrings(article.keywords); track tag){
             <app-hash-label [text]="tag"></app-hash-label>
         }
-        <app-hash-label text="None" forceColour="#eee" *ngIf="!article.labels.length"></app-hash-label>
+        <app-hash-label text="None" forceColour="#eee" *ngIf="!article.keywords.length"></app-hash-label>
     </app-article-attribute>
 
 
