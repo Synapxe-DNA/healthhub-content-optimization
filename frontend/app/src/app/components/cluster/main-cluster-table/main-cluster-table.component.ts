@@ -1,4 +1,4 @@
-import { Component, Injectable } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import {
   FormControl,
   FormsModule,
@@ -49,7 +49,7 @@ import { HashLabelComponent } from "../../hash-label/hash-label.component";
   templateUrl: "./main-cluster-table.component.html",
   styleUrl: "./main-cluster-table.component.css",
 })
-export class MainClusterTableComponent {
+export class MainClusterTableComponent implements OnInit {
   clusters: Cluster[] = [];
   paginatedClusters: Cluster[] = []
 

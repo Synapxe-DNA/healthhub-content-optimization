@@ -14,6 +14,7 @@ export interface Article {
     author: string,
     pillar: string,
     url: string,
+    updated: string,
     status: ArticleStatus,
     labels: string[],
     cover_image_url: string,

@@ -1,0 +1,55 @@
+<div class="
+grid grid-cols-2 gap-2
+relative
+w-[100dvw] max-w-[45ch]
+p-[1rem]
+">
+
+    <div class="absolute top-1 right-1">
+        <app-article-more [articleId]="article.id" [groupManager]="groupManager"></app-article-more>
+    </div>
+
+    <div class="col-span-2 flex flex-col justify-start items-stretch">
+        <h6 class="tui-text_body-m font-medium">
+            <a [href]="article.url" target="_blank">{{ article.title }}</a>
+        </h6>
+        <p class="tui-text_body-m opacity-50 break-words hyphens-auto ">{{ article.description }}</p>
+    </div>
+
+    <app-article-attribute title="Author">
+        {{article.author}}
+    </app-article-attribute>
+
+    <app-article-attribute title="Reviewed">
+        {{article.updated | date}}
+    </app-article-attribute>
+
+    <app-article-attribute title="Engagement">
+        {{(article.engagement*100).toFixed(1) }}%
+    </app-article-attribute>
+
+    <app-article-attribute title="Total Views">
+        {{ article.views }}
+    </app-article-attribute>
+
+    <app-article-attribute title="Similarity">
+        <app-hash-label text="XX%" />
+    </app-article-attribute>
+
+    <app-article-attribute title="Sub Group">
+        <app-hash-label [text]="subgroup" />
+    </app-article-attribute>
+
+    <app-article-attribute class="col-span-2" title="Tags">
+        @for(tag of sortStrings(article.labels); track tag){
+            <app-hash-label [text]="tag"></app-hash-label>
+        }
+        <app-hash-label text="None" forceColour="#eee" *ngIf="!article.labels.length"></app-hash-label>
+    </app-article-attribute>
+
+
+
+</div>
+
+
+<!--<div class="bg-blue-100 w-[30dvw]"></div>-->

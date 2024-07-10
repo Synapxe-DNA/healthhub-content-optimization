@@ -1,0 +1,30 @@
+<section class="w-full">
+
+    <button type="button" (click)="toggleExpand()" class="
+    w-full
+    flex flex-row justify-between items-center
+    bg-gray-50 pl-[1rem]
+    cursor-pointer border-b border-[--tui-base-03]
+    ">
+        <span class="font-medium text-lg max-w-full text-ellipsis capitalize">{{title}}</span>
+        <span>
+            <button tuiIconButton icon="tuiIconChevronUpLarge" appearance="icon"
+            class="
+            transition-all duration-200
+            pointer-events-none
+            {{isExpand?'rotate-180':''}}
+            "></button>
+        </span>
+    </button>
+
+    <div class="
+    overflow-hidden
+    ">
+        <div class=" transition-all
+        {{isExpand?'opacity-100':'-mt-[100%] opacity-0'}}
+        ">
+            <ng-content></ng-content>
+        </div>
+    </div>
+
+</section>

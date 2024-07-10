@@ -1,0 +1,37 @@
+# This is a boilerplate parameters config generated for pipeline 'feature_engineering'
+# using Kedro 0.19.6.
+#
+# Documentation for this file format can be found in "Parameters"
+# Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
+cfg:
+  # For single content contegory, a subset (only confirmed) or all content categories
+  # Options: 'live-healthy-articles', 'only_confirmed', 'all'
+  option: only_confirmed
+  contributor: Health Promotion Board
+  to_remove: true
+
+selection_options:
+  only_confirmed:
+    - cost-and-financing
+    - diseases-and-conditions
+    - live-healthy-articles
+    - medical-care-and-facilities
+    - support-group-and-others
+  # Note: Try not to touch the `all` option unless explicity required
+  all:
+    - cost-and-financing
+    - diseases-and-conditions
+    - health-statistics
+    - live-healthy-articles
+    - medical-care-and-facilities
+    - medications
+    - program-sub-pages
+    - programs
+    - support-group-and-others
+
+keywords:
+  stop_words: english
+  workers: -1
+  use_mmr: true
+  diversity: 0.5
+  top_n: 5

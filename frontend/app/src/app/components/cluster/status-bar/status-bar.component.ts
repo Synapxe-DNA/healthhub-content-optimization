@@ -1,4 +1,4 @@
-import { Component, Input } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { TuiProgressModule } from "@taiga-ui/kit";
 import { ClusterService } from "../../../services/cluster/cluster.service";
 import { Cluster } from "../../../types/data/cluster.types";
@@ -11,7 +11,7 @@ import { ArticleStatus } from "../../../types/data/article.types";
   templateUrl: "./status-bar.component.html",
   styleUrl: "./status-bar.component.css",
 })
-export class StatusBarComponent {
+export class StatusBarComponent implements OnInit {
   clustersCompleted = 0;
   clustersPending = 0;
   totalClusters = 0;

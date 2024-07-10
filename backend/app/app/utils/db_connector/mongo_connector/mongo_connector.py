@@ -14,7 +14,7 @@ from app.utils.db_connector.mongo_connector.beanie_documents import (
     IgnoreDocument,
 )
 from beanie import init_beanie
-from bson import ObjectId
+from bson.objectid import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 
@@ -139,12 +139,13 @@ class MongoConnector(DbConnector):
                 name=c.name,
                 articles=[
                     Article(
-                        id=a.id,
+                        id=str(a.id),
                         title=a.title,
                         description=a.description,
                         author=a.author,
                         pillar=a.pillar,
                         url=a.url,
+                        updated=a.updated,
                         status=article_status(str(a.id)),
                         labels=a.labels,
                         cover_image_url=a.cover_image_url,
@@ -200,6 +201,7 @@ class MongoConnector(DbConnector):
                     author=a.author,
                     pillar=a.pillar,
                     url=a.url,
+                    updated=a.updated,
                     status=article_status(str(a.id)),
                     labels=a.labels,
                     cover_image_url=a.cover_image_url,
@@ -262,7 +264,7 @@ class MongoConnector(DbConnector):
 
         return [
             Article(
-                id=a.id,
+                id=str(a.id),
                 title=a.title,
                 description=a.description,
                 author=a.author,
@@ -302,12 +304,13 @@ class MongoConnector(DbConnector):
         article = await ArticleDocument.get(article_id)
 
         return Article(
-            id=article.id,
+            id=str(article.id),
             title=article.title,
             description=article.description,
             author=article.author,
             pillar=article.pillar,
             url=article.url,
+            updated=article.updated,
             status=article_status(str(article.id)),
             labels=article.labels,
             cover_image_url=article.cover_image_url,
@@ -358,6 +361,7 @@ class MongoConnector(DbConnector):
                         author=a.author,
                         pillar=a.pillar,
                         url=a.url,
+                        updated=a.updated,
                         status=article_status(str(a.id)),
                         labels=a.labels,
                         cover_image_url=a.cover_image_url,
@@ -405,6 +409,7 @@ class MongoConnector(DbConnector):
                     author=a.author,
                     pillar=a.pillar,
                     url=a.url,
+                    updated=a.updated,
                     status=article_status(str(a.id)),
                     labels=a.labels,
                     cover_image_url=a.cover_image_url,

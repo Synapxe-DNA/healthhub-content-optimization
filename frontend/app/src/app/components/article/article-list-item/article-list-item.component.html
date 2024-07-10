@@ -1,0 +1,21 @@
+<div class="
+w-full flex flex-row justify-between items-center
+px-[1rem] py-[0.25rem] gap-3
+border-b border-[--tui-base-03]
+relative
+">
+    <span class="truncate text-nowrap">
+        <tui-hosted-dropdown
+        tuiDropdownAlign="left"
+        tuiDropdownHover
+        [content]="articleContent"
+        >
+            {{article.title}}
+        </tui-hosted-dropdown>
+    </span>
+    <app-article-more [articleId]="article.id" [groupManager]="groupManager"></app-article-more>
+</div>
+
+<ng-template #articleContent>
+    <app-article-card [article]="article" [groupManager]="groupManager"></app-article-card>
+</ng-template>
