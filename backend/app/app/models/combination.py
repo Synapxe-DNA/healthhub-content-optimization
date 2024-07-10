@@ -16,5 +16,6 @@ class CombinationPopulated(BaseModel):
     """
 
     id: str = Field()
+    groupId: string = Field()
     name: str = Field()
     articles: List[Article]

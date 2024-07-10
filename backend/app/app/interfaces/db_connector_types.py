@@ -4,7 +4,7 @@ from typing import List
 from app.models.article import Article
 from app.models.cluster import Cluster, ClusterPopulated
 from app.models.combination import Combination, CombinationPopulated
-from app.models.ignore import Ignore
+from app.models.ignore import Optimise
 
 
 class DbConnector(ABC):
@@ -77,13 +77,13 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    async def create_ignore(self, ignore: [Ignore]):
+    async def create_ignore(self, ignore: [Optimise]):
         pass
 
     @abstractmethod
-    async def read_ignore_all(self) -> List[Ignore]:
+    async def read_ignore_all(self) -> List[Optimise]:
         pass
 
     @abstractmethod
-    async def read_ignore(self, ignore_id: str) -> Ignore:
+    async def read_ignore(self, ignore_id: str) -> Optimise:
         pass

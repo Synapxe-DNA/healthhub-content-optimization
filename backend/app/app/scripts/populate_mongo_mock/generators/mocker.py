@@ -6,7 +6,7 @@ from app.models.article import Article
 from app.models.cluster import Cluster
 from app.models.combination import Combination
 from app.models.edge import Edge
-from app.models.ignore import Ignore
+from app.models.ignore import Optimise
 from app.scripts.populate_mongo_mock.generators.string_generator import (
     random_id,
     random_str,
@@ -122,7 +122,7 @@ class Mocker:
 
             ### Removed mocking of ignore jobs to keep mocking process simple.
             ### This can be manually tested on the frontend.
-            ignore_jobs = [Ignore(article_id=x) for x in ignore_ids]
+            ignore_jobs = [Optimise(article_id=x) for x in ignore_ids]
 
             await self.conn.create_articles(articles)
             await self.conn.create_clusters([cluster])

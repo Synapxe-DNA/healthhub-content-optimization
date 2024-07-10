@@ -5,7 +5,7 @@ from app.models.article import Article
 from app.models.cluster import Cluster, ClusterPopulated
 from app.models.combination import Combination, CombinationPopulated
 from app.models.edge import Edge
-from app.models.ignore import Ignore
+from app.models.ignore import Optimise
 from app.utils.db_connector.mongo_connector.beanie_documents import (
     ArticleDocument,
     ClusterDocument,
@@ -142,15 +142,15 @@ class MongoConnector(DbConnector):
                         id=str(a.id),
                         title=a.title,
                         description=a.description,
-                        author=a.author,
-                        pillar=a.pillar,
+                        author=a.pr_name,
+                        pillar=a.content_category,
                         url=a.url,
-                        updated=a.updated,
+                        updated=a.data_modified,
                         status=article_status(str(a.id)),
-                        labels=a.labels,
+                        labels=a.keywords,
                         cover_image_url=a.cover_image_url,
-                        engagement=a.engagement,
-                        views=a.views,
+                        engagement=a.engagement_rate,
+                        views=a.number_of_views,
                     )
                     for a in c.article_ids
                 ],
@@ -198,15 +198,15 @@ class MongoConnector(DbConnector):
                     id=str(a.id),
                     title=a.title,
                     description=a.description,
-                    author=a.author,
-                    pillar=a.pillar,
+                    author=a.pr_name,
+                    pillar=a.content_category,
                     url=a.url,
-                    updated=a.updated,
+                    updated=a.data_modified,
                     status=article_status(str(a.id)),
-                    labels=a.labels,
+                    labels=a.keywords,
                     cover_image_url=a.cover_image_url,
-                    engagement=a.engagement,
-                    views=a.views,
+                    engagement=a.engagement_rate,
+                    views=a.number_of_views,
                 )
                 for a in cluster.article_ids
             ],
@@ -232,13 +232,13 @@ class MongoConnector(DbConnector):
                 id=a.id,
                 title=a.title,
                 description=a.description,
-                author=a.author,
-                pillar=a.pillar,
+                author=a.pr_name,
+                pillar=a.content_category,
                 url=a.url,
-                labels=a.labels,
+                labels=a.keywords,
                 cover_image_url=a.cover_image_url,
-                engagement=a.engagement,
-                views=a.views,
+                engagement=a.engagement_rate,
+                views=a.number_of_views,
             ).create()
 
     async def read_article_all(self) -> List[Article]:
@@ -267,14 +267,14 @@ class MongoConnector(DbConnector):
                 id=str(a.id),
                 title=a.title,
                 description=a.description,
-                author=a.author,
-                pillar=a.pillar,
+                author=a.pr_name,
+                pillar=a.content_category,
                 url=a.url,
                 status=article_status(a.id),
-                labels=a.labels,
+                labels=a.keywords,
                 cover_image_url=a.cover_image_url,
-                engagement=a.engagement,
-                views=a.views,
+                engagement=a.engagement_rate,
+                views=a.number_of_views,
             )
             async for a in ArticleDocument.find_all()
         ]
@@ -307,15 +307,15 @@ class MongoConnector(DbConnector):
             id=str(article.id),
             title=article.title,
             description=article.description,
-            author=article.author,
-            pillar=article.pillar,
+            author=article.pr_name,
+            pillar=article.content_category,
             url=article.url,
-            updated=article.updated,
+            updated=article.data_modified,
             status=article_status(str(article.id)),
-            labels=article.labels,
+            labels=article.keywords,
             cover_image_url=article.cover_image_url,
-            engagement=article.engagement,
-            views=article.views,
+            engagement=article.engagement_rate,
+            views=article.number_of_views,
         )
 
     async def create_combine(self, combination: List[Combination]):
@@ -358,15 +358,15 @@ class MongoConnector(DbConnector):
                         id=str(a.id),
                         title=a.title,
                         description=a.description,
-                        author=a.author,
-                        pillar=a.pillar,
+                        author=a.pr_name,
+                        pillar=a.content_category,
                         url=a.url,
-                        updated=a.updated,
+                        updated=a.data_modified,
                         status=article_status(str(a.id)),
-                        labels=a.labels,
+                        labels=a.keywords,
                         cover_image_url=a.cover_image_url,
-                        engagement=a.engagement,
-                        views=a.views,
+                        engagement=a.engagement_rate,
+                        views=a.number_of_views,
                     )
                     for a in c.article_ids
                 ],
@@ -406,36 +406,36 @@ class MongoConnector(DbConnector):
                     id=str(a.id),
                     title=a.title,
                     description=a.description,
-                    author=a.author,
-                    pillar=a.pillar,
+                    author=a.pr_name,
+                    pillar=a.content_category,
                     url=a.url,
-                    updated=a.updated,
+                    updated=a.data_modified,
                     status=article_status(str(a.id)),
-                    labels=a.labels,
+                    labels=a.keywords,
                     cover_image_url=a.cover_image_url,
-                    engagement=a.engagement,
-                    views=a.views,
+                    engagement=a.engagement_rate,
+                    views=a.number_of_views,
                 )
                 for a in combine_doc[0].article_ids
             ],
         )
 
-    async def create_ignore(self, ignore: List[Ignore]):
+    async def create_ignore(self, ignore: List[Optimise]):
         for o in ignore:
             await IgnoreDocument(article_id=o.article_id).create()
 
-    async def read_ignore_all(self) -> List[Ignore]:
+    async def read_ignore_all(self) -> List[Optimise]:
         """
         Method to retrieve all ignored articles.
         Note: this does not return a populated Ignore as we'll probably only need the IDs
         :return:
         """
         return [
-            Ignore(id=str(i.id), article_id=str(i.article_id))
+            Optimise(id=str(i.id), article_id=str(i.article_id))
             async for i in IgnoreDocument.find_all()
         ]
 
-    async def read_ignore(self, ignore_id: str) -> Ignore:
+    async def read_ignore(self, ignore_id: str) -> Optimise:
         """
         Method to retrieve a particular ignore record.
         :param ignore_id:
@@ -443,4 +443,4 @@ class MongoConnector(DbConnector):
         """
         ignore = await IgnoreDocument.get(ObjectId(ignore_id))
 
-        return Ignore(id=str(ignore.id), article_id=ignore.article_id.to_dict()["id"])
+        return Optimise(id=str(ignore.id), article_id=ignore.article_id.to_dict()["id"])

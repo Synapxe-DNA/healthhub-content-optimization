@@ -2,7 +2,7 @@ from app.models.article import Article
 from pydantic import BaseModel, Field
 
 
-class Ignore(BaseModel):
+class Optimise(BaseModel):
     """
     Represents the entry into the database where the article marked will be ignored by post processing.
     """
@@ -11,7 +11,7 @@ class Ignore(BaseModel):
     article_id: str = Field()
 
 
-class IgnorePopulated(BaseModel):
+class OptimisePopulated(BaseModel):
     """
     This model will be the response type for frontend consumption.
     """
