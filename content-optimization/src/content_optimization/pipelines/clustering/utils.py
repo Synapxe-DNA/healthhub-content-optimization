@@ -38,38 +38,42 @@ def create_graph_nodes(tx, doc):
         ground_truth=doc["ground_truth_cluster"],
     )
 
-def calculate_similarity_weighted_embeddings(tx):
-    logging.info("Create edges")
-    query = """
-        MATCH (a:Article), (b:Article)
-        WHERE a.id < b.id
-        WITH a, b, gds.similarity.cosine(a.vector_combined, b.vector_combined) AS similarity
-        RETURN a.id AS node_1_id,
-            b.id AS node_2_id,
-            a.title AS node_1_title, 
-            b.title AS node_2_title,
-            a.ground_truth AS node_1_ground_truth, 
-            b.ground_truth AS node_2_ground_truth,
-            similarity AS edge_weight
-        """
-    result = tx.run(query)
-    return [record for record in result]
+# def calculate_similarity_weighted_embeddings(tx):
+#     logging.info("Create edges")
+#     query = """
+        # MATCH (a:Article), (b:Article)
+        # WHERE a.id < b.id
+        # WITH a, b, gds.similarity.cosine(a.vector_combined, b.vector_combined) AS similarity
+        # RETURN a.id AS node_1_id,
+        #     b.id AS node_2_id,
+        #     a.title AS node_1_title, 
+        #     b.title AS node_2_title,
+        #     a.ground_truth AS node_1_ground_truth, 
+        #     b.ground_truth AS node_2_ground_truth,
+        #     similarity AS edge_weight
+#         """
+#     result = tx.run(query)
+#     return [record for record in result]
 
-def calculate_similarity_weighted_average(tx,col_1='vector_body', col_2='vector_kws',weight_1=0.5, weight_2=0.5):
+def clustering_neo4j(tx, weight_title, weight_cat, weight_desc,weight_body,weight_combined,weight_kws):
     query = f"""
     MATCH (a:Article), (b:Article)
             WHERE a.id < b.id
-            WITH a, b, gds.similarity.cosine(a.{col_1}, b.{col_1}) AS similarity_body,
-                gds.similarity.cosine(a.{col_2}, b.{col_2}) AS similarity_keywords
+            WITH a, b, gds.similarity.cosine(a.vector_title, b.vector_title) AS similarity_title,
+                gds.similarity.cosine(a.vector_category, b.vector_category) AS similarity_cat,
+                gds.similarity.cosine(a.vector_desc, b.vector_desc) AS similarity_desc,
+                gds.similarity.cosine(a.vector_body, b.vector_body) AS similarity_body,
+                gds.similarity.cosine(a.vector_kws, b.vector_kws) AS similarity_combined,
+                gds.similarity.cosine(a.vector_kws, b.vector_kws) AS similarity_kws
             RETURN a.id AS node_1_id,
                 b.id AS node_2_id,
                 a.title AS node_1_title, 
                 b.title AS node_2_title,
                 a.ground_truth AS node_1_ground_truth, 
                 b.ground_truth AS node_2_ground_truth,
-                {weight_1}*similarity_body + {weight_2}*similarity_keywords AS weighted_similarity
+                {weight_title}*similarity_title + {weight_cat}*similarity_cat + {weight_desc}*similarity_desc + {weight_body}*similarity_body + {weight_combined}*similarity_combined + {weight_kws}*similarity_kws AS weighted_similarity
             ORDER BY similarity_body DESC
-    """.format(col_1, col_2, weight_1, weight_2)
+    """
     result = tx.run(query)
     return [record for record in result]
 
