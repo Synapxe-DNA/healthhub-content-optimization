@@ -49,7 +49,7 @@ filtered_data_with_keywords:
   filepath: data/03_primary/filtered_data_with_keywords.parquet
   versioned: true
 
-embedding_data:
+embeddings_data:
   type: pandas.ParquetDataset
   filepath: data/04_feature/embeddings_data.parquet
 
@@ -86,3 +86,7 @@ edges_dict:
 metrics:
   type: pandas.CSVDataset
   filepath: data/07_model_output/metrics.csv
+
+neo4j_cluster_viz.html:
+  type: text.TextDataset
+  filepath: data/07_model_output/neo4j_cluster_viz.html
