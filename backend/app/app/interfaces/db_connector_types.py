@@ -1,19 +1,15 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from app.models.article import Article
-from app.models.cluster import Cluster, ClusterPopulated
-from app.models.combination import Combination, CombinationPopulated
-from app.models.ignore import Optimise
+from app.models.article import Article, ArticleMeta
+from app.models.cluster import Cluster
+from app.models.edge import Edge
 
 
 class DbConnector(ABC):
     """
-    Abstract class for interaction with databases.
-    - Clusters
-    - Articles
-    - Combination Jobs
-    - Ignore tagging
+    Abstract class for a query engine abstraction.
+    This ABC contains methods that execute and parse database queries, tailored for specific data manipulation needs.
     """
 
     """
@@ -29,15 +25,23 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    async def create_clusters(self, cluster: List[Cluster]):
+    async def create_cluster_from_articles(
+        self, cluster_name: str, article_ids: List[str]
+    ) -> str:
+        """
+        Method to group a cluster from existing articles
+        :param cluster_name: {str} Name of cluster
+        :param article_ids: {List[str]} List of IDs of articles
+        :return: {str} ID of newly created cluster
+        """
         pass
 
     @abstractmethod
-    async def read_cluster_all(self) -> List[ClusterPopulated]:
-        pass
-
-    @abstractmethod
-    async def read_cluster(self, cluster_id: str) -> ClusterPopulated:
+    async def get_all_clusters(self) -> List[Cluster]:
+        """
+        Method to retrieve all clusters, populated with their respective ArticleMeta and Edges
+        :return: {List[Cluster]}
+        """
         pass
 
     """
@@ -45,45 +49,28 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    async def create_articles(self, article: List[Article]):
+    async def create_articles(self, articles: List[Article]) -> List[str]:
         pass
 
     @abstractmethod
-    async def read_article_all(self) -> List[Article]:
+    async def get_all_articles(self) -> List[ArticleMeta]:
+        """
+        Method to get all articles with their respective metadata.
+        This will not return article contents, in order to save on memory.
+        :return: {List[ArticleMeta]}
+        """
         pass
 
     @abstractmethod
-    async def read_article(self, article_id: str) -> Article:
+    async def get_articles(self, article_ids: List[str]) -> List[Article]:
+        """
+        Fetches articles with their content by specified ID.
+        :param article_ids: {List[str]}
+        :return: {List[Article]}
+        """
         pass
 
     """
-    Methods related to harmonisation jobs
+    Methods related to generated articles
+    TODO will commit soon
     """
-
-    @abstractmethod
-    async def create_combine(self, combination: [Combination]):
-        pass
-
-    @abstractmethod
-    async def read_combine_all(self) -> List[CombinationPopulated]:
-        pass
-
-    @abstractmethod
-    async def read_combine(self, combine_id: str) -> CombinationPopulated:
-        pass
-
-    """
-    Methods related to ignore tagging of articles
-    """
-
-    @abstractmethod
-    async def create_ignore(self, ignore: [Optimise]):
-        pass
-
-    @abstractmethod
-    async def read_ignore_all(self) -> List[Optimise]:
-        pass
-
-    @abstractmethod
-    async def read_ignore(self, ignore_id: str) -> Optimise:
-        pass

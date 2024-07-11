@@ -12,7 +12,6 @@ from pydantic import Field
 class ClusterDocument(Document):
     name: str
     article_ids: List[Link["ArticleDocument"]] = Field(default=[])
-    edges: List["EdgeDocument"] = Field(default=[])
 
 
 class ArticleDocument(Document):
@@ -48,7 +47,6 @@ class GeneratedArticleDocument(Document):
     approved: bool = Field(default=False)
 
 
-
 class EdgeDocument(Document):
     start: Link[ArticleDocument]
     end: Link[ArticleDocument]
@@ -63,7 +61,8 @@ class JobCombineDocument(Document):
 
 
 class JobOptimiseDocument(Document):
-    article: Link[ArticleDocument]
+    original_article: Link[ArticleDocument]
+    generated_article: Optional[Link[GeneratedArticleDocument]]
 
 
 class IgnoreDocument(Document):
