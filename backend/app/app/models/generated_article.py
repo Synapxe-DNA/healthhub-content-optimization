@@ -21,3 +21,5 @@ class GeneratedArticle(BaseModel):
     cover_image_url: str = Field(default="")
 
     approved: bool = Field(default=False)
+
+    content: str

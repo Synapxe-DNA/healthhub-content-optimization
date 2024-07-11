@@ -56,6 +56,7 @@ class EdgeDocument(Document):
 class JobCombineDocument(Document):
     cluster: Link[ClusterDocument]
     sub_group_name: str
+    remarks: str
     original_articles: List[Link[ArticleDocument]] = Field(default=[])
     generated_article: Optional[Link[GeneratedArticleDocument]]
 
@@ -66,4 +67,4 @@ class JobOptimiseDocument(Document):
 
 
 class IgnoreDocument(Document):
-    article_id: Link[ArticleDocument]
+    article: Link[ArticleDocument]
