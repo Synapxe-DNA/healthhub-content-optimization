@@ -39,6 +39,7 @@ def create_graph_nodes(tx, doc):
     )
 
 def calculate_similarity(tx, vector_name):
+    print(f"Calculate Similarity For {vector_name}")
     query = f"""
     MATCH (a:Article), (b:Article)
     WHERE a.id < b.id
@@ -49,6 +50,7 @@ def calculate_similarity(tx, vector_name):
     return {(record['node_1_id'], record['node_2_id']): record['similarity'] for record in result}
 
 def fetch_ground_truth(session):
+    print("Fetching Ground Truth")
     query = """
     MATCH (a:Article)
     RETURN a.id AS id, a.ground_truth AS ground_truth
@@ -58,6 +60,7 @@ def fetch_ground_truth(session):
     return ground_truth
 
 def combine_similarities(session, weight_title, weight_cat, weight_desc, weight_body, weight_combined, weight_kws):
+    print("Combining Similarity")
     ground_truth = fetch_ground_truth(session)
 
     similarities_title = session.execute_write(lambda tx: calculate_similarity(tx, 'vector_title'))
@@ -88,25 +91,27 @@ def combine_similarities(session, weight_title, weight_cat, weight_desc, weight_
                 'similarities_kws' : similarities_kws[key]
             }
             combined_similarities.append(combined_similarity)
-
-            df = pd.DataFrame(combined_similarities)
-            columns_to_fill = ['similarities_title', 'similarities_cat', 'similarities_desc', 'similarities_body', 'similarities_combined','similarities_kws']
-            df[columns_to_fill] = df[columns_to_fill].fillna(0)
-            df["weighted_similarity"] = weight_title * df["similarities_title"] + \
-                weight_cat * df["similarities_cat"] + \
-                    weight_desc * df["similarities_desc"] + \
-                        weight_body * df["similarities_body"] + \
-                        weight_combined * df["similarities_combined"] +\
-                        weight_kws * df['similarities_kws']
+            
+    df = pd.DataFrame(combined_similarities)
+    columns_to_fill = ['similarities_title', 'similarities_cat', 'similarities_desc', 'similarities_body', 'similarities_combined','similarities_kws']
+    df[columns_to_fill] = df[columns_to_fill].fillna(0)
+    df["weighted_similarity"] = weight_title * df["similarities_title"] + \
+        weight_cat * df["similarities_cat"] + \
+            weight_desc * df["similarities_desc"] + \
+                weight_body * df["similarities_body"] + \
+                weight_combined * df["similarities_combined"] +\
+                weight_kws * df['similarities_kws']
     return df
 
 def median_threshold(combined_similarities):
+    print("Calculating Median")
     df = combined_similarities.dropna(subset=["node_1_ground_truth", "node_2_ground_truth"])
     df_filtered = df[df["node_1_ground_truth"] == df["node_2_ground_truth"]]
     threshold = df_filtered["weighted_similarity"].median()
     return threshold
 
 def create_sim_edges(tx, similarities, threshold):
+    print("Creating Edges")
     logging.info("Creating edges")
     for _, record in similarities.iterrows():
         if record['weighted_similarity'] > threshold:
