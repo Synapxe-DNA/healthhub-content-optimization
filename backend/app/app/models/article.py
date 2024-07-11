@@ -3,7 +3,7 @@ from typing import List
 from pydantic import BaseModel, Field
 
 
-class Article(BaseModel):
+class ArticleMeta(BaseModel):
     id: str = Field(default="")  # Will only be present when retrieving from DB
 
     title: str = Field()
@@ -23,3 +23,8 @@ class Article(BaseModel):
     # Article statistics
     engagement_rate: float = Field(default=-1.0)
     number_of_views: int = Field(default=-1)
+
+
+class Article(ArticleMeta):
+    content: str
+
