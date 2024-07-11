@@ -2,6 +2,7 @@ import logging
 import re
 import string
 import unicodedata
+from typing import Optional
 
 from bs4 import BeautifulSoup, NavigableString, PageElement
 
@@ -63,6 +64,9 @@ class HTMLExtractor:
         Note:
             This method is being used in all extractor methods.
         """
+        # Replace dash in unicode
+        text = text.replace("\u2013", "-")  # Replace dashes
+
         # Normalize Unicode characters
         text = unicodedata.normalize("NFKD", text)
         # Use ASCII encoding to handle special symbols e.g. copyright \xa9
@@ -181,8 +185,7 @@ class HTMLExtractor:
 
         return extracted_content_body
 
-    @classmethod
-    def _clean_up_fragments(cls, content: list[str], threshold: int = 5) -> list[str]:
+    def _clean_up_fragments(self, content: list[str], threshold: int = 5) -> list[str]:
         """
         Cleans up content fragments after extraction
 
@@ -199,21 +202,29 @@ class HTMLExtractor:
 
         result = []
         for i in range(len(content)):
+            fragment = content[i]
+            # # Monitor for very short fragments (using 2 * threshold as criteria)
+            # # NOTE: The log is commented out as it is only used during development
+            # if 2 * threshold >= len(fragment) > 1:
+            #     logger.debug(f"Text Extraction - Short Text detected in {self.content_name}: {fragment}")
             # Append the first element
             if i == 0:
-                result.append(content[i])
+                result.append(fragment)
+            # Skip duplicate fragments
+            elif content[i] == result[-1]:
+                continue
             # Handle self-made bullet points
             elif result[-1] != "\n" and len(result[-1]) < threshold:
-                result[-1] = result[-1] + " " + content[i]
+                result[-1] = result[-1] + " " + fragment
             # Handle nested bullet points
             elif result[-1] == "\t":
-                result[-1] = result[-1] + content[i]
-            # Concatenate strings if the 2nd one starts with a punctuation
-            elif content[i][0] in [".", ",", ":"]:
-                result[-1] = result[-1] + content[i]
+                result[-1] = result[-1] + " " + fragment
+            # Concatenate strings if the latter starts with the punctuation stated below
+            elif fragment[0] in [".", ",", ":", ")", "?"]:
+                result[-1] = result[-1] + fragment
             # Add back remaining content fragments
             else:
-                result.append(content[i])
+                result.append(fragment)
 
         return result
 
@@ -341,7 +352,14 @@ class HTMLExtractor:
                 # Extract text within strong
                 elif child.name is None:
                     # Join text with previous element if punctuation is detected
-                    if cleaned_text != "" and cleaned_text[0] in string.punctuation:
+                    if (
+                        cleaned_text != ""
+                        and len(content) > 0
+                        and len(content[-1]) > 0
+                        and content[-1][-1] in string.punctuation
+                    ):
+                        content.append(cleaned_text)
+                    elif cleaned_text != "" and cleaned_text[0] in string.punctuation:
                         content[-1] = content[-1] + cleaned_text
                     elif cleaned_text != "":
                         content.append(cleaned_text)
@@ -390,7 +408,15 @@ class HTMLExtractor:
                 elif child.name == "em":
                     # Note: Text can be either words or paragraphs - Impact formatting
                     cleaned_text = self.clean_text(child.text)
-                    if cleaned_text != "":
+                    # Skip empty text
+                    if cleaned_text == "":
+                        continue
+                    # If text contains the `Related:` section
+                    if "Related:" in cleaned_text:
+                        content.append(cleaned_text)
+                    elif len(content) > 0 and cleaned_text != content[-1]:
+                        content[-1] = content[-1] + " " + cleaned_text
+                    else:
                         content.append(self.clean_text(cleaned_text))
                 # Extract text in span containers
                 elif child.name == "span":
@@ -572,13 +598,12 @@ class HTMLExtractor:
             tag.span.unwrap()
 
         # Extract text from children
-        start_counter = tag.get("start", 1)
-        for i, child in enumerate(tag.children):
+        counter = int(tag.get("start", 1))
+        for child in tag.children:
             # Extract text within bullet points
             if child.name == "li":
-                content.append(
-                    f"{int(start_counter) + i}. " + self.clean_text(child.text)
-                )
+                content.append(f"{counter}. " + self.clean_text(child.text))
+                counter += 1
             # Extract text within ol
             # Note: Indents must be preserved
             elif child.name is None:
@@ -701,6 +726,58 @@ class HTMLExtractor:
 
         return related_sections
 
+    def extract_tables(self) -> Optional[list[list[list[str]]]]:
+        """
+        Extract all tables from the HTML content and process them.
+
+        Returns:
+            list[list[list[str]]]: A list of processed tables, where each table is represented
+                as a list of rows, and each row is a list of cell values.
+        """
+        tables = []
+        for table in self.soup.find_all("table"):
+            processed_table = self._process_table(table)
+            tables.append(processed_table)
+
+        return tables if tables else None
+
+    def _process_table(self, table_html: PageElement) -> list[list[str]]:
+        """
+        Process a single HTML table and convert it to a list of lists.
+
+        Note: This method does not account for rowspan and colspan attributes.
+
+        Args:
+            table_html (PageElement): The BeautifulSoup element representing the HTML table.
+
+        Returns:
+            list[list[str]]: A list of rows, where each row is a list of cell values.
+            Returns None if the table is empty.
+        """
+        # Note: Does not account for rowspan and colspan in processing the table
+        table = []
+
+        # Skip empty tables - Empty table in All You Need to Know About Childhood Immunisations
+        if table_html.find_all("tr") == []:
+            return None
+        # Process table headers
+        headers = [
+            self.clean_text(header.get_text())
+            for header in table_html.find_all("tr")[0]
+        ]
+        # Remove empty headers
+        headers = list(filter(lambda k: " " in k, headers))
+        # Append headers
+        table.append(headers)
+
+        # Process table rows
+        for row in table_html.find_all("tr")[1:]:
+            cols = row.find_all("td")
+            cols = [self.clean_text(ele.get_text()) for ele in cols]
+            table.append(cols)
+
+        return table
+
     def extract_links(self) -> list[tuple[str, str]]:
         """
         Extracts the title and URL from all the anchor tags in the HTML content.
@@ -710,21 +787,50 @@ class HTMLExtractor:
                 A list of tuples containing the title and URL of each anchor tag.
 
         Note:
-            Footnotes to references sections are ignored.
+            Footnotes to references sections and online forms are ignored.
         """
         extracted_links = []
 
         # Extract title/text and links from anchor tags
         for link in self.soup.find_all("a"):
             url = link.get("href")
-            # Ignore footnotes
-            if url != "#footnotes":
-                text = link.get("title") or link.get_text()
-                cleaned_text = self.clean_text(text)
-                record = cleaned_text, url
-                extracted_links.append(record)
+            # Skip incorrectly formatted urls or footnotes
+            if url is None or re.search(r"#footnote\w+", url):
+                continue
+            # Extract text
+            text = link.get("title") or link.get_text()
+            cleaned_text = self.clean_text(text)
+            # Skip links to forms
+            if re.search(r"online form", cleaned_text):
+                continue
+
+            # NOTE: These logs are commented out as it is only used during development
+            # logger.debug(f"Link Extraction - text: {cleaned_text}, url: {url}")
+
+            # Store text, url into extracted_links
+            record = cleaned_text, url
+            extracted_links.append(record)
 
         return extracted_links
+
+    def extract_headers(self) -> list[tuple[str, str]]:
+        """
+        Extracts the headers from the HTML content.
+
+        Returns:
+            list[tuple[str, str]]:
+                A list of tuples containing the text and tag name of
+                each header found in the HTML content.
+        """
+        extracted_headers = []
+
+        for title in self.soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
+            tag = title.name
+            text = self.clean_text(title.get_text())
+            record = text, tag
+            extracted_headers.append(record)
+
+        return extracted_headers
 
     def extract_alt_text_from_img(self) -> list[str]:
         """
@@ -749,22 +855,3 @@ class HTMLExtractor:
 
         # Return unique elements
         return list(set(extracted_alt_text))
-
-    def extract_headers(self) -> list[tuple[str, str]]:
-        """
-        Extracts the headers from the HTML content.
-
-        Returns:
-            list[tuple[str, str]]:
-                A list of tuples containing the text and tag name of
-                each header found in the HTML content.
-        """
-        extracted_headers = []
-
-        for title in self.soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
-            tag = title.name
-            text = self.clean_text(title.get_text())
-            record = text, tag
-            extracted_headers.append(record)
-
-        return extracted_headers

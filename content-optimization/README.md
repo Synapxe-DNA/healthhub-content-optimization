@@ -634,6 +634,19 @@ kedro run --nodes="extract_keywords_node"
 
   </details>
 
+- **`extracted_tables`**
+
+  <details>
+
+  - Data Type: `list[list[list[string]]]`
+  - Description:
+    - A list of extracted tables as a 2d-array extracted from the content body
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
 - **`extracted_links`**
 
   <details>
@@ -645,7 +658,7 @@ kedro run --nodes="extract_keywords_node"
     - `[('Child Health Booklet', 'https://www.healthhub.sg/programmes/parent-hub/child-health-booklet')]`
   - Null Values Allowed: Yes
   - Primary Key: No
-    - Foreign Key: No
+  - Foreign Key: No
 
   </details>
 
@@ -660,7 +673,7 @@ kedro run --nodes="extract_keywords_node"
     - `[('What is this medication for?', 'h2'])]`
   - Null Values Allowed: Yes
   - Primary Key: No
-    - Foreign Key: No
+  - Foreign Key: No
 
   </details>
 
@@ -675,7 +688,7 @@ kedro run --nodes="extract_keywords_node"
     - `['cabbage']`
   - Null Values Allowed: Yes
   - Primary Key: No
-    - Foreign Key: No
+  - Foreign Key: No
 
   </details>
 
