@@ -28,6 +28,7 @@ class GraphState(TypedDict):
     keypoints: Optional[list]
     response: Optional[str]
     counter: Optional[int]
+    previous_node: Optional[str]
     
 
 workflow = StateGraph(GraphState)
