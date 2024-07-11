@@ -38,47 +38,82 @@ def create_graph_nodes(tx, doc):
         ground_truth=doc["ground_truth_cluster"],
     )
 
-def clustering_neo4j(tx, weight_title, weight_cat, weight_desc,weight_body,weight_combined,weight_kws):
+def calculate_similarity(tx, vector_name):
     query = f"""
     MATCH (a:Article), (b:Article)
-            WHERE a.id < b.id
-            WITH a, b, gds.similarity.cosine(a.vector_title, b.vector_title) AS similarity_title,
-                gds.similarity.cosine(a.vector_category, b.vector_category) AS similarity_cat,
-                gds.similarity.cosine(a.vector_desc, b.vector_desc) AS similarity_desc,
-                gds.similarity.cosine(a.vector_body, b.vector_body) AS similarity_body,
-                gds.similarity.cosine(a.vector_kws, b.vector_kws) AS similarity_combined,
-                gds.similarity.cosine(a.vector_kws, b.vector_kws) AS similarity_kws
-            RETURN a.id AS node_1_id,
-                b.id AS node_2_id,
-                a.title AS node_1_title, 
-                b.title AS node_2_title,
-                a.ground_truth AS node_1_ground_truth, 
-                b.ground_truth AS node_2_ground_truth,
-                {weight_title}*similarity_title + {weight_cat}*similarity_cat + {weight_desc}*similarity_desc + {weight_body}*similarity_body + {weight_combined}*similarity_combined + {weight_kws}*similarity_kws AS weighted_similarity
-            ORDER BY similarity_body DESC
+    WHERE a.id < b.id
+    RETURN a.id AS node_1_id, b.id AS node_2_id,
+           gds.similarity.cosine(a.{vector_name}, b.{vector_name}) AS similarity
     """
     result = tx.run(query)
-    return [record for record in result]
+    return {(record['node_1_id'], record['node_2_id']): record['similarity'] for record in result}
+
+def fetch_ground_truth(session):
+    query = """
+    MATCH (a:Article)
+    RETURN a.id AS id, a.ground_truth AS ground_truth
+    """
+    result = session.run(query)
+    ground_truth = {record['id']: record['ground_truth'] for record in result}
+    return ground_truth
+
+def combine_similarities(session, weight_title, weight_cat, weight_desc, weight_body, weight_combined, weight_kws):
+    ground_truth = fetch_ground_truth(session)
+
+    similarities_title = session.execute_write(lambda tx: calculate_similarity(tx, 'vector_title'))
+    similarities_cat = session.execute_write(lambda tx: calculate_similarity(tx, 'vector_category'))
+    similarities_desc = session.execute_write(lambda tx: calculate_similarity(tx, 'vector_desc'))
+    similarities_body = session.execute_write(lambda tx: calculate_similarity(tx, 'vector_body'))
+    similarities_combined = session.execute_write(lambda tx: calculate_similarity(tx, 'vector_combined'))
+    similarities_kws = session.execute_write(lambda tx: calculate_similarity(tx, 'vector_kws'))
+
+    combined_similarities = []
+
+    for key in similarities_title.keys():
+        if key in similarities_cat and key in similarities_desc and key in similarities_body and key in similarities_combined and key in similarities_kws:
+            node_1_ground_truth = ground_truth.get(key[0])
+            node_2_ground_truth = ground_truth.get(key[1])
 
 
-def median_threshold(sim_result):
-    df = pd.DataFrame(sim_result, columns=["node_1_id", "node_2_id", "node_1_title", "node_2_title","node_1_ground_truth", "node_2_ground_truth", "edge_weight"])
+            combined_similarity = {
+                'node_1_id': key[0],
+                'node_2_id': key[1],
+                'node_1_ground_truth': node_1_ground_truth,
+                'node_2_ground_truth': node_2_ground_truth,
+                'weighted_similarity': (
+                    weight_title * similarities_title[key] +
+                    weight_cat * similarities_cat[key] +
+                    weight_desc * similarities_desc[key] +
+                    weight_body * similarities_body[key] +
+                    weight_combined * similarities_combined[key] +
+                    weight_kws * similarities_kws[key]
+                )
+            }
+            combined_similarities.append(combined_similarity)
+
+    return combined_similarities
+
+def median_threshold(combined_similarities):
+    df = pd.DataFrame(combined_similarities)
+    df = df.dropna(subset=["node_1_ground_truth", "node_2_ground_truth"])
     df_filtered = df[df["node_1_ground_truth"] == df["node_2_ground_truth"]]
-    threshold = df_filtered["edge_weight"].median()
+    threshold = df_filtered["weighted_similarity"].median()
     return threshold
 
-def create_sim_edges(tx, threshold):
-    logging.info("Create edges")
-    tx.run(
-        """
-    MATCH (a:Article), (b:Article)
-    WHERE a.id < b.id
-    WITH a, b, gds.similarity.cosine(a.vector_body, b.vector_body) AS similarity
-    WHERE similarity > $threshold
-    CREATE (a)-[:SIMILAR {similarity: similarity}]->(b)
-    """,
-        threshold=threshold,
-    )
+def create_sim_edges(tx, similarities, threshold):
+    logging.info("Creating edges")
+    for record in similarities:
+        if record['weighted_similarity'] > threshold:
+            tx.run(
+                """
+                MATCH (a:Article {id: $node_1_id}), (b:Article {id: $node_2_id})
+                CREATE (a)-[:SIMILAR {similarity: $weighted_similarity}]->(b)
+                """,
+                node_1_id=record['node_1_id'],
+                node_2_id=record['node_2_id'],
+                weighted_similarity=record['weighted_similarity']
+            )
+
 
 def drop_graph_projection(tx):
     result = tx.run(
