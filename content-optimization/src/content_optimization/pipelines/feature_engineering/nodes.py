@@ -145,7 +145,7 @@ def generate_embeddings(
     df_filtered = df_filtered.loc[:, columns_to_keep_emb]
     df_filtered["keywords_all-MiniLM-L6-v2"] = df_filtered[
         "keywords_all-MiniLM-L6-v2"
-    ].apply(lambda x: str(x).replace("[", "").replace("]", ""))
+    ].apply(lambda x: " ".join(x))
 
     # Load the tokenizer and model
     if trust_remote_code:
