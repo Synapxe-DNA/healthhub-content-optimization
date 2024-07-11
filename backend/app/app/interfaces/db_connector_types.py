@@ -46,6 +46,15 @@ class DbConnector(ABC):
         """
         pass
 
+    @abstractmethod
+    async def get_cluster(self, cluster_id:str) -> Cluster:
+        """
+        Method to fetch a cluster by ID.
+        :param cluster_id:
+        :return:
+        """
+        pass
+
     """
     Methods related to articles
     """
