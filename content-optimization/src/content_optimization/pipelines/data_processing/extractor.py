@@ -2,6 +2,7 @@ import logging
 import re
 import string
 import unicodedata
+from typing import Optional
 
 from bs4 import BeautifulSoup, NavigableString, PageElement
 
@@ -725,8 +726,14 @@ class HTMLExtractor:
 
         return related_sections
 
-    # TODO: Write docstrings and comments
-    def extract_tables(self) -> list[list[list[str]]]:
+    def extract_tables(self) -> Optional[list[list[list[str]]]]:
+        """
+        Extract all tables from the HTML content and process them.
+
+        Returns:
+            list[list[list[str]]]: A list of processed tables, where each table is represented
+                as a list of rows, and each row is a list of cell values.
+        """
         tables = []
         for table in self.soup.find_all("table"):
             processed_table = self._process_table(table)
@@ -735,23 +742,35 @@ class HTMLExtractor:
         return tables if tables else None
 
     def _process_table(self, table_html: PageElement) -> list[list[str]]:
+        """
+        Process a single HTML table and convert it to a list of lists.
+
+        Note: This method does not account for rowspan and colspan attributes.
+
+        Args:
+            table_html (PageElement): The BeautifulSoup element representing the HTML table.
+
+        Returns:
+            list[list[str]]: A list of rows, where each row is a list of cell values.
+            Returns None if the table is empty.
+        """
         # Note: Does not account for rowspan and colspan in processing the table
         table = []
 
         # Skip empty tables - Empty table in All You Need to Know About Childhood Immunisations
         if table_html.find_all("tr") == []:
             return None
-        # Get all headers of the table
+        # Process table headers
         headers = [
             self.clean_text(header.get_text())
             for header in table_html.find_all("tr")[0]
         ]
-        # Remove empty spaces in headers
+        # Remove empty headers
         headers = list(filter(lambda k: " " in k, headers))
         # Append headers
         table.append(headers)
 
-        # Append values for each row
+        # Process table rows
         for row in table_html.find_all("tr")[1:]:
             cols = row.find_all("td")
             cols = [self.clean_text(ele.get_text()) for ele in cols]
