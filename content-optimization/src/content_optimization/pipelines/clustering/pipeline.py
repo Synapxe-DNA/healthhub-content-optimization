@@ -7,6 +7,7 @@ from kedro.pipeline import Pipeline, pipeline, node
 from content_optimization.pipelines.clustering.nodes import (
  merge_ground_truth_to_data,
  clustering_weighted_embeddings,
+ cluster_viz
 )
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline(
@@ -31,6 +32,15 @@ def create_pipeline(**kwargs) -> Pipeline:
                 ],
                 outputs=["pred_cluster", "clustered_nodes", "unclustered_nodes", "cluster_articles_dict", "edges_dict", "metrics"],
                 name="clustering_weighted_embeddings_node"
+            ),
+              node(
+                func=cluster_viz,
+                inputs=[
+                    "clustered_nodes",
+                    "unclustered_nodes",
+                ],
+                outputs=None,
+                name="cluster_viz_node"
             )
         ]
     )

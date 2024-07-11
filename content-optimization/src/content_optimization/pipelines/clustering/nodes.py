@@ -10,6 +10,7 @@ from kedro.config import OmegaConfigLoader
 from kedro.framework.project import settings
 import pandas as pd
 import logging
+import pyvis
 from content_optimization.pipelines.clustering.utils import(
     clear_db,
     create_graph_nodes,
@@ -32,18 +33,18 @@ def merge_ground_truth_to_data(ground_truth_data, content_contributor, weighted_
     ground_truth_data = ground_truth_data[ground_truth_data["Combine Group ID"].notna()]
 
     # Extract id from merged_data_df to ground truth
-    ground_truth_data = pd.merge(
-        ground_truth_data, weighted_embeddings, how="inner", left_on="URL", right_on="full_url"
-    )
-    ground_truth_data = ground_truth_data[["id", "Page Title", "URL", "Combine Group ID"]]
+    # ground_truth_data = pd.merge(
+    #     ground_truth_data, weighted_embeddings, how="inner", left_on="URL", right_on="full_url"
+    # )
+    ground_truth_data = ground_truth_data[["Page Title", "URL", "Combine Group ID"]]
     ground_truth_data.rename(columns={"Combine Group ID": "ground_truth_cluster"}, inplace=True)
     # merge with ground truth
     articles_df = pd.merge(
         weighted_embeddings,
         ground_truth_data,
         how="left",
-        left_on="id",
-        right_on="id",
+        left_on="full_url",
+        right_on="URL",
     )
     return articles_df
 
@@ -109,5 +110,48 @@ def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, wei
         "Number of articles not clustered": [unclustered_count],
     }
 )
-
+    print(metrics_df)
     return pred_cluster, clustered_nodes, unclustered_nodes, cluster_articles_dict, edges_dict, metrics_df
+
+def cluster_viz(
+    clustered_nodes: pd.DataFrame,
+    unclustered_nodes: pd.DataFrame
+):
+    clustered_df = clustered_nodes.copy()
+    unclustered_df = unclustered_nodes.copy()
+ 
+    visual_graph = pyvis.network.Network(select_menu=True, filter_menu=True)
+ 
+    # Add nodes-nodes pair
+    for _, row in clustered_df.iterrows():
+        # Add nodes
+        visual_graph.add_node(
+            row["node_1_title"],
+            label=row["node_1_title"],
+            title=f"Ground Truth: {row['node_1_ground_truth']}\nPredicted: {row['node_1_pred_cluster']}\nTitle: {row['node_1_title']}",
+            group=row["node_1_pred_cluster"],
+        )
+        visual_graph.add_node(
+            row["node_2_title"],
+            label=row["node_2_title"],
+            title=f"Ground Truth: {row['node_2_ground_truth']}\nPredicted: {row['node_2_pred_cluster']}\nTitle: {row['node_2_title']}",
+            group=row["node_2_pred_cluster"],
+        )
+ 
+        # Add edge
+        visual_graph.add_edge(
+            row["node_1_title"],
+            row["node_2_title"],
+            title=f"Edge Weight: {row['edge_weight']}",
+        )
+   
+    # Add solo nodes
+    for _, row in unclustered_df.iterrows():
+        visual_graph.add_node(
+            row["node_title"],
+            label=row["node_title"],
+            title=f"Ground Truth: {row['node_ground_truth']}\nPredicted: No Community\nTitle: {row['node_title']}",
+        )
+ 
+    return visual_graph.show("data/07_model_output/neo4j_cluster_viz.html", notebook=False)
+ 

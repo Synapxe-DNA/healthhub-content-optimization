@@ -80,29 +80,35 @@ def combine_similarities(session, weight_title, weight_cat, weight_desc, weight_
                 'node_2_id': key[1],
                 'node_1_ground_truth': node_1_ground_truth,
                 'node_2_ground_truth': node_2_ground_truth,
-                'weighted_similarity': (
-                    weight_title * similarities_title[key] +
-                    weight_cat * similarities_cat[key] +
-                    weight_desc * similarities_desc[key] +
-                    weight_body * similarities_body[key] +
-                    weight_combined * similarities_combined[key] +
-                    weight_kws * similarities_kws[key]
-                )
+                'similarities_title': similarities_title[key],
+                'similarities_cat': similarities_cat[key],
+                'similarities_desc': similarities_desc[key],
+                'similarities_body': similarities_body[key],
+                'similarities_combined' : similarities_combined[key],
+                'similarities_kws' : similarities_kws[key]
             }
             combined_similarities.append(combined_similarity)
 
-    return combined_similarities
+            df = pd.DataFrame(combined_similarities)
+            columns_to_fill = ['similarities_title', 'similarities_cat', 'similarities_desc', 'similarities_body', 'similarities_combined','similarities_kws']
+            df[columns_to_fill] = df[columns_to_fill].fillna(0)
+            df["weighted_similarity"] = weight_title * df["similarities_title"] + \
+                weight_cat * df["similarities_cat"] + \
+                    weight_desc * df["similarities_desc"] + \
+                        weight_body * df["similarities_body"] + \
+                        weight_combined * df["similarities_combined"] +\
+                        weight_kws * df['similarities_kws']
+    return df
 
 def median_threshold(combined_similarities):
-    df = pd.DataFrame(combined_similarities)
-    df = df.dropna(subset=["node_1_ground_truth", "node_2_ground_truth"])
+    df = combined_similarities.dropna(subset=["node_1_ground_truth", "node_2_ground_truth"])
     df_filtered = df[df["node_1_ground_truth"] == df["node_2_ground_truth"]]
     threshold = df_filtered["weighted_similarity"].median()
     return threshold
 
 def create_sim_edges(tx, similarities, threshold):
     logging.info("Creating edges")
-    for record in similarities:
+    for _, record in similarities.iterrows():
         if record['weighted_similarity'] > threshold:
             tx.run(
                 """
