@@ -705,19 +705,6 @@ kedro run --nodes="extract_keywords_node"
 
   </details>
 
-- **`is_recipe`**
-
-  <details>
-
-  - Data Type: `boolean`
-  - Description:
-    - Indicates whether the article is a recipe
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
 </details>
 
 ### Data Quality and Processing
