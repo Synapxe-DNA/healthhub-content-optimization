@@ -6,7 +6,7 @@
 
 neo4j_config:
   uri: neo4j://localhost:7687
-  database: live-healthy-articles
+  database: hh-articles
 
 content_contributor: Health Promotion Board
 
