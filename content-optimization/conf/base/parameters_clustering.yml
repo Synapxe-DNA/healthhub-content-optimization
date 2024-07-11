@@ -3,3 +3,18 @@
 #
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
+
+neo4j_config:
+  uri: neo4j://localhost:7687
+  database: live-healthy-articles
+
+content_contributor: Health Promotion Board
+
+sim_weightage:
+  weight_title: 0
+  weight_cat: 0.5
+  weight_desc: 0
+  weight_body: 0.5
+  weight_combined: 0
+  weight_kws: 0
+

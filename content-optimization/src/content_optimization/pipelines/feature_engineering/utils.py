@@ -40,5 +40,5 @@ def pool_embeddings(embeddings: np.ndarray, strategy: str = "mean") -> np.ndarra
         return np.max(embeddings, axis=0)
     else:
         raise ValueError(
-            "Pooling strategy not recognized. The strategy must be either 'average' or 'max'."
+            "Pooling strategy not recognized. The strategy must be either 'mean' or 'max'."
         )
