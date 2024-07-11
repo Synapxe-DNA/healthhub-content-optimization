@@ -6,15 +6,15 @@
 
 neo4j_config:
   uri: neo4j://localhost:7687
-  database: live-healthy-articles
+  database: hh-articles
 
 content_contributor: Health Promotion Board
 
 sim_weightage:
   weight_title: 0
-  weight_cat: 0.5
+  weight_cat: 0
   weight_desc: 0
-  weight_body: 0.5
+  weight_body: 1
   weight_combined: 0
   weight_kws: 0
 

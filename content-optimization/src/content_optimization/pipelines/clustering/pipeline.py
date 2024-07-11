@@ -6,8 +6,8 @@ generated using Kedro 0.19.6
 from kedro.pipeline import Pipeline, pipeline, node
 from content_optimization.pipelines.clustering.nodes import (
  merge_ground_truth_to_data,
-#  connect_to_neo4j,
  clustering_weighted_embeddings,
+ cluster_viz
 )
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline(
@@ -16,7 +16,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 func=merge_ground_truth_to_data,
                 inputs=["ground_truth_data", "params:content_contributor","weighted_embeddings"],
                 outputs="merged_df_with_groundtruth",
-                name="merge_ground_truth_to_data"
+                name="merge_ground_truth_to_data_node"
             ),
             node(
                 func=clustering_weighted_embeddings,
@@ -31,7 +31,16 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "params:sim_weightage.weight_kws"
                 ],
                 outputs=["pred_cluster", "clustered_nodes", "unclustered_nodes", "cluster_articles_dict", "edges_dict", "metrics"],
-                name="clustering_weighted_embeddings"
+                name="clustering_weighted_embeddings_node"
+            ),
+              node(
+                func=cluster_viz,
+                inputs=[
+                    "clustered_nodes",
+                    "unclustered_nodes",
+                ],
+                outputs=None,
+                name="cluster_viz_node"
             )
         ]
     )
