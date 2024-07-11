@@ -53,7 +53,7 @@ export class MainClusterSortComponent implements OnInit {
   constructor(private readonly dialogs: TuiDialogService, private clusterService:ClusterService){}
 
   ngOnInit(){
-    this.sortClusters() 
+    this.sortClusters()
     for (let i = 0; i < this.numOfSorts; i++) {
       this.order.set(i,i) // The Map needs to be initialised as (Original index, Current index)
     }
@@ -67,7 +67,7 @@ export class MainClusterSortComponent implements OnInit {
    * Method to change the state of the sort item
    * - True represents ascending
    * - False represent descending
-   * 
+   *
    */
   changeSort(item:string) {
     this.sortItems[item].state = !this.sortItems[item].state
@@ -75,7 +75,7 @@ export class MainClusterSortComponent implements OnInit {
 
   /**
    * Method used to change the icon of the button to ascending/descending
-   * 
+   *
    */
   getIcon(state:boolean){
     if (state) {

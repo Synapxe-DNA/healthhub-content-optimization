@@ -27,4 +27,3 @@ class ArticleMeta(BaseModel):
 
 class Article(ArticleMeta):
     content: str
-

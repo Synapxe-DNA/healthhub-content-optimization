@@ -90,7 +90,7 @@
           <td *tuiCell="'title'" tuiTd class="number text">
             <a href="{{article.url}}" class="text-[#0000EE] hover:underline">{{ article.title }}</a>
           </td>
-            
+
           <td *tuiCell="'description'" tuiTd class="number text max-w-prose break-words">
             {{ article.description }}
           </td>
@@ -127,23 +127,23 @@
       <ng-template #template>
         <div class="relative">
           <div class="w-[67rem] text-left inline-block">
-            <a href="/clusters/{{cluster.id}}" 
+            <a href="/clusters/{{cluster.id}}"
             (click)="$event.stopPropagation()"
             class="text-[#0000EE] hover:underline"
             >
               {{cluster.name}}
             </a>
           </div>
-          <div class="px-2 
+          <div class="px-2
             flex-row inline-flex
             mr-2"
           >
 
               @if (getClusterStatus(cluster)) {
-                <p class="text-white bg-[#4ac99b] inline p-1 rounded">Completed</p> 
-              } 
+                <p class="text-white bg-[#4ac99b] inline p-1 rounded">Completed</p>
+              }
               @else {
-                <p class="text-white bg-[#ed656e] inline p-1 rounded">Pending</p> 
+                <p class="text-white bg-[#ed656e] inline p-1 rounded">Pending</p>
               }
 
               <p class="text-white bg-blue-400 inline p-1 ml-3 rounded"> Articles: {{cluster.articles.length}}</p>

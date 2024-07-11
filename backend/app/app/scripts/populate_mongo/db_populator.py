@@ -9,7 +9,7 @@ from beanie.operators import In
 from motor.motor_asyncio import AsyncIOMotorClient
 
 
-class DBPopulator:
+class DBPopulater:
     def __init__(
         self, mongo_connector, articles_file_path, edges_file_path, cluster_file_path
     ):

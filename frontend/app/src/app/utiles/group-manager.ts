@@ -46,7 +46,7 @@ export class GroupManager {
     }
 
     /**
-      * Retrieves a BehaviorSubject containing the names of groups that can have articles added to them,
+      * Retrieves a BehaviorSubject containing the names of groups that can have original_articles added to them,
       * excluding specific non-addable group names.
       * @returns BehaviorSubject<string[]> A BehaviorSubject emitting an array of addable group names.
       */
