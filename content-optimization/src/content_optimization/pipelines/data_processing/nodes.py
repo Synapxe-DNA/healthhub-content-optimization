@@ -136,6 +136,7 @@ def extract_data(
             df["has_table"] = None
             df["has_image"] = None
             df["related_sections"] = None
+            df["extracted_tables"] = None
             df["extracted_links"] = None
             df["extracted_headers"] = None
             df["extracted_img_alt_text"] = None
@@ -143,6 +144,7 @@ def extract_data(
 
             for index, row in df.iterrows():
                 # Skip extraction for those articles flagged for removal
+                # TODO: Need to monitor implementation of "to_remove" as extracted_content is skipped
                 if row["to_remove"]:
                     continue
 
@@ -161,6 +163,7 @@ def extract_data(
                 has_table = extractor.check_for_table()
                 has_image = extractor.check_for_image()
                 related_sections = extractor.extract_related_sections()
+                extracted_tables = extractor.extract_tables()
                 extracted_links = extractor.extract_links()
                 extracted_headers = extractor.extract_headers()
                 extracted_img_alt_text = extractor.extract_alt_text_from_img()
@@ -170,6 +173,7 @@ def extract_data(
                 df.at[index, "has_table"] = has_table
                 df.at[index, "has_image"] = has_image
                 df.at[index, "related_sections"] = related_sections
+                df.at[index, "extracted_tables"] = extracted_tables
                 df.at[index, "extracted_links"] = extracted_links
                 df.at[index, "extracted_headers"] = extracted_headers
                 df.at[index, "extracted_img_alt_text"] = extracted_img_alt_text
