@@ -15,7 +15,7 @@ class ClusterDocument(Document):
 
 
 class ArticleDocument(Document):
-    id: Optional[PydanticObjectId] = Field(None, alias="_id")
+    id: str
     title: str
     description: str
     pr_name: Indexed(str)
@@ -25,6 +25,7 @@ class ArticleDocument(Document):
     date_modified: str
 
     keywords: List[str]
+    labels: List[str]
     cover_image_url: str
 
     engagement_rate: float
@@ -44,6 +45,7 @@ class GeneratedArticleDocument(Document):
     date_modified: str
 
     keywords: List[str]
+    labels: List[str]
     cover_image_url: str
 
     approved: bool = Field(default=False)
@@ -69,4 +71,8 @@ class JobOptimiseDocument(Document):
 
 
 class IgnoreDocument(Document):
+    article: Link[ArticleDocument]
+
+
+class RemoveDocument(Document):
     article: Link[ArticleDocument]

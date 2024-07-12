@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List
 
 from pydantic import BaseModel, Field
@@ -18,6 +19,7 @@ class ArticleMeta(BaseModel):
 
     # Article peripheral information
     keywords: List[str] = Field(default=[])
+    labels: List[str] = Field(default=[])
     cover_image_url: str = Field(default="")
 
     # Article statistics
@@ -27,3 +29,10 @@ class ArticleMeta(BaseModel):
 
 class Article(ArticleMeta):
     content: str
+
+
+class ArticleStatus(Enum):
+    COMBINE = "Combined"
+    IGNORE = "Ignored"
+    OPTIMISE = "Optimise"
+    REMOVE = "Remove"

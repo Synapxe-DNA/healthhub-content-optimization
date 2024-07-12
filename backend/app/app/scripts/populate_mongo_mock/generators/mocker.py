@@ -1,16 +1,12 @@
+import datetime
 import random
 from typing import List
 
 from app.interfaces.db_connector_types import DbConnector
 from app.models.article import Article
-from app.models.cluster import Cluster
-from app.models.combination import Combination
 from app.models.edge import Edge
-from app.models.ignore import Optimise
-from app.scripts.populate_mongo_mock.generators.string_generator import (
-    random_id,
-    random_str,
-)
+from app.scripts.populate_mongo_mock.generators.string_generator import random_str
+from bson import ObjectId
 
 
 class Mocker:
@@ -55,7 +51,24 @@ class Mocker:
         num_articles = random.randint(
             2, (self.max_articles_per_cluster - self.min_articles_per_cluster)
         )
-        return [random_id(32) for _ in range(num_articles)]
+        # return [random_id(32) for _ in range(num_articles)]
+        return [str(ObjectId()) for _ in range(num_articles)]
+
+    def _create_date(self) -> str:
+        start_dt = datetime.date(2024, 5, 13)
+        end_dt = datetime.date(2024, 10, 25)
+        time_between_dates = end_dt - start_dt
+        days_between_dates = time_between_dates.days
+        random_number_of_days = random.randrange(days_between_dates)
+        random_date = start_dt + datetime.timedelta(days=random_number_of_days)
+        return str(random_date)
+
+    """
+    Method to generate the status of an article based on the number of articles in a cluster
+
+    If cluster size is greater than 1, the status is "Combined" as the articles should be cominbed
+    else the status is "Ignored" as default.
+    """
 
     async def mock(self) -> None:
 
@@ -63,6 +76,7 @@ class Mocker:
 
         authors = [random_str(random.randint(5, 20)).strip() for _ in range(5)]
         labels = [random_str(random.randint(5, 10)).strip() for _ in range(10)]
+        keywords = [random_str(random.randint(5, 10)).strip() for _ in range(10)]
         pillar = [random_str(random.randint(3, 10)).strip() for _ in range(10)]
 
         for i in range(self.num_clusters):
@@ -76,15 +90,21 @@ class Mocker:
                     id=x,
                     title=random_str(),
                     description=random_str(128),
-                    author=random.choice(authors),
-                    pillar=random.choice(pillar),
+                    pr_name=random.choice(authors),
+                    content_category=random.choice(pillar),
+                    url="url",
+                    status="status",
+                    date_modified=self._create_date(),
+                    keywords=random.sample(
+                        keywords, random.randint(0, int(len(keywords) / 2))
+                    ),
                     labels=random.sample(
                         labels, random.randint(0, int(len(labels) / 2))
                     ),
-                    url="url",
                     cover_image_url="image_url",
-                    engagement=random.uniform(0, 1),
-                    views=random.randint(100, 99999),
+                    engagement_rate=random.uniform(0, 1),
+                    number_of_views=random.randint(100, 99999),
+                    content=random_str(128),
                 )
                 for x in article_ids
             ]
@@ -99,34 +119,9 @@ class Mocker:
                 ]
             ]
 
-            cluster = Cluster(
-                name=f"Cluster {random_str(5)}", article_ids=article_ids, edges=edges
-            )
-
-            combine_ids = []
-            ignore_ids = []
-
-            if bool(random.getrandbits(1)):
-                for id in article_ids:
-                    if bool(random.getrandbits(1)):
-                        combine_ids.append(id)
-                    else:
-                        ignore_ids.append(id)
-
-            combine_jobs = [
-                Combination(
-                    name=random_str(16),
-                    article_ids=combine_ids,
-                )
-            ]
-
-            ### Removed mocking of ignore jobs to keep mocking process simple.
-            ### This can be manually tested on the frontend.
-            ignore_jobs = [Optimise(article_id=x) for x in ignore_ids]
-
             await self.conn.create_articles(articles)
-            await self.conn.create_clusters([cluster])
-
-            # if random.uniform(0, 1) > self.percent_processed:
-            await self.conn.create_combine(combine_jobs)
-            await self.conn.create_ignore(ignore_jobs)
+            await self.conn.create_cluster_from_articles(
+                "Cluster {random_str(5)}", article_ids
+            )
+            if len(edges) > 0:
+                await self.conn.create_edges(edges)

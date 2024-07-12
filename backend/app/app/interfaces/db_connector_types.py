@@ -47,7 +47,7 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def get_cluster(self, cluster_id:str) -> Cluster:
+    async def get_cluster(self, cluster_id: str) -> Cluster:
         """
         Method to fetch a cluster by ID.
         :param cluster_id:
@@ -88,12 +88,20 @@ class DbConnector(ABC):
     @abstractmethod
     async def create_edges(self, edges: List[Edge]) -> List[str]:
         """
-        Method to create edges between two articles
-        :param edges: {List[Edge]} Array of edges to insert
-        :return:
+        Method to create edges between articles.
+        :param edges: {List[Edge]}
+        :return: {List[str]} IDs of created edges
         """
         pass
 
+    @abstractmethod
+    async def get_edges(self, article_ids: List[str]) -> List[Edge]:
+        """
+        Fetches edges between articles by specified IDs.
+        :param article_ids: {List[str]}
+        :return: {List[Edge]}
+        """
+        pass
 
     """
     Methods related to generated articles
@@ -101,7 +109,7 @@ class DbConnector(ABC):
 
     @abstractmethod
     async def create_generated_article(
-            self, generated_articles: List[GeneratedArticle]
+        self, generated_articles: List[GeneratedArticle]
     ) -> List[str]:
         """
         Method to insert generated articles into the database
@@ -110,15 +118,13 @@ class DbConnector(ABC):
         """
         pass
 
-
-
     """
-    Methods related to combination jobs     
+    Methods related to combination jobs
     """
 
     @abstractmethod
     async def create_combine_job(
-            self, cluster_id: str, sub_group_name: str, remarks: str, article_ids: List[str]
+        self, cluster_id: str, sub_group_name: str, remarks: str, article_ids: List[str]
     ) -> str:
         """
         Method to create a combine job record
@@ -130,7 +136,6 @@ class DbConnector(ABC):
         """
         pass
 
-
     @abstractmethod
     async def get_all_combine_jobs(self) -> List[JobCombine]:
         """
@@ -138,7 +143,6 @@ class DbConnector(ABC):
         :return: {List[JobCombine]}
         """
         pass
-
 
     """
     Methods related to standalone articles to optimise
@@ -164,22 +168,15 @@ class DbConnector(ABC):
         """
         pass
 
-
     """
     Methods related to ignored articles
     """
 
     @abstractmethod
-    async def create_ignore_record(self, article_id:str) -> str:
+    async def create_ignore_record(self, article_id: str) -> str:
         """
         Method to ignore an article based on it's own ID.
         :param article_id:
         :return:
         """
         pass
-
-
-
-
-
-
