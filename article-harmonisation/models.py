@@ -1,4 +1,3 @@
-import getpass
 import os
 import dotenv
 from langchain_huggingface import HuggingFaceEndpoint
