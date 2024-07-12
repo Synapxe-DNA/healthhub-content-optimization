@@ -72,7 +72,7 @@ columns_to_keep:
     - id
     - Content.Name
     - HealthStatistics_Title
-    - HealthStatistics_ArticleCatNames  # all values are null
+    - HealthStatistics_ArticleCatNames
     - HealthStatistics_CoverImgUrl
     - HealthStatistics_FullUrl
     - HealthStatistics_FullUrl2
@@ -84,9 +84,9 @@ columns_to_keep:
     - HealthStatistics_PRName
     - HealthStatistics_AlternateImageText
     - HealthStatistics_DateModified
-    - HealthStatistics_NumberOfViews  # all values are null
-    - HealthStatistics_LastMonthViewCount  # all values are null
-    - HealthStatistics_LastTwoMonthsView  # all values are null
+    - HealthStatistics_NumberOfViews
+    - HealthStatistics_LastMonthViewCount
+    - HealthStatistics_LastTwoMonthsView
     - Page Views
     - Engagement Rate
     - Bounce Rate
@@ -153,7 +153,7 @@ columns_to_keep:
     - id
     - Content.Name
     - Medication_Title
-    - Medication_ArticleCatNames  # all values are null
+    - Medication_ArticleCatNames
     - Medication_CoverImgUrl
     - Medication_FullUrl
     - Medication_FullUrl2
@@ -166,8 +166,8 @@ columns_to_keep:
     - Medication_AlternateImageText
     - Medication_DateModified
     - Medication_NumberOfViews
-    - Medication_LastMonthViewCount  # all values are null
-    - Medication_LastTwoMonthsView  # all values are null
+    - Medication_LastMonthViewCount
+    - Medication_LastTwoMonthsView
     - Page Views
     - Engagement Rate
     - Bounce Rate
@@ -180,8 +180,8 @@ columns_to_keep:
     - id
     - Content.Name
     - ProgramSubPages_Title
-    - ProgramSubPages_ArticleCatNames  # not found
-    - ProgramSubPages_CoverImgUrl  # all values are null
+    - ProgramSubPages_ArticleCatNames # not found
+    - ProgramSubPages_CoverImgUrl
     - ProgramSubPages_FullUrl
     - ProgramSubPages_FullUrl2
     - ProgramSubPages_FriendlyUrl
@@ -191,10 +191,10 @@ columns_to_keep:
     - ProgramSubPages_FeatureTitle
     - ProgramSubPages_PRName
     - ProgramSubPages_AlternateImageText
-    - ProgramSubPages_DateModified  # not found
-    - ProgramSubPages_Number_of_Views  # all values are null
-    - ProgramSubPages_Lastmonthviewcount  # all values are null
-    - ProgramSubPages_LastTwoMonthCount  # all values are null
+    - ProgramSubPages_DateModified # not found
+    - ProgramSubPages_Number_of_Views
+    - ProgramSubPages_Lastmonthviewcount
+    - ProgramSubPages_LastTwoMonthCount
     - Page Views
     - Engagement Rate
     - Bounce Rate
@@ -218,7 +218,7 @@ columns_to_keep:
     - Programs_FeatureTitle
     - Programs_PRName
     - Programs_AlternateImageText
-    - Programs_DateModified  # not found
+    - Programs_DateModified # not found
     - Programs_Number_of_Views
     - Programs_Lastmonthviewcount
     - Programs_LastTwoMonthsView
@@ -257,25 +257,10 @@ columns_to_keep:
     - "% of Total Views"
     - Cumulative % of Total Views
 
-columns_to_add:  # null columns to add back to match columns_to_keep for each content category
-  health-statistics:
-    - HealthStatistics_ArticleCatNames
-    - HealthStatistics_NumberOfViews
-    - HealthStatistics_LastMonthViewCount
-    - HealthStatistics_LastTwoMonthsView
-
-  medications:
-    - Medication_ArticleCatNames
-    - Medication_LastMonthViewCount
-    - Medication_LastTwoMonthsView
-
+columns_to_add: # missing columns to add back to match `columns_to_keep` for each content category
   program-sub-pages:
     - ProgramSubPages_ArticleCatNames
-    - ProgramSubPages_CoverImgUrl
     - ProgramSubPages_DateModified
-    - ProgramSubPages_Number_of_Views
-    - ProgramSubPages_Lastmonthviewcount
-    - ProgramSubPages_LastTwoMonthCount
 
   programs:
     - Programs_DateModified
@@ -307,4 +292,4 @@ default_columns:
   - percentage_total_views
   - cumulative_percentage_total_views
 
-word_count_cutoff: 90  # see word_count.ipynb for analysis on threshold
+word_count_cutoff: 90 # see word_count.ipynb for analysis on threshold
