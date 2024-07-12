@@ -1,7 +1,12 @@
+from pathlib import Path
+
 import pytest
 from kedro.config import OmegaConfigLoader
 from kedro.io import DataCatalog
 from kedro_datasets.partitions.partitioned_dataset import PartitionedDataset
+
+# Get the project root directory
+project_path = Path.cwd()
 
 
 @pytest.fixture
@@ -9,15 +14,29 @@ def datasets() -> dict:
     datasets = {
         "all_contents": PartitionedDataset(
             dataset="pandas.ExcelDataset",
-            path="tests/data/01_raw/all_contents",
+            path=(
+                project_path / "tests" / "data" / "01_raw" / "all_contents"
+            ).as_posix(),
         ),
         "all_contents_standardized": PartitionedDataset(
             dataset="pandas.ParquetDataset",
-            path="tests/data/02_intermediate/all_contents_standardized",
+            path=(
+                project_path
+                / "tests"
+                / "data"
+                / "02_intermediate"
+                / "all_contents_standardized"
+            ).as_posix(),
         ),
         "all_contents_extracted": PartitionedDataset(
             dataset="pandas.ParquetDataset",
-            path="tests/data/02_intermediate/all_contents_extracted",
+            path=(
+                project_path
+                / "tests"
+                / "data"
+                / "02_intermediate"
+                / "all_contents_extracted"
+            ).as_posix(),
         ),
     }
     return datasets
