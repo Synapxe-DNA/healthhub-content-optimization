@@ -156,7 +156,7 @@ class DbConnector(ABC):
         """
         Method to mark standalone articles to be optimised as "individual" articles.
         :param article_id:
-        :return:
+        :return: {str} id of the job just created
         """
         pass
 
@@ -177,6 +177,19 @@ class DbConnector(ABC):
         """
         Method to ignore an article based on it's own ID.
         :param article_id:
-        :return:
+        :return: {str} id of article ignored
+        """
+        pass
+
+    """
+    Methods related to removed articles
+    """
+
+    @abstractmethod
+    async def create_remove_record(self, article_id: str) -> str:
+        """
+        Method to remove an article based on it's own ID.
+        :param article_id:
+        :return: {str} id of article removed
         """
         pass

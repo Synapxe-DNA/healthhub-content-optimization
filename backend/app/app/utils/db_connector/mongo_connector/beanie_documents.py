@@ -76,3 +76,4 @@ class IgnoreDocument(Document):
 
 class RemoveDocument(Document):
     article: Link[ArticleDocument]
+    remarks: str
