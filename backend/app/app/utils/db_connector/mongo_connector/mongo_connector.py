@@ -30,9 +30,7 @@ class MongoConnector(DbConnector):
     __client: AsyncIOMotorClient
     __conn: AsyncIOMotorDatabase
 
-    """
-    Client setup
-    """
+    #region Client Setup
 
     def __init__(
         self, username: str, password: str, host: str, port: str, db_name: str
@@ -118,7 +116,10 @@ class MongoConnector(DbConnector):
         async for record in RemoveDocument.find_all(fetch_links=True):
             removed_ids.add(str(record.original_article.id))
         return list(removed_ids)
+    
+    #endregion
 
+    #region Helper functions
     async def get_article_status(self, _id: str) -> str:
         """
         Method to get a article status
@@ -135,14 +136,14 @@ class MongoConnector(DbConnector):
             return ArticleStatus.OPTIMISE
         else:
             return ArticleStatus.IGNORE
+        
+    #endregion
 
     """
     Class methods to interact with DB
     """
 
-    """
-    Methods related to clusters
-    """
+    #region Methods related to clusters
 
     async def create_cluster_from_articles(
         self, cluster_name: str, article_ids: List[str]
@@ -219,11 +220,10 @@ class MongoConnector(DbConnector):
             ],
             edges=self.get_edges([str(a.id) for a in cluster.article_ids]),
         )
+    
+    #endregion
 
-    """
-    Methods related to articles
-    """
-
+    #region Methods related to articles
 
     async def create_articles(self, articles: List[Article]) -> List[str]:
         """
@@ -299,10 +299,10 @@ class MongoConnector(DbConnector):
             )
             async for a in ArticleDocument.find_many(article_ids)
         ]
+    
+    #endregion
 
-    """
-    Methods related to article edges
-    """
+    #region Methods related to article edges
 
     async def create_edges(self, edges: List[Edge]) -> List[str]:
         """
@@ -337,10 +337,10 @@ class MongoConnector(DbConnector):
             for e in edges
             if (str(e.start.id) in article_ids) and (str(e.end.id) in article_ids)
         ]
+    
+    #endregion
 
-    """
-    Methods related to generated articles
-    """
+    #region Methods related to generated articles
 
     async def create_generated_article(
         self, generated_articles: List[GeneratedArticle]
@@ -351,11 +351,10 @@ class MongoConnector(DbConnector):
         :return: {List[str]} IDs of the generated articles inserted
         """
         raise NotImplementedError()
+    
+    #endregion
 
-
-    """
-    Methods related to combination jobs
-    """
+    #region Methods related to combination jobs
 
     async def create_combine_job(
         self, cluster_id: str, sub_group_name: str, remarks: str, article_ids: List[str]
@@ -377,10 +376,9 @@ class MongoConnector(DbConnector):
         """
         raise NotImplementedError()
 
+    #endregion
 
-    """
-    Methods related to standalone articles to optimise
-    """
+    #region Methods related to standalone articles to optimise
 
     async def create_optimise_job(
         self,
@@ -400,9 +398,9 @@ class MongoConnector(DbConnector):
         """
         raise NotImplementedError()
     
-    """
-    Methods related to ignored articles
-    """
+    #endregion
+
+    #region Methods related to ignored articles
 
     async def create_ignore_record(self, article_id: str) -> str:
         """
@@ -412,9 +410,10 @@ class MongoConnector(DbConnector):
         """
         raise NotImplementedError()
     
-    """
-    Methods related to removed articles
-    """
+    #endregion
+
+    #region Methods related to removed articles
+
     async def create_remove_record(self, article_id: str) -> str:
         """
         Method to remove an article based on it's own ID.
@@ -422,4 +421,5 @@ class MongoConnector(DbConnector):
         :return: {str} id of article removed
         """
         raise NotImplementedError()
-
+    
+    #endregion
