@@ -75,17 +75,21 @@ unclustered_nodes:
   type: pandas.CSVDataset
   filepath: data/07_model_output/neo_4j_unclustered_data.csv
 
-cluster_articles_dict:
+cluster_articles_pkl:
   type: pickle.PickleDataset
   filepath: data/07_model_output/neo4j_predicted_clusters.pkl
 
-edges_dict:
+edges_pkl:
   type: pickle.PickleDataset
   filepath: data/07_model_output/neo4j_edges.pkl
 
 metrics:
   type: pandas.CSVDataset
   filepath: data/07_model_output/metrics.csv
+
+cluster_size:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/cluster_size.csv
 
 neo4j_cluster_viz.html:
   type: text.TextDataset

@@ -23,6 +23,8 @@ from content_optimization.pipelines.clustering.utils import(
     get_clustered_nodes,
     get_unclustered_nodes,
     return_pred_cluster,
+    get_cluster_size,
+    generate_cluster_keywords,
     count_articles,
     return_by_cluster
 )
@@ -32,12 +34,9 @@ def merge_ground_truth_to_data(ground_truth_data, content_contributor, weighted_
     ground_truth_data = ground_truth_data[["Page Title", "Combine Group ID", "URL"]]
     ground_truth_data = ground_truth_data[ground_truth_data["Combine Group ID"].notna()]
 
-    # Extract id from merged_data_df to ground truth
-    # ground_truth_data = pd.merge(
-    #     ground_truth_data, weighted_embeddings, how="inner", left_on="URL", right_on="full_url"
-    # )
     ground_truth_data = ground_truth_data[["Page Title", "URL", "Combine Group ID"]]
     ground_truth_data.rename(columns={"Combine Group ID": "ground_truth_cluster"}, inplace=True)
+    
     # merge with ground truth
     articles_df = pd.merge(
         weighted_embeddings,
@@ -60,6 +59,8 @@ def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, wei
     }
 
     documents = merged_df_with_groundtruth.to_dict(orient="records")
+    print(f"Number of articles: {len(documents)}")
+
     try: 
         with GraphDatabase.driver(**neo4j_auth) as driver:
             with driver.session() as session:
@@ -81,6 +82,9 @@ def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, wei
         logging.error(f"Neo4j error occurred: {e}")
         raise
 
+    cluster_size = get_cluster_size(pred_cluster)
+    cluster_keywords_dict = generate_cluster_keywords(pred_cluster)
+
     min_count = cluster_article_count[cluster_article_count["article_count"] > 1][
     "article_count"
     ].min()
@@ -88,11 +92,15 @@ def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, wei
     num_clusters = (cluster_article_count["article_count"] != 1).sum()
     unclustered_count = (cluster_article_count["article_count"] == 1).sum()
 
-    cluster_articles_dict = cluster_articles.to_dict(orient='records')
+    cluster_articles["cluster_keywords"] = cluster_articles["cluster"].apply(lambda x, d=cluster_keywords_dict: d[x] if x in d else [])
+    cluster_articles_pkl = cluster_articles.to_dict(orient='records')
+
+    clustered_nodes["node_1_cluster_kws"] = clustered_nodes["node_1_pred_cluster"].apply(lambda x, d=cluster_keywords_dict: d[x] if x in d else [])
+    clustered_nodes["node_2_cluster_kws"] = clustered_nodes["node_2_pred_cluster"].apply(lambda x, d=cluster_keywords_dict: d[x] if x in d else [])
 
     edges_in_same_cluster = clustered_nodes[clustered_nodes["node_1_pred_cluster"] == clustered_nodes["node_2_pred_cluster"]]
-    edges = edges_in_same_cluster[["node_1_title", "node_2_title", "edge_weight"]]
-    edges_dict = edges.to_dict(orient='records')
+    edges = edges_in_same_cluster[["node_1_id", "node_2_id", "node_1_title", "node_2_title", "edge_weight"]]
+    edges_pkl = edges.to_dict(orient='records')
 
     metrics_df = pd.DataFrame(
     {
@@ -111,7 +119,7 @@ def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, wei
     }
 )
     print(metrics_df)
-    return pred_cluster, clustered_nodes, unclustered_nodes, cluster_articles_dict, edges_dict, metrics_df
+    return pred_cluster, clustered_nodes, unclustered_nodes, cluster_articles_pkl, edges_pkl, metrics_df, cluster_size
 
 def cluster_viz(
     clustered_nodes: pd.DataFrame,
@@ -128,13 +136,13 @@ def cluster_viz(
         visual_graph.add_node(
             row["node_1_title"],
             label=row["node_1_title"],
-            title=f"Ground Truth: {row['node_1_ground_truth']}\nPredicted: {row['node_1_pred_cluster']}\nTitle: {row['node_1_title']}",
+            title=f"Predicted group: {row['node_1_pred_cluster']}\nGroup keywords: {row['node_1_cluster_kws']}\nTitle: {row['node_1_title']}",
             group=row["node_1_pred_cluster"],
         )
         visual_graph.add_node(
             row["node_2_title"],
             label=row["node_2_title"],
-            title=f"Ground Truth: {row['node_2_ground_truth']}\nPredicted: {row['node_2_pred_cluster']}\nTitle: {row['node_2_title']}",
+            title=f"Predicted group: {row['node_2_pred_cluster']}\nGroup keywords: {row['node_2_cluster_kws']}\nTitle: {row['node_2_title']}",
             group=row["node_2_pred_cluster"],
         )
  
@@ -150,7 +158,7 @@ def cluster_viz(
         visual_graph.add_node(
             row["node_title"],
             label=row["node_title"],
-            title=f"Ground Truth: {row['node_ground_truth']}\nPredicted: No Community\nTitle: {row['node_title']}",
+            title=f"Predicted group: No Community\nTitle: {row['node_title']}",
         )
  
     return visual_graph.show("data/07_model_output/neo4j_cluster_viz.html", notebook=False)

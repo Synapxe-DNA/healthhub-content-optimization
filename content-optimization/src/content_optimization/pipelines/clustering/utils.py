@@ -1,6 +1,15 @@
 import logging
 import pandas as pd
+from nltk.stem import WordNetLemmatizer
+import nltk
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import CountVectorizer
+from .ctfidf import CTFIDFVectorizer
 logging.basicConfig(level=logging.INFO)
+
+nltk.download('wordnet')
+stopwords=list(stopwords.words('english'))
+lemmatizer = WordNetLemmatizer()
 
 def clear_db(tx):
     logging.info("Clearing database")
@@ -76,7 +85,6 @@ def combine_similarities(session, weight_title, weight_cat, weight_desc, weight_
         if key in similarities_cat and key in similarities_desc and key in similarities_body and key in similarities_combined and key in similarities_kws:
             node_1_ground_truth = ground_truth.get(key[0])
             node_2_ground_truth = ground_truth.get(key[1])
-
 
             combined_similarity = {
                 'node_1_id': key[0],
@@ -170,14 +178,48 @@ def return_pred_cluster(tx):
     query = """
         MATCH (a:Article)
         RETURN a.id AS id,
-            a.title AS title, 
-            a.url AS url, 
+            a.title AS title,
+            a.url AS url,
+            a.content AS body_content,
             a.community AS cluster
         ORDER BY a.community
         """
     result = tx.run(query)
     df = pd.DataFrame(result.data())
     return df
+
+def get_cluster_size(pred_cluster):
+    grouped_counts = pred_cluster.groupby('cluster').size()
+    filtered_grouped_counts = grouped_counts[grouped_counts != 1]
+    single_nodes =  len(grouped_counts[grouped_counts == 1])
+    bins = range(1, filtered_grouped_counts.max() + 10, 10)
+    labels = [f"{i}-{i+9}" for i in bins[:-1]]
+    labels[0] = '2-10'
+    binned_counts = pd.cut(filtered_grouped_counts, bins=bins, labels=labels, right=False)
+    banded_counts = binned_counts.value_counts().sort_index()
+    cluster_size = pd.DataFrame(banded_counts).reset_index().rename(columns={'index':"Cluster size",'count':"Num of clusters"})
+    new_row = {'Cluster size': '1', 'Num of clusters': single_nodes}  # Customize with your data
+    cluster_size.loc[-1] = new_row
+    cluster_size = cluster_size.sort_index().reset_index(drop=True)
+    return cluster_size
+
+def generate_cluster_keywords(pred_cluster):
+    docs = pd.DataFrame({'Document': pred_cluster.body_content, 'Class': pred_cluster.cluster})
+    docs_per_class = docs.groupby(['Class'], as_index=False).agg({'Document': ' '.join})
+    docs_per_class['Document'] = docs_per_class['Document'].apply(lambda text: ' '.join([lemmatizer.lemmatize(word) for word in text.split()]))
+    
+    count_vectorizer = CountVectorizer(stop_words=stopwords).fit(docs_per_class.Document)
+    count = count_vectorizer.transform(docs_per_class.Document)
+    words = count_vectorizer.get_feature_names_out()
+    ctfidf = CTFIDFVectorizer().fit_transform(count, n_samples=len(docs)).toarray()
+
+    cluster_keywords_dict = {}
+    for idx, cluster in enumerate(docs_per_class.Class):
+        top_indices = ctfidf[idx].argsort()[-5:][::-1] # Get top 5 indices, sorted in descending order
+        top_words = [words[index] for index in top_indices]
+        cluster_keywords_dict[cluster] = top_words
+
+    return cluster_keywords_dict
 
 def get_clustered_nodes(tx):
     query = """
