@@ -1,6 +1,6 @@
 all_contents:
   type: partitions.PartitionedDataset
-  path: data/01_raw/all_contents  # path to the location of partitions
+  path: data/01_raw/all_contents # path to the location of partitions
   dataset: pandas.ExcelDataset
   filename_suffix: ".xlsx"
 
@@ -25,3 +25,26 @@ all_extracted_text:
 merged_data:
   type: pandas.ParquetDataset
   filepath: data/03_primary/merged_data.parquet
+  versioned: true
+
+raw_word_counts:
+  type: content_optimization.datasets.plotly.HTMLDataset
+  filepath: data/08_reporting/raw_word_counts.html
+  versioned: true
+
+log_word_counts:
+  type: content_optimization.datasets.plotly.HTMLDataset
+  filepath: data/08_reporting/log_word_counts.html
+  versioned: true
+
+flag_for_removal_by_type:
+  type: pandas.ExcelDataset
+  filepath: data/08_reporting/flag_for_removal_by_type.xlsx
+  save_args:
+    index: false
+  versioned: true
+
+filtered_data_with_keywords:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/filtered_data_with_keywords.parquet
+  versioned: true

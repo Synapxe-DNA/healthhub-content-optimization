@@ -9,8 +9,12 @@ from typing import Any, Callable
 
 import pandas as pd
 from alive_progress import alive_bar
-from content_optimization.utils.columns import select_and_rename_columns
-from content_optimization.utils.extract import HTMLExtractor
+from content_optimization.pipelines.data_processing.extractor import HTMLExtractor
+from content_optimization.pipelines.data_processing.utils import (
+    flag_articles_to_remove_after_extraction,
+    flag_articles_to_remove_before_extraction,
+    select_and_rename_columns,
+)
 
 
 def standardize_columns(
@@ -37,7 +41,7 @@ def standardize_columns(
     Args:
         all_contents (dict[str, Callable[[], Any]]):
             A dictionary containing the raw `partitions.PartitionedDataset`
-            where the keys are the filenames and the values loads the raww excel data as
+            where the keys are the filenames and the values loads the raw excel data as
             `pandas.DataFrame`.
 
         columns_to_add_cfg (dict[str, list[str]]):
@@ -63,7 +67,7 @@ def standardize_columns(
         for filename, partition_load_func in all_contents.items():
             # Get content category from filename
             content_category = re.sub(r"export-published-", "", filename.split("_")[0])
-            bar.text(f"Standardizing for {content_category}")
+            bar.text(f"Standardizing: {content_category}")
 
             # Load partition data
             df = partition_load_func()
@@ -77,14 +81,13 @@ def standardize_columns(
                 df, columns_to_add, columns_to_keep, default_columns, content_category
             )
 
-            # Mark articles with no content or with dummy content in `to_remove` column
-            df["to_remove"] = df["content_body"].apply(
-                lambda x: (
-                    False
-                    if pd.notna(x) and re.search(r"(<[div|p|h2].*?>)", str(x))
-                    else True
-                )
-            )
+            # Strip all whitespaces across all strings in dataframe
+            # See: https://github.com/Wilsven/healthhub-content-optimization/issues/53
+            df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+            # Mark articles with no content, was rejected by Excel due to a "Value
+            # exceeded maximum cell size" error or with dummy content in `to_remove` column
+            df = flag_articles_to_remove_before_extraction(df)
 
             all_contents_standardized[content_category] = df
             bar()
@@ -93,7 +96,7 @@ def standardize_columns(
 
 
 def extract_data(
-    all_contents_standardized: dict[str, Callable[[], Any]],
+    all_contents_standardized: dict[str, Callable[[], Any]], word_count_cutoff: int
 ) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
     """
     Extracts data from processed content and stores it in parquet files
@@ -104,6 +107,9 @@ def extract_data(
             A dictionary containing the standardized `partitions.PartitionedDataset`
             where the keys are the content categories and thevalues loads the
             standardized parquet data as `pandas.DataFrame`.
+
+        word_count_cutoff (int): The minimum number of words in an article
+            to be considered before flagging for removal.
 
     Returns:
         tuple[dict[str, pd.DataFrame], dict[str, str]]:
@@ -130,41 +136,48 @@ def extract_data(
             df["has_table"] = None
             df["has_image"] = None
             df["related_sections"] = None
+            df["extracted_tables"] = None
             df["extracted_links"] = None
             df["extracted_headers"] = None
+            df["extracted_img_alt_text"] = None
             df["extracted_content_body"] = None
 
             for index, row in df.iterrows():
                 # Skip extraction for those articles flagged for removal
+                # TODO: Need to monitor implementation of "to_remove" as extracted_content is skipped
                 if row["to_remove"]:
                     continue
 
                 # Replace all forward slashes with hyphens to avoid saving as folders
                 title = re.sub(r"\/", "-", row["title"]).strip()
 
-                # Get the HTML content
+                # Get the HTML content for extraction and relevant data for logging
+                content_name = row["content_name"]
+                full_url = row["full_url"]
                 html_content = row["content_body"]
 
                 # Extract text from HTML using the HTMLExtractor Class
-                extractor = HTMLExtractor(html_content)
+                extractor = HTMLExtractor(
+                    content_name, content_category, full_url, html_content
+                )
                 has_table = extractor.check_for_table()
                 has_image = extractor.check_for_image()
                 related_sections = extractor.extract_related_sections()
+                extracted_tables = extractor.extract_tables()
                 extracted_links = extractor.extract_links()
                 extracted_headers = extractor.extract_headers()
+                extracted_img_alt_text = extractor.extract_alt_text_from_img()
                 extracted_content_body = extractor.extract_text()
 
                 # Store extracted data into the dataframe
                 df.at[index, "has_table"] = has_table
                 df.at[index, "has_image"] = has_image
                 df.at[index, "related_sections"] = related_sections
+                df.at[index, "extracted_tables"] = extracted_tables
                 df.at[index, "extracted_links"] = extracted_links
                 df.at[index, "extracted_headers"] = extracted_headers
+                df.at[index, "extracted_img_alt_text"] = extracted_img_alt_text
                 df.at[index, "extracted_content_body"] = extracted_content_body
-
-                # If `extracted_content_body` is empty, we update flag to remove
-                if extracted_content_body == "":
-                    df.at[index, "to_remove"] = True
 
                 # Substitute forbidden characters for filenames with _
                 title = re.sub(r'[<>:"/\\|?*]', "_", title)
@@ -177,6 +190,10 @@ def extract_data(
                 all_extracted_text[os.path.join(content_category, title)] = (
                     extracted_content_body
                 )
+
+            # After extraction, we flag to remove articles with no content,
+            # duplicated content, duplicated URL or below word count cutoff
+            df = flag_articles_to_remove_after_extraction(df, word_count_cutoff)
 
             # Store dataframes in a parquet file named `content_category`
             all_contents_extracted[content_category] = df

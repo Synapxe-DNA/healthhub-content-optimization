@@ -1,4 +1,4 @@
-.PHONY: install lint
+.PHONY: install lint clean-dry-run clean run local-db-start local-db-stop
 
 install:
 	pip install -r requirements.txt
@@ -6,22 +6,36 @@ install:
 lint:
 	pre-commit run --all-files
 
+
+# List of directories to operate on
+DIRS ?= data/02_intermediate data/03_primary data/04_feature data/05_model_input data/06_models data/07_model_output
+
+clean-dry-run:
+	@python script.py --dry-run --dir $(DIRS)
+
+clean:
+	@python script.py --dir $(DIRS)
+
+
+PIPELINE ?=
+
+run:
+	@cd content-optimization && \
+	if [ -z "$(PIPELINE)" ]; then \
+		kedro run; \
+	else \
+		kedro run --pipeline=$(PIPELINE); \
+	fi
+
 #############################
 # Commands to run docker
 # for local development
 #############################
 
-.PHONY: local-db-start
 local-db-start:
 	@docker-compose --file ./docker/Dockercompose.yaml --env-file ./docker/dockercompose.env.local up hh-mongo -d
 
-
-.PHONY: local-db-stop
 local-db-stop:
 	@docker-compose --file ./docker/Dockercompose.yaml --env-file ./docker/dockercompose.env.local down hh-mongo
 
-
-
-
-
-all: lint
+all: install lint clean-dry-run clean run local-db-start local-db-stop
