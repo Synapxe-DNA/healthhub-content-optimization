@@ -180,3 +180,16 @@ class DbConnector(ABC):
         :return:
         """
         pass
+
+    """
+    Methods related to ignored articles
+    """
+
+    @abstractmethod
+    async def create_removed_record(self, article_id: str) -> str:
+        """
+        Method to ignore an article based on it's own ID.
+        :param article_id:
+        :return:
+        """
+        pass
