@@ -1,5 +1,11 @@
 # Changelog
 
+## July 12, 2024 <a id="july-12-2024"></a>
+
+- Added unit tests and integration test for [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline
+- Added [data directories](content-optimization/tests/data) for test datasets
+- Removed use of `alive_progress` because of incompatibility with `pytest`
+
 ## July 9, 2024 <a id="july-9-2024"></a>
 
 - Created [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline
