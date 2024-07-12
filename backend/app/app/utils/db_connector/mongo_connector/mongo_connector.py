@@ -140,6 +140,10 @@ class MongoConnector(DbConnector):
     Class methods to interact with DB
     """
 
+    """
+    Methods related to clusters
+    """
+
     async def create_cluster_from_articles(
         self, cluster_name: str, article_ids: List[str]
     ) -> str:
@@ -216,6 +220,11 @@ class MongoConnector(DbConnector):
             edges=self.get_edges([str(a.id) for a in cluster.article_ids]),
         )
 
+    """
+    Methods related to articles
+    """
+
+
     async def create_articles(self, articles: List[Article]) -> List[str]:
         """
         Method to create articles in the database
@@ -291,6 +300,10 @@ class MongoConnector(DbConnector):
             async for a in ArticleDocument.find_many(article_ids)
         ]
 
+    """
+    Methods related to article edges
+    """
+
     async def create_edges(self, edges: List[Edge]) -> List[str]:
         """
         Method to create edges between articles.
@@ -325,6 +338,10 @@ class MongoConnector(DbConnector):
             if (str(e.start.id) in article_ids) and (str(e.end.id) in article_ids)
         ]
 
+    """
+    Methods related to generated articles
+    """
+
     async def create_generated_article(
         self, generated_articles: List[GeneratedArticle]
     ) -> List[str]:
@@ -334,6 +351,11 @@ class MongoConnector(DbConnector):
         :return: {List[str]} IDs of the generated articles inserted
         """
         raise NotImplementedError()
+
+
+    """
+    Methods related to combination jobs
+    """
 
     async def create_combine_job(
         self, cluster_id: str, sub_group_name: str, remarks: str, article_ids: List[str]
@@ -355,6 +377,11 @@ class MongoConnector(DbConnector):
         """
         raise NotImplementedError()
 
+
+    """
+    Methods related to standalone articles to optimise
+    """
+
     async def create_optimise_job(
         self,
         article_id: str,
@@ -362,7 +389,7 @@ class MongoConnector(DbConnector):
         """
         Method to mark standalone articles to be optimised as "individual" articles.
         :param article_id:
-        :return:
+        :return: {str} id of the job just created
         """
         raise NotImplementedError()
 
@@ -372,11 +399,27 @@ class MongoConnector(DbConnector):
         :return:{List[ArticleMeta]}
         """
         raise NotImplementedError()
+    
+    """
+    Methods related to ignored articles
+    """
 
     async def create_ignore_record(self, article_id: str) -> str:
         """
         Method to ignore an article based on it's own ID.
         :param article_id:
-        :return:
+        :return: {str} id of article ignored
         """
         raise NotImplementedError()
+    
+    """
+    Methods related to removed articles
+    """
+    async def create_remove_record(self, article_id: str) -> str:
+        """
+        Method to remove an article based on it's own ID.
+        :param article_id:
+        :return: {str} id of article removed
+        """
+        raise NotImplementedError()
+
