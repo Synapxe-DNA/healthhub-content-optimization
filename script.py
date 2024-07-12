@@ -83,9 +83,9 @@ def clean(
 
 def main():
     """
-    Main function that serves as the entry point of the script.
+    The main function that serves as the entry point of the script. It parses command line arguments
+    and expects the following arguments:
 
-    This function parses command line arguments using the argparse module. It expects the following arguments:
     - --dirs:
         A list of directories to clean. The choices are:
             * "data/02_intermediate"

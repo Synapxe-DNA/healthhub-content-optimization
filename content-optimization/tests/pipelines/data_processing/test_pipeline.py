@@ -10,12 +10,15 @@ https://docs.pytest.org/en/latest/getting-started.html
 
 import logging
 
+import pandas as pd
 from kedro.io import DataCatalog
 from kedro.runner import SequentialRunner
 from pytest import LogCaptureFixture
 from src.content_optimization.pipelines.data_processing import (
     create_pipeline as create_dp_pipeline,
 )
+
+pd.options.mode.chained_assignment = None
 
 
 def test_data_processing_pipeline(caplog: LogCaptureFixture, catalog: DataCatalog):

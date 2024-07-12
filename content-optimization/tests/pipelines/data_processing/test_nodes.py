@@ -17,6 +17,8 @@ from src.content_optimization.pipelines.data_processing.nodes import (
     standardize_columns,
 )
 
+pd.options.mode.chained_assignment = None
+
 
 def test_standardize_columns(catalog: DataCatalog, num_cols: int = 28):
     """
