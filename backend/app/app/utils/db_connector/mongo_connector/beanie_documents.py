@@ -62,12 +62,12 @@ class JobCombineDocument(Document):
     sub_group_name: str
     remarks: str
     original_articles: List[Link[ArticleDocument]] = Field(default=[])
-    generated_article: Optional[Link[GeneratedArticleDocument]]
+    generated_article: Optional[Link[GeneratedArticleDocument]] = None
 
 
 class JobOptimiseDocument(Document):
     original_article: Link[ArticleDocument]
-    generated_article: Optional[Link[GeneratedArticleDocument]]
+    generated_article: Optional[Link[GeneratedArticleDocument]] = None
 
 
 class IgnoreDocument(Document):

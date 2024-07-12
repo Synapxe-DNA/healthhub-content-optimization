@@ -32,7 +32,7 @@ class Article(ArticleMeta):
 
 
 class ArticleStatus(Enum):
-    COMBINE = "Combined"
-    IGNORE = "Ignored"
-    OPTIMISE = "Optimise"
-    REMOVE = "Remove"
+    COMBINE: str = "Combined"
+    IGNORE: str = "Ignored"
+    OPTIMISE: str = "Optimise"
+    REMOVE: str = "Remove"

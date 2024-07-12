@@ -1,7 +1,7 @@
 from typing import List
 
 from app.interfaces.db_connector_types import DbConnector
-from app.models.article import Article, ArticleMeta, ArticleStatus
+from app.models.article import Article, ArticleMeta
 from app.models.cluster import Cluster
 from app.models.edge import Edge
 from app.models.generated_article import GeneratedArticle
@@ -68,76 +68,13 @@ class MongoConnector(DbConnector):
                 JobCombineDocument,
                 JobOptimiseDocument,
                 IgnoreDocument,
+                RemoveDocument,
             ],
         )
-
-    @staticmethod
-    async def __get_ignored_ids() -> List[str]:
-        """
-        Method to get a unique list of all article IDs that have been ignored
-        :return: List[str]
-        """
-        ignored_ids = set()
-        async for record in IgnoreDocument.find_all(fetch_links=True):
-            ignored_ids.add(str(record.article.id))
-        return list(ignored_ids)
-
-    @staticmethod
-    async def __get_combined_ids() -> List[str]:
-        """
-        Method to get a unique list of all article IDs that have been combined
-        :return: List[str]
-        """
-        combined_ids = set()
-        async for record in JobCombineDocument.find_all(
-            fetch_links=True
-        ).original_articles:
-            combined_ids.add(str(record.article_id.id))
-        return list(combined_ids)
-
-    @staticmethod
-    async def __get_optimised_ids() -> List[str]:
-        """
-        Method to get a unique list of all article IDs that have been combined
-        :return: List[str]
-        """
-        optimised_ids = set()
-        async for record in JobOptimiseDocument.find_all(fetch_links=True):
-            optimised_ids.add(str(record.original_article.id))
-        return list(optimised_ids)
-
-    @staticmethod
-    async def __get_removed_ids() -> List[str]:
-        """
-        Method to get a unique list of all article IDs that have been removed
-        :return: List[str]
-        """
-        removed_ids = set()
-        async for record in RemoveDocument.find_all(fetch_links=True):
-            removed_ids.add(str(record.original_article.id))
-        return list(removed_ids)
 
     # endregion
 
     # region Helper functions
-    async def __get_article_status(self, _id: str) -> str:
-        """
-        Method to get a article status
-        """
-        remove_ids = await self.__get_removed_ids()
-        combined_ids = await self.__get_combined_ids()
-        optimise_ids = await self.__get_optimised_ids()
-
-        if _id in remove_ids:
-            return ArticleStatus.REMOVE
-        elif _id in combined_ids:
-            return ArticleStatus.COMBINE
-        elif _id in optimise_ids:
-            return ArticleStatus.OPTIMISE
-        else:
-            return ArticleStatus.IGNORE
-
-    # endregion
 
     @staticmethod
     async def __convertToArticleMeta(articleDoc: ArticleDocument) -> ArticleMeta:
@@ -181,6 +118,8 @@ class MongoConnector(DbConnector):
             articles=[self.__convertToArticleMeta(a) for a in clusterDoc.article_ids],
             edges=self.get_edges([str(a.id) for a in clusterDoc.article_ids]),
         )
+
+    # endregion
 
     """
     Class methods to interact with DB
@@ -375,19 +314,13 @@ class MongoConnector(DbConnector):
 
     # region Methods related to standalone articles to optimise
 
-    async def create_optimise_job(
-        self,
-        article_id: str,
-    ) -> str:
+    async def create_optimise_job(self, article_id: str) -> str:
         """
         Method to mark standalone articles to be optimised as "individual" articles.
         :param article_id:
         :return: {str} id of the job just created
         """
-        optimise_article = JobOptimiseDocument(
-            original_article=article_id,
-        )
-
+        optimise_article = JobOptimiseDocument(original_article=article_id)
         await JobOptimiseDocument.insert(optimise_article)
 
         return str(optimise_article.id)
@@ -399,7 +332,8 @@ class MongoConnector(DbConnector):
         """
 
         return [
-            self.__convertToArticleMeta(a) async for a in JobOptimiseDocument.find_all()
+            self.__convertToArticleMeta(a.original_article)
+            async for a in JobOptimiseDocument.find_all()
         ]
 
     # endregion
@@ -412,7 +346,7 @@ class MongoConnector(DbConnector):
         :param article_id:
         :return: {str} id of article ignored
         """
-        ignore_doc = IgnoreDocument(original_article=article_id)
+        ignore_doc = IgnoreDocument(article=article_id)
         await IgnoreDocument.insert(ignore_doc)
         return str(ignore_doc.id)
 
@@ -420,13 +354,14 @@ class MongoConnector(DbConnector):
 
     # region Methods related to removed articles
 
-    async def create_remove_record(self, article_id: str) -> str:
+    async def create_remove_record(self, article_id: str, remarks: str) -> str:
         """
         Method to remove an article based on it's own ID.
         :param article_id:
+        :param remarks:
         :return: {str} id of article removed
         """
-        remove_doc = RemoveDocument(original_article=article_id)
+        remove_doc = RemoveDocument(article=article_id, remarks=remarks)
         await RemoveDocument.insert(remove_doc)
         return str(remove_doc.id)
 
