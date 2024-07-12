@@ -30,6 +30,8 @@ class ArticleDocument(Document):
     engagement_rate: float
     number_of_views: int
 
+    content: str
+
 
 class GeneratedArticleDocument(Document):
     id: Optional[PydanticObjectId] = Field(None, alias="_id")
