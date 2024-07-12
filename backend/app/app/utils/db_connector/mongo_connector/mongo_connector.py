@@ -120,7 +120,7 @@ class MongoConnector(DbConnector):
     # endregion
 
     # region Helper functions
-    async def get_article_status(self, _id: str) -> str:
+    async def __get_article_status(self, _id: str) -> str:
         """
         Method to get a article status
         """
@@ -140,7 +140,7 @@ class MongoConnector(DbConnector):
     # endregion
 
     @staticmethod
-    async def convertToArticleMeta(articleDoc: ArticleDocument) -> ArticleMeta:
+    async def __convertToArticleMeta(articleDoc: ArticleDocument) -> ArticleMeta:
         return ArticleMeta(
             id=articleDoc.id,
             title=articleDoc.title,
@@ -157,7 +157,7 @@ class MongoConnector(DbConnector):
         )
 
     @staticmethod
-    async def convertToArticle(articleDoc: ArticleDocument) -> Article:
+    async def __convertToArticle(articleDoc: ArticleDocument) -> Article:
         return ArticleMeta(
             id=articleDoc.id,
             title=articleDoc.title,
@@ -174,11 +174,11 @@ class MongoConnector(DbConnector):
             content=articleDoc.content,
         )
 
-    async def convertToCluster(self, clusterDoc: ClusterDocument) -> Cluster:
+    async def __convertToCluster(self, clusterDoc: ClusterDocument) -> Cluster:
         return Cluster(
             id=str(clusterDoc.id),
             name=clusterDoc.name,
-            articles=[self.convertToArticleMeta(a) for a in clusterDoc.article_ids],
+            articles=[self.__convertToArticleMeta(a) for a in clusterDoc.article_ids],
             edges=self.get_edges([str(a.id) for a in clusterDoc.article_ids]),
         )
 
@@ -208,7 +208,7 @@ class MongoConnector(DbConnector):
         """
 
         return [
-            self.convertToCluster(c)
+            self.__convertToCluster(c)
             async for c in ClusterDocument.find_all(fetch_links=True)
         ]
 
@@ -220,7 +220,7 @@ class MongoConnector(DbConnector):
         """
         cluster = await ClusterDocument.get(cluster_id)
 
-        return self.convertToCluster(cluster)
+        return self.__convertToCluster(cluster)
 
     # endregion
 
@@ -259,7 +259,9 @@ class MongoConnector(DbConnector):
         This will not return article contents, in order to save on memory.
         :return: {List[ArticleMeta]}
         """
-        return [self.convertToArticleMeta(a) async for a in ArticleDocument.find_all()]
+        return [
+            self.__convertToArticleMeta(a) async for a in ArticleDocument.find_all()
+        ]
 
     async def get_articles(self, article_ids: List[str]) -> List[ArticleMeta]:
         """
@@ -268,7 +270,7 @@ class MongoConnector(DbConnector):
         :return: {List[Article]}
         """
         return [
-            self.convertToArticleMeta(a)
+            self.__convertToArticleMeta(a)
             async for a in ArticleDocument.find_many(article_ids)
         ]
 
@@ -363,7 +365,7 @@ class MongoConnector(DbConnector):
                 sub_group_name=j.sub_group_name,
                 remarks=j.remarks,
                 original_articles=[
-                    self.convertToArticle(a) for a in j.original_articles
+                    self.__convertToArticle(a) for a in j.original_articles
                 ],
             )
             for j in JobCombineDocument.find_all()
@@ -397,7 +399,7 @@ class MongoConnector(DbConnector):
         """
 
         return [
-            self.convertToArticleMeta(a) async for a in JobOptimiseDocument.find_all()
+            self.__convertToArticleMeta(a) async for a in JobOptimiseDocument.find_all()
         ]
 
     # endregion
