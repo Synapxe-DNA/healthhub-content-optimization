@@ -1,9 +1,8 @@
 from typing import List, Optional
 
 from app.models.article import Article
-from pydantic import BaseModel
-
 from app.models.generated_article import GeneratedArticle
+from pydantic import BaseModel
 
 
 class JobCombine(BaseModel):

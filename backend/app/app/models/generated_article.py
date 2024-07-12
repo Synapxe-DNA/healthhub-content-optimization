@@ -18,6 +18,7 @@ class GeneratedArticle(BaseModel):
 
     # Article peripheral information
     keywords: List[str] = Field(default=[])
+    labels: List[str] = Field(default=[])
     cover_image_url: str = Field(default="")
 
     approved: bool = Field(default=False)
