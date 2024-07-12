@@ -1,5 +1,11 @@
 # Changelog
 
+## July 11, 2024 <a id="july-11-2024"></a>
+
+- Added new column `extracted_tables` as a new column into `merged_data.parquet`
+- Replace En Dash with a dash to extract these dashes into `extracted_content_body`
+- Amended `extract_links` to ignore footnotes and online forms
+
 ## July 9, 2024 <a id="july-9-2024"></a>
 
 - Created [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline
