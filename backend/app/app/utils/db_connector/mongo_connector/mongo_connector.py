@@ -307,7 +307,7 @@ class MongoConnector(DbConnector):
         return [str(e.id) for e in edge_docs]
 
     async def get_edges(self, article_ids: List[str]) -> List[Edge]:
-        """       
+        """
         Fetches edges between articles by specified article IDs.
         :param article_ids: {List[str]}
         :return: {List[Edge]}
