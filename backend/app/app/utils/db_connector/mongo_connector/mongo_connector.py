@@ -168,23 +168,7 @@ class MongoConnector(DbConnector):
             Cluster(
                 id=str(c.id),
                 name=c.name,
-                articles=[
-                    ArticleMeta(
-                        id=str(a.id),  # Will only be present when retrieving from DB
-                        title=a.title,
-                        description=a.description,
-                        pr_name=a.pr_name,
-                        content_category=a.content_category,
-                        url=a.url,
-                        status=self.get_article_status(str(a.id)),
-                        data_modified=a.date_modified,
-                        keywords=a.keywords,
-                        cover_image_url=a.cover_image_url,
-                        engagement_rate=a.engagement_rate,
-                        number_of_views=a.number_of_views,
-                    )
-                    for a in c.article_ids
-                ],
+                articles=[ArticleMeta.convert(a) for a in c.article_ids],
                 edges=self.get_edges([str(a.id) for a in c.article_ids]),
             )
             async for c in ClusterDocument.find_all(fetch_links=True)
@@ -201,23 +185,7 @@ class MongoConnector(DbConnector):
         return Cluster(
             id=str(cluster.id),
             name=cluster.name,
-            articles=[
-                ArticleMeta(
-                    id=str(a.id),  # Will only be present when retrieving from DB
-                    title=a.title,
-                    description=a.description,
-                    pr_name=a.pr_name,
-                    content_category=a.content_category,
-                    url=a.url,
-                    status=self.get_article_status(str(a.id)),
-                    data_modified=a.date_modified,
-                    keywords=a.keywords,
-                    cover_image_url=a.cover_image_url,
-                    engagement_rate=a.engagement_rate,
-                    number_of_views=a.number_of_views,
-                )
-                for a in cluster.article_ids
-            ],
+            articles=[ArticleMeta.convert(a) for a in cluster.article_ids],
             edges=self.get_edges([str(a.id) for a in cluster.article_ids]),
         )
 
@@ -239,7 +207,7 @@ class MongoConnector(DbConnector):
                 pr_name=a.pr_name,
                 content_category=a.content_category,
                 url=a.url,
-                date_modified=a.data_modified,
+                date_modified=a.date_modified,
                 keywords=a.keywords,
                 labels=a.labels,
                 cover_image_url=a.cover_image_url,
@@ -258,23 +226,7 @@ class MongoConnector(DbConnector):
         This will not return article contents, in order to save on memory.
         :return: {List[ArticleMeta]}
         """
-        return [
-            ArticleMeta(
-                id=str(a.id),
-                title=a.title,
-                description=a.description,
-                pr_name=a.pr_name,
-                content_category=a.content_category,
-                url=a.url,
-                status=self.get_article_status(str(a.id)),
-                data_modified=a.date_modified,
-                keywords=a.keywords,
-                cover_image_url=a.cover_image_url,
-                engagement_rate=a.engagement_rate,
-                number_of_views=a.number_of_views,
-            )
-            async for a in ArticleDocument.find_all()
-        ]
+        return [ArticleMeta.convert(a) async for a in ArticleDocument.find_all()]
 
     async def get_articles(self, article_ids: List[str]) -> List[ArticleMeta]:
         """
@@ -283,21 +235,7 @@ class MongoConnector(DbConnector):
         :return: {List[Article]}
         """
         return [
-            ArticleMeta(
-                id=str(a.id),
-                title=a.title,
-                description=a.description,
-                pr_name=a.pr_name,
-                content_category=a.content_category,
-                url=a.url,
-                status=self.get_article_status(str(a.id)),
-                data_modified=a.date_modified,
-                keywords=a.keywords,
-                cover_image_url=a.cover_image_url,
-                engagement_rate=a.engagement_rate,
-                number_of_views=a.number_of_views,
-            )
-            async for a in ArticleDocument.find_many(article_ids)
+            ArticleMeta.convert(a) async for a in ArticleDocument.find_many(article_ids)
         ]
 
     # endregion
@@ -367,14 +305,33 @@ class MongoConnector(DbConnector):
         :param article_ids: {List[str]} IDs of the articles to combine
         :return: {str} id of the job just created
         """
-        raise NotImplementedError()
+        combine_job = JobCombineDocument(
+            cluster=cluster_id,
+            sub_group_name=sub_group_name,
+            remarks=remarks,
+            original_articles=article_ids,
+        )
+
+        await JobCombineDocument.insert(combine_job)
+
+        return str(combine_job.id)
 
     async def get_all_combine_jobs(self) -> List[JobCombine]:
         """
         Method to get the combine jobs that have been recorded
         :return: {List[JobCombine]}
         """
-        raise NotImplementedError()
+        return [
+            JobCombine(
+                id=str(j.id),
+                group_id=str(j.cluster.id),
+                group_name=j.cluster.name,
+                sub_group_name=j.sub_group_name,
+                remarks=j.remarks,
+                original_articles=[Article.convert(a) for a in j.original_articles],
+            )
+            for j in JobCombineDocument.find_all()
+        ]
 
     # endregion
 
@@ -389,14 +346,21 @@ class MongoConnector(DbConnector):
         :param article_id:
         :return: {str} id of the job just created
         """
-        raise NotImplementedError()
+        optimise_article = JobOptimiseDocument(
+            original_article=article_id,
+        )
+
+        await JobOptimiseDocument.insert(optimise_article)
+
+        return str(optimise_article.id)
 
     async def get_all_optimise_jobs(self) -> List[ArticleMeta]:
         """
         Method to get all optimisation jobs recorded
         :return:{List[ArticleMeta]}
         """
-        raise NotImplementedError()
+
+        return [ArticleMeta.convert(a) async for a in JobOptimiseDocument.find_all()]
 
     # endregion
 
@@ -408,7 +372,9 @@ class MongoConnector(DbConnector):
         :param article_id:
         :return: {str} id of article ignored
         """
-        raise NotImplementedError()
+        ignore_doc = IgnoreDocument(original_article=article_id)
+        await IgnoreDocument.insert(ignore_doc)
+        return str(ignore_doc.id)
 
     # endregion
 
@@ -420,6 +386,8 @@ class MongoConnector(DbConnector):
         :param article_id:
         :return: {str} id of article removed
         """
-        raise NotImplementedError()
+        remove_doc = RemoveDocument(original_article=article_id)
+        await RemoveDocument.insert(remove_doc)
+        return str(remove_doc.id)
 
     # endregion
