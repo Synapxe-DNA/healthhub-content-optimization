@@ -4,6 +4,8 @@ from app.interfaces.db_connector_types import DbConnector
 from app.models.article import Article, ArticleMeta, ArticleStatus
 from app.models.cluster import Cluster
 from app.models.edge import Edge
+from app.models.generated_article import GeneratedArticle
+from app.models.job_combine import JobCombine
 from app.utils.db_connector.mongo_connector.beanie_documents import (
     ArticleDocument,
     ClusterDocument,
@@ -322,3 +324,59 @@ class MongoConnector(DbConnector):
             for e in edges
             if (str(e.start.id) in article_ids) and (str(e.end.id) in article_ids)
         ]
+
+    async def create_generated_article(
+        self, generated_articles: List[GeneratedArticle]
+    ) -> List[str]:
+        """
+        Method to insert generated articles into the database
+        :param generated_articles: {List[GeneratedArticle]}
+        :return: {List[str]} IDs of the generated articles inserted
+        """
+        raise NotImplementedError()
+
+    async def create_combine_job(
+        self, cluster_id: str, sub_group_name: str, remarks: str, article_ids: List[str]
+    ) -> str:
+        """
+        Method to create a combine job record
+        :param cluster_id: {str} ID of the parent cluster
+        :param sub_group_name: {str} name of the subgroup to be combined
+        :param remarks: {str} remarks from the user for this sub group
+        :param article_ids: {List[str]} IDs of the articles to combine
+        :return: {str} id of the job just created
+        """
+        raise NotImplementedError()
+
+    async def get_all_combine_jobs(self) -> List[JobCombine]:
+        """
+        Method to get the combine jobs that have been recorded
+        :return: {List[JobCombine]}
+        """
+        raise NotImplementedError()
+
+    async def create_optimise_job(
+        self,
+        article_id: str,
+    ) -> str:
+        """
+        Method to mark standalone articles to be optimised as "individual" articles.
+        :param article_id:
+        :return:
+        """
+        raise NotImplementedError()
+
+    async def get_all_optimise_jobs(self) -> List[ArticleMeta]:
+        """
+        Method to get all optimisation jobs recorded
+        :return:{List[ArticleMeta]}
+        """
+        raise NotImplementedError()
+
+    async def create_ignore_record(self, article_id: str) -> str:
+        """
+        Method to ignore an article based on it's own ID.
+        :param article_id:
+        :return:
+        """
+        raise NotImplementedError()
