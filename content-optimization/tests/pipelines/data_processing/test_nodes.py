@@ -1,13 +1,3 @@
-"""
-This is a boilerplate test file for pipeline 'data_processing'
-generated using Kedro 0.19.6.
-Please add your node tests here.
-
-Kedro recommends using `pytest` framework, more info about it can be found
-in the official documentation:
-https://docs.pytest.org/en/latest/getting-started.html
-"""
-
 import pandas as pd
 import pytest
 from kedro.io import DataCatalog
@@ -37,7 +27,7 @@ def test_standardize_columns(catalog: DataCatalog, num_cols: int = 28):
         3. Expects the correct number of columns in output data
         4. Expects a set of defined columns in output data
     """
-    data_standardized = standardize_columns(
+    all_contents_standardized = standardize_columns(
         catalog.load("all_contents"),
         catalog.load("params:columns_to_add"),
         catalog.load("params:columns_to_keep"),
@@ -45,13 +35,13 @@ def test_standardize_columns(catalog: DataCatalog, num_cols: int = 28):
     )
 
     # Check if output is a dictionary
-    assert isinstance(data_standardized, dict), "Expected a dictionary"
+    assert isinstance(all_contents_standardized, dict), "Expected a dictionary"
     # Check if output contains only the correct number of content categories
-    assert len(data_standardized) == len(
+    assert len(all_contents_standardized) == len(
         catalog.load("all_contents")
     ), "Number of content categories should match the input data"
 
-    for _, df in data_standardized.items():
+    for _, df in all_contents_standardized.items():
         # Check if output contains the correct number of columns
         assert (
             df.shape[1] == num_cols
