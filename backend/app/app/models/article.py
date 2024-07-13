@@ -15,7 +15,7 @@ class ArticleMeta(BaseModel):
 
     status: str = Field(default="")
 
-    data_modified: str = Field(default="")
+    date_modified: str = Field(default="")
 
     # Article peripheral information
     keywords: List[str] = Field(default=[])
@@ -32,7 +32,7 @@ class Article(ArticleMeta):
 
 
 class ArticleStatus(Enum):
-    COMBINE = "Combined"
-    IGNORE = "Ignored"
-    OPTIMISE = "Optimise"
-    REMOVE = "Remove"
+    COMBINE: str = "Combined"
+    IGNORE: str = "Ignored"
+    OPTIMISE: str = "Optimise"
+    REMOVE: str = "Remove"

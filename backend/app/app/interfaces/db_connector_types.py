@@ -149,10 +149,7 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    async def create_optimise_job(
-        self,
-        article_id: str,
-    ) -> str:
+    async def create_optimise_job(self, article_id: str) -> str:
         """
         Method to mark standalone articles to be optimised as "individual" articles.
         :param article_id:
@@ -186,10 +183,11 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    async def create_remove_record(self, article_id: str) -> str:
+    async def create_remove_record(self, article_id: str, remarks: str) -> str:
         """
         Method to remove an article based on it's own ID.
         :param article_id:
+        :param remarks:
         :return: {str} id of article removed
         """
         pass

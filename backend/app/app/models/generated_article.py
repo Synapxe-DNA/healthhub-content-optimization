@@ -14,7 +14,7 @@ class GeneratedArticle(BaseModel):
 
     status: str = Field(default="")
 
-    data_modified: str = Field(default="")
+    date_modified: str = Field(default="")
 
     # Article peripheral information
     keywords: List[str] = Field(default=[])

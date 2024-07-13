@@ -1,7 +1,7 @@
 from typing import List
 
 from app.interfaces.db_connector_types import DbConnector
-from app.models.article import Article, ArticleMeta, ArticleStatus
+from app.models.article import Article, ArticleMeta
 from app.models.cluster import Cluster
 from app.models.edge import Edge
 from app.models.generated_article import GeneratedArticle
@@ -68,74 +68,56 @@ class MongoConnector(DbConnector):
                 JobCombineDocument,
                 JobOptimiseDocument,
                 IgnoreDocument,
+                RemoveDocument,
             ],
         )
-
-    @staticmethod
-    async def __get_ignored_ids() -> List[str]:
-        """
-        Method to get a unique list of all article IDs that have been ignored
-        :return: List[str]
-        """
-        ignored_ids = set()
-        async for record in IgnoreDocument.find_all(fetch_links=True):
-            ignored_ids.add(str(record.article.id))
-        return list(ignored_ids)
-
-    @staticmethod
-    async def __get_combined_ids() -> List[str]:
-        """
-        Method to get a unique list of all article IDs that have been combined
-        :return: List[str]
-        """
-        combined_ids = set()
-        async for record in JobCombineDocument.find_all(
-            fetch_links=True
-        ).original_articles:
-            combined_ids.add(str(record.article_id.id))
-        return list(combined_ids)
-
-    @staticmethod
-    async def __get_optimised_ids() -> List[str]:
-        """
-        Method to get a unique list of all article IDs that have been combined
-        :return: List[str]
-        """
-        optimised_ids = set()
-        async for record in JobOptimiseDocument.find_all(fetch_links=True):
-            optimised_ids.add(str(record.original_article.id))
-        return list(optimised_ids)
-
-    @staticmethod
-    async def __get_removed_ids() -> List[str]:
-        """
-        Method to get a unique list of all article IDs that have been removed
-        :return: List[str]
-        """
-        removed_ids = set()
-        async for record in RemoveDocument.find_all(fetch_links=True):
-            removed_ids.add(str(record.original_article.id))
-        return list(removed_ids)
 
     # endregion
 
     # region Helper functions
-    async def get_article_status(self, _id: str) -> str:
-        """
-        Method to get a article status
-        """
-        remove_ids = await self.__get_removed_ids()
-        combined_ids = await self.__get_combined_ids()
-        optimise_ids = await self.__get_optimised_ids()
 
-        if _id in remove_ids:
-            return ArticleStatus.REMOVE
-        elif _id in combined_ids:
-            return ArticleStatus.COMBINE
-        elif _id in optimise_ids:
-            return ArticleStatus.OPTIMISE
-        else:
-            return ArticleStatus.IGNORE
+    @staticmethod
+    async def __convertToArticleMeta(articleDoc: ArticleDocument) -> ArticleMeta:
+        return ArticleMeta(
+            id=articleDoc.id,
+            title=articleDoc.title,
+            description=articleDoc.description,
+            pr_name=articleDoc.pr_name,
+            content_category=articleDoc.content_category,
+            url=articleDoc.url,
+            date_modified=articleDoc.date_modified,
+            keywords=articleDoc.keywords,
+            labels=articleDoc.labels,
+            cover_image_url=articleDoc.cover_image_url,
+            engagement_rate=articleDoc.engagement_rate,
+            number_of_views=articleDoc.number_of_views,
+        )
+
+    @staticmethod
+    async def __convertToArticle(articleDoc: ArticleDocument) -> Article:
+        return ArticleMeta(
+            id=articleDoc.id,
+            title=articleDoc.title,
+            description=articleDoc.description,
+            pr_name=articleDoc.pr_name,
+            content_category=articleDoc.content_category,
+            url=articleDoc.url,
+            date_modified=articleDoc.date_modified,
+            keywords=articleDoc.keywords,
+            labels=articleDoc.labels,
+            cover_image_url=articleDoc.cover_image_url,
+            engagement_rate=articleDoc.engagement_rate,
+            number_of_views=articleDoc.number_of_views,
+            content=articleDoc.content,
+        )
+
+    async def __convertToCluster(self, clusterDoc: ClusterDocument) -> Cluster:
+        return Cluster(
+            id=str(clusterDoc.id),
+            name=clusterDoc.name,
+            articles=[self.__convertToArticleMeta(a) for a in clusterDoc.article_ids],
+            edges=self.get_edges([str(a.id) for a in clusterDoc.article_ids]),
+        )
 
     # endregion
 
@@ -165,28 +147,7 @@ class MongoConnector(DbConnector):
         """
 
         return [
-            Cluster(
-                id=str(c.id),
-                name=c.name,
-                articles=[
-                    ArticleMeta(
-                        id=str(a.id),  # Will only be present when retrieving from DB
-                        title=a.title,
-                        description=a.description,
-                        pr_name=a.pr_name,
-                        content_category=a.content_category,
-                        url=a.url,
-                        status=self.get_article_status(str(a.id)),
-                        data_modified=a.date_modified,
-                        keywords=a.keywords,
-                        cover_image_url=a.cover_image_url,
-                        engagement_rate=a.engagement_rate,
-                        number_of_views=a.number_of_views,
-                    )
-                    for a in c.article_ids
-                ],
-                edges=self.get_edges([str(a.id) for a in c.article_ids]),
-            )
+            self.__convertToCluster(c)
             async for c in ClusterDocument.find_all(fetch_links=True)
         ]
 
@@ -198,28 +159,7 @@ class MongoConnector(DbConnector):
         """
         cluster = await ClusterDocument.get(cluster_id)
 
-        return Cluster(
-            id=str(cluster.id),
-            name=cluster.name,
-            articles=[
-                ArticleMeta(
-                    id=str(a.id),  # Will only be present when retrieving from DB
-                    title=a.title,
-                    description=a.description,
-                    pr_name=a.pr_name,
-                    content_category=a.content_category,
-                    url=a.url,
-                    status=self.get_article_status(str(a.id)),
-                    data_modified=a.date_modified,
-                    keywords=a.keywords,
-                    cover_image_url=a.cover_image_url,
-                    engagement_rate=a.engagement_rate,
-                    number_of_views=a.number_of_views,
-                )
-                for a in cluster.article_ids
-            ],
-            edges=self.get_edges([str(a.id) for a in cluster.article_ids]),
-        )
+        return self.__convertToCluster(cluster)
 
     # endregion
 
@@ -239,7 +179,7 @@ class MongoConnector(DbConnector):
                 pr_name=a.pr_name,
                 content_category=a.content_category,
                 url=a.url,
-                date_modified=a.data_modified,
+                date_modified=a.date_modified,
                 keywords=a.keywords,
                 labels=a.labels,
                 cover_image_url=a.cover_image_url,
@@ -259,21 +199,7 @@ class MongoConnector(DbConnector):
         :return: {List[ArticleMeta]}
         """
         return [
-            ArticleMeta(
-                id=str(a.id),
-                title=a.title,
-                description=a.description,
-                pr_name=a.pr_name,
-                content_category=a.content_category,
-                url=a.url,
-                status=self.get_article_status(str(a.id)),
-                data_modified=a.date_modified,
-                keywords=a.keywords,
-                cover_image_url=a.cover_image_url,
-                engagement_rate=a.engagement_rate,
-                number_of_views=a.number_of_views,
-            )
-            async for a in ArticleDocument.find_all()
+            self.__convertToArticleMeta(a) async for a in ArticleDocument.find_all()
         ]
 
     async def get_articles(self, article_ids: List[str]) -> List[ArticleMeta]:
@@ -283,20 +209,7 @@ class MongoConnector(DbConnector):
         :return: {List[Article]}
         """
         return [
-            ArticleMeta(
-                id=str(a.id),
-                title=a.title,
-                description=a.description,
-                pr_name=a.pr_name,
-                content_category=a.content_category,
-                url=a.url,
-                status=self.get_article_status(str(a.id)),
-                data_modified=a.date_modified,
-                keywords=a.keywords,
-                cover_image_url=a.cover_image_url,
-                engagement_rate=a.engagement_rate,
-                number_of_views=a.number_of_views,
-            )
+            self.__convertToArticleMeta(a)
             async for a in ArticleDocument.find_many(article_ids)
         ]
 
@@ -367,36 +280,61 @@ class MongoConnector(DbConnector):
         :param article_ids: {List[str]} IDs of the articles to combine
         :return: {str} id of the job just created
         """
-        raise NotImplementedError()
+        combine_job = JobCombineDocument(
+            cluster=cluster_id,
+            sub_group_name=sub_group_name,
+            remarks=remarks,
+            original_articles=article_ids,
+        )
+
+        await JobCombineDocument.insert(combine_job)
+
+        return str(combine_job.id)
 
     async def get_all_combine_jobs(self) -> List[JobCombine]:
         """
         Method to get the combine jobs that have been recorded
         :return: {List[JobCombine]}
         """
-        raise NotImplementedError()
+        return [
+            JobCombine(
+                id=str(j.id),
+                group_id=str(j.cluster.id),
+                group_name=j.cluster.name,
+                sub_group_name=j.sub_group_name,
+                remarks=j.remarks,
+                original_articles=[
+                    self.__convertToArticle(a) for a in j.original_articles
+                ],
+            )
+            for j in JobCombineDocument.find_all()
+        ]
 
     # endregion
 
     # region Methods related to standalone articles to optimise
 
-    async def create_optimise_job(
-        self,
-        article_id: str,
-    ) -> str:
+    async def create_optimise_job(self, article_id: str) -> str:
         """
         Method to mark standalone articles to be optimised as "individual" articles.
         :param article_id:
         :return: {str} id of the job just created
         """
-        raise NotImplementedError()
+        optimise_article = JobOptimiseDocument(original_article=article_id)
+        await JobOptimiseDocument.insert(optimise_article)
+
+        return str(optimise_article.id)
 
     async def get_all_optimise_jobs(self) -> List[ArticleMeta]:
         """
         Method to get all optimisation jobs recorded
         :return:{List[ArticleMeta]}
         """
-        raise NotImplementedError()
+
+        return [
+            self.__convertToArticleMeta(a.original_article)
+            async for a in JobOptimiseDocument.find_all()
+        ]
 
     # endregion
 
@@ -408,18 +346,23 @@ class MongoConnector(DbConnector):
         :param article_id:
         :return: {str} id of article ignored
         """
-        raise NotImplementedError()
+        ignore_doc = IgnoreDocument(article=article_id)
+        await IgnoreDocument.insert(ignore_doc)
+        return str(ignore_doc.id)
 
     # endregion
 
     # region Methods related to removed articles
 
-    async def create_remove_record(self, article_id: str) -> str:
+    async def create_remove_record(self, article_id: str, remarks: str) -> str:
         """
         Method to remove an article based on it's own ID.
         :param article_id:
+        :param remarks:
         :return: {str} id of article removed
         """
-        raise NotImplementedError()
+        remove_doc = RemoveDocument(article=article_id, remarks=remarks)
+        await RemoveDocument.insert(remove_doc)
+        return str(remove_doc.id)
 
     # endregion

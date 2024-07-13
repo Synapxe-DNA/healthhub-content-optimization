@@ -14,7 +14,7 @@ export interface Article {
     pr_name: string,
     content_category: string,
     url: string,
-    data_modified: string,
+    date_modified: string,
     status: ArticleStatus,
     keywords: string[],
     cover_image_url: string,
