@@ -59,12 +59,14 @@ def test_standardize_columns(catalog: DataCatalog, num_cols: int = 28):
         ).all(), "Unexpected columns in the standardized dataframe"
 
 
-def test_extract_data(catalog: DataCatalog):
+@pytest.mark.parametrize("word_count_cutoff", [50, 90])
+def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
     """
     A test function for `extract_data` that checks the output data.
 
     Args:
         catalog (DataCatalog): The Kedro DataCatalog containing the necessary test datasets.
+        word_count_cutoff (int): The word count cutoff for the extracted content body.
 
     Raises:
         AssertionError: If the output data does not meet the specified criteria (see below).
@@ -73,10 +75,11 @@ def test_extract_data(catalog: DataCatalog):
         1. Expects both outputs to be dictionaries
         2. Expects a set of defined columns in output data
         3. Expects the same number of articles with extracted content body as the number of output text files
+        4. Expects the extracted content body to meet the word count cutoff
     """
     all_contents_extracted, all_extracted_text = extract_data(
         catalog.load("all_contents_standardized"),
-        catalog.load("params:word_count_cutoff"),
+        word_count_cutoff,
     )
 
     # Check if output is a dictionary
@@ -97,13 +100,19 @@ def test_extract_data(catalog: DataCatalog):
         }.issubset(df.columns), "Exptected columns missing in the extracted dataframe"
 
         # Check if number of articles with extracted content body matches the number of text files
-        df.query("to_remove == False").shape[0] == len(
+        assert df.query("to_remove == False").shape[0] == len(
             [
                 key
                 for key in all_extracted_text.keys()
                 if key.startswith(content_category)
             ]
         ), "Unexpected number of articles with extracted content body does not match the number of text files"
+        # Check if extracted content body meets the word count cutoff
+        assert (
+            df["extracted_content_body"]
+            .apply(lambda x: len(x.split()) >= word_count_cutoff)
+            .all()
+        ), "Found extracted content body below the word count cutoff"
 
 
 def test_merge_data(catalog: DataCatalog):
