@@ -1,23 +1,25 @@
 import numpy as np
 import pandas as pd
+import pytest
 from kedro.io import DataCatalog
 from src.content_optimization.pipelines.feature_engineering.nodes import (
     extract_keywords,
 )
 
 
-def test_extract_keywords(catalog: DataCatalog):
+@pytest.mark.parametrize(
+    "model, top_n", [("all-MiniLM-L6-v2", 5), ("all-mpnet-base-v2", 2)]
+)
+def test_extract_keywords(catalog: DataCatalog, model: str, top_n: int):
     merged_data = catalog.load("merged_data")
     cfg = catalog.load("params:cfg")
     only_confirmed_option = catalog.load("params:selection_options.only_confirmed")
     all_option = catalog.load("params:selection_options.all")
-    model = catalog.load("params:keywords.model")
     spacy_pipeline = catalog.load("params:keywords.spacy_pipeline")
     stop_words = catalog.load("params:keywords.stop_words")
     workers = catalog.load("params:keywords.workers")
     use_mmr = catalog.load("params:keywords.use_mmr")
     diversity = catalog.load("params:keywords.diversity")
-    top_n = catalog.load("params:keywords.top_n")
     filtered_data_with_keywords = extract_keywords(
         merged_data,
         cfg,
