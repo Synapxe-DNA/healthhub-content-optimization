@@ -108,9 +108,10 @@ def add_contents(
         # Store in dictionary
         excel_errors[friendly_url] = text
 
-    pbar = tqdm(all_contents_added.items())
+    pbar = tqdm(all_contents_standardized.items())
 
     for content_category, partition_load_func in pbar:
+        pbar.set_description(f"Adding: {content_category}")
         df = partition_load_func()
         for friendly_url, text in excel_errors.items():
             # Fetch rows where `friendly_url` column value must match filename
