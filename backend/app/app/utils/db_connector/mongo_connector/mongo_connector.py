@@ -2,19 +2,19 @@ from typing import List
 
 from app.interfaces.db_connector_types import DbConnector
 from app.models.article import Article, ArticleMeta
-from app.models.cluster import Cluster
 from app.models.edge import Edge
 from app.models.generated_article import GeneratedArticle
+from app.models.group import Group
 from app.models.job_combine import JobCombine
 from app.utils.db_connector.mongo_connector.beanie_documents import (
     ArticleDocument,
-    ClusterDocument,
     EdgeDocument,
     GeneratedArticleDocument,
-    IgnoreDocument,
+    GroupDocument,
     JobCombineDocument,
+    JobIgnoreDocument,
     JobOptimiseDocument,
-    RemoveDocument,
+    JobRemoveDocument,
 )
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -61,14 +61,14 @@ class MongoConnector(DbConnector):
         await init_beanie(
             database=self.__conn,
             document_models=[
-                ClusterDocument,
+                GroupDocument,
                 ArticleDocument,
                 GeneratedArticleDocument,
                 EdgeDocument,
                 JobCombineDocument,
                 JobOptimiseDocument,
-                IgnoreDocument,
-                RemoveDocument,
+                JobIgnoreDocument,
+                JobRemoveDocument,
             ],
         )
 
@@ -111,12 +111,12 @@ class MongoConnector(DbConnector):
             content=articleDoc.content,
         )
 
-    async def __convertToCluster(self, clusterDoc: ClusterDocument) -> Cluster:
-        return Cluster(
-            id=str(clusterDoc.id),
-            name=clusterDoc.name,
-            articles=[self.__convertToArticleMeta(a) for a in clusterDoc.article_ids],
-            edges=self.get_edges([str(a.id) for a in clusterDoc.article_ids]),
+    async def __convertToGroup(self, groupDoc: GroupDocument) -> Group:
+        return Group(
+            id=str(groupDoc.id),
+            name=groupDoc.name,
+            articles=[self.__convertToArticleMeta(a) for a in groupDoc.article_ids],
+            edges=self.get_edges([str(a.id) for a in groupDoc.article_ids]),
         )
 
     # endregion
@@ -125,41 +125,41 @@ class MongoConnector(DbConnector):
     Class methods to interact with DB
     """
 
-    # region Methods related to clusters
+    # region Methods related to groups
 
-    async def create_cluster_from_articles(
-        self, cluster_name: str, article_ids: List[str]
+    async def create_group_from_articles(
+        self, group_name: str, article_ids: List[str]
     ) -> str:
         """
-        Method to group a cluster from existing articles
-        :param cluster_name: {str} Name of cluster
+        Method to group a group from existing articles
+        :param group_name: {str} Name of group
         :param article_ids: {List[str]} List of IDs of articles
-        :return: {str} ID of newly created cluster
+        :return: {str} ID of newly created group
         """
-        cluster = ClusterDocument(name=cluster_name, article_ids=article_ids)
-        await cluster.insert()
-        return str(cluster.id)
+        group = GroupDocument(name=group_name, pending_articles=article_ids)
+        await group.insert()
+        return str(group.id)
 
-    async def get_all_clusters(self) -> List[Cluster]:
+    async def get_all_groups(self) -> List[Group]:
         """
-        Method to retrieve all clusters, populated with their respective ArticleMeta and Edges
-        :return: {List[Cluster]}
+        Method to retrieve all groups, populated with their respective ArticleMeta and Edges
+        :return: {List[Group]}
         """
 
         return [
-            self.__convertToCluster(c)
-            async for c in ClusterDocument.find_all(fetch_links=True)
+            self.__convertToGroup(c)
+            async for c in GroupDocument.find_all(fetch_links=True)
         ]
 
-    async def get_cluster(self, cluster_id: str) -> Cluster:
+    async def get_group(self, group_id: str) -> Group:
         """
-        Method to fetch a cluster by ID.
-        :param cluster_id:
+        Method to fetch a group by ID.
+        :param group_id:
         :return:
         """
-        cluster = await ClusterDocument.get(cluster_id)
+        group = await GroupDocument.get(group_id)
 
-        return self.__convertToCluster(cluster)
+        return self.__convertToGroup(group)
 
     # endregion
 
@@ -270,20 +270,27 @@ class MongoConnector(DbConnector):
     # region Methods related to combination jobs
 
     async def create_combine_job(
-        self, cluster_id: str, sub_group_name: str, remarks: str, article_ids: List[str]
+        self,
+        group_id: str,
+        sub_group_name: str,
+        article_ids: List[str],
+        remarks: str = "",
+        context: str = "",
     ) -> str:
         """
         Method to create a combine job record
-        :param cluster_id: {str} ID of the parent cluster
+        :param group_id: {str} ID of the parent group
         :param sub_group_name: {str} name of the subgroup to be combined
-        :param remarks: {str} remarks from the user for this sub group
         :param article_ids: {List[str]} IDs of the articles to combine
+        :param remarks: {str} remarks from the user for this sub group
+        :param context: {str} context from user to add on to this subgroup
         :return: {str} id of the job just created
         """
         combine_job = JobCombineDocument(
-            cluster=cluster_id,
+            group=group_id,
             sub_group_name=sub_group_name,
             remarks=remarks,
+            context=context,
             original_articles=article_ids,
         )
 
@@ -299,8 +306,8 @@ class MongoConnector(DbConnector):
         return [
             JobCombine(
                 id=str(j.id),
-                group_id=str(j.cluster.id),
-                group_name=j.cluster.name,
+                group_id=str(j.group.id),
+                group_name=j.group.name,
                 sub_group_name=j.sub_group_name,
                 remarks=j.remarks,
                 original_articles=[
@@ -314,13 +321,36 @@ class MongoConnector(DbConnector):
 
     # region Methods related to standalone articles to optimise
 
-    async def create_optimise_job(self, article_id: str) -> str:
+    async def create_optimise_job(
+        self,
+        article_id: str,
+        optimise_title: bool,
+        optimise_meta: bool,
+        optimise_content: bool,
+        title_remarks: str = "",
+        meta_remarks: str = "",
+        content_remarks: str = "",
+    ) -> str:
         """
         Method to mark standalone articles to be optimised as "individual" articles.
         :param article_id:
+        :param optimise_title: True if title needs to be optimised
+        :param optimise_meta: True if meta needs to be optimised
+        :param optimise_content: True if content needs to be optimised
+        :param title_remarks: Optional remarks for title optimisation
+        :param meta_remarks: Optional remarks for meta optimisation
+        :param content_remarks: Optional remarks for content optimisation
         :return: {str} id of the job just created
         """
-        optimise_article = JobOptimiseDocument(original_article=article_id)
+        optimise_article = JobOptimiseDocument(
+            original_article=article_id,
+            optimise_title=optimise_title,
+            optimise_meta=optimise_meta,
+            optimise_content=optimise_content,
+            title_remarks=title_remarks,
+            meta_remarks=meta_remarks,
+            content_remarks=content_remarks,
+        )
         await JobOptimiseDocument.insert(optimise_article)
 
         return str(optimise_article.id)
@@ -340,29 +370,41 @@ class MongoConnector(DbConnector):
 
     # region Methods related to ignored articles
 
-    async def create_ignore_record(self, article_id: str) -> str:
+    async def create_ignore_job(self, article_id: str) -> str:
         """
         Method to ignore an article based on it's own ID.
         :param article_id:
         :return: {str} id of article ignored
         """
-        ignore_doc = IgnoreDocument(article=article_id)
-        await IgnoreDocument.insert(ignore_doc)
+        ignore_doc = JobIgnoreDocument(article=article_id)
+        await JobIgnoreDocument.insert(ignore_doc)
         return str(ignore_doc.id)
+
+    async def get_all_ignore_jobs(self) -> List[ArticleMeta]:
+        return [
+            self.__convertToArticleMeta(a.article)
+            async for a in JobRemoveDocument.find_all()
+        ]
 
     # endregion
 
     # region Methods related to removed articles
 
-    async def create_remove_record(self, article_id: str, remarks: str) -> str:
+    async def create_remove_job(self, article_id: str, remarks: str) -> str:
         """
         Method to remove an article based on it's own ID.
         :param article_id:
         :param remarks:
         :return: {str} id of article removed
         """
-        remove_doc = RemoveDocument(article=article_id, remarks=remarks)
-        await RemoveDocument.insert(remove_doc)
+        remove_doc = JobRemoveDocument(article=article_id, remarks=remarks)
+        await JobRemoveDocument.insert(remove_doc)
         return str(remove_doc.id)
+
+    async def get_all_remove_jobs(self) -> List[ArticleMeta]:
+        return [
+            self.__convertToArticleMeta(a.article)
+            async for a in JobRemoveDocument.find_all()
+        ]
 
     # endregion

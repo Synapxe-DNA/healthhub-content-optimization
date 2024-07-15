@@ -1,14 +1,14 @@
 from typing import List
 
 from app.interfaces.db_connector_types import DbConnector
-from app.models.cluster import Cluster
+from app.models.group import Group
 from app.utils.get_injected_db import get_db
 from fastapi import APIRouter, Depends
 
 clusterRouter = APIRouter(prefix="/clusters")
 
 
-@clusterRouter.get("", response_model=List[Cluster])
+@clusterRouter.get("", response_model=List[Group])
 async def get_all_clusters(db: DbConnector = Depends(get_db)):
     return await db.read_cluster_all()
 

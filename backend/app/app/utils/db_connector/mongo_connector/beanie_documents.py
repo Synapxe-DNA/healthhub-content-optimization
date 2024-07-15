@@ -9,9 +9,17 @@ from beanie.odm.fields import PydanticObjectId
 from pydantic import Field
 
 
-class ClusterDocument(Document):
+class GroupDocument(Document):
     name: str
-    article_ids: List[Link["ArticleDocument"]] = Field(default=[])
+    created_at: str = Field(default="")
+
+    pending_articles: List[Link["ArticleDocument"]] = Field(
+        default=[]
+    )  # Articles not reviewed yet
+    remove_articles: List[Link["JobRemoveDocument"]] = Field(default=[])
+    ignore_articles: List[Link["JobIgnoreDocument"]] = Field(default=[])
+    optimise_articles: List[Link["JobOptimiseDocument"]] = Field(default=[])
+    combine_articles: List[Link["JobOptimiseDocument"]] = Field(default=[])
 
 
 class ArticleDocument(Document):
@@ -58,9 +66,10 @@ class EdgeDocument(Document):
 
 
 class JobCombineDocument(Document):
-    cluster: Link[ClusterDocument]
+    group: Link[GroupDocument]
     sub_group_name: str
     remarks: str
+    context: str
     original_articles: List[Link[ArticleDocument]] = Field(default=[])
     generated_article: Optional[Link[GeneratedArticleDocument]] = None
 
@@ -68,12 +77,18 @@ class JobCombineDocument(Document):
 class JobOptimiseDocument(Document):
     original_article: Link[ArticleDocument]
     generated_article: Optional[Link[GeneratedArticleDocument]] = None
+    optimise_title: bool
+    title_remarks: str
+    optimise_meta: bool
+    meta_remarks: str
+    optimise_content: bool
+    content_remarks: str
 
 
-class IgnoreDocument(Document):
+class JobIgnoreDocument(Document):
     article: Link[ArticleDocument]
 
 
-class RemoveDocument(Document):
+class JobRemoveDocument(Document):
     article: Link[ArticleDocument]
-    remarks: str
+    remarks: str = Field(default="")

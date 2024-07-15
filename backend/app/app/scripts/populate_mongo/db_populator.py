@@ -4,8 +4,8 @@ from app.models.article import Article
 from app.models.edge import Edge
 from app.utils.db_connector.mongo_connector.beanie_documents import (
     ArticleDocument,
-    ClusterDocument,
     EdgeDocument,
+    GroupDocument,
 )
 from beanie import init_beanie
 from beanie.operators import In
@@ -31,7 +31,7 @@ class DBPopulater:
     async def init_db(self):
         await init_beanie(
             database=self.client[self.mongo_connector._MongoConnector__db],
-            document_models=[ArticleDocument, EdgeDocument, ClusterDocument],
+            document_models=[ArticleDocument, EdgeDocument, GroupDocument],
         )
 
     async def populate_articles(self):

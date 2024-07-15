@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from app.models.article import Article, ArticleMeta
-from app.models.cluster import Cluster
 from app.models.edge import Edge
 from app.models.generated_article import GeneratedArticle
+from app.models.group import Group
 from app.models.job_combine import JobCombine
 
 
@@ -23,34 +23,34 @@ class DbConnector(ABC):
         pass
 
     """
-    Methods related to clusters
+    Methods related to groups
     """
 
     @abstractmethod
-    async def create_cluster_from_articles(
-        self, cluster_name: str, article_ids: List[str]
+    async def create_group_from_articles(
+        self, group_name: str, article_ids: List[str]
     ) -> str:
         """
-        Method to group a cluster from existing articles
-        :param cluster_name: {str} Name of cluster
+        Method to group a group from existing articles
+        :param group_name: {str} Name of group
         :param article_ids: {List[str]} List of IDs of articles
-        :return: {str} ID of newly created cluster
+        :return: {str} ID of newly created group
         """
         pass
 
     @abstractmethod
-    async def get_all_clusters(self) -> List[Cluster]:
+    async def get_all_groups(self) -> List[Group]:
         """
-        Method to retrieve all clusters, populated with their respective ArticleMeta and Edges
-        :return: {List[Cluster]}
+        Method to retrieve all groups, populated with their respective ArticleMeta and Edges
+        :return: {List[Group]}
         """
         pass
 
     @abstractmethod
-    async def get_cluster(self, cluster_id: str) -> Cluster:
+    async def get_group(self, group_id: str) -> Group:
         """
-        Method to fetch a cluster by ID.
-        :param cluster_id:
+        Method to fetch a group by ID.
+        :param group_id:
         :return:
         """
         pass
@@ -124,14 +124,20 @@ class DbConnector(ABC):
 
     @abstractmethod
     async def create_combine_job(
-        self, cluster_id: str, sub_group_name: str, remarks: str, article_ids: List[str]
+        self,
+        group_id: str,
+        sub_group_name: str,
+        article_ids: List[str],
+        remarks: str = "",
+        context: str = "",
     ) -> str:
         """
         Method to create a combine job record
-        :param cluster_id: {str} ID of the parent cluster
+        :param group_id: {str} ID of the parent group
         :param sub_group_name: {str} name of the subgroup to be combined
-        :param remarks: {str} remarks from the user for this sub group
         :param article_ids: {List[str]} IDs of the articles to combine
+        :param remarks: {str} remarks from the user for this sub group
+        :param context: {str} context from user to add on to this subgroup
         :return: {str} id of the job just created
         """
         pass
@@ -149,10 +155,25 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    async def create_optimise_job(self, article_id: str) -> str:
+    async def create_optimise_job(
+        self,
+        article_id: str,
+        optimise_title: bool,
+        optimise_meta: bool,
+        optimise_content: bool,
+        title_remarks: str = "",
+        meta_remarks: str = "",
+        content_remarks: str = "",
+    ) -> str:
         """
         Method to mark standalone articles to be optimised as "individual" articles.
         :param article_id:
+        :param optimise_title: True if title needs to be optimised
+        :param optimise_meta: True if meta needs to be optimised
+        :param optimise_content: True if content needs to be optimised
+        :param title_remarks: Optional remarks for title optimisation
+        :param meta_remarks: Optional remarks for meta optimisation
+        :param content_remarks: Optional remarks for content optimisation
         :return: {str} id of the job just created
         """
         pass
@@ -170,11 +191,19 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    async def create_ignore_record(self, article_id: str) -> str:
+    async def create_ignore_job(self, article_id: str) -> str:
         """
         Method to ignore an article based on it's own ID.
         :param article_id:
         :return: {str} id of article ignored
+        """
+        pass
+
+    @abstractmethod
+    async def get_all_ignore_jobs(self) -> List[ArticleMeta]:
+        """
+        Method to get all remove records
+        :return: {List[JobCombine]}
         """
         pass
 
@@ -183,11 +212,19 @@ class DbConnector(ABC):
     """
 
     @abstractmethod
-    async def create_remove_record(self, article_id: str, remarks: str) -> str:
+    async def create_remove_job(self, article_id: str, remarks: str) -> str:
         """
         Method to remove an article based on it's own ID.
         :param article_id:
         :param remarks:
         :return: {str} id of article removed
+        """
+        pass
+
+    @abstractmethod
+    async def get_all_remove_jobs(self) -> List[ArticleMeta]:
+        """
+        Method to get all remove records
+        :return: {List[JobCombine]}
         """
         pass
