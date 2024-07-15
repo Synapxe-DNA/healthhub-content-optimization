@@ -53,7 +53,7 @@ cat requirements.txt | xargs poetry add
 
 - [`data/`](data): contains all data for the project at every stages; there are many sub-directories but here are the notable ones (will be updated as the pipeline progresses)
 
-  - [`01_raw/`](data/01_raw/all_contents): contains all raw data
+  - [`01_raw/`](data/01_raw): contains all raw data
 
     - `all_contents/`: contains all the raw data provided by HealthHub for the project
 
