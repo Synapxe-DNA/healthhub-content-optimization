@@ -95,7 +95,7 @@ class MongoConnector(DbConnector):
 
     @staticmethod
     async def __convertToArticle(articleDoc: ArticleDocument) -> Article:
-        return ArticleMeta(
+        return Article(
             id=articleDoc.id,
             title=articleDoc.title,
             description=articleDoc.description,
@@ -147,7 +147,7 @@ class MongoConnector(DbConnector):
         """
 
         return [
-            self.__convertToGroup(c)
+            await self.__convertToGroup(c)
             async for c in GroupDocument.find_all(fetch_links=True)
         ]
 
@@ -159,7 +159,7 @@ class MongoConnector(DbConnector):
         """
         group = await GroupDocument.get(group_id)
 
-        return self.__convertToGroup(group)
+        return await self.__convertToGroup(group)
 
     # endregion
 
@@ -199,7 +199,7 @@ class MongoConnector(DbConnector):
         :return: {List[ArticleMeta]}
         """
         return [
-            self.__convertToArticleMeta(a) async for a in ArticleDocument.find_all()
+            await self.__convertToArticleMeta(a) async for a in ArticleDocument.find_all()
         ]
 
     async def get_articles(self, article_ids: List[str]) -> List[ArticleMeta]:
@@ -209,7 +209,7 @@ class MongoConnector(DbConnector):
         :return: {List[Article]}
         """
         return [
-            self.__convertToArticleMeta(a)
+            await self.__convertToArticleMeta(a)
             async for a in ArticleDocument.find_many(article_ids)
         ]
 
@@ -362,7 +362,7 @@ class MongoConnector(DbConnector):
         """
 
         return [
-            self.__convertToArticleMeta(a.original_article)
+            await self.__convertToArticleMeta(a.original_article)
             async for a in JobOptimiseDocument.find_all()
         ]
 
@@ -382,7 +382,7 @@ class MongoConnector(DbConnector):
 
     async def get_all_ignore_jobs(self) -> List[ArticleMeta]:
         return [
-            self.__convertToArticleMeta(a.article)
+            await self.__convertToArticleMeta(a.article)
             async for a in JobRemoveDocument.find_all()
         ]
 
@@ -403,7 +403,7 @@ class MongoConnector(DbConnector):
 
     async def get_all_remove_jobs(self) -> List[ArticleMeta]:
         return [
-            self.__convertToArticleMeta(a.article)
+            await self.__convertToArticleMeta(a.article)
             async for a in JobRemoveDocument.find_all()
         ]
 

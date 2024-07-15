@@ -117,7 +117,7 @@ class DBPopulater:
                 In(ArticleDocument.title, row["titles"])
             ).to_list()
             cluster_name = "Cluster " + str(row["cluster"])
-            await self.mongo_connector.create_cluster_from_articles(
+            await self.mongo_connector.create_group_from_articles(
                 cluster_name, articles_incluster
             )
         print(f"Inserted {len(cluster_pkl)} cluster documents into MongoDB")
