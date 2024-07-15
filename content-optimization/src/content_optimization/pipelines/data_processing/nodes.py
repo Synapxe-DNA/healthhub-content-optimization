@@ -95,63 +95,17 @@ def standardize_columns(
     return all_contents_standardized
 
 
-def add_contents(
-    missing_contents: dict[str, Callable[[], Any]],
-    all_contents_standardized: dict[str, Callable[[], Any]],
-) -> dict[str, Callable[[], Any]]:
-    excel_errors = {}
-    all_contents_added = {}
-
-    # Fetch all txt files from 01_raw to correct the Excel error
-    for file_path, partition_load_func in missing_contents.items():
-        text = partition_load_func()
-        # Extract friendly url that is used as filename
-        friendly_url = file_path.split("/")[-1]
-        # Store in dictionary
-        excel_errors[friendly_url] = text
-
-    with alive_bar(
-        len(all_contents_standardized), title="Adding data", force_tty=True
-    ) as bar:
-
-        for content_category, partition_load_func in all_contents_standardized.items():
-            bar.text(f"Whitelisting: {content_category}")
-
-            df = partition_load_func()
-            for friendly_url, text in excel_errors.items():
-                # Fetch rows where `friendly_url` column value must match filename
-                article_index = df.index[df["friendly_url"] == friendly_url]
-                # Skip if the index is empty
-                if article_index.empty:
-                    continue
-                # Assign Raw HTML content to `content_body` column
-                df.loc[article_index, "content_body"] = text
-                # TODO: Confirm if you wish to remove Multilingual content
-                # Change remove_type if the content body is in a language other than English
-                if re.search(r"(malay|tamil|chinese)", friendly_url):
-                    df.loc[article_index, "remove_type"] = "Multilingual"
-                # Whitelist remaining content
-                else:
-                    df.loc[article_index, "to_remove"] = False
-                    df.loc[article_index, "remove_type"] = None
-
-            all_contents_added[content_category] = df
-            bar()
-
-    return all_contents_added
-
-
 def extract_data(
-    all_contents_added: dict[str, Callable[[], Any]], word_count_cutoff: int
+    all_contents_standardized: dict[str, Callable[[], Any]], word_count_cutoff: int
 ) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
     """
     Extracts data from processed content and stores it in parquet files
     and text files.
 
     Args:
-        all_contents_added (dict[str, Callable[[], Any]]):
+        all_contents_standardized (dict[str, Callable[[], Any]]):
             A dictionary containing the standardized `partitions.PartitionedDataset`
-            where the keys are the content categories and the values loads the
+            where the keys are the content categories and thevalues loads the
             standardized parquet data as `pandas.DataFrame`.
 
         word_count_cutoff (int): The minimum number of words in an article
@@ -170,23 +124,23 @@ def extract_data(
     all_extracted_text = {}  # to store as partitioned text files
 
     with alive_bar(
-        len(all_contents_added), title="Extracting data", force_tty=True
+        len(all_contents_standardized), title="Extracting data", force_tty=True
     ) as bar:
-        for content_category, partition_load_func in all_contents_added.items():
+        for content_category, partition_load_func in all_contents_standardized.items():
             bar.text(f"Extracting: {content_category}")
 
             # Load partition data
             df = partition_load_func()
 
             # Initialise new columns in dataframe to store extracted data
-            df["has_table"] = False
-            df["has_image"] = False
+            df["has_table"] = None
+            df["has_image"] = None
             df["related_sections"] = None
             df["extracted_tables"] = None
             df["extracted_links"] = None
             df["extracted_headers"] = None
             df["extracted_img_alt_text"] = None
-            df["extracted_content_body"] = ""
+            df["extracted_content_body"] = None
 
             for index, row in df.iterrows():
                 # Skip extraction for those articles flagged for removal
