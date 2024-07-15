@@ -11,5 +11,6 @@ class JobCombine(BaseModel):
     group_name: str
     sub_group_name: str
     remarks: str
+    context: str
     original_articles: List[Article]
     generated_article: Optional[GeneratedArticle]
