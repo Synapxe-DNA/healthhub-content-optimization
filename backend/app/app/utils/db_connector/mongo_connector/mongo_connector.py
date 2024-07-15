@@ -16,7 +16,7 @@ from app.utils.db_connector.mongo_connector.beanie_documents import (
     JobOptimiseDocument,
     JobRemoveDocument,
 )
-from beanie import init_beanie, SortDirection
+from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 
@@ -87,18 +87,11 @@ class MongoConnector(DbConnector):
         pipeline = [
             {
                 "$match": {
-                    "$or": [
-                        {"start.$id": articleDoc.id},
-                        {"end.$id": articleDoc.id}
-                    ]
+                    "$or": [{"start.$id": articleDoc.id}, {"end.$id": articleDoc.id}]
                 }
             },
-            {
-                "$sort": {"weight": -1}
-            },
-            {
-                "$limit": 1
-            }
+            {"$sort": {"weight": -1}},
+            {"$limit": 1},
         ]
 
         # Execute the aggregation pipeline
@@ -106,11 +99,9 @@ class MongoConnector(DbConnector):
 
         # Output the result
         if highest_weight_edge:
-            return highest_weight_edge[0]['weight']
+            return highest_weight_edge[0]["weight"]
         else:
             return -1.0  # Return -1 or any other default value if no edges are found
-
-
 
     async def __convertToArticleMeta(self, articleDoc: ArticleDocument) -> ArticleMeta:
         return ArticleMeta(
@@ -151,7 +142,9 @@ class MongoConnector(DbConnector):
         return Group(
             id=str(groupDoc.id),
             name=groupDoc.name,
-            pending_articles=[await self.__convertToArticleMeta(a) for a in groupDoc.pending_articles],
+            pending_articles=[
+                await self.__convertToArticleMeta(a) for a in groupDoc.pending_articles
+            ],
             # TODO conversion to support the other job types
         )
 
@@ -235,7 +228,8 @@ class MongoConnector(DbConnector):
         :return: {List[ArticleMeta]}
         """
         return [
-            await self.__convertToArticleMeta(a) async for a in ArticleDocument.find_all()
+            await self.__convertToArticleMeta(a)
+            async for a in ArticleDocument.find_all()
         ]
 
     async def get_articles(self, article_ids: List[str]) -> List[ArticleMeta]:

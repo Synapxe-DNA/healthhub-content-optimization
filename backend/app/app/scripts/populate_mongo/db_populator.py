@@ -2,14 +2,8 @@ import pandas as pd
 from app.interfaces.db_connector_types import DbConnector
 from app.models.article import Article
 from app.models.edge import Edge
-from app.utils.db_connector.mongo_connector.beanie_documents import (
-    ArticleDocument,
-    EdgeDocument,
-    GroupDocument,
-)
-from beanie import init_beanie
+from app.utils.db_connector.mongo_connector.beanie_documents import ArticleDocument
 from beanie.operators import In
-from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class DBPopulater:

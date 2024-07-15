@@ -66,14 +66,8 @@ class EdgeDocument(Document):
 
     class settings:
         indexes = [
-            {
-                "fields": ["start"],
-                "unique": False
-            },
-            {
-                "fields": ["end"],
-                "unique": False
-            },
+            {"fields": ["start"], "unique": False},
+            {"fields": ["end"], "unique": False},
         ]
 
 
