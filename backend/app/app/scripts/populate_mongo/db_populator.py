@@ -24,15 +24,9 @@ class DBPopulater:
         self.articles_file_path = articles_file_path
         self.edges_file_path = edges_file_path
         self.cluster_file_path = cluster_file_path
-        self.client = AsyncIOMotorClient(
-            mongo_connector._MongoConnector__connection_string
-        )
 
     async def init_db(self):
-        await init_beanie(
-            database=self.client[self.mongo_connector._MongoConnector__db],
-            document_models=[ArticleDocument, EdgeDocument, GroupDocument],
-        )
+        await self.mongo_connector.connect()
 
     async def populate_articles(self):
         await self.init_db()

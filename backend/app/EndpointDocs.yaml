@@ -12,7 +12,9 @@ servers:
 components:
   schemas:
 
-    Cluster:
+
+
+    Group:
       type: object
       properties:
         id:
@@ -20,15 +22,27 @@ components:
           example: "E2A0b0e274cDdF591C9Bb5bbFD33C479"
         name:
           type: string
-          example: "Cluster 7365"
-        articles:
+          example: "Group 7365"
+        pending_articles:
           type: array
           items:
             $ref: '#/components/schemas/Article'
-        edges:
+        remove_articles:
           type: array
           items:
-            $ref: '#/components/schemas/Edge'
+            $ref: '#/components/schemas/NotYetImplemented'
+        ignore_articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotYetImplemented'
+        optimise_articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotYetImplemented'
+        combine_articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotYetImplemented'
 
     Article:
       type: object
@@ -42,54 +56,40 @@ components:
         description:
           type: string
           example: "Lorem ipsum dolor sit amet..."
-        author:
+        pr_name:
           type: string
           example: "Author Name"
-        pillar:
+        content_category:
           type: string
           example: "Health and Wellness"
         url:
           type: string
           example: "www.url-to-resource.com"
-        status:
-          type: string
-          enum:
-            - ""
-            - "COMBINED"
-            - "IGNORED"
         labels:
           type: array
           items:
             type: string
           example: ["Label A", "Label B"]
+        keywords:
+          type: array
+          items:
+            type: string
+          example: [ "Keyword A", "Keyword B" ]
         cover_image_url:
           type: string
           example: "www.content-resource.com"
-        engagement:
+        engagement_rate:
           type: number
           format: float
           example: 0.72
           description: "Engagement is within the bounds of [0,1]"
-        views:
+        number_of_views:
           type: integer
           example: 98764
 
-    Edge:
+    NotYetImplemented:
       type: object
-      properties:
-        start:
-          type: string
-          example: "E2A0b0e274cDdF591C9Bb5bbFD33C479"
-          description: "ID of Article"
-        end:
-          type: string
-          example: "9Bb5bbFD33C479E2A0b0e274cDdF591C"
-          description: "ID of Article"
-        weight:
-          type: number
-          format: float
-          example: 0.72
-          description: "Weight is within the bounds of [0,1]"
+      additionalProperties: true
 
 
 paths:
@@ -110,29 +110,28 @@ paths:
                     type: string
                     example: "ok"
 
-  ### Cluster endpoints
-  /clusters:
+  ### Group endpoints
+  /groups:
     get:
-      summary: Fetches all clusters in the database
+      summary: Fetches all groups in the database
       responses:
         '200':
-          description: Successfully fetched all clusters
+          description: Successfully fetched all groups
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Cluster'
+                  $ref: '#/components/schemas/Group'
 
-  /clusters/{cluster_id}:
+  /groups/{group_id}:
       get:
-        summary: Fetches a specific cluster by ID
-        operationId: getClusterById
+        summary: Fetches a specific group by ID
         parameters:
-          - name: cluster_id
+          - name: group_id
             in: path
             required: true
-            description: The ID of the cluster to retrieve
+            description: The ID of the group to retrieve
             schema:
               type: string
         responses:
@@ -141,4 +140,4 @@ paths:
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/Cluster'
+                  $ref: '#/components/schemas/Group'
