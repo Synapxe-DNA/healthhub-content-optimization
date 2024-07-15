@@ -16,7 +16,7 @@ from app.utils.db_connector.mongo_connector.beanie_documents import (
     JobOptimiseDocument,
     JobRemoveDocument,
 )
-from beanie import init_beanie
+from beanie import init_beanie, SortDirection
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 
@@ -77,12 +77,48 @@ class MongoConnector(DbConnector):
     # region Helper functions
 
     @staticmethod
-    async def __convertToArticleMeta(articleDoc: ArticleDocument) -> ArticleMeta:
+    async def __getArticleSimilarity(articleDoc: ArticleDocument) -> float:
+        """
+        Method to retrieve the highest similarity from the edges for a given article.
+        :param articleDoc: ArticleDocument
+        :return: float - the highest edge weight (similarity)
+        """
+
+        pipeline = [
+            {
+                "$match": {
+                    "$or": [
+                        {"start.$id": articleDoc.id},
+                        {"end.$id": articleDoc.id}
+                    ]
+                }
+            },
+            {
+                "$sort": {"weight": -1}
+            },
+            {
+                "$limit": 1
+            }
+        ]
+
+        # Execute the aggregation pipeline
+        highest_weight_edge = await EdgeDocument.aggregate(pipeline).to_list()
+
+        # Output the result
+        if highest_weight_edge:
+            return highest_weight_edge[0]['weight']
+        else:
+            return -1.0  # Return -1 or any other default value if no edges are found
+
+
+
+    async def __convertToArticleMeta(self, articleDoc: ArticleDocument) -> ArticleMeta:
         return ArticleMeta(
             id=articleDoc.id,
             title=articleDoc.title,
             description=articleDoc.description,
             pr_name=articleDoc.pr_name,
+            similarity=await self.__getArticleSimilarity(articleDoc),
             content_category=articleDoc.content_category,
             url=articleDoc.url,
             date_modified=articleDoc.date_modified,
