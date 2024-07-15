@@ -115,8 +115,8 @@ class MongoConnector(DbConnector):
         return Group(
             id=str(groupDoc.id),
             name=groupDoc.name,
-            articles=[self.__convertToArticleMeta(a) for a in groupDoc.article_ids],
-            edges=self.get_edges([str(a.id) for a in groupDoc.article_ids]),
+            pending_articles=[await self.__convertToArticleMeta(a) for a in groupDoc.pending_articles],
+            # TODO conversion to support the other job types
         )
 
     # endregion
@@ -157,7 +157,7 @@ class MongoConnector(DbConnector):
         :param group_id:
         :return:
         """
-        group = await GroupDocument.get(group_id)
+        group = await GroupDocument.get(group_id, fetch_links=True)
 
         return await self.__convertToGroup(group)
 
