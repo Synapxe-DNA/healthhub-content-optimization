@@ -19,7 +19,7 @@ on:
   # (i.e., the workflow trigger condition)
   pull_request:
     paths:
-      - "**/pipelines.py"
+      - "**/pipeline.py"
       - "**/nodes.py"
   workflow_dispatch:
 

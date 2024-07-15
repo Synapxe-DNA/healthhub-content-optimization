@@ -1,6 +1,10 @@
 import re
+import warnings
 
 import pandas as pd
+from pandas.errors import SettingWithCopyWarning
+
+warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 
 
 def select_and_rename_columns(
@@ -41,9 +45,6 @@ def select_and_rename_columns(
          - The function assumes that the length of `columns_to_keep` and `default_columns` are the same.
          - Columns not in `columns_to_keep` will be dropped from the resulting DataFrame.
     """
-    # Drop all columns which have only null values
-    df = df.dropna(axis=1, how="all")
-
     if columns_to_add is not None:
         # Add back selected columns which were dropped because they contained only null values
         df = df.reindex(columns=[*df.columns, *columns_to_add])
