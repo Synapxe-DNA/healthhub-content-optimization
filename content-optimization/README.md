@@ -53,7 +53,11 @@ cat requirements.txt | xargs poetry add
 
 - [`data/`](data): contains all data for the project at every stages; there are many sub-directories but here are the notable ones (will be updated as the pipeline progresses)
 
-  - [`01_raw/all_contents/`](data/01_raw/all_contents): contains all raw data
+  - [`01_raw/`](data/01_raw/all_contents): contains all raw data
+
+    - `all_contents/`: contains all the raw data provided by HealthHub for the project
+
+    - `missing_contents/`: contains the content body of articles with `Excel Error` but were designated as `keep` by HealthHub.
 
   - [`02_intermediate/`](data/02_intermediate): contains all intermediate data
 
