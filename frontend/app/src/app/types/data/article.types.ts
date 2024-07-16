@@ -11,13 +11,13 @@ export interface Article {
     id: string,
     title: string,
     description: string,
-    author: string,
-    pillar: string,
+    pr_name: string,
+    content_category: string,
     url: string,
-    updated: string,
+    date_modified: string,
     status: ArticleStatus,
-    labels: string[],
+    keywords: string[],
     cover_image_url: string,
-    engagement: number,
-    views: number
+    engagement_rate: number,
+    number_of_views: number
 }

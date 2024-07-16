@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from app.scripts.populate_mongo.db_populator import DBPopulator
+from app.scripts.populate_mongo.db_populator import DBPopulater
 from app.utils.db_connector.mongo_connector.mongo_connector import MongoConnector
 from dotenv import load_dotenv
 
@@ -24,7 +24,7 @@ async def __main():
     cluster_file_path = os.path.join(
         "app", "data", "nomic-embed-text-v1.5_neo4j_predicted_clusters.pkl"
     )  # To be edited
-    db_populator = DBPopulator(
+    db_populator = DBPopulater(
         conn, articles_file_path, edges_file_path, cluster_file_path
     )
 

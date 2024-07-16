@@ -1,3 +1,3 @@
 from fastapi import APIRouter
 
-articleRouter = APIRouter(prefix="/articles")
+articleRouter = APIRouter(prefix="/original_articles")

@@ -1,31 +1,26 @@
 import pandas as pd
-from app.utils.db_connector.mongo_connector.beanie_documents import (
-    ArticleDocument,
-    ClusterDocument,
-    EdgeDocument,
-)
-from beanie import init_beanie
+from app.interfaces.db_connector_types import DbConnector
+from app.models.article import Article
+from app.models.edge import Edge
+from app.utils.db_connector.mongo_connector.beanie_documents import ArticleDocument
 from beanie.operators import In
-from motor.motor_asyncio import AsyncIOMotorClient
 
 
-class DBPopulator:
+class DBPopulater:
     def __init__(
-        self, mongo_connector, articles_file_path, edges_file_path, cluster_file_path
+        self,
+        mongo_connector: DbConnector,
+        articles_file_path,
+        edges_file_path,
+        cluster_file_path,
     ):
         self.mongo_connector = mongo_connector
         self.articles_file_path = articles_file_path
         self.edges_file_path = edges_file_path
         self.cluster_file_path = cluster_file_path
-        self.client = AsyncIOMotorClient(
-            mongo_connector._MongoConnector__connection_string
-        )
 
     async def init_db(self):
-        await init_beanie(
-            database=self.client[self.mongo_connector._MongoConnector__db],
-            document_models=[ArticleDocument, EdgeDocument, ClusterDocument],
-        )
+        await self.mongo_connector.connect()
 
     async def populate_articles(self):
         await self.init_db()
@@ -56,21 +51,23 @@ class DBPopulator:
         )
 
         articles = [
-            ArticleDocument(
+            Article(
+                id=str(row["id"]),
                 title=row["title"].strip(),
                 description=row.get("category_description", "").strip(),
-                author=row.get("pr_name", "").strip(),
-                pillar=row.get("content_category", "").strip(),
+                pr_name=row.get("pr_name", "").strip(),
+                content_category=row.get("content_category", "").strip(),
                 url=row.get("full_url", "").strip(),
-                updated=row.get("date_modified", ""),
-                labels=row.get("keywords", []),
+                date_modified=row.get("date_modified", ""),
+                keywords=row.get("keywords", []),
                 cover_image_url=row.get("cover_image_url", "").strip(),
-                engagement=row.get("engagement_rate", -1.0),
-                views=row.get("page_views", -1),
+                engagement_rate=row.get("engagement_rate", -1.0),
+                number_of_views=row.get("page_views", -1),
+                content=row.get("content_body", "").strip(),
             )
             for _, row in articles_df.iterrows()
         ]
-        await ArticleDocument.insert_many(articles)
+        await self.mongo_connector.create_articles(articles)
         print(f"Inserted {len(articles)} article documents into MongoDB")
 
     async def populate_edges(self):
@@ -93,37 +90,22 @@ class DBPopulator:
 
             article_1, article_2 = articles_pair
             all_edges.append(
-                EdgeDocument(
-                    start=article_1, end=article_2, weight=row.get("edge_weight")
+                Edge(
+                    start=article_1.id, end=article_2.id, weight=row.get("edge_weight")
                 )
             )
-        await EdgeDocument.insert_many(all_edges)
+        await self.mongo_connector.create_edges(all_edges)
         print(f"Inserted {len(all_edges)} edges documents into MongoDB")
 
     async def populate_clusters(self):
         await self.init_db()
-        all_clusters = []
         cluster_pkl = pd.read_pickle(self.cluster_file_path)
         for row in cluster_pkl:
             articles_incluster = await ArticleDocument.find(
                 In(ArticleDocument.title, row["titles"])
             ).to_list()
-            match_start = await EdgeDocument.find(
-                In(EdgeDocument.start.id, [a.id for a in articles_incluster])
-            ).to_list()
-            match_start_id_list = [e.id for e in match_start]
-            match_end = await EdgeDocument.find(
-                In(EdgeDocument.end.id, [a.id for a in articles_incluster])
-            ).to_list()
-            diff = [e for e in match_end if e.id not in match_start_id_list]
-            final_edges = match_start + diff
-            final_edges_dicts = [dict(e) for e in final_edges]
-            all_clusters.append(
-                ClusterDocument(
-                    name="Cluster" + str(row["cluster"]),
-                    article_ids=articles_incluster,
-                    edges=final_edges_dicts,
-                )
+            cluster_name = "Cluster " + str(row["cluster"])
+            await self.mongo_connector.create_group_from_articles(
+                cluster_name, articles_incluster
             )
-        await ClusterDocument.insert_many(all_clusters)
-        print(f"Inserted {len(all_clusters)} cluster documents into MongoDB")
+        print(f"Inserted {len(cluster_pkl)} cluster documents into MongoDB")

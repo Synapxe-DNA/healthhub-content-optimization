@@ -9,27 +9,54 @@ from beanie.odm.fields import PydanticObjectId
 from pydantic import Field
 
 
-class ClusterDocument(Document):
+class GroupDocument(Document):
     name: str
-    article_ids: List[Link["ArticleDocument"]] = Field(default=[])
-    edges: List["EdgeDocument"] = Field(default=[])
+    created_at: str = Field(default="")
+
+    pending_articles: List[Link["ArticleDocument"]] = Field(
+        default=[]
+    )  # Articles not reviewed yet
+    remove_articles: List[Link["JobRemoveDocument"]] = Field(default=[])
+    ignore_articles: List[Link["JobIgnoreDocument"]] = Field(default=[])
+    optimise_articles: List[Link["JobOptimiseDocument"]] = Field(default=[])
+    combine_articles: List[Link["JobOptimiseDocument"]] = Field(default=[])
 
 
 class ArticleDocument(Document):
-    id: Optional[PydanticObjectId] = Field(None, alias="_id")
+    id: str
     title: str
     description: str
-    author: Indexed(str)
-    pillar: Indexed(str)
+    pr_name: Indexed(str)
+    content_category: Indexed(str)
     url: Indexed(str)
 
-    updated: str
+    date_modified: str
 
+    keywords: List[str]
     labels: List[str]
     cover_image_url: str
 
-    engagement: float
-    views: int
+    engagement_rate: float
+    number_of_views: int
+
+    content: str
+
+
+class GeneratedArticleDocument(Document):
+    id: Optional[PydanticObjectId] = Field(None, alias="_id")
+    title: str
+    description: str
+    pr_name: Indexed(str)
+    content_category: Indexed(str)
+    url: Indexed(str)
+
+    date_modified: str
+
+    keywords: List[str]
+    labels: List[str]
+    cover_image_url: str
+
+    approved: bool = Field(default=False)
 
 
 class EdgeDocument(Document):
@@ -37,11 +64,37 @@ class EdgeDocument(Document):
     end: Link[ArticleDocument]
     weight: float = Field(default=-1.0)
 
+    class settings:
+        indexes = [
+            {"fields": ["start"], "unique": False},
+            {"fields": ["end"], "unique": False},
+        ]
 
-class CombinationDocument(Document):
-    name: str
-    article_ids: List[Link[ArticleDocument]] = Field(default=[])
+
+class JobCombineDocument(Document):
+    group: Link[GroupDocument]
+    sub_group_name: str
+    remarks: str
+    context: str
+    original_articles: List[Link[ArticleDocument]] = Field(default=[])
+    generated_article: Optional[Link[GeneratedArticleDocument]] = None
 
 
-class IgnoreDocument(Document):
-    article_id: Link[ArticleDocument]
+class JobOptimiseDocument(Document):
+    original_article: Link[ArticleDocument]
+    generated_article: Optional[Link[GeneratedArticleDocument]] = None
+    optimise_title: bool
+    title_remarks: str
+    optimise_meta: bool
+    meta_remarks: str
+    optimise_content: bool
+    content_remarks: str
+
+
+class JobIgnoreDocument(Document):
+    article: Link[ArticleDocument]
+
+
+class JobRemoveDocument(Document):
+    article: Link[ArticleDocument]
+    remarks: str = Field(default="")

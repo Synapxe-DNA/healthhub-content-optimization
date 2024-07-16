@@ -1,20 +1,22 @@
 from typing import List
 
 from app.interfaces.db_connector_types import DbConnector
-from app.models.article import Article
-from app.models.cluster import Cluster, ClusterPopulated
-from app.models.combination import Combination, CombinationPopulated
+from app.models.article import Article, ArticleMeta
 from app.models.edge import Edge
-from app.models.ignore import Ignore
+from app.models.generated_article import GeneratedArticle
+from app.models.group import Group
+from app.models.job_combine import JobCombine
 from app.utils.db_connector.mongo_connector.beanie_documents import (
     ArticleDocument,
-    ClusterDocument,
-    CombinationDocument,
     EdgeDocument,
-    IgnoreDocument,
+    GeneratedArticleDocument,
+    GroupDocument,
+    JobCombineDocument,
+    JobIgnoreDocument,
+    JobOptimiseDocument,
+    JobRemoveDocument,
 )
 from beanie import init_beanie
-from bson.objectid import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 
@@ -28,9 +30,7 @@ class MongoConnector(DbConnector):
     __client: AsyncIOMotorClient
     __conn: AsyncIOMotorDatabase
 
-    """
-    Client setup
-    """
+    # region Client Setup
 
     def __init__(
         self, username: str, password: str, host: str, port: str, db_name: str
@@ -61,386 +61,380 @@ class MongoConnector(DbConnector):
         await init_beanie(
             database=self.__conn,
             document_models=[
-                ClusterDocument,
+                GroupDocument,
                 ArticleDocument,
+                GeneratedArticleDocument,
                 EdgeDocument,
-                CombinationDocument,
-                IgnoreDocument,
+                JobCombineDocument,
+                JobOptimiseDocument,
+                JobIgnoreDocument,
+                JobRemoveDocument,
             ],
         )
 
-    @staticmethod
-    async def __get_ignored_ids() -> List[str]:
-        """
-        Method to get a unique list of all article IDs that have been ignored
-        :return: List[str]
-        """
-        ignored_ids = set()
-        async for record in IgnoreDocument.find_all(fetch_links=True):
-            ignored_ids.add(str(record.article_id.id))
-        return list(ignored_ids)
+    # endregion
+
+    # region Helper functions
 
     @staticmethod
-    async def __get_combine_ids() -> List[str]:
+    async def __getArticleSimilarity(articleDoc: ArticleDocument) -> float:
         """
-        Method to get a unique list of all article IDs that have been added to a "combine" job
-        :return: List[str]
+        Method to retrieve the highest similarity from the edges for a given article.
+        :param articleDoc: ArticleDocument
+        :return: float - the highest edge weight (similarity)
         """
-        combined_ids = set()
-        async for c in CombinationDocument.find_all(fetch_links=True):
-            combined_ids.update([str(x.id) for x in c.article_ids])
 
-        return list(combined_ids)
+        pipeline = [
+            {
+                "$match": {
+                    "$or": [{"start.$id": articleDoc.id}, {"end.$id": articleDoc.id}]
+                }
+            },
+            {"$sort": {"weight": -1}},
+            {"$limit": 1},
+        ]
+
+        # Execute the aggregation pipeline
+        highest_weight_edge = await EdgeDocument.aggregate(pipeline).to_list()
+
+        # Output the result
+        if highest_weight_edge:
+            return highest_weight_edge[0]["weight"]
+        else:
+            return -1.0  # Return -1 or any other default value if no edges are found
+
+    async def __convertToArticleMeta(self, articleDoc: ArticleDocument) -> ArticleMeta:
+        return ArticleMeta(
+            id=articleDoc.id,
+            title=articleDoc.title,
+            description=articleDoc.description,
+            pr_name=articleDoc.pr_name,
+            similarity=await self.__getArticleSimilarity(articleDoc),
+            content_category=articleDoc.content_category,
+            url=articleDoc.url,
+            date_modified=articleDoc.date_modified,
+            keywords=articleDoc.keywords,
+            labels=articleDoc.labels,
+            cover_image_url=articleDoc.cover_image_url,
+            engagement_rate=articleDoc.engagement_rate,
+            number_of_views=articleDoc.number_of_views,
+        )
+
+    @staticmethod
+    async def __convertToArticle(articleDoc: ArticleDocument) -> Article:
+        return Article(
+            id=articleDoc.id,
+            title=articleDoc.title,
+            description=articleDoc.description,
+            pr_name=articleDoc.pr_name,
+            content_category=articleDoc.content_category,
+            url=articleDoc.url,
+            date_modified=articleDoc.date_modified,
+            keywords=articleDoc.keywords,
+            labels=articleDoc.labels,
+            cover_image_url=articleDoc.cover_image_url,
+            engagement_rate=articleDoc.engagement_rate,
+            number_of_views=articleDoc.number_of_views,
+            content=articleDoc.content,
+        )
+
+    async def __convertToGroup(self, groupDoc: GroupDocument) -> Group:
+        return Group(
+            id=str(groupDoc.id),
+            name=groupDoc.name,
+            pending_articles=[
+                await self.__convertToArticleMeta(a) for a in groupDoc.pending_articles
+            ],
+            # TODO conversion to support the other job types
+        )
+
+    # endregion
 
     """
     Class methods to interact with DB
     """
 
-    async def create_clusters(self, cluster: List[Cluster]) -> None:
-        """
-        Method to create (multiple) cluster documents.
-        :param cluster:
-        :return: None
-        """
-        for c in cluster:
-            await ClusterDocument(
-                name=c.name,
-                article_ids=c.article_ids,
-                edges=[
-                    EdgeDocument(start=e.start, end=e.end, weight=e.weight)
-                    for e in c.edges
-                ],
-            ).create()
+    # region Methods related to groups
 
-    async def read_cluster_all(self) -> List[ClusterPopulated]:
+    async def create_group_from_articles(
+        self, group_name: str, article_ids: List[str]
+    ) -> str:
         """
-        Method to fetch all clusters. Clusters will be populated with articles and edges.
-        :return: List[ClusterPopulated]
+        Method to group a group from existing articles
+        :param group_name: {str} Name of group
+        :param article_ids: {List[str]} List of IDs of articles
+        :return: {str} ID of newly created group
         """
+        group = GroupDocument(name=group_name, pending_articles=article_ids)
+        await group.insert()
+        return str(group.id)
 
-        ignore_ids = await self.__get_ignored_ids()
-        combined_ids = await self.__get_combine_ids()
-
-        def article_status(_id: str) -> str:
-            """
-            Function to get the appropriate state for each article.
-            :param _id:
-            :return:
-            """
-            if _id in ignore_ids:
-                return "IGNORED"
-            if _id in combined_ids:
-                return "COMBINED"
-            return ""
+    async def get_all_groups(self) -> List[Group]:
+        """
+        Method to retrieve all groups, populated with their respective ArticleMeta and Edges
+        :return: {List[Group]}
+        """
 
         return [
-            ClusterPopulated(
-                id=str(c.id),
-                name=c.name,
-                articles=[
-                    Article(
-                        id=str(a.id),
-                        title=a.title,
-                        description=a.description,
-                        author=a.author,
-                        pillar=a.pillar,
-                        url=a.url,
-                        updated=a.updated,
-                        status=article_status(str(a.id)),
-                        labels=a.labels,
-                        cover_image_url=a.cover_image_url,
-                        engagement=a.engagement,
-                        views=a.views,
-                    )
-                    for a in c.article_ids
-                ],
-                edges=[
-                    Edge(
-                        start=e.start.to_dict()["id"],
-                        end=e.end.to_dict()["id"],
-                        weight=e.weight,
-                    )
-                    for e in c.edges
-                ],
-            )
-            async for c in ClusterDocument.find_all(fetch_links=True)
+            await self.__convertToGroup(c)
+            async for c in GroupDocument.find_all(fetch_links=True)
         ]
 
-    async def read_cluster(self, cluster_id: str) -> ClusterPopulated:
+    async def get_group(self, group_id: str) -> Group:
         """
-        Method to get a ClusterPopulated object from a specified cluster_id
-        :param cluster_id:
+        Method to fetch a group by ID.
+        :param group_id:
         :return:
         """
+        group = await GroupDocument.get(group_id, fetch_links=True)
 
-        ignore_ids = await self.__get_ignored_ids()
-        combined_ids = await self.__get_combine_ids()
+        return await self.__convertToGroup(group)
 
-        def article_status(_id: str) -> str:
-            """
-            Function to get the appropriate state for each article.
-            :param _id:
-            :return:
-            """
-            if _id in ignore_ids:
-                return "IGNORED"
-            if _id in combined_ids:
-                return "COMBINED"
-            return ""
+    # endregion
 
-        cluster = await ClusterDocument.get(ObjectId(cluster_id), fetch_links=True)
+    # region Methods related to articles
 
-        return ClusterPopulated(
-            id=str(cluster.id),
-            name=cluster.name,
-            articles=[
-                Article(
-                    id=str(a.id),
-                    title=a.title,
-                    description=a.description,
-                    author=a.author,
-                    pillar=a.pillar,
-                    url=a.url,
-                    updated=a.updated,
-                    status=article_status(str(a.id)),
-                    labels=a.labels,
-                    cover_image_url=a.cover_image_url,
-                    engagement=a.engagement,
-                    views=a.views,
-                )
-                for a in cluster.article_ids
-            ],
-            edges=[
-                Edge(
-                    start=e.start.to_dict()["id"],
-                    end=e.end.to_dict()["id"],
-                    weight=e.weight,
-                )
-                for e in cluster.edges
-            ],
-        )
-
-    async def create_articles(self, articles: List[Article]):
+    async def create_articles(self, articles: List[Article]) -> List[str]:
         """
-        Method to insert (multiple) articles into Mongo DB.
-        :param articles:
-        :return:
+        Method to create articles in the database
+        :param articles: {List[ArticleMeta]}
+        :return: {List[str]} List of IDs of newly created articles
         """
-
-        for a in articles:
-            await ArticleDocument(
+        article_docs = [
+            ArticleDocument(
                 id=a.id,
                 title=a.title,
                 description=a.description,
-                author=a.author,
-                pillar=a.pillar,
+                pr_name=a.pr_name,
+                content_category=a.content_category,
                 url=a.url,
+                date_modified=a.date_modified,
+                keywords=a.keywords,
                 labels=a.labels,
                 cover_image_url=a.cover_image_url,
-                engagement=a.engagement,
-                views=a.views,
-            ).create()
-
-    async def read_article_all(self) -> List[Article]:
-        """
-        Method to retrieve all articles in the database.
-        :return:
-        """
-
-        ignore_ids = await self.__get_ignored_ids()
-        combined_ids = await self.__get_combine_ids()
-
-        def article_status(_id: str) -> str:
-            """
-            Function to get the appropriate state for each article.
-            :param _id:
-            :return:
-            """
-            if _id in ignore_ids:
-                return "IGNORED"
-            if _id in combined_ids:
-                return "COMBINED"
-            return ""
-
-        return [
-            Article(
-                id=str(a.id),
-                title=a.title,
-                description=a.description,
-                author=a.author,
-                pillar=a.pillar,
-                url=a.url,
-                status=article_status(a.id),
-                labels=a.labels,
-                cover_image_url=a.cover_image_url,
-                engagement=a.engagement,
-                views=a.views,
+                engagement_rate=a.engagement_rate,
+                number_of_views=a.number_of_views,
+                content=a.content,
             )
+            for a in articles
+        ]
+        await ArticleDocument.insert_many(article_docs)
+        return [str(a.id) for a in article_docs]
+
+    async def get_all_articles(self) -> List[ArticleMeta]:
+        """
+        Method to get all articles with their respective metadata.
+        This will not return article contents, in order to save on memory.
+        :return: {List[ArticleMeta]}
+        """
+        return [
+            await self.__convertToArticleMeta(a)
             async for a in ArticleDocument.find_all()
         ]
 
-    async def read_article(self, article_id: str) -> Article:
+    async def get_articles(self, article_ids: List[str]) -> List[ArticleMeta]:
         """
-        Method to get a particular article by ID
-        :param article_id:
-        :return:
+        Fetches articles with their content by specified ID.
+        :param article_ids: {List[str]}
+        :return: {List[Article]}
         """
+        return [
+            await self.__convertToArticleMeta(a)
+            async for a in ArticleDocument.find_many(article_ids)
+        ]
 
-        ignore_ids = await self.__get_ignored_ids()
-        combined_ids = await self.__get_combine_ids()
+    # endregion
 
-        def article_status(_id: str) -> str:
-            """
-            Function to get the appropriate state for each article.
-            :param _id:
-            :return:
-            """
-            if _id in ignore_ids:
-                return "IGNORED"
-            if _id in combined_ids:
-                return "COMBINED"
-            return ""
+    # region Methods related to article edges
 
-        article = await ArticleDocument.get(article_id)
+    async def create_edges(self, edges: List[Edge]) -> List[str]:
+        """
+        Method to create edges between articles.
+        :param edges: {List[Edge]}
+        :return: {List[str]} IDs of created edges
+        """
+        edge_docs = [
+            EdgeDocument(
+                start=e.start,
+                end=e.end,
+                weight=e.weight,
+            )
+            for e in edges
+        ]
+        await EdgeDocument.insert_many(edge_docs)
+        return [str(e.id) for e in edge_docs]
 
-        return Article(
-            id=str(article.id),
-            title=article.title,
-            description=article.description,
-            author=article.author,
-            pillar=article.pillar,
-            url=article.url,
-            updated=article.updated,
-            status=article_status(str(article.id)),
-            labels=article.labels,
-            cover_image_url=article.cover_image_url,
-            engagement=article.engagement,
-            views=article.views,
+    async def get_edges(self, article_ids: List[str]) -> List[Edge]:
+        """
+        Fetches edges between articles by specified article IDs.
+        :param article_ids: {List[str]}
+        :return: {List[Edge]}
+        """
+        edges = await EdgeDocument.find_all()
+        return [
+            Edge(
+                start=str(e.start.id),
+                end=str(e.end.id),
+                weight=e.weight,
+            )
+            for e in edges
+            if (str(e.start.id) in article_ids) and (str(e.end.id) in article_ids)
+        ]
+
+    # endregion
+
+    # region Methods related to generated articles
+
+    async def create_generated_article(
+        self, generated_articles: List[GeneratedArticle]
+    ) -> List[str]:
+        """
+        Method to insert generated articles into the database
+        :param generated_articles: {List[GeneratedArticle]}
+        :return: {List[str]} IDs of the generated articles inserted
+        """
+        raise NotImplementedError()
+
+    # endregion
+
+    # region Methods related to combination jobs
+
+    async def create_combine_job(
+        self,
+        group_id: str,
+        sub_group_name: str,
+        article_ids: List[str],
+        remarks: str = "",
+        context: str = "",
+    ) -> str:
+        """
+        Method to create a combine job record
+        :param group_id: {str} ID of the parent group
+        :param sub_group_name: {str} name of the subgroup to be combined
+        :param article_ids: {List[str]} IDs of the articles to combine
+        :param remarks: {str} remarks from the user for this sub group
+        :param context: {str} context from user to add on to this subgroup
+        :return: {str} id of the job just created
+        """
+        combine_job = JobCombineDocument(
+            group=group_id,
+            sub_group_name=sub_group_name,
+            remarks=remarks,
+            context=context,
+            original_articles=article_ids,
         )
 
-    async def create_combine(self, combination: List[Combination]):
+        await JobCombineDocument.insert(combine_job)
+
+        return str(combine_job.id)
+
+    async def get_all_combine_jobs(self) -> List[JobCombine]:
         """
-        Method to insert (multiple) Combination documents into the DB.
-        :param combination:
-        :return:
+        Method to get the combine jobs that have been recorded
+        :return: {List[JobCombine]}
         """
-
-        for c in combination:
-            await CombinationDocument(name=c.name, article_ids=c.article_ids).create()
-
-    async def read_combine_all(self) -> List[CombinationPopulated]:
-        """
-        Method to retrieve all records of combination jobs
-        :return:
-        """
-
-        ignore_ids = await self.__get_ignored_ids()
-        combined_ids = await self.__get_combine_ids()
-
-        def article_status(_id: str) -> str:
-            """
-            Function to get the appropriate state for each article.
-            :param _id:
-            :return:
-            """
-            if _id in ignore_ids:
-                return "IGNORED"
-            if _id in combined_ids:
-                return "COMBINED"
-            return ""
-
         return [
-            CombinationPopulated(
-                id=str(c.id),
-                name=c.name,
-                articles=[
-                    Article(
-                        id=str(a.id),
-                        title=a.title,
-                        description=a.description,
-                        author=a.author,
-                        pillar=a.pillar,
-                        url=a.url,
-                        updated=a.updated,
-                        status=article_status(str(a.id)),
-                        labels=a.labels,
-                        cover_image_url=a.cover_image_url,
-                        engagement=a.engagement,
-                        views=a.views,
-                    )
-                    for a in c.article_ids
+            JobCombine(
+                id=str(j.id),
+                group_id=str(j.group.id),
+                group_name=j.group.name,
+                sub_group_name=j.sub_group_name,
+                remarks=j.remarks,
+                original_articles=[
+                    self.__convertToArticle(a) for a in j.original_articles
                 ],
             )
-            async for c in CombinationDocument.find_all(fetch_links=True)
+            for j in JobCombineDocument.find_all()
         ]
 
-    async def read_combine(self, combine_id: str) -> CombinationPopulated:
+    # endregion
 
-        ignore_ids = await self.__get_ignored_ids()
-        combined_ids = await self.__get_combine_ids()
+    # region Methods related to standalone articles to optimise
 
-        def article_status(_id: str) -> str:
-            """
-            Function to get the appropriate state for each article.
-            :param _id:
-            :return:
-            """
-            if _id in ignore_ids:
-                return "IGNORED"
-            if _id in combined_ids:
-                return "COMBINED"
-            return ""
-
-        combine_doc = await CombinationDocument.find(
-            CombinationDocument.id == ObjectId(combine_id), fetch_links=True
-        ).to_list()
-
-        # TODO [BUG] Linting fix needed
-        # Linter will show that a.[attr] doesn't exist. This is due to the type hinting of the Document.find()
-        # not accounting for `fetch_links=True`.
-        return CombinationPopulated(
-            id=str(combine_doc[0].id),
-            name=combine_doc[0].name,
-            articles=[
-                Article(
-                    id=str(a.id),
-                    title=a.title,
-                    description=a.description,
-                    author=a.author,
-                    pillar=a.pillar,
-                    url=a.url,
-                    updated=a.updated,
-                    status=article_status(str(a.id)),
-                    labels=a.labels,
-                    cover_image_url=a.cover_image_url,
-                    engagement=a.engagement,
-                    views=a.views,
-                )
-                for a in combine_doc[0].article_ids
-            ],
+    async def create_optimise_job(
+        self,
+        article_id: str,
+        optimise_title: bool,
+        optimise_meta: bool,
+        optimise_content: bool,
+        title_remarks: str = "",
+        meta_remarks: str = "",
+        content_remarks: str = "",
+    ) -> str:
+        """
+        Method to mark standalone articles to be optimised as "individual" articles.
+        :param article_id:
+        :param optimise_title: True if title needs to be optimised
+        :param optimise_meta: True if meta needs to be optimised
+        :param optimise_content: True if content needs to be optimised
+        :param title_remarks: Optional remarks for title optimisation
+        :param meta_remarks: Optional remarks for meta optimisation
+        :param content_remarks: Optional remarks for content optimisation
+        :return: {str} id of the job just created
+        """
+        optimise_article = JobOptimiseDocument(
+            original_article=article_id,
+            optimise_title=optimise_title,
+            optimise_meta=optimise_meta,
+            optimise_content=optimise_content,
+            title_remarks=title_remarks,
+            meta_remarks=meta_remarks,
+            content_remarks=content_remarks,
         )
+        await JobOptimiseDocument.insert(optimise_article)
 
-    async def create_ignore(self, ignore: List[Ignore]):
-        for o in ignore:
-            await IgnoreDocument(article_id=o.article_id).create()
+        return str(optimise_article.id)
 
-    async def read_ignore_all(self) -> List[Ignore]:
+    async def get_all_optimise_jobs(self) -> List[ArticleMeta]:
         """
-        Method to retrieve all ignored articles.
-        Note: this does not return a populated Ignore as we'll probably only need the IDs
-        :return:
+        Method to get all optimisation jobs recorded
+        :return:{List[ArticleMeta]}
         """
+
         return [
-            Ignore(id=str(i.id), article_id=str(i.article_id))
-            async for i in IgnoreDocument.find_all()
+            await self.__convertToArticleMeta(a.original_article)
+            async for a in JobOptimiseDocument.find_all()
         ]
 
-    async def read_ignore(self, ignore_id: str) -> Ignore:
-        """
-        Method to retrieve a particular ignore record.
-        :param ignore_id:
-        :return:
-        """
-        ignore = await IgnoreDocument.get(ObjectId(ignore_id))
+    # endregion
 
-        return Ignore(id=str(ignore.id), article_id=ignore.article_id.to_dict()["id"])
+    # region Methods related to ignored articles
+
+    async def create_ignore_job(self, article_id: str) -> str:
+        """
+        Method to ignore an article based on it's own ID.
+        :param article_id:
+        :return: {str} id of article ignored
+        """
+        ignore_doc = JobIgnoreDocument(article=article_id)
+        await JobIgnoreDocument.insert(ignore_doc)
+        return str(ignore_doc.id)
+
+    async def get_all_ignore_jobs(self) -> List[ArticleMeta]:
+        return [
+            await self.__convertToArticleMeta(a.article)
+            async for a in JobRemoveDocument.find_all()
+        ]
+
+    # endregion
+
+    # region Methods related to removed articles
+
+    async def create_remove_job(self, article_id: str, remarks: str) -> str:
+        """
+        Method to remove an article based on it's own ID.
+        :param article_id:
+        :param remarks:
+        :return: {str} id of article removed
+        """
+        remove_doc = JobRemoveDocument(article=article_id, remarks=remarks)
+        await JobRemoveDocument.insert(remove_doc)
+        return str(remove_doc.id)
+
+    async def get_all_remove_jobs(self) -> List[ArticleMeta]:
+        return [
+            await self.__convertToArticleMeta(a.article)
+            async for a in JobRemoveDocument.find_all()
+        ]
+
+    # endregion
