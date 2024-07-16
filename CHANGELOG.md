@@ -5,9 +5,6 @@
 - Added unit tests and integration test for [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline
 - Added [data directories](content-optimization/tests/data) for test datasets
 - Removed use of `alive_progress` because of incompatibility with `pytest`
-
----
-
 - Added [`run_tests.py`](run_tests.py) to provide as an entry point for `make test`
 
 ## July 9, 2024 <a id="july-9-2024"></a>
