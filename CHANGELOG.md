@@ -1,10 +1,11 @@
 # Changelog
 
-## July 11, 2024 <a id="july-11-2024"></a>
+## July 12, 2024 <a id="july-12-2024"></a>
 
-- Added new column `extracted_tables` as a new column into `merged_data.parquet`
-- Replace En Dash with a dash to extract these dashes into `extracted_content_body`
-- Amended `extract_links` to ignore footnotes and online forms
+- Added unit tests and integration test for [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline
+- Added [data directories](content-optimization/tests/data) for test datasets
+- Removed use of `alive_progress` because of incompatibility with `pytest`
+- Added [`run_tests.py`](run_tests.py) to provide as an entry point for `make test`
 
 ## July 9, 2024 <a id="july-9-2024"></a>
 
@@ -19,7 +20,7 @@
 
 ---
 
-- Added [`script.py`](script.py) to provide as an entry point for Makefile commands
+- Added [`script.py`](script.py) to provide as an entry point for `make clean`
   - This is an improvement over the previous release on [July 6, 2024](#july-6-2024) where it was not compatible with Windows OS
 
 ## July 6, 2024 <a id="july-6-2024"></a>
