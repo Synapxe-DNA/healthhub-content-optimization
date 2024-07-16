@@ -95,15 +95,15 @@ def standardize_columns(
 
 
 def add_contents(
-    missing_contents: dict[str, Callable[[], Any]],
     all_contents_standardized: dict[str, Callable[[], Any]],
+    missing_contents: dict[str, Callable[[], Any]],
 ) -> dict[str, Callable[[], Any]]:
     excel_errors = {}
     all_contents_added = {}
 
     # Fetch all txt files from 01_raw to correct the Excel error
-    for file_path, partition_load_func in missing_contents.items():
-        text = partition_load_func()
+    for file_path, load_func in missing_contents.items():
+        text = load_func()
         # Extract friendly url that is used as filename
         friendly_url = file_path.split("/")[-1]
         # Store in dictionary
