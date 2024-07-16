@@ -186,8 +186,7 @@ def extract_data(
         df["extracted_content_body"] = ""
 
         for index, row in df.iterrows():
-            # Skip extraction for those articles flagged for removal
-            # TODO: Need to monitor implementation of "to_remove" as extracted_content is skipped
+            # Skip extraction for those articles flagged for removal unless whitelisted
             if row["to_remove"]:
                 # Check if the article is in the whitelist
                 if row["id"] not in whitelist:
