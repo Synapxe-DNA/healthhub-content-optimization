@@ -87,8 +87,7 @@ def test_add_contents(catalog: DataCatalog):
 
     # Combine all dataframes into one
     combined_df = pd.DataFrame()
-    for content_category, partition_load_func in all_contents_added.items():
-        df = partition_load_func()
+    for content_category, df in all_contents_added.items():
         combined_df = pd.concat([combined_df, df], axis=0, ignore_index=True)
 
     # Get articles with Excel Errors
@@ -119,7 +118,7 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
         4. Expects the extracted content body to meet the word count cutoff
     """
     all_contents_extracted, all_extracted_text = extract_data(
-        catalog.load("all_contents_extracted"),
+        catalog.load("all_contents_added"),
         word_count_cutoff,
         catalog.load("params:whitelist"),
     )
