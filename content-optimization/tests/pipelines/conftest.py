@@ -35,6 +35,16 @@ def datasets() -> dict:
                 / "all_contents_standardized"
             ).as_posix(),
         ),
+        "all_contents_added": PartitionedDataset(
+            dataset="pandas.ParquetDataset",
+            path=(
+                project_path
+                / "tests"
+                / "data"
+                / "02_intermediate"
+                / "all_contents_added"
+            ).as_posix(),
+        ),
         "all_contents_extracted": PartitionedDataset(
             dataset="pandas.ParquetDataset",
             path=(
@@ -77,12 +87,14 @@ def catalog(datasets: dict, parameters: dict) -> DataCatalog:
     catalog.add_feed_dict(
         {
             "all_contents": datasets["all_contents"],
+            "missing_contents": datasets["missing_contents"],
             "params:columns_to_add": parameters["columns_to_add"],
             "params:columns_to_keep": parameters["columns_to_keep"],
             "params:default_columns": parameters["default_columns"],
             "params:word_count_cutoff": parameters["word_count_cutoff"],
             "params:whitelist": parameters["whitelist"],
             "all_contents_standardized": datasets["all_contents_standardized"],
+            "all_contents_added": datasets["all_contents_added"],
             "all_contents_extracted": datasets["all_contents_extracted"],
             "merged_data": datasets["merged_data"],
             "params:cfg": parameters["cfg"],
