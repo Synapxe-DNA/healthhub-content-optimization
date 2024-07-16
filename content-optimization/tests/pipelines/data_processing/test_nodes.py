@@ -1,7 +1,10 @@
+import re
+
 import pandas as pd
 import pytest
 from kedro.io import DataCatalog
 from src.content_optimization.pipelines.data_processing.nodes import (
+    add_contents,
     extract_data,
     merge_data,
     standardize_columns,
@@ -57,6 +60,44 @@ def test_standardize_columns(catalog: DataCatalog, num_cols: int = 28):
                 "remove_type",
             ]
         ).all(), "Unexpected columns in the standardized dataframe"
+
+
+def test_add_contents(catalog: DataCatalog):
+    all_contents_standardized = catalog.load("all_contents_standardized")
+    missing_contents = catalog.load("missing_contents")
+
+    all_contents_added = add_contents(all_contents_standardized, missing_contents)
+
+    # Check if output is a dictionary
+    assert isinstance(all_contents_added, dict), "Expected a dictionary"
+
+    # Check if output contains only the correct number of content categories
+    assert len(all_contents_added) == len(
+        catalog.load("all_contents")
+    ), "Number of content categories should match the input data"
+
+    friendly_urls = []
+
+    # Store friendly_url in friendly_urls
+    for file_path, _ in missing_contents.items():
+        print(file_path)
+        # Extract friendly url that is used as filename
+        friendly_url = file_path.split("/")[-1]
+        friendly_urls.append(friendly_url)
+
+    # Combine all dataframes into one
+    combined_df = pd.DataFrame()
+    for content_category, partition_load_func in all_contents_added.items():
+        df = partition_load_func()
+        combined_df = pd.concat([combined_df, df], axis=0, ignore_index=True)
+
+    # Get articles with Excel Errors
+    filtered_df = combined_df[combined_df["friendly_url"].isin(friendly_urls)]
+
+    for index, row in filtered_df.iterrows():
+        assert not re.match(
+            r"Value exceeded maximum cell size", row["content_body"]
+        ), "Content body was not successfully replaced"
 
 
 @pytest.mark.parametrize("word_count_cutoff", [50, 90])
