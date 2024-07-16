@@ -8,14 +8,13 @@ import re
 from typing import Any, Callable
 
 import pandas as pd
-from tqdm import tqdm
-
-from .extractor import HTMLExtractor
-from .utils import (
+from content_optimization.pipelines.data_processing.extractor import HTMLExtractor
+from content_optimization.pipelines.data_processing.utils import (
     flag_articles_to_remove_after_extraction,
     flag_articles_to_remove_before_extraction,
     select_and_rename_columns,
 )
+from tqdm import tqdm
 
 
 def standardize_columns(
