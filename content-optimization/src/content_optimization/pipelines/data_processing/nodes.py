@@ -94,7 +94,9 @@ def standardize_columns(
 
 
 def extract_data(
-    all_contents_standardized: dict[str, Callable[[], Any]], word_count_cutoff: int
+    all_contents_standardized: dict[str, Callable[[], Any]],
+    word_count_cutoff: int,
+    whitelist: list[int],
 ) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
     """
     Extracts data from processed content and stores it in parquet files
@@ -108,6 +110,8 @@ def extract_data(
 
         word_count_cutoff (int): The minimum number of words in an article
             to be considered before flagging for removal.
+
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
 
     Returns:
         tuple[dict[str, pd.DataFrame], dict[str, str]]:
@@ -142,7 +146,12 @@ def extract_data(
             # Skip extraction for those articles flagged for removal
             # TODO: Need to monitor implementation of "to_remove" as extracted_content is skipped
             if row["to_remove"]:
-                continue
+                # Check if the article is in the whitelist
+                if row["id"] not in whitelist:
+                    continue
+                else:
+                    # Whitelist article
+                    df.at[index, "to_remove"] = False
 
             # Replace all forward slashes with hyphens to avoid saving as folders
             title = re.sub(r"\/", "-", row["title"]).strip()
@@ -189,7 +198,7 @@ def extract_data(
 
         # After extraction, we flag to remove articles with no content,
         # duplicated content, duplicated URL or below word count cutoff
-        df = flag_articles_to_remove_after_extraction(df, word_count_cutoff)
+        df = flag_articles_to_remove_after_extraction(df, word_count_cutoff, whitelist)
 
         # Store dataframes in a parquet file named `content_category`
         all_contents_extracted[content_category] = df
