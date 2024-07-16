@@ -24,7 +24,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=add_contents,
-                inputs=["missing_contents", "all_contents_standardized"],
+                inputs=["all_contents_standardized", "missing_contents"],
                 outputs="all_contents_added",
                 name="add_contents_node",
             ),
