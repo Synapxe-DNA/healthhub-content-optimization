@@ -14,6 +14,7 @@ class ArticleMeta(BaseModel):
     url: str = Field(default="")
 
     status: str = Field(default="")
+    similarity: float = Field(default=-1)
 
     date_modified: str = Field(default="")
 

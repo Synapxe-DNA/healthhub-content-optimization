@@ -85,12 +85,39 @@ class MongoConnector(DbConnector):
     # region Helper functions
 
     @staticmethod
-    async def __convertToArticleMeta(articleDoc: ArticleDocument) -> ArticleMeta:
+    async def __getArticleSimilarity(articleDoc: ArticleDocument) -> float:
+        """
+        Method to retrieve the highest similarity from the edges for a given article.
+        :param articleDoc: ArticleDocument
+        :return: float - the highest edge weight (similarity)
+        """
+
+        pipeline = [
+            {
+                "$match": {
+                    "$or": [{"start.$id": articleDoc.id}, {"end.$id": articleDoc.id}]
+                }
+            },
+            {"$sort": {"weight": -1}},
+            {"$limit": 1},
+        ]
+
+        # Execute the aggregation pipeline
+        highest_weight_edge = await EdgeDocument.aggregate(pipeline).to_list()
+
+        # Output the result
+        if highest_weight_edge:
+            return highest_weight_edge[0]["weight"]
+        else:
+            return -1.0  # Return -1 or any other default value if no edges are found
+
+    async def __convertToArticleMeta(self, articleDoc: ArticleDocument) -> ArticleMeta:
         return ArticleMeta(
             id=articleDoc.id,
             title=articleDoc.title,
             description=articleDoc.description,
             pr_name=articleDoc.pr_name,
+            similarity=await self.__getArticleSimilarity(articleDoc),
             content_category=articleDoc.content_category,
             url=articleDoc.url,
             date_modified=articleDoc.date_modified,
@@ -103,7 +130,7 @@ class MongoConnector(DbConnector):
 
     @staticmethod
     async def __convertToArticle(articleDoc: ArticleDocument) -> Article:
-        return ArticleMeta(
+        return Article(
             id=articleDoc.id,
             title=articleDoc.title,
             description=articleDoc.description,
@@ -167,7 +194,7 @@ class MongoConnector(DbConnector):
         """
 
         return [
-            self.__convertToGroup(c)
+            await self.__convertToGroup(c)
             async for c in GroupDocument.find_all(fetch_links=True)
         ]
 
@@ -177,9 +204,9 @@ class MongoConnector(DbConnector):
         :param group_id:
         :return:
         """
-        group = await GroupDocument.get(group_id)
+        group = await GroupDocument.get(group_id, fetch_links=True)
 
-        return self.__convertToGroup(group)
+        return await self.__convertToGroup(group)
 
     # endregion
 
@@ -219,7 +246,8 @@ class MongoConnector(DbConnector):
         :return: {List[ArticleMeta]}
         """
         return [
-            self.__convertToArticleMeta(a) async for a in ArticleDocument.find_all()
+            await self.__convertToArticleMeta(a)
+            async for a in ArticleDocument.find_all()
         ]
 
     async def get_articles(self, article_ids: List[str]) -> List[ArticleMeta]:
@@ -229,7 +257,7 @@ class MongoConnector(DbConnector):
         :return: {List[Article]}
         """
         return [
-            self.__convertToArticleMeta(a)
+            await self.__convertToArticleMeta(a)
             async for a in ArticleDocument.find_many(article_ids)
         ]
 
@@ -480,7 +508,7 @@ class MongoConnector(DbConnector):
         """
 
         return [
-            self.__convertToArticleMeta(a.original_article)
+            await self.__convertToArticleMeta(a.original_article)
             async for a in JobOptimiseDocument.find_all()
         ]
 
@@ -512,7 +540,7 @@ class MongoConnector(DbConnector):
 
     async def get_all_ignore_jobs(self) -> List[ArticleMeta]:
         return [
-            self.__convertToArticleMeta(a.article)
+            await self.__convertToArticleMeta(a.article)
             async for a in JobRemoveDocument.find_all()
         ]
 
@@ -545,7 +573,7 @@ class MongoConnector(DbConnector):
 
     async def get_all_remove_jobs(self) -> List[ArticleMeta]:
         return [
-            self.__convertToArticleMeta(a.article)
+            await self.__convertToArticleMeta(a.article)
             async for a in JobRemoveDocument.find_all()
         ]
 

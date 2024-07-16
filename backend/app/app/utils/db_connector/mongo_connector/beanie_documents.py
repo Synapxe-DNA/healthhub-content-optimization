@@ -68,6 +68,12 @@ class EdgeDocument(Document):
     end: Link[ArticleDocument]
     weight: float = Field(default=-1.0)
 
+    class settings:
+        indexes = [
+            {"fields": ["start"], "unique": False},
+            {"fields": ["end"], "unique": False},
+        ]
+
 
 class JobCombineDocument(Document):
     group: Link[GroupDocument]

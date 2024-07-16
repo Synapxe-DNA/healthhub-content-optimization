@@ -1,7 +1,7 @@
 from app.routes.articles.article_router import articleRouter
 from app.routes.check.check_router import checkRouter
-from app.routes.clusters.cluster_router import clusterRouter
 from app.routes.combine.combine_router import combineRouter
+from app.routes.groups.group_router import groupRouter
 from app.routes.ignore.ignore_router import ignoreRouter
 from app.utils.db_connector.mongo_connector.mongo_connector_injector import (
     create_mongo_db_connector,
@@ -38,7 +38,7 @@ class AppBuilder:
         )
 
         # Register routers here
-        app.include_router(clusterRouter)
+        app.include_router(groupRouter)
         app.include_router(articleRouter)
         app.include_router(ignoreRouter)
         app.include_router(combineRouter)

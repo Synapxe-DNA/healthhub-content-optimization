@@ -2,14 +2,8 @@ import pandas as pd
 from app.interfaces.db_connector_types import DbConnector
 from app.models.article import Article
 from app.models.edge import Edge
-from app.utils.db_connector.mongo_connector.beanie_documents import (
-    ArticleDocument,
-    EdgeDocument,
-    GroupDocument,
-)
-from beanie import init_beanie
+from app.utils.db_connector.mongo_connector.beanie_documents import ArticleDocument
 from beanie.operators import In
-from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class DBPopulater:
@@ -24,15 +18,9 @@ class DBPopulater:
         self.articles_file_path = articles_file_path
         self.edges_file_path = edges_file_path
         self.cluster_file_path = cluster_file_path
-        self.client = AsyncIOMotorClient(
-            mongo_connector._MongoConnector__connection_string
-        )
 
     async def init_db(self):
-        await init_beanie(
-            database=self.client[self.mongo_connector._MongoConnector__db],
-            document_models=[ArticleDocument, EdgeDocument, GroupDocument],
-        )
+        await self.mongo_connector.connect()
 
     async def populate_articles(self):
         await self.init_db()
@@ -117,7 +105,7 @@ class DBPopulater:
                 In(ArticleDocument.title, row["titles"])
             ).to_list()
             cluster_name = "Cluster " + str(row["cluster"])
-            await self.mongo_connector.create_cluster_from_articles(
+            await self.mongo_connector.create_group_from_articles(
                 cluster_name, articles_incluster
             )
         print(f"Inserted {len(cluster_pkl)} cluster documents into MongoDB")
