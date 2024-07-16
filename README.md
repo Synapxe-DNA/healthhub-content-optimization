@@ -239,3 +239,24 @@ For more control, you may specify the pipeline you want to run:
 ```
 make run PIPELINE=data_processing
 ```
+
+### Testing Kedro
+
+If you want to run tests for Kedro from the root directory, you can run the following command:
+
+```
+make test
+```
+
+For more control, you may specify the files and/or functions you want to run `pytest` on. [`run_tests.py`](run_tests.py) takes in two arguments flags: `--files` and `--functions`. These argument flags are mapped from the `make` commands below respectively:
+
+```
+make test FILES="tests/pipelines/data_processing/test_pipeline.py tests/pipelines/data_processing/test_nodes.py"
+```
+
+```
+make test FUNCTIONS="test_data_processing_pipeline test_project_path"
+```
+
+> [!TIP]
+> This will be increasingly helpful when the number of unit tests and/or integration tests starts to grow. Consult the [Makefile](Makefile) for more information.

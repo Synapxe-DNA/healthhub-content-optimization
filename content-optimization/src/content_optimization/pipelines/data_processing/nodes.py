@@ -8,13 +8,13 @@ import re
 from typing import Any, Callable
 
 import pandas as pd
-from alive_progress import alive_bar
 from content_optimization.pipelines.data_processing.extractor import HTMLExtractor
 from content_optimization.pipelines.data_processing.utils import (
     flag_articles_to_remove_after_extraction,
     flag_articles_to_remove_before_extraction,
     select_and_rename_columns,
 )
+from tqdm import tqdm
 
 
 def standardize_columns(
@@ -61,42 +61,42 @@ def standardize_columns(
     """
     all_contents_standardized = {}
 
-    with alive_bar(
-        len(all_contents), title="Standardizing columns", force_tty=True
-    ) as bar:
-        for filename, partition_load_func in all_contents.items():
-            # Get content category from filename
-            content_category = re.sub(r"export-published-", "", filename.split("_")[0])
-            bar.text(f"Standardizing: {content_category}")
+    pbar = tqdm(all_contents.items())
 
-            # Load partition data
-            df = partition_load_func()
+    for filename, partition_load_func in pbar:
+        # Get content category from filename
+        content_category = re.sub(r"export-published-", "", filename.split("_")[0])
+        pbar.set_description(f"Standardizing: {content_category}")
 
-            # Standardize column names
-            columns_to_add = columns_to_add_cfg.get(content_category, None)
-            columns_to_keep = columns_to_keep_cfg.get(content_category, None)
+        # Load partition data
+        df = partition_load_func()
 
-            # Standardize columns
-            df = select_and_rename_columns(
-                df, columns_to_add, columns_to_keep, default_columns, content_category
-            )
+        # Standardize column names
+        columns_to_add = columns_to_add_cfg.get(content_category, None)
+        columns_to_keep = columns_to_keep_cfg.get(content_category, None)
 
-            # Strip all whitespaces across all strings in dataframe
-            # See: https://github.com/Wilsven/healthhub-content-optimization/issues/53
-            df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+        # Standardize columns
+        df = select_and_rename_columns(
+            df, columns_to_add, columns_to_keep, default_columns, content_category
+        )
 
-            # Mark articles with no content, was rejected by Excel due to a "Value
-            # exceeded maximum cell size" error or with dummy content in `to_remove` column
-            df = flag_articles_to_remove_before_extraction(df)
+        # Strip all whitespaces across all strings in dataframe
+        # See: https://github.com/Wilsven/healthhub-content-optimization/issues/53
+        df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
-            all_contents_standardized[content_category] = df
-            bar()
+        # Mark articles with no content, was rejected by Excel due to a "Value
+        # exceeded maximum cell size" error or with dummy content in `to_remove` column
+        df = flag_articles_to_remove_before_extraction(df)
+
+        all_contents_standardized[content_category] = df
 
     return all_contents_standardized
 
 
 def extract_data(
-    all_contents_standardized: dict[str, Callable[[], Any]], word_count_cutoff: int
+    all_contents_standardized: dict[str, Callable[[], Any]],
+    word_count_cutoff: int,
+    whitelist: list[int],
 ) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
     """
     Extracts data from processed content and stores it in parquet files
@@ -111,6 +111,8 @@ def extract_data(
         word_count_cutoff (int): The minimum number of words in an article
             to be considered before flagging for removal.
 
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
+
     Returns:
         tuple[dict[str, pd.DataFrame], dict[str, str]]:
             A tuple containing two dictionaries. The first dictionary contains
@@ -123,81 +125,83 @@ def extract_data(
     all_contents_extracted = {}  # to store as partitioned parquet files
     all_extracted_text = {}  # to store as partitioned text files
 
-    with alive_bar(
-        len(all_contents_standardized), title="Extracting data", force_tty=True
-    ) as bar:
-        for content_category, partition_load_func in all_contents_standardized.items():
-            bar.text(f"Extracting: {content_category}")
+    pbar = tqdm(all_contents_standardized.items())
 
-            # Load partition data
-            df = partition_load_func()
+    for content_category, partition_load_func in pbar:
+        pbar.set_description(f"Extracting: {content_category}")
+        # Load partition data
+        df = partition_load_func()
 
-            # Initialise new columns in dataframe to store extracted data
-            df["has_table"] = None
-            df["has_image"] = None
-            df["related_sections"] = None
-            df["extracted_tables"] = None
-            df["extracted_links"] = None
-            df["extracted_headers"] = None
-            df["extracted_img_alt_text"] = None
-            df["extracted_content_body"] = None
+        # Initialise new columns in dataframe to store extracted data
+        df["has_table"] = None
+        df["has_image"] = None
+        df["related_sections"] = None
+        df["extracted_tables"] = None
+        df["extracted_links"] = None
+        df["extracted_headers"] = None
+        df["extracted_img_alt_text"] = None
+        df["extracted_content_body"] = None
 
-            for index, row in df.iterrows():
-                # Skip extraction for those articles flagged for removal
-                # TODO: Need to monitor implementation of "to_remove" as extracted_content is skipped
-                if row["to_remove"]:
+        for index, row in df.iterrows():
+            # Skip extraction for those articles flagged for removal
+            # TODO: Need to monitor implementation of "to_remove" as extracted_content is skipped
+            if row["to_remove"]:
+                # Check if the article is in the whitelist
+                if row["id"] not in whitelist:
                     continue
+                else:
+                    # Whitelist article
+                    df.at[index, "to_remove"] = False
 
-                # Replace all forward slashes with hyphens to avoid saving as folders
-                title = re.sub(r"\/", "-", row["title"]).strip()
+            # Replace all forward slashes with hyphens to avoid saving as folders
+            title = re.sub(r"\/", "-", row["title"]).strip()
 
-                # Get the HTML content for extraction and relevant data for logging
-                content_name = row["content_name"]
-                full_url = row["full_url"]
-                html_content = row["content_body"]
+            # Get the HTML content for extraction and relevant data for logging
+            content_name = row["content_name"]
+            full_url = row["full_url"]
+            html_content = row["content_body"]
 
-                # Extract text from HTML using the HTMLExtractor Class
-                extractor = HTMLExtractor(
-                    content_name, content_category, full_url, html_content
-                )
-                has_table = extractor.check_for_table()
-                has_image = extractor.check_for_image()
-                related_sections = extractor.extract_related_sections()
-                extracted_tables = extractor.extract_tables()
-                extracted_links = extractor.extract_links()
-                extracted_headers = extractor.extract_headers()
-                extracted_img_alt_text = extractor.extract_alt_text_from_img()
-                extracted_content_body = extractor.extract_text()
+            # Extract text from HTML using the HTMLExtractor Class
+            extractor = HTMLExtractor(
+                content_name, content_category, full_url, html_content
+            )
+            has_table = extractor.check_for_table()
+            has_image = extractor.check_for_image()
+            related_sections = extractor.extract_related_sections()
+            extracted_tables = extractor.extract_tables()
+            extracted_links = extractor.extract_links()
+            extracted_headers = extractor.extract_headers()
+            extracted_img_alt_text = extractor.extract_alt_text_from_img()
+            extracted_content_body = extractor.extract_text()
 
-                # Store extracted data into the dataframe
-                df.at[index, "has_table"] = has_table
-                df.at[index, "has_image"] = has_image
-                df.at[index, "related_sections"] = related_sections
-                df.at[index, "extracted_tables"] = extracted_tables
-                df.at[index, "extracted_links"] = extracted_links
-                df.at[index, "extracted_headers"] = extracted_headers
-                df.at[index, "extracted_img_alt_text"] = extracted_img_alt_text
-                df.at[index, "extracted_content_body"] = extracted_content_body
+            # Store extracted data into the dataframe
+            df.at[index, "has_table"] = has_table
+            df.at[index, "has_image"] = has_image
+            df.at[index, "related_sections"] = related_sections
+            df.at[index, "extracted_tables"] = extracted_tables
+            df.at[index, "extracted_links"] = extracted_links
+            df.at[index, "extracted_headers"] = extracted_headers
+            df.at[index, "extracted_img_alt_text"] = extracted_img_alt_text
+            df.at[index, "extracted_content_body"] = extracted_content_body
 
-                # Substitute forbidden characters for filenames with _
-                title = re.sub(r'[<>:"/\\|?*]', "_", title)
+            # Substitute forbidden characters for filenames with _
+            title = re.sub(r'[<>:"/\\|?*]', "_", title)
 
-                # Truncate title to 25 characters and append the id
-                # See: https://github.com/Wilsven/healthhub-content-optimization/issues/42
-                title = title[:25] + f"_{row['id']}"
+            # Truncate title to 25 characters and append the id
+            # See: https://github.com/Wilsven/healthhub-content-optimization/issues/42
+            title = title[:25] + f"_{row['id']}"
 
-                # Store text files in its own folder named `content_category`
-                all_extracted_text[os.path.join(content_category, title)] = (
-                    extracted_content_body
-                )
+            # Store text files in its own folder named `content_category`
+            all_extracted_text[os.path.join(content_category, title)] = (
+                extracted_content_body
+            )
 
-            # After extraction, we flag to remove articles with no content,
-            # duplicated content, duplicated URL or below word count cutoff
-            df = flag_articles_to_remove_after_extraction(df, word_count_cutoff)
+        # After extraction, we flag to remove articles with no content,
+        # duplicated content, duplicated URL or below word count cutoff
+        df = flag_articles_to_remove_after_extraction(df, word_count_cutoff, whitelist)
 
-            # Store dataframes in a parquet file named `content_category`
-            all_contents_extracted[content_category] = df
-            bar()
+        # Store dataframes in a parquet file named `content_category`
+        all_contents_extracted[content_category] = df
 
     return all_contents_extracted, all_extracted_text
 

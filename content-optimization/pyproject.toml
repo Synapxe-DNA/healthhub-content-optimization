@@ -45,6 +45,9 @@ source_dir = "src"
 addopts = """
 --cov-report term-missing \
 --cov src/content_optimization -ra"""
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
 
 [tool.coverage.report]
 fail_under = 0

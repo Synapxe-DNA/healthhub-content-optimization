@@ -1,6 +1,10 @@
 import re
+import warnings
 
 import pandas as pd
+from pandas.errors import SettingWithCopyWarning
+
+warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 
 
 def select_and_rename_columns(
@@ -41,9 +45,6 @@ def select_and_rename_columns(
          - The function assumes that the length of `columns_to_keep` and `default_columns` are the same.
          - Columns not in `columns_to_keep` will be dropped from the resulting DataFrame.
     """
-    # Drop all columns which have only null values
-    df = df.dropna(axis=1, how="all")
-
     if columns_to_add is not None:
         # Add back selected columns which were dropped because they contained only null values
         df = df.reindex(columns=[*df.columns, *columns_to_add])
@@ -116,19 +117,28 @@ def flag_articles_to_remove_before_extraction(
     return df
 
 
-def flag_no_extracted_content(df: pd.DataFrame) -> pd.DataFrame:
+def flag_no_extracted_content(df: pd.DataFrame, whitelist: list[int]) -> pd.DataFrame:
     """
     Flags rows in the given DataFrame where the `extracted_content_body` column is empty.
 
     Args:
         df (pd.DataFrame): The DataFrame to flag rows in.
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
 
     Returns:
         pd.DataFrame:
             The modified DataFrame with the `to_remove` and `remove_type` columns updated. The `remove_type`
             column is updated with the type of "No Extracted Content".
     """
-    no_extracted_content_indexes = df.query("extracted_content_body == ''").index
+    # All content ids without extracted content
+    no_extracted_content_ids = set(
+        df[df["extracted_content_body"] == ""].id.to_list()
+    ).difference(set(whitelist))
+
+    # All content without extracted content indexes
+    no_extracted_content_indexes = df.query(
+        f"id in {list(no_extracted_content_ids)}"
+    ).index
 
     # Update `to_remove`
     df.loc[no_extracted_content_indexes, "to_remove"] = True
@@ -139,7 +149,9 @@ def flag_no_extracted_content(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def flag_duplicated(df: pd.DataFrame, column: str) -> pd.DataFrame:
+def flag_duplicated(
+    df: pd.DataFrame, whitelist: list[int], column: str
+) -> pd.DataFrame:
     """
     Flags duplicated rows in the given DataFrame based on the specified column.
     This function only inspects for duplicates in two columns:
@@ -147,6 +159,7 @@ def flag_duplicated(df: pd.DataFrame, column: str) -> pd.DataFrame:
 
     Args:
         df (pd.DataFrame): The DataFrame to flag duplicated rows in.
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
         column (str):
             The column to check for duplicated values. Must be either
             `extracted_content_body` and `full_url`.
@@ -188,6 +201,9 @@ def flag_duplicated(df: pd.DataFrame, column: str) -> pd.DataFrame:
         # However, we'd overwrite the previous flags. This is kept as is, for now.
         for j in duplicated_indexes:
             if not df.iloc[j]["to_remove"]:
+                # Ignore whitelisted articles
+                if df.iloc[j]["id"] in whitelist:
+                    continue
                 # Update `to_remove`
                 df.at[j, "to_remove"] = True
 
@@ -198,7 +214,7 @@ def flag_duplicated(df: pd.DataFrame, column: str) -> pd.DataFrame:
 
 
 def flag_below_word_count_cutoff(
-    df: pd.DataFrame, word_count_cutoff: int
+    df: pd.DataFrame, word_count_cutoff: int, whitelist: list[int]
 ) -> pd.DataFrame:
     """
     Flags articles in a DataFrame based on the word count in the extracted content body.
@@ -208,6 +224,7 @@ def flag_below_word_count_cutoff(
         word_count_cutoff (int):
             The word count for an article to be flagged. If the word count falls below this
             threshold, the article is flagged.
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
 
     Returns:
         pd.DataFrame:
@@ -226,6 +243,14 @@ def flag_below_word_count_cutoff(
     # Get the indices of the True values
     word_count_indexes = indexes[indexes].index
 
+    # All content ids below word count cutoff
+    word_count_ids = set(df.iloc[word_count_indexes].id.to_list()).difference(
+        set(whitelist)
+    )
+
+    # All content below word count cutoff indexes
+    word_count_indexes = df.query(f"id in {list(word_count_ids)}").index
+
     # Update `to_remove`
     df.loc[word_count_indexes, "to_remove"] = True
 
@@ -236,7 +261,7 @@ def flag_below_word_count_cutoff(
 
 
 def flag_articles_to_remove_after_extraction(
-    df: pd.DataFrame, word_count_cutoff: int
+    df: pd.DataFrame, word_count_cutoff: int, whitelist: list[int]
 ) -> pd.DataFrame:
     """
     Flags articles to remove after extraction based on several different criteria.
@@ -244,14 +269,15 @@ def flag_articles_to_remove_after_extraction(
     Args:
         df (pd.DataFrame): The DataFrame containing the articles.
         word_count_cutoff (int): The word count threshold for flagging articles.
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
 
     Returns:
         pd.DataFrame: The DataFrame with updated flags for articles to remove.
     """
-    df = flag_no_extracted_content(df)
-    df = flag_duplicated(df, column="extracted_content_body")
-    df = flag_duplicated(df, column="full_url")
-    df = flag_below_word_count_cutoff(df, word_count_cutoff)
+    df = flag_no_extracted_content(df, whitelist)
+    df = flag_duplicated(df, whitelist, column="extracted_content_body")
+    df = flag_duplicated(df, whitelist, column="full_url")
+    df = flag_below_word_count_cutoff(df, word_count_cutoff, whitelist)
 
     return df
 
