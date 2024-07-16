@@ -19,6 +19,12 @@ def datasets() -> dict:
                 project_path / "tests" / "data" / "01_raw" / "all_contents"
             ).as_posix(),
         ),
+        "missing_contents": PartitionedDataset(
+            dataset="text.TextDataset",
+            path=(
+                project_path / "tests" / "data" / "01_raw" / "missing_contents"
+            ).as_posix(),
+        ),
         "all_contents_standardized": PartitionedDataset(
             dataset="pandas.ParquetDataset",
             path=(
@@ -75,6 +81,7 @@ def catalog(datasets: dict, parameters: dict) -> DataCatalog:
             "params:columns_to_keep": parameters["columns_to_keep"],
             "params:default_columns": parameters["default_columns"],
             "params:word_count_cutoff": parameters["word_count_cutoff"],
+            "params:whitelist": parameters["whitelist"],
             "all_contents_standardized": datasets["all_contents_standardized"],
             "all_contents_extracted": datasets["all_contents_extracted"],
             "merged_data": datasets["merged_data"],
