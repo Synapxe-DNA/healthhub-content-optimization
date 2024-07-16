@@ -117,10 +117,11 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
         3. Expects the same number of articles with extracted content body as the number of output text files
         4. Expects the extracted content body to meet the word count cutoff
     """
+    whitelist = catalog.load("params:whitelist")
     all_contents_extracted, all_extracted_text = extract_data(
         catalog.load("all_contents_added"),
         word_count_cutoff,
-        catalog.load("params:whitelist"),
+        whitelist,
     )
 
     # Check if output is a dictionary
@@ -141,8 +142,6 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
         }.issubset(df.columns), "Expected columns missing in the extracted dataframe"
 
         # Filter out articles that will be removed
-        df_keep = df[~df["to_remove"]]
-
         # Check if extracted content body of removed articles are below the word count
         assert (
             df.query("remove_type == 'Below Word Count'")["extracted_content_body"]
@@ -150,9 +149,11 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
             .all()
         ), "Found extracted content body under `remove_type == Below Word Count`` above the word count cutoff"
 
-        # Check if extracted content body of kept articles meets the word count cutoff
+        # Check if extracted content body of kept articles (excluding whitelisted articles) meets the word count cutoff
+        df_keep = df[~df["to_remove"]]
+        df_filtered = df_keep[~df_keep["id"].isin(whitelist)]
         assert (
-            df_keep["extracted_content_body"]
+            df_filtered["extracted_content_body"]
             .apply(lambda x: len(x.split()) >= word_count_cutoff)
             .all()
         ), "Found extracted content body below the word count cutoff that is not removed"
