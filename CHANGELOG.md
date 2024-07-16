@@ -1,6 +1,14 @@
 # Changelog
 
+## July 16, 2024 <a id="july-16-2024"></a>
+
+- Cleaned up Imports to better handle pytest environment
+- Improved test cases for `data_processing` pipeline
+- Implemented test cases for `add_contents` node
+- Implemented article whitelisting within `data_processing` pipeline
+
 ## July 15, 2024 <a id="july-15-2024"></a>
+
 - Added selected articles with `Excel Error` back into the dataset
 
 ## July 12, 2024 <a id="july-12-2024"></a>
