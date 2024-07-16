@@ -2,10 +2,7 @@ from typing import List
 
 from app.models.article import ArticleMeta
 from app.models.edge import Edge
-from app.models.job_combine import JobCombine
-from app.models.job_ignore import JobIgnore
-from app.models.job_optimise import JobOptimise
-from app.models.job_remove import JobRemove
+from app.models.job import Job
 from pydantic import BaseModel, Field
 
 
@@ -15,10 +12,5 @@ class Group(BaseModel):
     name: str = Field(default="")
     edges: List[Edge] = Field(default=[])
 
-    created_at: str = Field(default="")
-
-    pending_articles: List[ArticleMeta] = Field(default=[])  # Articles not reviewed yet
-    remove_articles: List[JobRemove] = Field(default=[])
-    ignore_articles: List[JobIgnore] = Field(default=[])
-    optimise_articles: List[JobOptimise] = Field(default=[])
-    combine_articles: List[JobCombine] = Field(default=[])
+    articles: List[ArticleMeta] = Field(default=[])  # Articles not reviewed yet
+    job: Job = Field(default=None)

@@ -11,15 +11,19 @@ from pydantic import Field
 
 class GroupDocument(Document):
     name: str
-    created_at: str = Field(default="")
 
-    pending_articles: List[Link["ArticleDocument"]] = Field(
-        default=[]
-    )  # Articles not reviewed yet
+    articles: List[Link["ArticleDocument"]]
+
+    job: Link["JobDocument"] = None
+
+
+class JobDocument(Document):
+    group: Link[GroupDocument]
+    created_at: str
     remove_articles: List[Link["JobRemoveDocument"]] = Field(default=[])
     ignore_articles: List[Link["JobIgnoreDocument"]] = Field(default=[])
     optimise_articles: List[Link["JobOptimiseDocument"]] = Field(default=[])
-    combine_articles: List[Link["JobOptimiseDocument"]] = Field(default=[])
+    combine_articles: List[Link["JobCombineDocument"]] = Field(default=[])
 
 
 class ArticleDocument(Document):
@@ -87,6 +91,7 @@ class JobOptimiseDocument(Document):
 
 class JobIgnoreDocument(Document):
     article: Link[ArticleDocument]
+    remarks: str = Field(default="")
 
 
 class JobRemoveDocument(Document):

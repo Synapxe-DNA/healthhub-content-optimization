@@ -5,6 +5,7 @@ from app.models.article import Article, ArticleMeta
 from app.models.edge import Edge
 from app.models.generated_article import GeneratedArticle
 from app.models.group import Group
+from app.models.job import Job
 from app.models.job_combine import JobCombine
 
 
@@ -119,6 +120,33 @@ class DbConnector(ABC):
         pass
 
     """
+    Methods related to jobs
+    """
+
+    @abstractmethod
+    async def create_job(
+        self,
+        group_id: str,
+        remove_jobs: List[str],
+        optimise_jobs: List[str],
+        ignore_jobs: List[str],
+        combine_jobs: List[str],
+    ) -> str:
+        """
+        Method to create a job record
+        :param remove_jobs: {List[JobRemove]}
+        :param optimise_jobs: {List[JobOptimise]}
+        :param ignore_jobs: {List[JobIgnore]}
+        :param combine_jobs: {List[JobCombine]}
+        :return: {str} id of the job just created
+        """
+        pass
+
+    @abstractmethod
+    async def get_job(self, job_id: str) -> Job:
+        pass
+
+    """
     Methods related to combination jobs
     """
 
@@ -139,6 +167,15 @@ class DbConnector(ABC):
         :param remarks: {str} remarks from the user for this sub group
         :param context: {str} context from user to add on to this subgroup
         :return: {str} id of the job just created
+        """
+        pass
+
+    @abstractmethod
+    async def get_combine_job(self, job_combine_id) -> JobCombine:
+        """
+        Method to get a combine job record
+        :param job_combine_id: {str} ID of the combine job
+        :return: {JobCombine} combine job record
         """
         pass
 
@@ -179,6 +216,15 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
+    async def get_optimise_job(self, job_optimise_id):
+        """
+        Method to get a optimise job record
+        :param job_optimise_id: {str} ID of the optimise job
+        :return: {JobOptimise} optimise job record
+        """
+        pass
+
+    @abstractmethod
     async def get_all_optimise_jobs(self) -> List[ArticleMeta]:
         """
         Method to get all optimisation jobs recorded
@@ -196,6 +242,15 @@ class DbConnector(ABC):
         Method to ignore an article based on it's own ID.
         :param article_id:
         :return: {str} id of article ignored
+        """
+        pass
+
+    @abstractmethod
+    async def get_ignore_job(self, job_ignore_id):
+        """
+        Method to get a ignore job record
+        :param job_ignore_id: {str} ID of the ignore job
+        :return: {JobIgnore} ignore job record
         """
         pass
 
@@ -220,6 +275,13 @@ class DbConnector(ABC):
         :return: {str} id of article removed
         """
         pass
+
+    async def get_remove_job(self, job_remove_id):
+        """
+        Method to get a remove job record
+        :param job_remove_id: {str} ID of the remove job
+        :return: {JobRemove} remove job record
+        """
 
     @abstractmethod
     async def get_all_remove_jobs(self) -> List[ArticleMeta]:

@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 
 class JobCombine(BaseModel):
-    id: str
     group_id: str
     group_name: str
     sub_group_name: str
