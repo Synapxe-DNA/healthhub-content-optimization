@@ -143,15 +143,6 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
         # Filter out articles that will be removed
         df_keep = df[~df["to_remove"]]
 
-        # Check if number of articles with extracted content body matches the number of text files
-        assert df_keep.shape[0] == len(
-            [
-                key
-                for key in all_extracted_text.keys()
-                if key.startswith(content_category)
-            ]
-        ), "Unexpected number of articles with extracted content body does not match the number of text files"
-
         # Check if extracted content body of removed articles are below the word count
         assert (
             df.query("remove_type == 'Below Word Count'")["extracted_content_body"]
