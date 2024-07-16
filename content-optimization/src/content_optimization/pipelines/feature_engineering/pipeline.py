@@ -3,8 +3,9 @@ This is a boilerplate pipeline 'feature_engineering'
 generated using Kedro 0.19.6
 """
 
-from content_optimization.pipelines.feature_engineering.nodes import extract_keywords
 from kedro.pipeline import Pipeline, node, pipeline
+
+from .nodes import extract_keywords
 
 
 def create_pipeline(**kwargs) -> Pipeline:
