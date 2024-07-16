@@ -78,7 +78,7 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
         4. Expects the extracted content body to meet the word count cutoff
     """
     all_contents_extracted, all_extracted_text = extract_data(
-        catalog.load("all_contents_standardized"),
+        catalog.load("all_contents_extracted"),
         word_count_cutoff,
     )
 
@@ -97,19 +97,23 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
             "extracted_headers",
             "extracted_img_alt_text",
             "extracted_content_body",
-        }.issubset(df.columns), "Exptected columns missing in the extracted dataframe"
+        }.issubset(df.columns), "Expected columns missing in the extracted dataframe"
+
+        # Filter out articles that will be removed
+        df_keep = df[~df["to_remove"]]
 
         # Check if number of articles with extracted content body matches the number of text files
-        assert df.query("to_remove == False").shape[0] == len(
+        assert df_keep.shape[0] == len(
             [
                 key
                 for key in all_extracted_text.keys()
                 if key.startswith(content_category)
             ]
         ), "Unexpected number of articles with extracted content body does not match the number of text files"
-        # Check if extracted content body meets the word count cutoff
+
+        # Check if extracted content body of kept articles meets the word count cutoff
         assert (
-            df["extracted_content_body"]
+            df_keep["extracted_content_body"]
             .apply(lambda x: len(x.split()) >= word_count_cutoff)
             .all()
         ), "Found extracted content body below the word count cutoff"
