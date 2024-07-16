@@ -30,7 +30,11 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=extract_data,
-                inputs=["all_contents_added", "params:word_count_cutoff"],
+                inputs=[
+                    "all_contents_added",
+                    "params:word_count_cutoff",
+                    "params:whitelist",
+                ],
                 outputs=["all_contents_extracted", "all_extracted_text"],
                 name="extract_data_node",
             ),
