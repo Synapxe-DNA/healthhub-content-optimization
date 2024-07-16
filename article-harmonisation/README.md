@@ -33,7 +33,7 @@ HUGGINGFACEHUB_API_TOKEN = "YOUR_TOKEN_HERE"
 Finally, head to [`harmonisation.py`](harmonisation.py) and run the file to check if your packages are working.
 
 ## Using the project
-To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `harmonisation.py` and run the file to start the article harmonisation process. 
+To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `harmonisation.py` and run the file to start the article harmonisation process.
 
 Currently, the article harmonisation and optimisation is a single process but it might be bound to change in future developments.
 
