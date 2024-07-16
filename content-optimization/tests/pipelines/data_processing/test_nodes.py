@@ -80,6 +80,7 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
     all_contents_extracted, all_extracted_text = extract_data(
         catalog.load("all_contents_standardized"),
         word_count_cutoff,
+        catalog.load("params:whitelist"),
     )
 
     # Check if output is a dictionary
@@ -109,10 +110,10 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
         ), "Unexpected number of articles with extracted content body does not match the number of text files"
         # Check if extracted content body meets the word count cutoff
         assert (
-            df["extracted_content_body"]
-            .apply(lambda x: len(x.split()) >= word_count_cutoff)
+            df.query("remove_type == 'Below Word Count'")["extracted_content_body"]
+            .apply(lambda x: len(x.split()) <= word_count_cutoff)
             .all()
-        ), "Found extracted content body below the word count cutoff"
+        ), "Found extracted content body above the word count cutoff"
 
 
 def test_merge_data(catalog: DataCatalog):

@@ -293,3 +293,26 @@ default_columns:
   - cumulative_percentage_total_views
 
 word_count_cutoff: 90 # see word_count.ipynb for analysis on threshold
+
+# See: https://bitly.cx/IlwNV (Google Excel)
+whitelist:
+  - 1445216
+  - 1444496 # has a duplicated URL
+  - 1446090 # has a duplicated URL
+  - 1442907
+  - 1443325
+  - 1445019
+  - 1442928
+  - 1445021
+  - 1444996
+  - 1442952
+  - 1445017
+  - 1445212
+  - 1445958
+  - 1444997
+  - 1445027
+  - 1445024
+  - 1445002
+  - 1444991
+  - 1445000
+  - 1445733
