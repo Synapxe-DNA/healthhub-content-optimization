@@ -305,20 +305,15 @@ def flag_below_word_count_cutoff(
             removed. The `remove_type` column is also updated with the type of "Below Word Count".
 
     """
-    indexes = df.query(
-        "extracted_content_body.notna() "
-        "and remove_type != 'Duplicated Content' "
-        "and remove_type != 'Duplicated URL'"
-        "and remove_type != 'Recipe'"
-    )["extracted_content_body"].apply(
+    indexes = df.query("to_remove != True")["extracted_content_body"].apply(
         lambda x: len(x.split()) > 0 and len(x.split()) <= word_count_cutoff
     )
 
     # Get the indexes of the True values
-    word_count_indexes = indexes[indexes].index
+    all_word_count_indexes = indexes[indexes].index
 
     # All content ids below word count cutoff
-    word_count_ids = set(df.iloc[word_count_indexes].id.to_list()).difference(
+    word_count_ids = set(df.iloc[all_word_count_indexes].id.to_list()).difference(
         set(whitelist)
     )
 
@@ -330,6 +325,68 @@ def flag_below_word_count_cutoff(
 
     # Set `remove_type` for all indexes
     df.loc[word_count_indexes, "remove_type"] = "Below Word Count"
+
+    return df
+
+
+def flag_multilingual_content(df: pd.DataFrame, whitelist: list[int]) -> pd.DataFrame:
+    """
+    Flags articles in a DataFrame if it is purely Chinese, Malay or Tamil.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the articles.
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
+
+    Returns:
+        pd.DataFrame:
+            The DataFrame with a new column `to_remove` indicating whether an article should be
+            removed. The `remove_type` column is also updated with the type of "Multilingual".
+    """
+
+    def find_multilingual(friendly_url: str) -> bool:
+        """
+        Find multilingual articles as True
+        Args:
+            friendly_url: The file pointer of the article relative to the URL
+
+        Returns:
+            bool: True if the article is multilingual, False otherwise
+
+        """
+        # Return false if value is None
+        if friendly_url is None:
+            return False
+
+        # Get the last word from the friendly_url
+        check_lang = friendly_url.split("_")[-1]
+        check_lang = check_lang.split("-")[-1]
+        if re.search("(chinese|tamil|malay)", check_lang):
+            return True
+        else:
+            return False
+
+    # Find articles that are purely Chinese, Malay or Tamil
+    all_multilingual_indexes = df.index[
+        df["friendly_url"].apply(find_multilingual)
+    ].to_list()
+    # Find articles that are already considered as `to_remove`
+    removed_indexes = df.index[df["to_remove"]].to_list()
+    # Filter out removed_indexes from all_multilingual_indexes
+    filtered_multilingual_indexes = list(
+        set(all_multilingual_indexes).difference(set(removed_indexes))
+    )
+    # Filter out multilingual articles that are not whitelisted
+    multilingual_ids = set(
+        df.iloc[filtered_multilingual_indexes].id.to_list()
+    ).difference(set(whitelist))
+
+    # All content below word count cutoff indexes
+    multilingual_indexes = df.query(f"id in {list(multilingual_ids)}").index
+
+    # Update `to_remove`
+    df.loc[multilingual_indexes, "to_remove"] = True
+    # Set remove_type for all indexes
+    df.loc[multilingual_indexes, "remove_type"] = "Multilingual"
 
     return df
 
@@ -352,6 +409,7 @@ def flag_articles_to_remove_after_extraction(
     df = flag_duplicated(df, whitelist, column="extracted_content_body")
     df = flag_duplicated(df, whitelist, column="full_url")
     df = flag_recipe_articles(df, whitelist)
+    df = flag_multilingual_content(df, whitelist)
     df = flag_below_word_count_cutoff(df, word_count_cutoff, whitelist)
 
     return df

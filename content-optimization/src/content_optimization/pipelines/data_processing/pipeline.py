@@ -4,6 +4,7 @@ generated using Kedro 0.19.6
 """
 
 from content_optimization.pipelines.data_processing.nodes import (
+    add_contents,
     extract_data,
     merge_data,
     standardize_columns,
@@ -26,9 +27,15 @@ def create_pipeline(**kwargs) -> Pipeline:
                 name="standardize_columns_node",
             ),
             node(
+                func=add_contents,
+                inputs=["all_contents_standardized", "missing_contents"],
+                outputs="all_contents_added",
+                name="add_contents_node",
+            ),
+            node(
                 func=extract_data,
                 inputs=[
-                    "all_contents_standardized",
+                    "all_contents_added",
                     "params:word_count_cutoff",
                     "params:whitelist",
                 ],
