@@ -303,7 +303,6 @@ def flag_below_word_count_cutoff(
         pd.DataFrame:
             The DataFrame with a new column `to_remove` indicating whether an article should be
             removed. The `remove_type` column is also updated with the type of "Below Word Count".
-
     """
     indexes = df.query("to_remove != True")["extracted_content_body"].apply(
         lambda x: len(x.split()) > 0 and len(x.split()) <= word_count_cutoff
@@ -343,35 +342,33 @@ def flag_multilingual_content(df: pd.DataFrame, whitelist: list[int]) -> pd.Data
             removed. The `remove_type` column is also updated with the type of "Multilingual".
     """
 
-    def find_multilingual(friendly_url: str) -> bool:
+    def find_multilingual(friendly_url: str | None = None) -> bool:
         """
-        Find multilingual articles as True
+        A function that checks if a friendly URL is purely Chinese, Malay, or Tamil.
+
         Args:
-            friendly_url: The file pointer of the article relative to the URL
+            friendly_url (str | None): The friendly URL to check.
 
         Returns:
-            bool: True if the article is multilingual, False otherwise
-
+            bool: True if the friendly URL is purely Chinese, Malay, or Tamil, False otherwise.
         """
         # Return false if value is None
         if friendly_url is None:
             return False
 
         # Get the last word from the friendly_url
-        check_lang = friendly_url.split("_")[-1]
-        check_lang = check_lang.split("-")[-1]
-        if re.search("(chinese|tamil|malay)", check_lang):
-            return True
-        else:
-            return False
+        check_lang = friendly_url.split("_")[-1].split("-")[-1]
+        return True if re.search("(chinese|tamil|malay)", check_lang.lower()) else False
 
     # Find articles that are purely Chinese, Malay or Tamil
     all_multilingual_indexes = df.index[
         df["friendly_url"].apply(find_multilingual)
     ].to_list()
+
     # Find articles that are already considered as `to_remove`
     removed_indexes = df.index[df["to_remove"]].to_list()
-    # Filter out removed_indexes from all_multilingual_indexes
+
+    # Filter out `removed_indexes` from all_multilingual_indexes
     filtered_multilingual_indexes = list(
         set(all_multilingual_indexes).difference(set(removed_indexes))
     )
@@ -380,12 +377,13 @@ def flag_multilingual_content(df: pd.DataFrame, whitelist: list[int]) -> pd.Data
         df.iloc[filtered_multilingual_indexes].id.to_list()
     ).difference(set(whitelist))
 
-    # All content below word count cutoff indexes
+    # All content mulitlingual indexes
     multilingual_indexes = df.query(f"id in {list(multilingual_ids)}").index
 
     # Update `to_remove`
     df.loc[multilingual_indexes, "to_remove"] = True
-    # Set remove_type for all indexes
+
+    # Set `remove_type` for all indexes
     df.loc[multilingual_indexes, "remove_type"] = "Multilingual"
 
     return df
