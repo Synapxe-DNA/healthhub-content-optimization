@@ -166,6 +166,46 @@ class MongoConnector(DbConnector):
             job=self.__convertToJob(groupDoc.job),
         )
 
+    async def __convertToJobCombine(
+        self, jobCombineDoc: JobCombineDocument
+    ) -> JobCombine:
+        return JobCombine(
+            group_id=jobCombineDoc.group.id,
+            group_name=jobCombineDoc.group.name,
+            sub_group_name=jobCombineDoc.sub_group_name,
+            remarks=jobCombineDoc.remarks,
+            context=jobCombineDoc.context,
+            original_articles=[
+                self.__convertToArticle(a) for a in jobCombineDoc.original_articles
+            ],
+            generated_article=jobCombineDoc.generated_article,
+        )
+
+    async def __convertToJobOptimise(
+        self, jobOptimiseDoc: JobOptimiseDocument
+    ) -> JobOptimise:
+        return JobOptimise(
+            original_article=self.__convertToArticle(jobOptimiseDoc.original_article),
+            optimise_title=jobOptimiseDoc.optimise_title,
+            optimise_meta=jobOptimiseDoc.optimise_meta,
+            optimise_content=jobOptimiseDoc.optimise_content,
+            title_remarks=jobOptimiseDoc.title_remarks,
+            meta_remarks=jobOptimiseDoc.meta_remarks,
+            content_remarks=jobOptimiseDoc.content_remarks,
+        )
+
+    async def __convertToJobIgnore(self, jobIgnoreDoc: JobIgnoreDocument) -> JobIgnore:
+        return JobIgnore(
+            article=self.__convertToArticle(jobIgnoreDoc.article),
+            remarks=jobIgnoreDoc.remarks,
+        )
+
+    async def __convertToJobRemove(self, jobRemoveDoc: JobRemoveDocument) -> JobRemove:
+        return JobRemove(
+            article=self.__convertToArticle(jobRemoveDoc.article),
+            remarks=jobRemoveDoc.remarks,
+        )
+
     # endregion
 
     """
@@ -427,36 +467,14 @@ class MongoConnector(DbConnector):
         :return: {JobCombine} combine job record
         """
         job_combine = await JobCombineDocument.get(job_combine_id)
-        return JobCombine(
-            group_id=job_combine.group.id,
-            group_name=job_combine.group.name,
-            sub_group_name=job_combine.sub_group_name,
-            remarks=job_combine.remarks,
-            context=job_combine.context,
-            original_articles=[
-                self.__convertToArticle(a) for a in job_combine.original_articles
-            ],
-            generated_article=job_combine.generated_article,
-        )
+        return self.__convertToJobCombine(job_combine)
 
     async def get_all_combine_jobs(self) -> List[JobCombine]:
         """
         Method to get the combine jobs that have been recorded
         :return: {List[JobCombine]}
         """
-        return [
-            JobCombine(
-                id=str(j.id),
-                group_id=str(j.group.id),
-                group_name=j.group.name,
-                sub_group_name=j.sub_group_name,
-                remarks=j.remarks,
-                original_articles=[
-                    self.__convertToArticle(a) for a in j.original_articles
-                ],
-            )
-            for j in JobCombineDocument.find_all()
-        ]
+        return [self.__convertToJobCombine(j) for j in JobCombineDocument.find_all()]
 
     # endregion
 
@@ -509,32 +527,23 @@ class MongoConnector(DbConnector):
 
         return str(optimise_article.id)
 
-    async def get_optimise_job(self, job_optimise_id):
+    async def get_optimise_job(self, job_optimise_id) -> JobOptimise:
         """
         Method to get a optimise job record
         :param job_optimise_id: {str} ID of the optimise job
         :return: {JobOptimise} optimise job record
         """
         job_optimise = await JobOptimiseDocument.get(job_optimise_id)
-        return JobOptimise(
-            original_article=self.__convertToArticle(job_optimise.original_article),
-            optimise_title=job_optimise.optimise_title,
-            optimise_meta=job_optimise.optimise_meta,
-            optimise_content=job_optimise.optimise_content,
-            title_remarks=job_optimise.title_remarks,
-            meta_remarks=job_optimise.meta_remarks,
-            content_remarks=job_optimise.content_remarks,
-        )
+        return self.__convertToJobOptimise(job_optimise)
 
-    async def get_all_optimise_jobs(self) -> List[ArticleMeta]:
+    async def get_all_optimise_jobs(self) -> List[JobOptimise]:
         """
         Method to get all optimisation jobs recorded
         :return:{List[ArticleMeta]}
         """
 
         return [
-            await self.__convertToArticleMeta(a.original_article)
-            async for a in JobOptimiseDocument.find_all()
+            self.__convertToJobOptimise(o) async for o in JobOptimiseDocument.find_all()
         ]
 
     # endregion
@@ -554,22 +563,18 @@ class MongoConnector(DbConnector):
             await JobIgnoreDocument.insert(ignore_doc)
         return str(ignore_doc.id)
 
-    async def get_ignore_job(self, job_ignore_id):
+    async def get_ignore_job(self, job_ignore_id) -> JobIgnore:
         """
         Method to get a ignore job record
         :param job_ignore_id: {str} ID of the ignore job
         :return: {JobIgnore} ignore job record
         """
         job_ignore = await JobIgnoreDocument.get(job_ignore_id)
-        return JobIgnore(
-            article=self.__convertToArticle(job_ignore.article),
-            remarks=job_ignore.remarks,
-        )
+        return self.__convertToJobIgnore(job_ignore)
 
-    async def get_all_ignore_jobs(self) -> List[ArticleMeta]:
+    async def get_all_ignore_jobs(self) -> List[JobIgnore]:
         return [
-            await self.__convertToArticleMeta(a.article)
-            async for a in JobRemoveDocument.find_all()
+            self.__convertToJobIgnore(i) async for i in JobRemoveDocument.find_all()
         ]
 
     # endregion
@@ -591,22 +596,18 @@ class MongoConnector(DbConnector):
 
         return str(remove_doc.id)
 
-    async def get_remove_job(self, job_remove_id):
+    async def get_remove_job(self, job_remove_id) -> JobRemove:
         """
         Method to get a remove job record
         :param job_remove_id: {str} ID of the remove job
         :return: {JobRemove} remove job record
         """
         job_remove = await JobRemoveDocument.get(job_remove_id)
-        return JobRemove(
-            article=self.__convertToArticle(job_remove.article),
-            remarks=job_remove.remarks,
-        )
+        return self.__convertToJobRemove(job_remove)
 
-    async def get_all_remove_jobs(self) -> List[ArticleMeta]:
+    async def get_all_remove_jobs(self) -> List[JobRemoveDocument]:
         return [
-            await self.__convertToArticleMeta(a.article)
-            async for a in JobRemoveDocument.find_all()
+            self.__convertToJobRemove(r) async for r in JobRemoveDocument.find_all()
         ]
 
     # endregion

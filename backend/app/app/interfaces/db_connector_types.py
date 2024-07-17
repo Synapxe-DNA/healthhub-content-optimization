@@ -7,6 +7,9 @@ from app.models.generated_article import GeneratedArticle
 from app.models.group import Group
 from app.models.job import Job
 from app.models.job_combine import JobCombine
+from app.models.job_ignore import JobIgnore
+from app.models.job_optimise import JobOptimise
+from app.models.job_remove import JobRemove
 
 
 class DbConnector(ABC):
@@ -216,7 +219,7 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def get_optimise_job(self, job_optimise_id):
+    async def get_optimise_job(self, job_optimise_id) -> JobOptimise:
         """
         Method to get a optimise job record
         :param job_optimise_id: {str} ID of the optimise job
@@ -225,10 +228,10 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def get_all_optimise_jobs(self) -> List[ArticleMeta]:
+    async def get_all_optimise_jobs(self) -> List[JobOptimise]:
         """
         Method to get all optimisation jobs recorded
-        :return:{List[ArticleMeta]}
+        :return:{List[JobOptimise]}
         """
         pass
 
@@ -246,7 +249,7 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def get_ignore_job(self, job_ignore_id):
+    async def get_ignore_job(self, job_ignore_id) -> JobIgnore:
         """
         Method to get a ignore job record
         :param job_ignore_id: {str} ID of the ignore job
@@ -255,10 +258,10 @@ class DbConnector(ABC):
         pass
 
     @abstractmethod
-    async def get_all_ignore_jobs(self) -> List[ArticleMeta]:
+    async def get_all_ignore_jobs(self) -> List[JobIgnore]:
         """
-        Method to get all remove records
-        :return: {List[JobCombine]}
+        Method to get all ignore records
+        :return: {List[JobIgnore]}
         """
         pass
 
@@ -276,7 +279,7 @@ class DbConnector(ABC):
         """
         pass
 
-    async def get_remove_job(self, job_remove_id):
+    async def get_remove_job(self, job_remove_id) -> JobRemove:
         """
         Method to get a remove job record
         :param job_remove_id: {str} ID of the remove job
@@ -284,9 +287,9 @@ class DbConnector(ABC):
         """
 
     @abstractmethod
-    async def get_all_remove_jobs(self) -> List[ArticleMeta]:
+    async def get_all_remove_jobs(self) -> List[JobRemove]:
         """
         Method to get all remove records
-        :return: {List[JobCombine]}
+        :return: {List[JobRemove]}
         """
         pass
