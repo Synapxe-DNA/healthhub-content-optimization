@@ -396,15 +396,27 @@ class MongoConnector(DbConnector):
         :param context: {str} context from user to add on to this subgroup
         :return: {str} id of the job just created
         """
-        combine_job = JobCombineDocument(
-            group=group_id,
-            sub_group_name=sub_group_name,
-            remarks=remarks,
-            context=context,
-            original_articles=article_ids,
+
+        combine_job = await JobCombineDocument.find_one(
+            {
+                "group.$id": ObjectId(group_id),
+                "sub_group_name": sub_group_name,
+                "remarks": remarks,
+                "context": context,
+                "original_articles.$id": {"$all": article_ids},
+            }
         )
 
-        await JobCombineDocument.insert(combine_job)
+        if not combine_job:
+            combine_job = JobCombineDocument(
+                group=group_id,
+                sub_group_name=sub_group_name,
+                remarks=remarks,
+                context=context,
+                original_articles=article_ids,
+            )
+
+            await JobCombineDocument.insert(combine_job)
 
         return str(combine_job.id)
 
@@ -414,7 +426,7 @@ class MongoConnector(DbConnector):
         :param job_combine_id: {str} ID of the combine job
         :return: {JobCombine} combine job record
         """
-        job_combine = JobCombineDocument.get(job_combine_id)
+        job_combine = await JobCombineDocument.get(job_combine_id)
         return JobCombine(
             group_id=job_combine.group.id,
             group_name=job_combine.group.name,
@@ -471,16 +483,29 @@ class MongoConnector(DbConnector):
         :param content_remarks: Optional remarks for content optimisation
         :return: {str} id of the job just created
         """
-        optimise_article = JobOptimiseDocument(
-            original_article=article_id,
-            optimise_title=optimise_title,
-            optimise_meta=optimise_meta,
-            optimise_content=optimise_content,
-            title_remarks=title_remarks,
-            meta_remarks=meta_remarks,
-            content_remarks=content_remarks,
+        optimise_article = await JobOptimiseDocument.find_one(
+            {
+                "original_article.$id": article_id,
+                "optimise_title": optimise_title,
+                "optimise_meta": optimise_meta,
+                "optimise_content": optimise_content,
+                "title_remarks": title_remarks,
+                "meta_remarks": meta_remarks,
+                "content_remarks": content_remarks,
+            }
         )
-        await JobOptimiseDocument.insert(optimise_article)
+
+        if not optimise_article:
+            optimise_article = JobOptimiseDocument(
+                original_article=article_id,
+                optimise_title=optimise_title,
+                optimise_meta=optimise_meta,
+                optimise_content=optimise_content,
+                title_remarks=title_remarks,
+                meta_remarks=meta_remarks,
+                content_remarks=content_remarks,
+            )
+            await JobOptimiseDocument.insert(optimise_article)
 
         return str(optimise_article.id)
 
@@ -490,7 +515,7 @@ class MongoConnector(DbConnector):
         :param job_optimise_id: {str} ID of the optimise job
         :return: {JobOptimise} optimise job record
         """
-        job_optimise = JobOptimiseDocument.get(job_optimise_id)
+        job_optimise = await JobOptimiseDocument.get(job_optimise_id)
         return JobOptimise(
             original_article=self.__convertToArticle(job_optimise.original_article),
             optimise_title=job_optimise.optimise_title,
@@ -522,8 +547,11 @@ class MongoConnector(DbConnector):
         :param article_id:
         :return: {str} id of article ignored
         """
-        ignore_doc = JobIgnoreDocument(article=article_id)
-        await JobIgnoreDocument.insert(ignore_doc)
+        ignore_doc = await JobIgnoreDocument.find_one({"article.$id": article_id})
+
+        if not ignore_doc:
+            ignore_doc = JobIgnoreDocument(article=article_id)
+            await JobIgnoreDocument.insert(ignore_doc)
         return str(ignore_doc.id)
 
     async def get_ignore_job(self, job_ignore_id):
@@ -532,7 +560,7 @@ class MongoConnector(DbConnector):
         :param job_ignore_id: {str} ID of the ignore job
         :return: {JobIgnore} ignore job record
         """
-        job_ignore = JobIgnoreDocument.get(job_ignore_id)
+        job_ignore = await JobIgnoreDocument.get(job_ignore_id)
         return JobIgnore(
             article=self.__convertToArticle(job_ignore.article),
             remarks=job_ignore.remarks,
@@ -555,8 +583,12 @@ class MongoConnector(DbConnector):
         :param remarks:
         :return: {str} id of article removed
         """
-        remove_doc = JobRemoveDocument(article=article_id, remarks=remarks)
-        await JobRemoveDocument.insert(remove_doc)
+        remove_doc = await JobRemoveDocument.find_one({"article.$id": article_id})
+
+        if not remove_doc:
+            remove_doc = JobRemoveDocument(article=article_id, remarks=remarks)
+            await JobRemoveDocument.insert(remove_doc)
+
         return str(remove_doc.id)
 
     async def get_remove_job(self, job_remove_id):
@@ -565,7 +597,7 @@ class MongoConnector(DbConnector):
         :param job_remove_id: {str} ID of the remove job
         :return: {JobRemove} remove job record
         """
-        job_remove = JobRemoveDocument.get(job_remove_id)
+        job_remove = await JobRemoveDocument.get(job_remove_id)
         return JobRemove(
             article=self.__convertToArticle(job_remove.article),
             remarks=job_remove.remarks,
