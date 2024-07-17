@@ -84,10 +84,6 @@ def standardize_columns(
         # See: https://github.com/Wilsven/healthhub-content-optimization/issues/53
         df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
-        # Mark articles with no content, was rejected by Excel due to a "Value
-        # exceeded maximum cell size" error or with dummy content in `to_remove` column
-        df = flag_articles_to_remove_before_extraction(df)
-
         all_contents_standardized[content_category] = df
 
     return all_contents_standardized
@@ -121,14 +117,10 @@ def add_contents(
                 continue
             # Assign Raw HTML content to `content_body` column
             df.loc[article_index, "content_body"] = text
-            # TODO: Confirm if you wish to remove Multilingual content
-            # Change remove_type if the content body is in a language other than English
-            if re.search(r"(malay|tamil|chinese)", friendly_url):
-                df.loc[article_index, "remove_type"] = "Multilingual"
-            # Whitelist remaining content
-            else:
-                df.loc[article_index, "to_remove"] = False
-                df.loc[article_index, "remove_type"] = None
+
+        # Mark articles with no content, was rejected by Excel due to a "Value
+        # exceeded maximum cell size" error or with dummy content in `to_remove` column
+        df = flag_articles_to_remove_before_extraction(df)
 
         all_contents_added[content_category] = df
 
@@ -182,7 +174,7 @@ def extract_data(
         df["extracted_links"] = None
         df["extracted_headers"] = None
         df["extracted_img_alt_text"] = None
-        df["extracted_content_body"] = ""
+        df["extracted_content_body"] = None
 
         for index, row in df.iterrows():
             # Skip extraction for those articles flagged for removal unless whitelisted
