@@ -17,6 +17,8 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "params:cfg",
                     "params:selection_options.only_confirmed",
                     "params:selection_options.all",
+                    "params:keywords.model",
+                    "params:keywords.spacy_pipeline",
                     "params:keywords.stop_words",
                     "params:keywords.workers",
                     "params:keywords.use_mmr",

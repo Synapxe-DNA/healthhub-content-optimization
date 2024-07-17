@@ -1,10 +1,27 @@
 # Changelog
 
+## July 12, 2024 <a id="july-12-2024"></a>
+
+- Added unit tests and integration test for [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline
+- Added [data directories](content-optimization/tests/data) for test datasets
+- Removed use of `alive_progress` because of incompatibility with `pytest`
+- Added [`run_tests.py`](run_tests.py) to provide as an entry point for `make test`
+
+## July 9, 2024 <a id="july-9-2024"></a>
+
+- Created [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline
+
 ## July 8, 2024 <a id="july-8-2024"></a>
 
-- Overhauled Text Extraction Pipeline to handle edge cases across the chosen 5 content categories
+- Overhauled the text processing in [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline to handle edge cases across the chosen 5 content categories
 - Added logging statements to monitor for edge cases during extraction (only during development)
 - Added new column `extracted_img_alt_text` to preserve alternate texts present in images
+- Renamed column `type` to `remove_type` for better understanding
+
+---
+
+- Added [`script.py`](script.py) to provide as an entry point for `make clean`
+  - This is an improvement over the previous release on [July 6, 2024](#july-6-2024) where it was not compatible with Windows OS
 
 ## July 6, 2024 <a id="july-6-2024"></a>
 
