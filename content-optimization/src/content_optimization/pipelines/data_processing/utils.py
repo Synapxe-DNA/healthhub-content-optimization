@@ -1,6 +1,7 @@
 import re
 import warnings
 
+import numpy as np
 import pandas as pd
 from pandas.errors import SettingWithCopyWarning
 
@@ -109,7 +110,7 @@ def flag_articles_to_remove_before_extraction(
 
     df["remove_type"] = None
 
-    # Set remove_type for all indexes
+    # Set `remove_type` for all indexes
     df.loc[na_indexes, "remove_type"] = "NaN"
     df.loc[excel_error_indexes, "remove_type"] = "Excel Error"
     df.loc[no_tags_indexes, "remove_type"] = "No HTML Tags"
@@ -143,7 +144,7 @@ def flag_no_extracted_content(df: pd.DataFrame, whitelist: list[int]) -> pd.Data
     # Update `to_remove`
     df.loc[no_extracted_content_indexes, "to_remove"] = True
 
-    # Set remove_type for all indexes
+    # Set `remove_type` for all indexes
     df.loc[no_extracted_content_indexes, "remove_type"] = "No Extracted Content"
 
     return df
@@ -207,8 +208,80 @@ def flag_duplicated(
                 # Update `to_remove`
                 df.at[j, "to_remove"] = True
 
-                # Set remove_type for all indexes (either "Duplicated Content" or "Duplicated URL")
+                # Set `remove_type` for all indexes (either "Duplicated Content" or "Duplicated URL")
                 df.at[j, "remove_type"] = value
+
+    return df
+
+
+def flag_recipe_articles(df: pd.DataFrame, whitelist: list[int]) -> pd.DataFrame:
+    """
+    Process the DataFrame to flag recipe articles based on `title`, `keywords` and
+    `extracted_content_body` column.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame to flag recipe articles in.
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
+
+    Returns:
+        pd.DataFrame:
+            The modified DataFrame with the `to_remove` and `remove_type` columns updated. The `remove_type`
+            column is updated with the type of "Recipe".
+    """
+
+    # `title` and `keywords` column
+    recipe_title_keywords_indexes = np.argwhere(
+        [
+            (
+                True
+                if (
+                    (title is not None and re.search(r"[rR]ecipes?", title))
+                    or (keywords is not None and re.search(r"[rR]ecipes?", keywords))
+                )
+                and (not to_remove)
+                else False
+            )
+            for title, keywords, to_remove in zip(
+                df["title"], df["keywords"], df["to_remove"]
+            )
+        ]
+    ).flatten()
+
+    # `extracted_content_body` column
+    recipe_content_indexes = np.argwhere(
+        [
+            (
+                True
+                if (
+                    content is not None
+                    and re.search(r"what [do ]?you need", content.lower())
+                    and re.search(r"how to cook [this dish]*", content.lower())
+                )
+                and (not to_remove)
+                else False
+            )
+            for content, to_remove in zip(df["extracted_content_body"], df["to_remove"])
+        ]
+    ).flatten()
+
+    # All recipe article indexes
+    all_recipe_indexes = list(
+        set(recipe_title_keywords_indexes).union(set(recipe_content_indexes))
+    )
+
+    # All content ids that are flagged as recipes
+    recipe_ids = set(df.iloc[all_recipe_indexes].id.to_list()).difference(
+        set(whitelist)
+    )
+
+    # All content below word count cutoff indexes
+    recipe_indexes = df.query(f"id in {list(recipe_ids)}").index
+
+    # Update `to_remove`
+    df.loc[recipe_indexes, "to_remove"] = True
+
+    # Set `remove_type` for all indexes
+    df.loc[recipe_indexes, "remove_type"] = "Recipe"
 
     return df
 
@@ -233,14 +306,12 @@ def flag_below_word_count_cutoff(
 
     """
     indexes = df.query(
-        "extracted_content_body.notna() "
-        "and remove_type != 'Duplicated Content' "
-        "and remove_type != 'Duplicated URL'"
+        "to_remove != True"
     )["extracted_content_body"].apply(
         lambda x: len(x.split()) > 0 and len(x.split()) <= word_count_cutoff
     )
 
-    # Get the indices of the True values
+    # Get the indexes of the True values
     word_count_indexes = indexes[indexes].index
 
     # All content ids below word count cutoff
@@ -254,19 +325,20 @@ def flag_below_word_count_cutoff(
     # Update `to_remove`
     df.loc[word_count_indexes, "to_remove"] = True
 
-    # Set remove_type for all indexes
+    # Set `remove_type` for all indexes
     df.loc[word_count_indexes, "remove_type"] = "Below Word Count"
 
     return df
 
 
-def flag_multilingual_content(df: pd.DataFrame) -> pd.DataFrame:
+def flag_multilingual_content(df: pd.DataFrame, whitelist: list[int]) -> pd.DataFrame:
     """
     Flags articles in a DataFrame if it is purely Chinese, Malay or Tamil.
 
     Args:
-        df: The DataFrame containing the articles.
-
+        df (pd.DataFrame): The DataFrame containing the articles.
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
+        
     Returns:
         pd.DataFrame:
             The DataFrame with a new column `to_remove` indicating whether an article should be
@@ -313,7 +385,8 @@ def flag_articles_to_remove_after_extraction(
     df = flag_no_extracted_content(df, whitelist)
     df = flag_duplicated(df, whitelist, column="extracted_content_body")
     df = flag_duplicated(df, whitelist, column="full_url")
+    df = flag_recipe_articles(df, whitelist)
+    df = flag_multilingual_content(df, whitelist)
     df = flag_below_word_count_cutoff(df, word_count_cutoff, whitelist)
-    df = flag_multilingual_content(df)
 
     return df
