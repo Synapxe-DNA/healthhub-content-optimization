@@ -109,11 +109,13 @@ class Mocker:
                     2, len(combine_ids) - 2
                 )  # Create subgroups of varying sizes, minimum 2
 
-            await self.conn.create_combine_job(
+            combine_job = await self.conn.create_combine_job(
                 group_id,
                 f"Subgroup {subgroup_num}",
                 combine_ids[:group_size],
             )
+
+            self.combine_jobs.append(combine_job)
 
             subgroup_num += 1
             combine_ids = combine_ids[group_size:]
@@ -157,7 +159,10 @@ class Mocker:
         self.optimise_ids = []
         self.combine_ids = []
 
-        if bool(random.getrandbits(1)):  # Randomly decide if group has been reviewed
+        self.combine_jobs = []
+        self.reviewed = bool(random.getrandbits(1))
+
+        if self.reviewed:  # Randomly decide if group has been reviewed
             article_statuses = self.__generate_article_status(len(article_ids))
 
             for x in article_ids:
@@ -203,23 +208,36 @@ class Mocker:
             if len(edges) > 0:
                 await self.conn.create_edges(edges)
 
-            if len(self.combine_ids) > 0:
-                await self.__create_combine_articles(group_id, self.combine_ids)
+            if self.reviewed:
+                if len(self.combine_ids) > 0:
+                    await self.__create_combine_articles(group_id, self.combine_ids)
 
-            await asyncio.gather(
-                *(self.conn.create_ignore_job(i) for i in self.ignore_ids)
-            )
-            await asyncio.gather(
-                *(self.conn.create_remove_job(r, random_str()) for r in self.remove_ids)
-            )
-            await asyncio.gather(
-                *(
-                    self.conn.create_optimise_job(
-                        o,
-                        bool(random.getrandbits(1)),
-                        bool(random.getrandbits(1)),
-                        bool(random.getrandbits(1)),
-                    )
-                    for o in self.optimise_ids
+                ignore_jobs = await asyncio.gather(
+                    *(self.conn.create_ignore_job(i) for i in self.ignore_ids)
                 )
-            )
+                remove_jobs = await asyncio.gather(
+                    *(
+                        self.conn.create_remove_job(r, random_str())
+                        for r in self.remove_ids
+                    )
+                )
+
+                optimise_jobs = await asyncio.gather(
+                    *(
+                        self.conn.create_optimise_job(
+                            o,
+                            bool(random.getrandbits(1)),
+                            bool(random.getrandbits(1)),
+                            bool(random.getrandbits(1)),
+                        )
+                        for o in self.optimise_ids
+                    )
+                )
+
+                await self.conn.create_job(
+                    group_id=group_id,
+                    remove_jobs=remove_jobs,
+                    optimise_jobs=optimise_jobs,
+                    ignore_jobs=ignore_jobs,
+                    combine_jobs=self.combine_jobs,
+                )
