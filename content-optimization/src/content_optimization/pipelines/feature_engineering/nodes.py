@@ -16,6 +16,8 @@ def extract_keywords(
     cfg: dict[str, Any],
     only_confirmed_option: list[str],
     all_option: list[str],
+    model: str,
+    spacy_pipeline: str,
     stop_words: str,
     workers: int,
     use_mmr: bool,
@@ -31,8 +33,10 @@ def extract_keywords(
         cfg (dict[str, Any]): The configuration dictionary containing the options to subset the merged data.
         only_confirmed_option (list[str]): The list of confirmed content categories if option is `only_confirmed`.
         all_option (list[str]): The list of all content categories if option is `all`.
+        model (str): Use a custom embedding model. See https://maartengr.github.io/KeyBERT/guides/embeddings.html
+        spacy_pipeline (str): The spaCy pipeline to be used for part-of-speech tagging. Standard is the 'en' pipeline.
         stop_words (str): The stop words to be used for keyphrase extraction.
-        workers (int): Number of workers for spaCy part-of-speech tagging. If set to -1, use all available worker threads of the machine.
+        workers (int): Number of workers for spaCy part-of-speech tagging. To use all workers, set it to -1.
         use_mmr (bool): Whether to use Maximal Marginal Relevance (MMR) for keyphrase extraction.
         diversity (float): The diversity parameter for keyphrase extraction.
         top_n (int): The number of top keywords to extract.
@@ -71,8 +75,10 @@ def extract_keywords(
     # Extract the raw content body text
     docs = filtered_data["extracted_content_body"].to_list()
 
-    kw_model = KeyBERT()
-    vectorizer = KeyphraseTfidfVectorizer(stop_words=stop_words, workers=workers)
+    kw_model = KeyBERT(model)
+    vectorizer = KeyphraseTfidfVectorizer(
+        spacy_pipeline, stop_words=stop_words, workers=workers
+    )
 
     # Marginally more performant
     # See: https://github.com/MaartenGr/KeyBERT/issues/156
@@ -95,6 +101,6 @@ def extract_keywords(
     keywords = [[kw[0] for kw in kws[::-1]] for kws in keywords]
     # Store keywords in new column
     filtered_data_with_keywords = filtered_data.copy()
-    filtered_data_with_keywords["keybert_keywords"] = keywords
+    filtered_data_with_keywords[f"keywords_{model}"] = keywords
 
     return filtered_data_with_keywords
