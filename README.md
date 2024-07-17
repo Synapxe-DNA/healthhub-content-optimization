@@ -169,7 +169,7 @@ pm.execute_notebook(
 
 Every time you complete a feature or change on a branch and want to push it to GitHub to make a pull request, you need to ensure you lint your code.
 
-You can simply run the command `pre-commit run --all-files` to lint your code. For more information, refer to the [pre-commit docs](https://pre-commit.com/). To see what linters are used, refer to the [`.pre-commit-config.yaml`](.pre-commit-config.yaml) YAML file.
+You can simply run the command `pre-commit run --all-files` to lint your code. Otherwise, you can also run `pre-commit install` to set up git hooks that run them automatically before every commit. For more information, refer to the [pre-commit docs](https://pre-commit.com/). To see what linters are used, refer to the [`.pre-commit-config.yaml`](.pre-commit-config.yaml) YAML file.
 
 Alternatively, there is a [`Makefile`](Makefile) that can also lint your code base when you run the simpler command `make lint`.
 
@@ -199,17 +199,17 @@ make clean
 For more control, you may specify the directory you want to clean:
 
 ```
-make clean DIRS="data/02_intermediate"
+make clean DIRS=data/02_intermediate
 ```
 
-You may even speficy multiple directories to clean:
+You may even specify multiple directories to clean:
 
 ```
 make clean DIRS="data/02_intermediate data/03_primary data/04_feature"
 ```
 
 > [!NOTE]
-> By default, `make clean` looks into all data directories of your Kedro project and cleans them. See [here](Makefile) for more information. When you specify the data directories you want to clean, ensure the directories are space separated and wrapped in quotes.
+> By default, `make clean` looks into all data directories of your Kedro project and cleans them. See [here](Makefile) for more information. When you specify the data directories you want to clean, ensure the directories are enclosed in double quotes and space separated.
 
 > [!CAUTION]
 > Before running any of the `make clean` commands above, you should review the directories that would be cleaned. To do so, run:
@@ -221,7 +221,7 @@ make clean DIRS="data/02_intermediate data/03_primary data/04_feature"
 > or run:
 >
 > ```
-> make clean-dry-run DIRS="data/02_intermediate"
+> make clean-dry-run DIRS=data/02_intermediate
 > ```
 
 ### Running Kedro
@@ -239,3 +239,24 @@ For more control, you may specify the pipeline you want to run:
 ```
 make run PIPELINE=data_processing
 ```
+
+### Testing Kedro
+
+If you want to run tests for Kedro from the root directory, you can run the following command:
+
+```
+make test
+```
+
+For more control, you may specify the files and/or functions you want to run `pytest` on. [`run_tests.py`](run_tests.py) takes in two arguments flags: `--files` and `--functions`. These argument flags are mapped from the `make` commands below respectively:
+
+```
+make test FILES="tests/pipelines/data_processing/test_pipeline.py tests/pipelines/data_processing/test_nodes.py"
+```
+
+```
+make test FUNCTIONS="test_data_processing_pipeline test_project_path"
+```
+
+> [!TIP]
+> This will be increasingly helpful when the number of unit tests and/or integration tests starts to grow. Consult the [Makefile](Makefile) for more information.

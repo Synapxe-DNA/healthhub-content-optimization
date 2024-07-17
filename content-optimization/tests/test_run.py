@@ -23,6 +23,7 @@ def config_loader():
 def project_context(config_loader):
     return KedroContext(
         package_name="content_optimization",
+        env="local",
         project_path=Path.cwd(),
         config_loader=config_loader,
         hook_manager=_create_hook_manager(),
