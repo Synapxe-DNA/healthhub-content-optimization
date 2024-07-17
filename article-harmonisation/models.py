@@ -15,6 +15,7 @@ os.environ["LANGCHAIN_PROJECT"] = "Multi-agent Collaboration"
 
 MODELS = [
     "meta-llama/Meta-Llama-3-8B-Instruct",
+    # "meta-llama/Meta-Llama-3-70B",
     "microsoft/Phi-3-mini-128k-instruct",
     "mistralai/Mistral-7B-Instruct-v0.3",
 ]
@@ -119,7 +120,7 @@ class Llama(LLMInterface):
             response = chain.invoke(article)
             print("keypoints generated")
             answer = response["text"]
-            return answer
+            return response
         else:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run generate_text()"
@@ -153,7 +154,7 @@ class Llama(LLMInterface):
                 answer = response["text"]
                 return answer
             else:
-                return ValueError(
+                raise ValueError(
                     "There are insufficient number of keypoints to compare. Kindly add more articles to compare and try again."
                 )
         else:
@@ -239,7 +240,7 @@ class Mistral(LLMInterface):
                 response = chain.invoke({"Keypoints": input_keypoints})
                 return response
             else:
-                return ValueError(
+                raise ValueError(
                     "There are insufficient number of keypoints to compare. Kindly add more articles to compare and try again."
                 )
         else:
