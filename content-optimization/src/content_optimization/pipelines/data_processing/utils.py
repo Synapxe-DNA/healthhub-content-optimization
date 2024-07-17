@@ -260,6 +260,42 @@ def flag_below_word_count_cutoff(
     return df
 
 
+def flag_multilingual_content(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Flags articles in a DataFrame if it is purely Chinese, Malay or Tamil.
+
+    Args:
+        df: The DataFrame containing the articles.
+
+    Returns:
+        pd.DataFrame:
+            The DataFrame with a new column `to_remove` indicating whether an article should be
+            removed. The `remove_type` column is also updated with the type of "Multilingual".
+    """
+
+    # Find articles that are purely Chinese, Malay or Tamil
+    def find_multilingual(friendly_url: str) -> bool:
+        # Return false if value is None
+        if friendly_url is None:
+            return False
+
+        # get the last word from the friendly_url
+        check_lang = friendly_url.split("_")[-1]
+        check_lang = check_lang.split("-")[-1]
+        if re.search("(chinese|tamil|malay)", check_lang):
+            return True
+        else:
+            return False
+
+    multilingual_indexes = df["friendly_url"].apply(find_multilingual)
+    # Update `to_remove`
+    df.loc[multilingual_indexes, "to_remove"] = True
+    # Set remove_type for all indexes
+    df.loc[multilingual_indexes, "remove_type"] = "Multilingual"
+
+    return df
+
+
 def flag_articles_to_remove_after_extraction(
     df: pd.DataFrame, word_count_cutoff: int, whitelist: list[int]
 ) -> pd.DataFrame:
@@ -278,67 +314,6 @@ def flag_articles_to_remove_after_extraction(
     df = flag_duplicated(df, whitelist, column="extracted_content_body")
     df = flag_duplicated(df, whitelist, column="full_url")
     df = flag_below_word_count_cutoff(df, word_count_cutoff, whitelist)
-
-    return df
-
-
-def flag_articles_with_keyword(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
-    """
-    This function creates a new boolean column in the DataFrame indicating whether
-    the specified keyword is present in any of the relevant text fields of each article.
-
-    The function searches for the keyword in the following columns:
-    - content_name
-    - title
-    - keywords
-    - category_description
-    - extracted_content_body
-
-    The new column is named 'is_{keyword}' and contains True if the keyword is found
-    in any of the above fields, False otherwise.
-
-    Args:
-        df (pd.DataFrame): The input DataFrame containing article information.
-        keyword (str): The keyword to search for in the articles.
-
-    Returns:
-        pd.DataFrame: The input DataFrame with an additional boolean column indicating
-                      the presence of the keyword in each article.
-
-    Note: The function uses regex to match whole words only, preventing partial matches.
-    """
-    # Convert keyword to lowercase
-    keyword = keyword.lower()
-    # Create keyword column
-    col = f"is_{keyword}"
-    df[col] = None
-
-    # Create regex pattern
-    # TODO: Explore what should be the match keyword for the regex search
-    match_keyword = r"\b" + keyword + r"\b"
-    pattern = re.compile(match_keyword)
-    for index, row in df.iterrows():
-        # Columns of Interest to find keyword
-        content_name = row["content_name"].lower()
-        title = row["title"].lower()
-        keywords = row["keywords"].lower() if row["keywords"] is not None else ""
-        category_description = (
-            row["category_description"].lower()
-            if row["category_description"] is not None
-            else ""
-        )
-        extracted_content_body = (
-            row["extracted_content_body"].lower()
-            if row["extracted_content_body"] is not None
-            else ""
-        )
-        # Assign boolean value
-        df.at[index, col] = (
-            bool(pattern.search(content_name))
-            or bool(pattern.search(title))
-            or bool(pattern.search(keywords))
-            or bool(pattern.search(category_description))
-            or bool(pattern.search(extracted_content_body))
-        )
+    df = flag_multilingual_content(df)
 
     return df
