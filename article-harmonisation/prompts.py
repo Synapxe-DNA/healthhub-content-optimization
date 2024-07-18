@@ -17,9 +17,15 @@ def prompt_tool(model: str):
         case "mistral":
             prompter = MistralPrompts()
             return prompter
+
         case "llama3":
             prompter = LlamaPrompts()
             return prompter
+
+        case "internlm":
+            prompter = InternLMPrompts()
+            return prompter
+
         case _:
             raise ValueError(f"You entered {model}, which is not a support model type")
 
