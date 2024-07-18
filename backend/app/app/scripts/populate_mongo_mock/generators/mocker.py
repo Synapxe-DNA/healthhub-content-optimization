@@ -18,7 +18,6 @@ class Mocker:
         num_groups: int = 10,
         min_articles_per_group: int = 25,
         max_articles_per_group: int = 100,
-        percent_processed: float = 0.5,
         percent_connection: float = 0.01,
     ):
         """
@@ -27,7 +26,6 @@ class Mocker:
         :param num_groups: Number of groups to mock
         :param min_articles_per_group: Minimum number of articles per group
         :param max_articles_per_group: Maximum number of articles per group
-        :param percent_processed: Proportion of groups that relate to "combination" jobs
         :param percent_connection: Proportion of articles within a groups with edges
         """
 
@@ -36,14 +34,12 @@ class Mocker:
         assert (
             max_articles_per_group >= min_articles_per_group
         ), "Max must be MEQ min articles!"
-        assert 1 >= percent_processed >= 0, "Percent processed must = [0,1]!"
         assert 1 >= percent_connection > 0, "Percent connection must = (0,1]!"
 
         self.conn = db_connector
         self.num_groups = num_groups
         self.min_articles_per_group = min_articles_per_group
         self.max_articles_per_group = max_articles_per_group
-        self.percent_processed = percent_processed
         self.percent_connection = percent_connection
 
         self.pr_name = [random_str(random.randint(5, 20)).strip() for _ in range(5)]
