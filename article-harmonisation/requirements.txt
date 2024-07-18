@@ -46,3 +46,4 @@ tqdm==4.66.4
 transformers==4.42.4
 typing_extensions==4.12.2
 urllib3==2.2.2
+streamlit==1.36.0
