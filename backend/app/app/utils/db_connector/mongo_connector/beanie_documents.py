@@ -54,6 +54,8 @@ class GeneratedArticleDocument(Document):
     content_category: Indexed(str)
     url: Indexed(str)
 
+    status: str = Field(default="")
+
     date_modified: str
 
     keywords: List[str]
@@ -61,6 +63,8 @@ class GeneratedArticleDocument(Document):
     cover_image_url: str
 
     approved: bool = Field(default=False)
+
+    content: str
 
 
 class EdgeDocument(Document):
