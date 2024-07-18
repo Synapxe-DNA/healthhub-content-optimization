@@ -3,7 +3,7 @@ import textdescriptives as td
 import re
 import string
 from functools import reduce
-
+import math
 
 def calculate_readability(text, choice=1):
 
@@ -59,7 +59,7 @@ def hemmingway_score(text):
     num_letters = reduce(lambda x, y: x + y, map(len, words))
     print(num_sentences, num_words, num_letters)
 
-    score = round(4.71 * (num_letters / num_words) + 0.5 * (num_words / num_sentences) - 21.43)
+    score = math.ceil(4.71 * (num_letters / num_words) + 0.5 * (num_words / num_sentences) - 21.43)
 
     if score < 10:
         level = "normal"
