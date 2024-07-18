@@ -167,15 +167,29 @@ pm.execute_notebook(
 > [!WARNING]
 > Refrain from pushing into `main` branch directly — it is bad practice. Always create a new branch and make your changes on your new branch.
 
-Every time you complete a feature or change on a branch and want to push it to GitHub to make a pull request, you need to ensure you lint your code.
+Every time you complete a feature or change on a branch and want to push it to GitHub to make a pull request, you need to ensure you lint and format your code.
 
-You can simply run the command `pre-commit run --all-files` to lint your code. Otherwise, you can also run `pre-commit install` to set up git hooks that run them automatically before every commit. For more information, refer to the [pre-commit docs](https://pre-commit.com/). To see what linters are used, refer to the [`.pre-commit-config.yaml`](.pre-commit-config.yaml) YAML file.
+### Install the Git Hook Scripts
 
-Alternatively, there is a [`Makefile`](Makefile) that can also lint your code base when you run the simpler command `make lint`.
+Run pre-commit install to set up the git hook scripts:
+
+```zsh
+pre-commit install
+
+> pre-commit installed at .git/hooks/pre-commit
+```
+
+This command sets up the git hooks and run them automatically before every commit. For more information, refer to the [pre-commit docs](https://pre-commit.com/). To see what hooks are used, refer to the [`.pre-commit-config.yaml`](.pre-commit-config.yaml) YAML file.
+
+### (Optional) Run `pre-commit run --all-files`
+
+Optionally, you can also run the command `pre-commit run --all-files` to lint and reformat your code. It's usually a good idea to run the hooks against all of the files when adding new hooks (usually pre-commit will only run on the changed files during git hooks).
+
+Alternatively, there is a [`Makefile`](Makefile) that can also lint and reformat your code base when you run the simpler command `make lint`.
 
 You should ensure that all cases are satisfied before you push to GitHub (you should see that all has passed). If not, please debug accordingly or your pull request may be rejected and closed.
 
-The [`lint.yml`](.github/workflows/lint.yml) is a GitHub workflow that kicks off several GitHub Actions when a pull request is made. These GitHub Actions check that your code have been properly linted before it is passed for review. Once all actions have passed and the PR approved, your changes will be merged to the `main` branch.
+The [`run-checks.yml`](.github/workflows/run-checks.yml) is a GitHub workflow that kicks off several GitHub Actions when a pull request is made. These GitHub Actions check that your code have been properly linted and formatted before it is passed for review. Once all actions have passed and the PR approved, your changes will be merged to the `main` branch.
 
 > [!NOTE]
 > The `pre-commit` will run regardless if you forget to explicitly call it. Nonetheless, it is recommended to call it explicitly so you can make any necessary changes in advanced.
@@ -192,35 +206,35 @@ Therefore, we have provided several simple `make` commands to automatically remo
 
 To ensure your data directories in your Kedro project are clean, run:
 
-```
+```zsh
 make clean
 ```
 
 For more control, you may specify the directory you want to clean:
 
-```
+```zsh
 make clean DIRS=data/02_intermediate
 ```
 
 You may even specify multiple directories to clean:
 
-```
+```zsh
 make clean DIRS="data/02_intermediate data/03_primary data/04_feature"
 ```
 
 > [!NOTE]
 > By default, `make clean` looks into all data directories of your Kedro project and cleans them. See [here](Makefile) for more information. When you specify the data directories you want to clean, ensure the directories are enclosed in double quotes and space separated.
-
+>
 > [!CAUTION]
 > Before running any of the `make clean` commands above, you should review the directories that would be cleaned. To do so, run:
 >
-> ```
+> ```zsh
 > make clean-dry-run
 > ```
 >
 > or run:
 >
-> ```
+> ```zsh
 > make clean-dry-run DIRS=data/02_intermediate
 > ```
 
@@ -228,7 +242,7 @@ make clean DIRS="data/02_intermediate data/03_primary data/04_feature"
 
 If you want to run Kedro from the root directory, you can run the following command:
 
-```
+```zsh
 make run
 ```
 
@@ -236,7 +250,7 @@ This will populate all the new intermediate and primary data in the data directo
 
 For more control, you may specify the pipeline you want to run:
 
-```
+```zsh
 make run PIPELINE=data_processing
 ```
 
@@ -244,17 +258,17 @@ make run PIPELINE=data_processing
 
 If you want to run tests for Kedro from the root directory, you can run the following command:
 
-```
+```zsh
 make test
 ```
 
 For more control, you may specify the files and/or functions you want to run `pytest` on. [`run_tests.py`](run_tests.py) takes in two arguments flags: `--files` and `--functions`. These argument flags are mapped from the `make` commands below respectively:
 
-```
+```zsh
 make test FILES="tests/pipelines/data_processing/test_pipeline.py tests/pipelines/data_processing/test_nodes.py"
 ```
 
-```
+```zsh
 make test FUNCTIONS="test_data_processing_pipeline test_project_path"
 ```
 
