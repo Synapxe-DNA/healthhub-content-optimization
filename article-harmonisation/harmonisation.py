@@ -349,9 +349,13 @@ if __name__ == "__main__":
     writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
 
     # loading the articles
-    with open(f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE1_TITLE}", "r") as file:
+    with open(
+        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE1_TITLE}", "r"
+    ) as file:
         article_1 = file.read()
-    with open(f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE2_TITLE}", "r") as file:
+    with open(
+        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE2_TITLE}", "r"
+    ) as file:
         article_2 = file.read()
 
     # List with the articles to harmonise
