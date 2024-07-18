@@ -216,7 +216,7 @@ class MistralPrompts(LLMPrompt):
 
             Article: {Article}
             [/INST]
-            
+
             Answer:
             </s>
         """
@@ -290,6 +290,7 @@ class InternLMPrompts(LLMPrompt):
 
     Refer to https://github.com/InternLM/InternLM/blob/main/chat/chat_format.md for more information.
     """
+
     def return_researcher_prompt(self):
         """
         Returns the researcher prompt for Mistral 7b

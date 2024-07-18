@@ -18,14 +18,11 @@ MODELS = [
     "meta-llama/Meta-Llama-3-8B-Instruct",
     # "NousResearch/Hermes-2-Pro-Llama-3-8B",
     # "meta-llama/Meta-Llama-3-70B-Instruct",
-
     # Phi 3
     "microsoft/Phi-3-mini-128k-instruct",
-
     # Mistral
     "mistralai/Mistral-7B-Instruct-v0.3",
     # "NousResearch/Hermes-2-Pro-Mistral-7B",
-
     # InternLM
     "internlm/internlm2_5-7b-chat",
 ]
@@ -360,6 +357,3 @@ class InternLM(LLMInterface):
         response = chain.invoke({"Keypoints": input_keypoints})
 
         return response
-
-
-
