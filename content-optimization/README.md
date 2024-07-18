@@ -53,7 +53,11 @@ cat requirements.txt | xargs poetry add
 
 - [`data/`](data): contains all data for the project at every stages; there are many sub-directories but here are the notable ones (will be updated as the pipeline progresses)
 
-  - [`01_raw/all_contents/`](data/01_raw/all_contents): contains all raw data
+  - [`01_raw/`](data/01_raw): contains all raw data
+
+    - `all_contents/`: contains all the raw data provided by HealthHub for the project. Get the data [here](https://trello.com/c/n0cMa6k2).
+
+    - `missing_contents/`: contains the content body of articles with `Excel Error` but were designated as `keep` by HealthHub. Get the data [here](https://trello.com/c/n0cMa6k2).
 
   - [`02_intermediate/`](data/02_intermediate): contains all intermediate data
 
@@ -99,6 +103,12 @@ cat requirements.txt | xargs poetry add
     - [`data_processing/`](src/content_optimization/pipelines/data_processing): contains the code for the `data_processing` pipeline; for more information, refer [here](#data-processing)
 
     - [`feature_engineering/`](src/content_optimization/pipelines/feature_engineering): contains the code for the `feature_engineering` pipeline; for more information, refer [here](#feature-engineering)
+
+- [`tests/`](tests): contains all unit and integrations tests for the Kedro pipeline; it is to be mirrored as per `data/` and `src/content_optimization/` directories. Refer [here](https://docs.kedro.org/en/stable/tutorial/test_a_project.html) for more information.
+
+  - [`data/`](tests/data): contains all data for the project at every stage for the testing environment
+
+  - [`pipelines/`](tests/pipelines): contains all the test cases for the pipelines
 
 ## Run the Kedro Project
 
@@ -160,12 +170,32 @@ If for any reason, you would like to run specific nodes in the `feature_engineer
 kedro run --nodes="extract_keywords_node"
 ```
 
+### Clustering <a id="clustering"></a>
+
+```python
+# TODO: Clustering Pipeline Documentation
+```
+
+## Test the Kedro Project
+
+### Unit Tests
+
+```python
+# TODO: Unit Tests Documentation
+```
+
+### Integration Tests
+
+```python
+# TODO: Integration Tests Documentation
+```
+
 ## Dataset <a id="dataset"></a>
 
 ### General Information
 
 - **Dataset Name:** `merged_data.parquet`
-- **Location**: [`data/03_primary/`](data/03_primary/)
+- **Location**: [`data/03_primary/`](data/03_primary)
 - **Dataset Description:** Merged collection of Health Hub articles across different content categories
 - **Version**: v1
 - **Date of Creation:** June 28, 2024

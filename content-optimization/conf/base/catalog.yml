@@ -4,9 +4,21 @@ all_contents:
   dataset: pandas.ExcelDataset
   filename_suffix: ".xlsx"
 
+missing_contents:
+  type: partitions.PartitionedDataset
+  path: data/01_raw/missing_contents
+  dataset: text.TextDataset
+  filename_suffix: ".txt"
+
 all_contents_standardized:
   type: partitions.PartitionedDataset
   path: data/02_intermediate/all_contents_standardized
+  dataset: pandas.ParquetDataset
+  filename_suffix: ".parquet"
+
+all_contents_added:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/all_contents_added
   dataset: pandas.ParquetDataset
   filename_suffix: ".parquet"
 
@@ -40,6 +52,13 @@ log_word_counts:
 flag_for_removal_by_type:
   type: pandas.ExcelDataset
   filepath: data/08_reporting/flag_for_removal_by_type.xlsx
+  save_args:
+    index: false
+  versioned: true
+
+recipes_data:
+  type: pandas.ExcelDataset
+  filepath: data/08_reporting/recipes_data.xlsx
   save_args:
     index: false
   versioned: true

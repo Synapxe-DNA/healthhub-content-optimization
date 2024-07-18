@@ -1,11 +1,35 @@
 # Changelog
 
+## July 17, 2024 <a id="july-17-2024"></a>
+
+- Integrated code to flag for recipe articles
+
+## July 16, 2024 <a id="july-16-2024"></a>
+
+- Improved test cases for `data_processing` pipeline
+- Implemented test cases for `add_contents` node
+- Implemented article whitelisting within `data_processing` pipeline
+
+## July 15, 2024 <a id="july-15-2024"></a>
+
+- Added selected articles with `Excel Error` back into the dataset
+
+## July 13, 2204 <a id="july-13-2024"></a>
+
+- Added unit tests and integration test for [`feature_engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering) pipeline
+
 ## July 12, 2024 <a id="july-12-2024"></a>
 
 - Added unit tests and integration test for [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline
 - Added [data directories](content-optimization/tests/data) for test datasets
 - Removed use of `alive_progress` because of incompatibility with `pytest`
 - Added [`run_tests.py`](run_tests.py) to provide as an entry point for `make test`
+
+## July 11, 2024 <a id="july-11-2024"></a>
+
+- Added new column `extracted_tables` as a new column into `merged_data.parquet`
+- Replace En Dash with a dash to extract these dashes into `extracted_content_body`
+- Amended `extract_links` to ignore footnotes and online forms
 
 ## July 9, 2024 <a id="july-9-2024"></a>
 

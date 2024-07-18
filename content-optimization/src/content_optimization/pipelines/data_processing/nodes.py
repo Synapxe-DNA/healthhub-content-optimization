@@ -84,17 +84,51 @@ def standardize_columns(
         # See: https://github.com/Wilsven/healthhub-content-optimization/issues/53
         df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
-        # Mark articles with no content, was rejected by Excel due to a "Value
-        # exceeded maximum cell size" error or with dummy content in `to_remove` column
-        df = flag_articles_to_remove_before_extraction(df)
-
         all_contents_standardized[content_category] = df
 
     return all_contents_standardized
 
 
-def extract_data(
+def add_contents(
     all_contents_standardized: dict[str, Callable[[], Any]],
+    missing_contents: dict[str, Callable[[], Any]],
+) -> dict[str, Callable[[], Any]]:
+    excel_errors = {}
+    all_contents_added = {}
+
+    # Fetch all txt files from 01_raw to correct the Excel error
+    for file_path, load_func in missing_contents.items():
+        text = load_func()
+        # Extract friendly url that is used as filename
+        friendly_url = file_path.split("/")[-1]
+        # Store in dictionary
+        excel_errors[friendly_url] = text
+
+    pbar = tqdm(all_contents_standardized.items())
+
+    for content_category, partition_load_func in pbar:
+        pbar.set_description(f"Adding: {content_category}")
+        df = partition_load_func()
+        for friendly_url, text in excel_errors.items():
+            # Fetch rows where `friendly_url` column value must match filename
+            article_index = df.index[df["friendly_url"] == friendly_url]
+            # Skip if the index is empty
+            if article_index.empty:
+                continue
+            # Assign Raw HTML content to `content_body` column
+            df.loc[article_index, "content_body"] = text
+
+        # Mark articles with no content, was rejected by Excel due to a "Value
+        # exceeded maximum cell size" error or with dummy content in `to_remove` column
+        df = flag_articles_to_remove_before_extraction(df)
+
+        all_contents_added[content_category] = df
+
+    return all_contents_added
+
+
+def extract_data(
+    all_contents_added: dict[str, Callable[[], Any]],
     word_count_cutoff: int,
     whitelist: list[int],
 ) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
@@ -103,9 +137,9 @@ def extract_data(
     and text files.
 
     Args:
-        all_contents_standardized (dict[str, Callable[[], Any]]):
+        all_contents_added (dict[str, Callable[[], Any]]):
             A dictionary containing the standardized `partitions.PartitionedDataset`
-            where the keys are the content categories and thevalues loads the
+            where the keys are the content categories and the values loads the
             standardized parquet data as `pandas.DataFrame`.
 
         word_count_cutoff (int): The minimum number of words in an article
@@ -125,7 +159,7 @@ def extract_data(
     all_contents_extracted = {}  # to store as partitioned parquet files
     all_extracted_text = {}  # to store as partitioned text files
 
-    pbar = tqdm(all_contents_standardized.items())
+    pbar = tqdm(all_contents_added.items())
 
     for content_category, partition_load_func in pbar:
         pbar.set_description(f"Extracting: {content_category}")
@@ -133,8 +167,8 @@ def extract_data(
         df = partition_load_func()
 
         # Initialise new columns in dataframe to store extracted data
-        df["has_table"] = None
-        df["has_image"] = None
+        df["has_table"] = False
+        df["has_image"] = False
         df["related_sections"] = None
         df["extracted_tables"] = None
         df["extracted_links"] = None
@@ -143,8 +177,7 @@ def extract_data(
         df["extracted_content_body"] = None
 
         for index, row in df.iterrows():
-            # Skip extraction for those articles flagged for removal
-            # TODO: Need to monitor implementation of "to_remove" as extracted_content is skipped
+            # Skip extraction for those articles flagged for removal unless whitelisted
             if row["to_remove"]:
                 # Check if the article is in the whitelist
                 if row["id"] not in whitelist:
