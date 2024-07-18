@@ -42,5 +42,5 @@ Currently, the article harmonisation and optimisation is a single process but it
     * [`images/`](docs/images): contains all images pertaining to this project
 - [`models.py`](models.py): python file containing classes to instantiate each LLM used in the project.
 - [`harmonisation.py`](harmonisation.py): python file containing the graph. Run this file to run the article harmonisation process
-- [`prompt.py`](prompt.py): python file containing classes to instantiate prompts unique to each LLM type. Do note that different LLM will have different prompts that can be retrieved under their respective classes.
+- [`prompts.py`](prompts.py): python file containing classes to instantiate prompts unique to each LLM type. Do note that different LLM will have different prompts that can be retrieved under their respective classes.
 - [`requirements.txt`](requirements.txt): txt file containing all the packages need to run the project.
