@@ -9,10 +9,10 @@ load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 
 # Available models configured to the project
-MODELS = ["Mistral", "Llama3"]
+MODELS = ["mistral", "llama3"]
 
 # Declaring model to use
-MODEL = MODELS[0]
+MODEL = MODELS[1]
 
 # Declaring node roles
 RESEARCHER = "Researcher"
@@ -127,9 +127,10 @@ def researcher_node(state):
     print("This is article ", counter + 1)
     keypoints = state.get("keypoints", [])
     article = article_list[counter].strip()
-    article_keypoints = researcher_agent.generate_text(article)
-    new_article_keypoints = article_keypoints
-    keypoints.append(new_article_keypoints)
+
+    #Runs the researcher LLM agent
+    article_keypoints = researcher_agent.generate_keypoints(article)
+    keypoints.append(article_keypoints)
     return {"keypoints": keypoints, "article_researcher_counter": counter + 1}
 
 
@@ -145,6 +146,8 @@ def compiler_node(state):
     """
     keypoints = state.get("keypoints")
     print("this is keypoints", len(keypoints))
+
+    #Runs the compiler LLM to compile the keypoints
     compiled_keypoints = compiler_agent.compile_points(keypoints)
     return {"compiled_keypoints": compiled_keypoints}
 
@@ -160,6 +163,7 @@ def meta_description_optimisation_node(state):
             - meta_desc: a String containing the optimised meta description from the meta description optimisation LLM
             - flag_for_meta_desc_optimisation: a False boolean value to indicate that the meta description optimisation step has been completed
     """
+
     return {
         "meta_desc": "This is the meta desc",
         "flag_for_meta_desc_optimisation": False}
@@ -280,20 +284,20 @@ workflow.add_conditional_edges(
     "compiler_node",
     decide_next_optimisation_node,
     {
-        "content_guidelines_node": "content_guidelines_optimisation_node",
+        "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
         "title_optimisation_node": "title_optimisation_node",
-        "meta_description_node": "meta_description_optimisation_node",
+        "meta_description_optimisation_node": "meta_description_optimisation_node",
         "__end__": END,
     },
 )
 
 # Adds a conditional edge to the workflow from compiler node to title optimmisation node, meta description optimisation node and END
 workflow.add_conditional_edges(
-    "writing_guidelines_node",
+    "writing_guidelines_optimisation_node",
     decide_next_optimisation_node,
     {
         "title_optimisation_node": "title_optimisation_node",
-        "meta_description_node": "meta_description_optimisation_node",
+        "meta_description_optimisation_node": "meta_description_optimisation_node",
         "__end__": END,
     },
 )
@@ -302,7 +306,7 @@ workflow.add_conditional_edges(
 workflow.add_conditional_edges(
     "title_optimisation_node",
     decide_next_optimisation_node,
-    {"meta_description_node": "meta_description_optimisation_node", 
+    {"meta_description_optimisation_node": "meta_description_optimisation_node", 
      "__end__": END},
 )
 
@@ -339,9 +343,9 @@ article_list_length = len(article_list)
 inputs = {"article_content": article_list, 
           "keypoints": [], 
           "article_researcher_counter": 0,
-          "flag_for_content_optimisation": True,
-          "flag_for_title_optimisation": True,
-          "flag_for_meta_desc_optimisation": True
+          "flag_for_content_optimisation": False,
+          "flag_for_title_optimisation": False,
+          "flag_for_meta_desc_optimisation": False
           }
 
 result = app.invoke(inputs)

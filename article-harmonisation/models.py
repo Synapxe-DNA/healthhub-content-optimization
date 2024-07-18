@@ -145,9 +145,7 @@ class Llama(LLMInterface):
         print("generating keypoints")
         response = chain.invoke(article)
         print("keypoints generated")
-        answer = response["text"]
-
-        return answer
+        return response
 
     def compile_points(self, keypoints: list = []):
         """
@@ -187,9 +185,7 @@ class Llama(LLMInterface):
 
         chain = prompt_t | self.model
         response = chain.invoke({"Keypoints": input_keypoints})
-        answer = response["text"]
-
-        return answer
+        return response
 
 
 class Mistral(LLMInterface):
