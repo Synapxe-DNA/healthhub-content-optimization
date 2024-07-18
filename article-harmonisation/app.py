@@ -1,9 +1,18 @@
-import streamlit as st
 from io import StringIO
 
-from harmonisation import *
-from models import start_llm
+import streamlit as st
 from evaluations import calculate_readability
+from harmonisation import (
+    COMPILER,
+    CONTENT_GUIDELINES,
+    META_DESC,
+    RESEARCHER,
+    TITLE,
+    WRITING_GUIDELINES,
+    app,
+    print_checks,
+)
+from models import start_llm
 
 # Available models configured to the project
 MODELS = ["mistral", "llama3"]
@@ -24,14 +33,18 @@ st.title("Article Harmonisation Demo")
 st.divider()
 
 # Upload File Section
-uploaded_files = st.file_uploader("Upload your text here. File Limit: 2", type=["txt"], accept_multiple_files=True)
+uploaded_files = st.file_uploader(
+    "Upload your text here. File Limit: 2", type=["txt"], accept_multiple_files=True
+)
 st.divider()
 
 # Show Extracted Text and Readability Score
 texts = []
 if uploaded_files:
     if len(uploaded_files) > 2:
-        st.warning(f"Maximum number of files reached. Only the last two files will be processed")
+        st.warning(
+            "Maximum number of files reached. Only the last two files will be processed"
+        )
         uploaded_texts = uploaded_files[:2]
 
     for uploaded_file in uploaded_files:
@@ -70,6 +83,3 @@ if texts:
 
     with st.container(height=500):
         st.write("\n".join(result["keypoints"]))
-
-
-
