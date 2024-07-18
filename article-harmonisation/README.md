@@ -44,7 +44,7 @@ Currently, the article harmonisation and optimisation is a single process but it
 ## File Structure
 
 - [`docs`](docs): contains all miscellaneous documents pertaining to this project
-    * [`images/`](docs/images): contains all images pertaining to this project
+  - [`images/`](docs/images): contains all images pertaining to this project
 - [`evaluations.py`](evaluations.py): python file containing the metric to evaluate the articles
 - [`harmonisation.py`](harmonisation.py): python file containing the graph. Run this file to run the article harmonisation process
 - [`models.py`](models.py): python file containing classes to instantiate each LLM used in the project.
