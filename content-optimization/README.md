@@ -155,7 +155,7 @@ The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/D
 ### Feature Engineering <a id="feature-engineering"></a>
 
 > [!IMPORTANT]
-> Before running the `feature_engineering` [pipeline](src/content_optimization/pipelines/feature_engineering/pipeline.py), ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
+> Before running the [`feature_engineering`](src/content_optimization/pipelines/feature_engineering/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
 
 You can run the entire `feature_engineering` pipeline by running:
 
@@ -195,7 +195,7 @@ kedro run --nodes="extract_keywords_node"
 ### General Information
 
 - **Dataset Name:** `merged_data.parquet`
-- **Location**: [`data/03_primary/`](data/03_primary)
+- **Location**: [`data/03_primary`](data/03_primary)
 - **Dataset Description:** Merged collection of Health Hub articles across different content categories
 - **Version**: v1
 - **Date of Creation:** June 28, 2024

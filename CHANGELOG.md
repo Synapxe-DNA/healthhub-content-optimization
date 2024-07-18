@@ -1,5 +1,12 @@
 # Changelog
 
+## July 18, 2024 <a id="july-18-2024"></a>
+
+- Extended [`.pre-commit-config.yaml`](.pre-commit-config.yaml) file
+- Updated GitHub Workflows
+  - Renamed `lint.yml` to [`run-checks.yml`](.github/workflows/run-checks.yml)
+  - Improved `run-checks.yml`
+
 ## July 17, 2024 <a id="july-17-2024"></a>
 
 - Integrated code to flag for recipe articles
