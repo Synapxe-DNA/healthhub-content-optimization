@@ -14,7 +14,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         [
             node(
                 func=merge_ground_truth_to_data,
-                inputs=["ground_truth_data", "params:content_contributor","weighted_embeddings"],
+                inputs=["ground_truth_data", "params:content_contributor","weighted_embeddings","params:category_name","filtered_data_with_keywords"],
                 outputs="merged_df_with_groundtruth",
                 name="merge_ground_truth_to_data_node"
             ),

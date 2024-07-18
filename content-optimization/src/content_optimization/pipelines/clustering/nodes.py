@@ -29,7 +29,7 @@ from content_optimization.pipelines.clustering.utils import(
     return_by_cluster
 )
 
-def merge_ground_truth_to_data(ground_truth_data, content_contributor, weighted_embeddings):
+def merge_ground_truth_to_data(ground_truth_data, content_contributor, weighted_embeddings,category_name, filtered_data):
     ground_truth_data = ground_truth_data[ground_truth_data["Owner"].str.contains(content_contributor)]
     ground_truth_data = ground_truth_data[["Page Title", "Combine Group ID", "URL"]]
     ground_truth_data = ground_truth_data[ground_truth_data["Combine Group ID"].notna()]
@@ -45,6 +45,17 @@ def merge_ground_truth_to_data(ground_truth_data, content_contributor, weighted_
         left_on="full_url",
         right_on="URL",
     )
+
+    if category_name:
+        article_cat_df = filtered_data[['id','article_category_names']].copy()
+        article_cat_df['article_category_names'] = article_cat_df['article_category_names'].apply(lambda x: x.strip(',') if str(x)!='None' else x)
+        article_cat_df['article_category_names'] = article_cat_df['article_category_names'].apply(lambda x: x.split(',') if str(x)!='None' else [None])
+
+        id_in_category = article_cat_df[article_cat_df['article_category_names'].apply(lambda x: category_name in x)]
+
+        articles_df = pd.merge(id_in_category, articles_df, how='left', on='id')
+        print(id_in_category.shape[0] == articles_df.shape[0])
+        print(articles_df)
     return articles_df
 
 def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, weight_title, weight_cat, weight_desc, weight_body, weight_combined, weight_kws,set_threshold):
