@@ -101,7 +101,7 @@ jobs:
 
       - name: Install Node.js Dependencies
         run: |
-          npm install -g prettier@3.2.5 @prettier/plugin-xml markdownlint-cli2@0.12.1
+          npm install -g prettier@3.2.5 @prettier/plugin-xml prettier-plugin-toml@2.0.1 markdownlint-cli2@0.12.1
         if: >
           contains(steps.changed-files.outputs.all_changed_files, '.md') ||
           contains(steps.changed-files.outputs.all_changed_files, '.toml') ||
