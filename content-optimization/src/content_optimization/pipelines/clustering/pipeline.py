@@ -28,7 +28,8 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "params:sim_weightage.weight_desc",
                     "params:sim_weightage.weight_body",
                     "params:sim_weightage.weight_combined",
-                    "params:sim_weightage.weight_kws"
+                    "params:sim_weightage.weight_kws",
+                    "params:set_threshold"
                 ],
                 outputs=["pred_cluster", "clustered_nodes", "unclustered_nodes", "cluster_articles_pkl", "edges_pkl", "metrics", "cluster_size"],
                 name="clustering_weighted_embeddings_node"

@@ -47,7 +47,7 @@ def merge_ground_truth_to_data(ground_truth_data, content_contributor, weighted_
     )
     return articles_df
 
-def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, weight_title, weight_cat, weight_desc, weight_body, weight_combined, weight_kws):
+def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, weight_title, weight_cat, weight_desc, weight_body, weight_combined, weight_kws,set_threshold):
     conf_path = str(str(Path(os.getcwd()) / settings.CONF_SOURCE))
     config_loader = OmegaConfigLoader(conf_source=conf_path)
     credentials = config_loader["credentials"]
@@ -68,7 +68,10 @@ def clustering_weighted_embeddings(merged_df_with_groundtruth, neo4j_config, wei
                 for doc in documents:
                     session.execute_write(create_graph_nodes, doc)
                 combined_similarities = combine_similarities(session, weight_title, weight_cat, weight_desc, weight_body, weight_combined, weight_kws)
-                threshold = median_threshold(combined_similarities)
+                if set_threshold:
+                    threshold = set_threshold
+                else:
+                    threshold = median_threshold(combined_similarities)
                 session.execute_write(create_sim_edges, combined_similarities, threshold)
                 session.execute_write(drop_graph_projection)
                 session.execute_write(create_graph_proj)
