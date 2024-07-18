@@ -16,7 +16,7 @@ MODEL = MODELS[0]
 
 # Declaring node roles
 RESEARCHER = "Researcher"
-COMPARER = "Comparer"
+COMPILER = "Compiler"
 META_DESC = "Meta description"
 TITLE = "Title"
 CONTENT_GUIDELINES = "Content guidelines"
@@ -110,17 +110,17 @@ class GraphState(TypedDict):
 # creating a StateGraph object with GraphState as input.
 workflow = StateGraph(GraphState)
 
+#Functions defining the functionality of different nodes
 def researcher_node(state):
     """Creates a researcher node, which will categorise the sentences in the article into keypoints.
 
     Args:
-        state: a dictionary storing with the relevant attributes as keys and content as the respective items.
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
 
     Returns:
-        a dictionary with keys "keypoints" and "article_researcher_counter"
+        a dictionary with keys "keypoints", "article_researcher_counter"
             - keypoints: an updated list storing keypoints from all articles output from the researcher node
             - article_researcher_counter: an integer serving as a counter for number of articles processed by the researcher node
-
     """
     article_list = state.get("article_content", "")
     counter = state.get("article_researcher_counter", 0)
@@ -137,36 +137,80 @@ def compiler_node(state):
     """Creates a compiler node, which will compile the keypoints from a list of keypoints
 
     Args:
-        state: 
+        state:  a dictionary storing relevant attributes as keys and content as the respective items.
     
     Returns:
-
-    
+        a dictionary with keys "compiled_keypoints"
+            - compiled_keypoints: a String containing the compiled keypoints from the compiler LLM
     """
     keypoints = state.get("keypoints")
     print("this is keypoints", len(keypoints))
-    compiled_keypoints = comparer_agent.compile_points(keypoints)
+    compiled_keypoints = compiler_agent.compile_points(keypoints)
     return {"compiled_keypoints": compiled_keypoints}
 
 
-def meta_description_node(state):
+def meta_description_optimisation_node(state):
+    """Creates a meta description optimisation node, which will optimise the meta description of the article
+
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+    
+    Returns:
+        a dictionary with keys "meta_desc",  "flag_for_meta_desc_optimisation"
+            - meta_desc: a String containing the optimised meta description from the meta description optimisation LLM
+            - flag_for_meta_desc_optimisation: a False boolean value to indicate that the meta description optimisation step has been completed
+    """
     return {
         "meta_desc": "This is the meta desc",
         "flag_for_meta_desc_optimisation": False}
 
 
 def title_optimisation_node(state):
+    """Creates a title optimisation node, which will optimise the title of the article
+
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+    
+    Returns:
+        a dictionary with keys "article_title",  "flag_for_title_optimisation"
+            - article_title: a String containing the optimised title from the title optimisation LLM
+            - flag_for_title_optimisation: a False boolean value to indicate that the title optimisation step has been completed
+    """
     return {
         "article_title": "This is new article title",
         "flag_for_title_optimisation": False
         }
 
-def content_guidelines_node(state):
+def content_guidelines_optimisation_node(state):
+    """Creates a content guidelines node, which will rewrite missing content of the article based on the article topic's requirements state in the content playbook.
+
+        Requirements for each topic can be found in the content playbook under:
+            1. Chapter 3, Step 1, (iii) writing guide 
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+    
+    Returns:
+        a dictionary with keys "optimised_content"
+            - optimised_content: a String containing the rewritten article from the content guidelines LLM
+    """
     return {
         "optimised_content": "This is content"}
 
 
-def writing_guidelines_node(state):
+def writing_guidelines_optimisation_node(state):
+    """Creates a writing optimisation node, which will optimise the article content based on the writing guidelines from the content playbook
+
+        Content covered from the playbook include:
+            1. Chapter 1, Section A, Guidelines + Examples
+
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+    
+    Returns:
+        a dictionary with keys "optimised_content",  "flag_for_content_optimisation"
+            - optimised_content: a String containing the optimised content from the writing optimisation LLM
+            - flag_for_content_optimisation: a False boolean value to indicate that the writing optimisation step has been completed
+    """
     optimised_content = state.get("optimised_content")
     optimised_content += " And this is writing guidelines"
     return {
@@ -178,14 +222,24 @@ def writing_guidelines_node(state):
 # Adding the nodes to the workflow
 workflow.add_node("researcher_node", researcher_node)
 workflow.add_node("compiler_node", compiler_node)
-workflow.add_node("meta_description_node", meta_description_node)
+workflow.add_node("meta_description_optimisation_node", meta_description_optimisation_node)
 workflow.add_node("title_optimisation_node", title_optimisation_node)
-workflow.add_node("content_guidelines_node", content_guidelines_node)
-workflow.add_node("writing_guidelines_node", writing_guidelines_node)
+workflow.add_node("content_guidelines_optimisation_node", content_guidelines_optimisation_node)
+workflow.add_node("writing_guidelines_optimisation_node", writing_guidelines_optimisation_node)
 
 
 #functions to determine next node
 def check_all_articles(state):
+    """Checks if all articles have gone through the researcher LLM and determines if the state should return to the researcher node or move on to the compiler node
+
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+    
+    Returns:
+        "researcher_node": returned if counter < number of articles to be harmonised
+        "compiler_node": returned if counter >= number of articles to be harmonised
+    """
+
     return (
         "researcher_node"
         if state.get("article_researcher_counter") < article_list_length
@@ -193,16 +247,27 @@ def check_all_articles(state):
     )
 
 def decide_next_optimisation_node(state):
+    """Checks user flags for content optimisation, title optimisation and meta description in state, and returning the appropriate node depending on the stored boolean values of each flag.
+
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+    
+    Returns:
+        "content_guidelines_node": returned if flag_for_content_optimisation is True
+        "title_optimisation_node": returned if previous flag is False and flag_for_title_optimisation is True
+        "meta_description_node": returned if previous flags are False and flag_for_meta_desc_optimisation is True
+        "__end__": returned if all flags are False, as no further optimisation is required for the article
+    """
     if state.get("flag_for_content_optimisation"):
-        return "content_guidelines_node"
+        return "content_guidelines_optimisation_node"
     elif state.get("flag_for_title_optimisation"):
         return "title_optimisation_node"
     elif state.get("flag_for_meta_desc_optimisation"):
-        return "meta_description_node"
+        return "meta_description_optimisation_node"
     else:
         return "__end__"
 
-
+# Adds a conditional edge to the workflow from researcher node to compiler node
 workflow.add_conditional_edges(
     "researcher_node",
     check_all_articles,
@@ -210,66 +275,76 @@ workflow.add_conditional_edges(
      "compiler_node": "compiler_node"},
 )
 
+# Adds a conditional edge to the workflow from compiler node to content guidelines node, title optimmisation node, meta description optimisation node and END
 workflow.add_conditional_edges(
     "compiler_node",
     decide_next_optimisation_node,
     {
-        "content_guidelines_node": "content_guidelines_node",
+        "content_guidelines_node": "content_guidelines_optimisation_node",
         "title_optimisation_node": "title_optimisation_node",
-        "meta_description_node": "meta_description_node",
+        "meta_description_node": "meta_description_optimisation_node",
         "__end__": END,
     },
 )
 
+# Adds a conditional edge to the workflow from compiler node to title optimmisation node, meta description optimisation node and END
 workflow.add_conditional_edges(
     "writing_guidelines_node",
     decide_next_optimisation_node,
     {
         "title_optimisation_node": "title_optimisation_node",
-        "meta_description_node": "meta_description_node",
+        "meta_description_node": "meta_description_optimisation_node",
         "__end__": END,
     },
 )
 
+# Adds a conditional edge to the workflow from compiler node to meta description optimisation node and END
 workflow.add_conditional_edges(
     "title_optimisation_node",
     decide_next_optimisation_node,
-    {"meta_description_node": "meta_description_node", 
+    {"meta_description_node": "meta_description_optimisation_node", 
      "__end__": END},
 )
 
-# Setting entry point node
+# Setting researcher_node as the entry point for the workflow
 workflow.set_entry_point("researcher_node")
 
-# Edge connecting content_guidelines_node to writing_guidelines_node
-workflow.add_edge("content_guidelines_node", "writing_guidelines_node")
+# Adding an edge connecting content_guidelines_optimisation_node to writing_guidelines_optimisation_node in the workflow
+workflow.add_edge("content_guidelines_optimisation_node", "writing_guidelines_optimisation_node")
 
+# Compiling the workflow
 app = workflow.compile()
 
-# starting up respective llm agents
+# starting up the respective llm agents
 researcher_agent = start_llm(MODEL, RESEARCHER)
-comparer_agent = start_llm(MODEL, COMPARER)
+compiler_agent = start_llm(MODEL, COMPILER)
 meta_desc_agent = start_llm(MODEL, META_DESC)
 title_agent = start_llm(MODEL, TITLE)
 content_guidelines_agent = start_llm(MODEL, CONTENT_GUIDELINES)
 writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
 
-# load the articles
+# loading the articles
 with open(f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE1_TITLE}", "r") as file:
     article_1 = file.read()
 with open(f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE2_TITLE}", "r") as file:
     article_2 = file.read()
 
+# List with the articles to harmonise
 article_list = [article_1, article_2]
+
+# Number of articles to harmonise
 article_list_length = len(article_list)
 
+# Dictionary with the variouse input keys and items
 inputs = {"article_content": article_list, 
           "keypoints": [], 
           "article_researcher_counter": 0,
           "flag_for_content_optimisation": True,
-          "flag_for_title_optimisation": False,
+          "flag_for_title_optimisation": True,
           "flag_for_meta_desc_optimisation": True
           }
 
 result = app.invoke(inputs)
+
+# Prints the various checks
 print_checks(result)
