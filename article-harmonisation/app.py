@@ -12,21 +12,22 @@ MODELS = ["mistral", "llama3"]
 MODEL = MODELS[1]
 
 researcher_agent = start_llm(MODEL, RESEARCHER)
-print(researcher_agent)
 compiler_agent = start_llm(MODEL, COMPILER)
 meta_desc_agent = start_llm(MODEL, META_DESC)
 title_agent = start_llm(MODEL, TITLE)
 content_guidelines_agent = start_llm(MODEL, CONTENT_GUIDELINES)
 writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
 
-
+# Set Page Config and Title for Streamlit
 st.set_page_config(page_title="Article Harmonisation", layout="wide")
 st.title("Article Harmonisation Demo")
 st.divider()
 
+# Upload File Section
 uploaded_files = st.file_uploader("Upload your text here. File Limit: 2", type=["txt"], accept_multiple_files=True)
 st.divider()
 
+# Show Extracted Text and Readability Score
 texts = []
 if uploaded_files:
     if len(uploaded_files) > 2:
@@ -45,6 +46,7 @@ if uploaded_files:
             st.write(texts[i])
 st.divider()
 
+# Run AI Agent and Display Output
 if texts:
     inputs = {
         "article_content": texts,
