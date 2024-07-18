@@ -5,7 +5,7 @@ import dotenv
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
-from prompt import prompt_tool
+from prompts import prompt_tool
 
 dotenv.load_dotenv()
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY", "")
@@ -14,16 +14,28 @@ os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_PROJECT"] = "Multi-agent Collaboration"
 
 MODELS = [
+    # Meta Llama
     "meta-llama/Meta-Llama-3-8B-Instruct",
-    # "meta-llama/Meta-Llama-3-70B",
+    # "NousResearch/Hermes-2-Pro-Llama-3-8B",
+    # "meta-llama/Meta-Llama-3-70B-Instruct",
+
+    # Phi 3
     "microsoft/Phi-3-mini-128k-instruct",
+
+    # Mistral
     "mistralai/Mistral-7B-Instruct-v0.3",
+    # "NousResearch/Hermes-2-Pro-Mistral-7B",
+
+    # InternLM
+    "internlm/internlm2_5-7b-chat",
 ]
+
 MAX_NEW_TOKENS = 3000
 
 
 def start_llm(model: str, role: str):
-    """Starts up and returns an instance of a specific model type
+    """
+    Starts up and returns an instance of a specific model type
 
     Args:
         model: a String input stating the model used
@@ -35,32 +47,42 @@ def start_llm(model: str, role: str):
     Raises:
         ValueError: if the input model is not supported, yet
     """
-    if model == "Mistral":
-        # creating an instance of a LLMPrompt object based on the model used
-        model_prompter = prompt_tool(model=model)
-        # starting an instance of the model using HuggingFaceEndpoint
-        llm = HuggingFaceEndpoint(endpoint_url=MODELS[2], max_new_tokens=MAX_NEW_TOKENS)
-        return Mistral(llm, model_prompter, role)
-    elif model == "Llama3":
-        # creating an instance of a LLMPrompt object based on the model used
-        model_prompter = prompt_tool(model)
-        # starting an instance of the model using HuggingFaceEndpoint
-        llm = HuggingFaceEndpoint(endpoint_url=MODELS[0], max_new_tokens=MAX_NEW_TOKENS)
-        return Llama(llm, model_prompter, role)
-    else:
-        raise ValueError(f"You entered {model}, which is not a support model type")
+
+    match model.lower():
+        case "llama3":
+            # creating an instance of a LLMPrompt object based on the model used
+            model_prompter = prompt_tool(model)
+            # starting an instance of the model using HuggingFaceEndpoint
+            llm = HuggingFaceEndpoint(
+                endpoint_url=MODELS[0], max_new_tokens=MAX_NEW_TOKENS
+            )
+            return Llama(llm, model_prompter, role)
+
+        case "mistral":
+            # creating an instance of a LLMPrompt object based on the model used
+            model_prompter = prompt_tool(model=model)
+            # starting an instance of the model using HuggingFaceEndpoint
+            llm = HuggingFaceEndpoint(
+                endpoint_url=MODELS[2], max_new_tokens=MAX_NEW_TOKENS
+            )
+            return Mistral(llm, model_prompter, role)
+
+        case _:
+            raise ValueError(f"You entered {model}, which is not a support model type")
 
 
 class LLMInterface(ABC):
-    """Abstract class for all LLM classes. Each unique LLM model will have it's own LLM class, which must inherit from this class, hence they must all include the following methods.
+    """
+    Abstract class for all LLM classes. Each unique LLM model will have it's own LLM class, which must inherit from this class, hence they must all include the following methods.
 
     This class inherits from ABC class.
-
     """
 
     @abstractmethod
-    def generate_text(self, article):
-        """Abstract method for generating and returing a summary of keypoints based on the article
+    def generate_keypoints(self, article):
+        """
+        Abstract method for generating and returing a summary of keypoints based on the article
+
         Args:
             article: String input of the article to be summarised
         """
@@ -76,29 +98,31 @@ class LLMInterface(ABC):
 
 
 class Llama(LLMInterface):
-    """This class contains the methods for the Llama3 class. It inherits from the LLMInterface abstract class.
+    """
+    This class contains the methods for the Llama3 class. It inherits from the LLMInterface abstract class.
 
     Attributes:
         model: a HuggingFaceEndpoint object for the specific model
         prompt_template: a LLMPrompt object for the specific model
         role: a String dictating the role of the llm
-
     """
 
     def __init__(self, model, prompt_template, role):
-        """Initializes the instance based on model, prompt_template and role input.
+        """
+        Initializes the instance based on model, prompt_template and role input.
 
         Args:
-          model: determines the model, in this case it will be a Llama3 model
-          prompt_template: the specific prompt template for the model and its role
-          role: determines the role of the model in the article harmonisation process
+          model: determines the model, in this case it will be a Llama3 model.
+          prompt_template: the specific prompt template for the model and its role.
+          role: determines the role of the model in the article harmonisation process.
         """
         self.model = model
         self.prompt_template = prompt_template
-        self.role = role
+        self.role = role.lower()
 
-    def generate_text(self, article: str):
-        """Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
+    def generate_keypoints(self, article: str):
+        """
+        Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
 
         Args:
             article: a String input of the article content
@@ -108,26 +132,29 @@ class Llama(LLMInterface):
 
         Raises:
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
-
         """
-        if self.role == "Researcher":
-            prompt_t = PromptTemplate(
-                input_variables=["Article"],
-                template=self.prompt_template.return_researcher_prompt(),
-            )
-            chain = prompt_t | self.model | StrOutputParser()
-            print("generating keypoints")
-            response = chain.invoke(article)
-            print("keypoints generated")
-            answer = response["text"]
-            return response
-        else:
+        # Raise an error if the role is not a researcher
+        if self.role != "researcher":
             raise TypeError(
                 f"This node is a {self.role} node and cannot run generate_text()"
             )
 
+        prompt_t = PromptTemplate(
+            input_variables=["Article"],
+            template=self.prompt_template.return_researcher_prompt(),
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+        print("generating keypoints")
+        response = chain.invoke(article)
+        print("keypoints generated")
+        answer = response["text"]
+
+        return answer
+
     def compile_points(self, keypoints: list = []):
-        """A list of keypoints from different articles are compiled using this method. This is the second step in the content harmonisation flow after generating the keypoints.
+        """
+        A list of keypoints from different articles are compiled using this method. This is the second step in the content harmonisation flow after generating the keypoints.
 
         Args:
             keypoints: a list input of the keypoints from the articles to be compiled
@@ -137,34 +164,40 @@ class Llama(LLMInterface):
 
         Raises:
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
-            ValueError: If there is <2 keypoints for comparison. This means there are no keypoints between articles to compile.
+            ValueError: If there is less than 2 keypoints for comparison. This means there are no keypoints between articles to compile.
         """
-        if self.role == "Comparer":
-            prompt_t = PromptTemplate.from_template(
-                self.prompt_template.return_compiler_prompt()
+        # Raise an error if there is less than 2 keypoints
+        if len(keypoints) < 2:
+            raise ValueError(
+                "There are insufficient keypoints to compare. Kindly add more articles to compare and try again."
             )
-            if len(keypoints) >= 2:
-                input_keypoints = "--START OF KEYPOINTS--"
-                for index in range(len(keypoints)):
-                    input_keypoints += f"\n Article {index + 1} keypoints:\n"
-                    input_keypoints += f"\n {keypoints[index]}\n"
-                input_keypoints += "\n --END OF KEYPOINTS--"
-                chain = prompt_t | self.model
-                response = chain.invoke({"Keypoints": input_keypoints})
-                answer = response["text"]
-                return answer
-            else:
-                raise ValueError(
-                    "There are insufficient number of keypoints to compare. Kindly add more articles to compare and try again."
-                )
-        else:
+
+        # Raise an error if the role is not a compiler
+        if self.role != "compiler":
             raise TypeError(
                 f"This node is a {self.role} node and cannot run compile_points()"
             )
+
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_compiler_prompt()
+        )
+
+        input_keypoints = "--START OF KEYPOINTS--"
+        for index in range(len(keypoints)):
+            input_keypoints += f"\n Article {index + 1} keypoints:\n"
+            input_keypoints += f"\n {keypoints[index]}\n"
+        input_keypoints += "\n --END OF KEYPOINTS--"
+
+        chain = prompt_t | self.model
+        response = chain.invoke({"Keypoints": input_keypoints})
+        answer = response["text"]
+
+        return answer
 
 
 class Mistral(LLMInterface):
-    """This class contains the methods for the Mistral class. It inherits from the LLMInterface abstract class.
+    """
+    This class contains the methods for the Mistral class. It inherits from the LLMInterface abstract class.
 
     Attributes:
         model: a HuggingFaceEndpoint object for the specific model
@@ -174,19 +207,21 @@ class Mistral(LLMInterface):
     """
 
     def __init__(self, model, prompt_template, role):
-        """Initializes the instance based on model, prompt_template and role input.
+        """
+        Initializes the instance based on model, prompt_template and role input.
 
         Args:
-          model: determines the model, in this case it will be a Mistral model
-          prompt_template: the specific prompt template for the model and its role
-          role: determines the role of the model in the article harmonisation process
+          model: determines the model, in this case it will be a Mistral model.
+          prompt_template: the specific prompt template for the model and its role.
+          role: determines the role of the model in the article harmonisation process.
         """
         self.model = model
         self.prompt_template = prompt_template
-        self.role = role
+        self.role = role.lower()
 
-    def generate_text(self, article: str):
-        """Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
+    def generate_keypoints(self, article: str):
+        """
+        Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
 
         Args:
             article: a String input of the article content
@@ -196,25 +231,27 @@ class Mistral(LLMInterface):
 
         Raises:
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
-
         """
-        if self.role == "Researcher":
-            prompt_t = PromptTemplate(
-                input_variables=["Article"],
-                template=self.prompt_template.return_researcher_prompt(),
-            )
-            chain = prompt_t | self.model | StrOutputParser()
-            print("generating keypoints")
-            response = chain.invoke(article)
-            print("keypoints generated")
-            return response
-        else:
+        # Raise an error if the role is not a researcher
+        if self.role != "researcher":
             raise TypeError(
                 f"This node is a {self.role} node and cannot run generate_text()"
             )
 
+        prompt_t = PromptTemplate(
+            input_variables=["Article"],
+            template=self.prompt_template.return_researcher_prompt(),
+        )
+        chain = prompt_t | self.model | StrOutputParser()
+        print("generating keypoints")
+        response = chain.invoke(article)
+        print("keypoints generated")
+
+        return response
+
     def compile_points(self, keypoints: list = []):
-        """A list of keypoints from different articles are compiled using this method. This is the second step in the content harmonisation flow after generating the keypoints.
+        """
+        A list of keypoints from different articles are compiled using this method. This is the second step in the content harmonisation flow after generating the keypoints.
 
         Args:
             keypoints: a list input of the keypoints from the articles to be compiled
@@ -224,26 +261,105 @@ class Mistral(LLMInterface):
 
         Raises:
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
-            ValueError: If there is <2 keypoints for comparison. This means there are no keypoints between articles to compile.
+            ValueError: If there is less than 2 keypoints for comparison. This means there are no keypoints between articles to compile.
         """
-        if self.role == "Comparer":
-            prompt_t = PromptTemplate.from_template(
-                self.prompt_template.return_compiler_prompt()
+        # Raise an error if there is less than 2 keypoints
+        if len(keypoints) < 2:
+            raise ValueError(
+                "There are insufficient keypoints to compare. Kindly add more articles to compare and try again."
             )
-            if len(keypoints) >= 2:
-                input_keypoints = "--START OF KEYPOINTS--"
-                for index in range(len(keypoints)):
-                    input_keypoints += f"\n Article {index + 1} keypoints:\n"
-                    input_keypoints += f"\n {keypoints[index]}\n"
-                input_keypoints += "\n --END OF KEYPOINTS--"
-                chain = prompt_t | self.model
-                response = chain.invoke({"Keypoints": input_keypoints})
-                return response
-            else:
-                raise ValueError(
-                    "There are insufficient number of keypoints to compare. Kindly add more articles to compare and try again."
-                )
-        else:
+
+        # Raise an error if the role is not a compiler
+        if self.role != "compiler":
             raise TypeError(
                 f"This node is a {self.role} node and cannot run compile_points()"
             )
+
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_compiler_prompt()
+        )
+
+        input_keypoints = "--START OF KEYPOINTS--"
+        for index in range(len(keypoints)):
+            input_keypoints += f"\n Article {index + 1} keypoints:\n"
+            input_keypoints += f"\n {keypoints[index]}\n"
+        input_keypoints += "\n --END OF KEYPOINTS--"
+
+        chain = prompt_t | self.model
+        response = chain.invoke({"Keypoints": input_keypoints})
+
+        return response
+
+
+class InternLM(LLMInterface):
+    """
+    This class contains the methods for the InternLM class. It inherits from the LLMInterface abstract class.
+
+    Attributes:
+        model: a HuggingFaceEndpoint object for the specific model
+        prompt_template: a LLMPrompt object for the specific model
+        role: a String dictating the role of the llm
+
+    """
+
+    def __init__(self, model, prompt_template, role):
+        """
+        Initializes the instance based on model, prompt_template and role input.
+
+        Args:
+            model: determines the model, in this case it will be a Llama3 model.
+            prompt_template: the specific prompt template for the model and its role.
+            role: determines the role of the model in the article harmonisation process.
+        """
+        self.model = model
+        self.prompt_template = prompt_template
+        self.role = role.lower()
+
+    def generate_keypoints(self, article: str):
+        # Raise an error if the role is not a researcher
+        if self.role != "researcher":
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run generate_text()"
+            )
+
+        prompt_t = PromptTemplate(
+            input_variables=["Article"],
+            template=self.prompt_template.return_researcher_prompt(),
+        )
+        chain = prompt_t | self.model | StrOutputParser()
+        print("generating keypoints")
+        response = chain.invoke(article)
+        print("keypoints generated")
+
+        return response
+
+    def compile_points(self, keypoints: list = []):
+        # Raise an error if there is less than 2 keypoints
+        if len(keypoints) < 2:
+            raise ValueError(
+                "There are insufficient keypoints to compare. Kindly add more articles to compare and try again."
+            )
+
+        # Raise an error if the role is not a compiler
+        if self.role != "compiler":
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run compile_points()"
+            )
+
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_compiler_prompt()
+        )
+
+        input_keypoints = "--START OF KEYPOINTS--"
+        for index in range(len(keypoints)):
+            input_keypoints += f"\n Article {index + 1} keypoints:\n"
+            input_keypoints += f"\n {keypoints[index]}\n"
+        input_keypoints += "\n --END OF KEYPOINTS--"
+
+        chain = prompt_t | self.model
+        response = chain.invoke({"Keypoints": input_keypoints})
+
+        return response
+
+
+
