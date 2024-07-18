@@ -6,7 +6,6 @@ on:
       - "**/*.py"
       - "**/*.ipynb"
       - "**/*.md"
-      - "**/*.toml"
       - "**/*.css"
       - "**/*.json"
       - "**/*.yaml"
@@ -78,7 +77,6 @@ jobs:
           node-version: "20"
         if: >
           contains(steps.changed-files.outputs.all_changed_files, '.md') ||
-          contains(steps.changed-files.outputs.all_changed_files, '.toml') ||
           contains(steps.changed-files.outputs.all_changed_files, '.css') ||
           contains(steps.changed-files.outputs.all_changed_files, '.json') ||
           contains(steps.changed-files.outputs.all_changed_files, '.yaml') ||
@@ -93,7 +91,6 @@ jobs:
             ${{ runner.os }}-node-
         if: >
           contains(steps.changed-files.outputs.all_changed_files, '.md') ||
-          contains(steps.changed-files.outputs.all_changed_files, '.toml') ||
           contains(steps.changed-files.outputs.all_changed_files, '.css') ||
           contains(steps.changed-files.outputs.all_changed_files, '.json') ||
           contains(steps.changed-files.outputs.all_changed_files, '.yaml') ||
@@ -101,20 +98,18 @@ jobs:
 
       - name: Install Node.js Dependencies
         run: |
-          npm install -g prettier@3.2.5 @prettier/plugin-xml prettier-plugin-toml@2.0.1 markdownlint-cli2@0.12.1
+          npm install -g prettier@3.2.5 @prettier/plugin-xml markdownlint-cli2@0.12.1
         if: >
           contains(steps.changed-files.outputs.all_changed_files, '.md') ||
-          contains(steps.changed-files.outputs.all_changed_files, '.toml') ||
           contains(steps.changed-files.outputs.all_changed_files, '.css') ||
           contains(steps.changed-files.outputs.all_changed_files, '.json') ||
           contains(steps.changed-files.outputs.all_changed_files, '.yaml') ||
           contains(steps.changed-files.outputs.all_changed_files, '.yml')
 
       - name: Run Prettier Check
-        run: prettier --check "**/*.{toml,css,json,yaml,yml,md}"
+        run: prettier --check "**/*.{css,json,yaml,yml,md}"
         if: >
           contains(steps.changed-files.outputs.all_changed_files, '.md') ||
-          contains(steps.changed-files.outputs.all_changed_files, '.toml') ||
           contains(steps.changed-files.outputs.all_changed_files, '.css') ||
           contains(steps.changed-files.outputs.all_changed_files, '.json') ||
           contains(steps.changed-files.outputs.all_changed_files, '.yaml') ||

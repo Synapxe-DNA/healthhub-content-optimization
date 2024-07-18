@@ -67,8 +67,7 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        args: [--fix]
-        types_or: [toml, css, json, yaml, markdown]
+        args: [--write]
+        types_or: [css, json, yaml, markdown]
         additional_dependencies:
           - prettier@3.2.5
-          - prettier-plugin-toml@2.0.1
