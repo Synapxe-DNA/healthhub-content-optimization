@@ -11,7 +11,7 @@ This repository contains the content optimization for HealthHub.
 
 You can download the Anaconda Distribution for your respective operating system [here](https://docs.anaconda.com/anaconda/install/). You may also find out how to get started with Anaconda Distribution [here](https://docs.anaconda.com/anaconda/getting-started/). To verfiy your installation, you can head to the Command Line Interface (CLI) and run the following command:
 
-```bash
+```zsh
 conda list
 ```
 
@@ -21,7 +21,7 @@ You should see a list of packages installed in your active environment and their
 
 Once set up, create a virtual environment using `conda` and install dependencies:
 
-```bash
+```zsh
 # Create a virtual environment
 conda create -n <VENV_NAME> python=3.12 -y
 conda activate <VENV_NAME>
@@ -41,27 +41,27 @@ Refer to the documentation [here](https://python-poetry.org/docs/#installing-wit
 
 First create a virtual environment by running the following commands:
 
-```bash
+```zsh
 poetry shell
 ```
 
 > [!TIP]
 > If you see the following error; `The currently activated Python version 3.11.7 is not supported by the project (^3.12). Trying to find and use a compatible version.`, run:
 
-```bash
+```zsh
 poetry env use 3.12.3  # Python version used in the project
 ```
 
 To install the defined dependencies for your project, just run the `install` command. The `install` command reads the [`pyproject.toml`](pyproject.toml) file from the current project, resolves the dependencies, and installs them.
 
-```bash
+```zsh
 poetry install
 ```
 
 > [!WARNING]
 > If you face an error installing `gensim` with `poetry`, run this command:
 
-```bash
+```zsh
 poetry run python -m pip install gensim --disable-pip-version-check --no-deps --no-cache-dir --no-binary gensim
 ```
 
@@ -78,7 +78,7 @@ If there is no [`poetry.lock`](poetry.lock) file, Poetry will create one after d
 
 You can use Python's native virtual environment `venv` to setup the project
 
-```bash
+```zsh
    # Create a virtual environment
    python3 -m venv <VENV_NAME>
 ```
@@ -87,7 +87,7 @@ You can then activate the environment and install the dependencies using the fol
 
 For UNIX-based systems (macOS / Linux):
 
-```bash
+```zsh
   # Activate virtual environment
   source <VENV_NAME>/bin/activate
 
