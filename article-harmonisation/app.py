@@ -24,7 +24,7 @@ st.set_page_config(page_title="Article Harmonisation", layout="wide")
 st.title("Article Harmonisation Demo")
 st.divider()
 
-uploaded_files = st.file_uploader("Upload your text here", type=["txt"], accept_multiple_files=True)
+uploaded_files = st.file_uploader("Upload your text here. File Limit: 2", type=["txt"], accept_multiple_files=True)
 st.divider()
 
 texts = []
