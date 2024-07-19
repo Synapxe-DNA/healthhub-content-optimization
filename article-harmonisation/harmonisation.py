@@ -3,7 +3,7 @@ from typing import Optional, TypedDict
 
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
-from models import start_llm
+from models import LLMInterface, start_llm
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
@@ -109,6 +109,8 @@ class GraphState(TypedDict):
     flag_for_content_optimisation: bool
     flag_for_title_optimisation: bool
     flag_for_meta_desc_optimisation: bool
+    researcher_agent: LLMInterface
+    compiler_agent: LLMInterface
 
 
 # creating a StateGraph object with GraphState as input.
@@ -134,7 +136,7 @@ def researcher_node(state):
     article = article_list[counter].strip()
 
     # Runs the researcher LLM agent
-    researcher_agent = state.get("researcher_agent", start_llm(MODEL, RESEARCHER))
+    researcher_agent = state.get("researcher_agent")
     article_keypoints = researcher_agent.generate_keypoints(article)
     keypoints.append(article_keypoints)
     return {"keypoints": keypoints, "article_researcher_counter": counter + 1}
@@ -154,7 +156,7 @@ def compiler_node(state):
     print("this is keypoints", len(keypoints))
 
     # Runs the compiler LLM to compile the keypoints
-    compiler_agent = state.get("compiler_agent", start_llm(MODEL, COMPILER))
+    compiler_agent = state.get("compiler_agent")
     compiled_keypoints = compiler_agent.compile_points(keypoints)
     return {"compiled_keypoints": compiled_keypoints}
 
