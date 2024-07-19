@@ -1,3 +1,4 @@
+import re
 from io import StringIO
 
 import streamlit as st
@@ -82,4 +83,5 @@ if texts:
     print_checks(result)
 
     with st.container(height=500):
-        st.write("\n".join(result["keypoints"]))
+        compiled_keypoints = re.sub(" +", " ", result["compiled_keypoints"])
+        st.write(compiled_keypoints)
