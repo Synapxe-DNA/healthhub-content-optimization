@@ -52,33 +52,41 @@ def print_checks(result):
 
     # determines the number of articles undergoing the harmonisation process
     num_of_articles = len(result["article_content"])
+    
+
+    f = open(f"article-harmonisation/docs/txt_outputs/{MODEL}_compiled_keypoints_check.txt", "w")
+    f.write("This is article 1 \n")
+    f.write(article_1 + "\n")
+    f.write("This is article 2 \n")
+    f.write(article_2 + "\n")
+
 
     # printing each keypoint produced by researcher LLM
-    print("\n RESEARCHER LLM CHECKS \n\n ----------------- \n")
+    print("\n RESEARCHER LLM CHECKS \n\n ----------------- \n", file=f)
     for i in range(0, num_of_articles):
-        print(f"These are the keypoints for article {i+1}".upper())
-        print(str(result["keypoints"][i]))
-        print(" \n ----------------- \n")
+        print(f"These are the keypoints for article {i+1}".upper(), file = f)
+        print(str(result["keypoints"][i]), file = f)
+        print(" \n ----------------- \n", file = f)
 
     # printing compiled keypoints produced by compiler LLM
-    print("COMPILER LLM CHECKS \n\n ----------------- \n")
-    print(str(result["compiled_keypoints"]))
-    print(" \n ----------------- \n")
+    
+    print("COMPILER LLM CHECKS \n\n ----------------- \n", file = f)
+    print(str(result["compiled_keypoints"]), file=f)
+    print(" \n ----------------- \n", file = f)
 
     # checking for optimised content produced by content optimisation flow
     flags = {"optimised_content", "article_title", "meta_desc"}
     keys = result.keys()
-    print("CONTENT OPTIMISATION CHECKS \n\n ----------------- \n")
+    print("CONTENT OPTIMISATION CHECKS \n\n ----------------- \n", file = f)
     for flag in flags:
         if flag in keys:
-            print(f"These are the optimised {flag.upper()}")
-            print(result[flag])
-            print(" \n ----------------- \n")
+            print(f"These are the optimised {flag.upper()}", file=f)
+            print(result[flag], file=f)
+            print(" \n ----------------- \n",file=f)
         else:
-            print(f"{flag.upper()} has not been flagged for optimisation.")
-            print(" \n ----------------- \n")
-    print(type(result))
-
+            print(f"{flag.upper()} has not been flagged for optimisation.",file=f)
+            print(" \n ----------------- \n",file=f)
+    f.close()
 
 class GraphState(TypedDict):
     """This class contains the different keys relevant to the project. It inherits from the TypedDict class.
@@ -91,7 +99,7 @@ class GraphState(TypedDict):
         compiled_keypoints: An optional String containing keypoints compiled from the attribute keypoints.
         optimised_content: An optional String containing the final optimised content.
         article_researcher_counter: An optional integer serving as a counter for number of articles processed by the researcher node.
-        previous_node: An optional String that will store the name of the most recently visited node by the StateGraph. Not in use currently, but possibly implemented in the future with further developments.
+        previous_node: An optional String that will store the name of the most recently visited node by the StateGraph. 
         flag_for_content_optimisation: A required boolean value, determining if the user has flagged the article for content optimisation.
         flag_for_title_optimisation: A required boolean value, determining if the user has flagged the article for title optimisation.
         flag_for_meta_desc_optimisation: A required boolean value, determining if the user has flagged the article for meta description optimisation.
@@ -109,10 +117,6 @@ class GraphState(TypedDict):
     flag_for_content_optimisation: bool
     flag_for_title_optimisation: bool
     flag_for_meta_desc_optimisation: bool
-
-
-# creating a StateGraph object with GraphState as input.
-workflow = StateGraph(GraphState)
 
 
 # Functions defining the functionality of different nodes
@@ -228,7 +232,8 @@ def writing_guidelines_optimisation_node(state):
         "flag_for_content_optimisation": False,
     }
 
-
+# creating a StateGraph object with GraphState as input.
+workflow = StateGraph(GraphState)
 # Adding the nodes to the workflow
 workflow.add_node("researcher_node", researcher_node)
 workflow.add_node("compiler_node", compiler_node)
@@ -362,8 +367,8 @@ inputs = {
     "keypoints": [],
     "article_researcher_counter": 0,
     "flag_for_content_optimisation": False,
-    "flag_for_title_optimisation": False,
-    "flag_for_meta_desc_optimisation": False,
+    "flag_for_title_optimisation": True,
+    "flag_for_meta_desc_optimisation": True,
 }
 
 result = app.invoke(inputs)
