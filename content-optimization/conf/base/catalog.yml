@@ -60,6 +60,13 @@ flag_for_removal_by_type:
     index: false
   versioned: true
 
+recipes_data:
+  type: pandas.ExcelDataset
+  filepath: data/08_reporting/recipes_data.xlsx
+  save_args:
+    index: false
+  versioned: true
+
 filtered_data_with_keywords:
   type: pandas.ParquetDataset
   filepath: data/03_primary/filtered_data_with_keywords.parquet

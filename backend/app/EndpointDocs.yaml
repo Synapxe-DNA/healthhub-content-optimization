@@ -8,10 +8,8 @@ servers:
   - url: http://localhost:8000
     description: Local server hosted on the default port.
 
-
 components:
   schemas:
-
     Cluster:
       type: object
       properties:
@@ -24,11 +22,11 @@ components:
         articles:
           type: array
           items:
-            $ref: '#/components/schemas/Article'
+            $ref: "#/components/schemas/Article"
         edges:
           type: array
           items:
-            $ref: '#/components/schemas/Edge'
+            $ref: "#/components/schemas/Edge"
 
     Article:
       type: object
@@ -91,15 +89,13 @@ components:
           example: 0.72
           description: "Weight is within the bounds of [0,1]"
 
-
 paths:
-
   ### Check endpoints
   /check/health:
     get:
       summary: Checks if the server is running
       responses:
-        '200':
+        "200":
           description: Server is running
           content:
             application/json:
@@ -115,30 +111,30 @@ paths:
     get:
       summary: Fetches all clusters in the database
       responses:
-        '200':
+        "200":
           description: Successfully fetched all clusters
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Cluster'
+                  $ref: "#/components/schemas/Cluster"
 
   /clusters/{cluster_id}:
-      get:
-        summary: Fetches a specific cluster by ID
-        operationId: getClusterById
-        parameters:
-          - name: cluster_id
-            in: path
-            required: true
-            description: The ID of the cluster to retrieve
-            schema:
-              type: string
-        responses:
-          '200':
-            description: Successfully fetched the cluster
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Cluster'
+    get:
+      summary: Fetches a specific cluster by ID
+      operationId: getClusterById
+      parameters:
+        - name: cluster_id
+          in: path
+          required: true
+          description: The ID of the cluster to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully fetched the cluster
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cluster"

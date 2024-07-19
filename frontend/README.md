@@ -1,4 +1,3 @@
-
 # Content Optimization for HealthHub (Frontend)
 
 This subdirectory contains the code for the frontend (UI) of this project.
