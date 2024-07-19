@@ -1,5 +1,3 @@
-
-
 # Routes for FastAPI
 
 > [!NOTE]

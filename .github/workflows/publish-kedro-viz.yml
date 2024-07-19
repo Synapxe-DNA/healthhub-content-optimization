@@ -17,7 +17,9 @@ permissions:
 on:
   # This can be configured based on your requirements
   # (i.e., the workflow trigger condition)
-  pull_request:
+  push:
+    branches:
+      - main
     paths:
       - "**/pipeline.py"
       - "**/nodes.py"
