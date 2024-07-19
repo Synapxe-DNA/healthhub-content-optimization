@@ -35,7 +35,7 @@ pip install -r requirements.txt
 Refer to the documentation [here](https://python-poetry.org/docs/#installing-with-the-official-installer) (recommended) on how to install Poetry based on your operating system.
 
 > [!IMPORTANT]
-> **For Mac users**, if encountering issues with `poetry command not found`, add `export PATH="$HOME/.local/bin:$PATH"` in your `.zshrc` file in your home folder and run `source ~/.zshrc`.
+> For Mac users, if encountering issues with `poetry command not found`, add `export PATH="$HOME/.local/bin:$PATH"` in your `.zshrc` file in your home folder and run `source ~/.zshrc`.
 
 ---
 
@@ -211,6 +211,9 @@ To ensure your data directories in your Kedro project are clean, run:
 make clean
 ```
 
+> [!NOTE]
+> By default, `make clean` looks into all data directories of your Kedro project and cleans them. See [here](Makefile) for more information. When you specify the data directories you want to clean, ensure the directories are enclosed in double quotes and space separated.
+
 For more control, you may specify the directory you want to clean:
 
 ```zsh
@@ -222,9 +225,6 @@ You may even specify multiple directories to clean:
 ```zsh
 make clean DIRS="data/02_intermediate data/03_primary data/04_feature"
 ```
-
-> [!NOTE]
-> By default, `make clean` looks into all data directories of your Kedro project and cleans them. See [here](Makefile) for more information. When you specify the data directories you want to clean, ensure the directories are enclosed in double quotes and space separated.
 
 > [!CAUTION]
 > Before running any of the `make clean` commands above, you should review the directories that would be cleaned. To do so, run:
