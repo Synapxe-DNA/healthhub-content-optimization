@@ -3,7 +3,7 @@ from typing import Optional, TypedDict
 
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
-from models import start_llm
+from models import LLMInterface, start_llm
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
@@ -109,6 +109,8 @@ class GraphState(TypedDict):
     flag_for_content_optimisation: bool
     flag_for_title_optimisation: bool
     flag_for_meta_desc_optimisation: bool
+    researcher_agent: LLMInterface
+    compiler_agent: LLMInterface
 
 
 # creating a StateGraph object with GraphState as input.
@@ -134,6 +136,7 @@ def researcher_node(state):
     article = article_list[counter].strip()
 
     # Runs the researcher LLM agent
+    researcher_agent = state.get("researcher_agent")
     article_keypoints = researcher_agent.generate_keypoints(article)
     keypoints.append(article_keypoints)
     return {"keypoints": keypoints, "article_researcher_counter": counter + 1}
@@ -153,6 +156,7 @@ def compiler_node(state):
     print("this is keypoints", len(keypoints))
 
     # Runs the compiler LLM to compile the keypoints
+    compiler_agent = state.get("compiler_agent")
     compiled_keypoints = compiler_agent.compile_points(keypoints)
     return {"compiled_keypoints": compiled_keypoints}
 
@@ -258,7 +262,7 @@ def check_all_articles(state):
 
     return (
         "researcher_node"
-        if state.get("article_researcher_counter") < article_list_length
+        if state.get("article_researcher_counter") < len(state.get("article_content"))
         else "compiler_node"
     )
 
@@ -336,37 +340,49 @@ workflow.add_edge(
 # Compiling the workflow
 app = workflow.compile()
 
-# starting up the respective llm agents
-researcher_agent = start_llm(MODEL, RESEARCHER)
-compiler_agent = start_llm(MODEL, COMPILER)
-meta_desc_agent = start_llm(MODEL, META_DESC)
-title_agent = start_llm(MODEL, TITLE)
-content_guidelines_agent = start_llm(MODEL, CONTENT_GUIDELINES)
-writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
 
-# loading the articles
-with open(f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE1_TITLE}", "r") as file:
-    article_1 = file.read()
-with open(f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE2_TITLE}", "r") as file:
-    article_2 = file.read()
+if __name__ == "__main__":
+    # starting up the respective llm agents
+    researcher_agent = start_llm(MODEL, RESEARCHER)
+    compiler_agent = start_llm(MODEL, COMPILER)
+    meta_desc_agent = start_llm(MODEL, META_DESC)
+    title_agent = start_llm(MODEL, TITLE)
+    content_guidelines_agent = start_llm(MODEL, CONTENT_GUIDELINES)
+    writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
 
-# List with the articles to harmonise
-article_list = [article_1, article_2]
+    # loading the articles
+    with open(
+        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE1_TITLE}", "r"
+    ) as file:
+        article_1 = file.read()
+    with open(
+        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE2_TITLE}", "r"
+    ) as file:
+        article_2 = file.read()
 
-# Number of articles to harmonise
-article_list_length = len(article_list)
+    # List with the articles to harmonise
+    article_list = [article_1, article_2]
 
-# Dictionary with the variouse input keys and items
-inputs = {
-    "article_content": article_list,
-    "keypoints": [],
-    "article_researcher_counter": 0,
-    "flag_for_content_optimisation": False,
-    "flag_for_title_optimisation": False,
-    "flag_for_meta_desc_optimisation": False,
-}
+    # Number of articles to harmonise
+    article_list_length = len(article_list)
 
-result = app.invoke(inputs)
+    # Dictionary with the various input keys and items
+    inputs = {
+        "article_content": article_list,
+        "keypoints": [],
+        "article_researcher_counter": 0,
+        "flag_for_content_optimisation": False,
+        "flag_for_title_optimisation": False,
+        "flag_for_meta_desc_optimisation": False,
+        "researcher_agent": researcher_agent,
+        "compiler_agent": compiler_agent,
+        "meta_desc_agent": meta_desc_agent,
+        "title_agent": title_agent,
+        "content_guidelines_agent": content_guidelines_agent,
+        "writing_guidelines_agent": writing_guidelines_agent,
+    }
 
-# Prints the various checks
-print_checks(result)
+    result = app.invoke(inputs)
+
+    # Prints the various checks
+    print_checks(result)
