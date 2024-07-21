@@ -8,6 +8,10 @@ from langgraph.graph import END, StateGraph
 from models import LLMInterface, start_llm
 from phoenix.trace.langchain import LangChainInstrumentor
 
+# Set up LLM tracing session
+session = px.launch_app()
+LangChainInstrumentor().instrument()
+
 # Setting the environment for HuggingFaceHub
 load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
@@ -334,9 +338,7 @@ app = workflow.compile()
 
 
 if __name__ == "__main__":
-    session = px.launch_app()
-    LangChainInstrumentor().instrument()
-
+    # TODO: Compact these statements as a modular function that can be executed in streamlit as well
     # starting up the respective llm agents
     researcher_agent = start_llm(MODEL, RESEARCHER)
     compiler_agent = start_llm(MODEL, COMPILER)
@@ -394,7 +396,9 @@ if __name__ == "__main__":
     # Prints the various checks
     print_checks(result)
 
-    # print(f"View the traces in phoenix: {session.url}")
+    print(
+        f"View the traces in phoenix: {px.active_session().url} after launching the web UI server."
+    )
 
     trace_df = px.Client().get_spans_dataframe()
 
