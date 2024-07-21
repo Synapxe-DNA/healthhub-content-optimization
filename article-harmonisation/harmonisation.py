@@ -1,9 +1,14 @@
 import os
 from typing import Optional, TypedDict
 
+import phoenix as px
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from models import LLMInterface, start_llm
+from phoenix.trace.langchain import LangChainInstrumentor
+
+session = px.launch_app()
+LangChainInstrumentor().instrument()
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
@@ -25,17 +30,6 @@ WRITING_GUIDELINES = "Writing guidelines"
 
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = 3000
-
-# Declaring directorys
-ROOT = os.getcwd()
-EXTRACTED_TEXT_DIRECTORY = (
-    f"{ROOT}/content-optimization/data/02_intermediate/all_extracted_text/"
-)
-ARTICLE_CATEGORY = "diseases-and-conditions/"
-
-# Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
-ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
-ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
 
 
 def print_checks(result):
@@ -350,6 +344,18 @@ if __name__ == "__main__":
     content_guidelines_agent = start_llm(MODEL, CONTENT_GUIDELINES)
     writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
 
+    # Declaring directorys
+    ROOT = os.getcwd()
+    EXTRACTED_TEXT_DIRECTORY = (
+        f"{ROOT}/content-optimization/data/02_intermediate/all_extracted_text/"
+    )
+    ARTICLE_CATEGORY = "diseases-and-conditions/"
+
+    # Declaring title of the articles here. Currently, only 2 articles are used.
+    # This section is declared at the start, which is bound to change with further developments.
+    ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
+    ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
+
     # loading the articles
     with open(
         f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE1_TITLE}", "r"
@@ -386,3 +392,8 @@ if __name__ == "__main__":
 
     # Prints the various checks
     print_checks(result)
+
+    print(f"View the traces in phoenix: {session.url}")
+
+    trace_df = px.Client().get_spans_dataframe()
+    trace_df.to_csv("traces.csv", index=False)
