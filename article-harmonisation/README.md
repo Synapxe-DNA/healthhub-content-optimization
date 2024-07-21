@@ -61,7 +61,7 @@ To try out the streamlit demo
 - [`docs`](docs): contains all miscellaneous documents pertaining to this project
     * [`images/`](docs/images): contains all images pertaining to this project
 - [`app.py`](app.py): python file containing a simple mock application to test the agentic framework
-- [`evaluations.py`](evaluations.py): python file containing the metric to evaluate the articles
+- [`evaluations.py`](utils/evaluations.py): python file containing the metric to evaluate the articles
 - [`harmonisation.py`](harmonisation.py): python file containing the graph. Run this file to run the article harmonisation process
 - [`models.py`](models.py): python file containing classes to instantiate each LLM used in the project
 - [`prompts.py`](prompts.py): python file containing classes to instantiate prompts unique to each LLM type. Do note that different LLM will have different prompts that can be retrieved under their respective classes
