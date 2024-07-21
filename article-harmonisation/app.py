@@ -2,7 +2,6 @@ import re
 from io import StringIO
 
 import streamlit as st
-from evaluations import calculate_readability
 from harmonisation import (
     COMPILER,
     CONTENT_GUIDELINES,
@@ -14,6 +13,7 @@ from harmonisation import (
     print_checks,
 )
 from models import start_llm
+from utils.evaluations import calculate_readability
 
 # Available models configured to the project
 MODELS = ["mistral", "llama3"]
@@ -54,7 +54,9 @@ if uploaded_files:
 
     cols = st.columns(len(texts), vertical_alignment="top")
     for i in range(len(cols)):
-        score, level = calculate_readability(texts[i], choice="hemmingway")
+        metrics = calculate_readability(texts[i], choice="hemmingway")
+        score = metrics["score"]
+        level = metrics["level"]
         cols[i].write(f"Readability score: {score}, Reading level: {level}")
         with cols[i].container(height=800):
             st.write(texts[i])
