@@ -6,9 +6,8 @@ from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from models import LLMInterface, start_llm
 from phoenix.trace.langchain import LangChainInstrumentor
+import time
 
-session = px.launch_app()
-LangChainInstrumentor().instrument()
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
@@ -336,6 +335,9 @@ app = workflow.compile()
 
 
 if __name__ == "__main__":
+    session = px.launch_app()
+    LangChainInstrumentor().instrument()
+
     # starting up the respective llm agents
     researcher_agent = start_llm(MODEL, RESEARCHER)
     compiler_agent = start_llm(MODEL, COMPILER)
@@ -393,7 +395,11 @@ if __name__ == "__main__":
     # Prints the various checks
     print_checks(result)
 
-    print(f"View the traces in phoenix: {session.url}")
+    # print(f"View the traces in phoenix: {session.url}")
 
     trace_df = px.Client().get_spans_dataframe()
-    trace_df.to_csv("traces.csv", index=False)
+
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
+
+    px.close_app()
