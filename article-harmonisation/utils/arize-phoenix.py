@@ -1,6 +1,7 @@
+import time
+
 import pandas as pd
 import phoenix as px
-import time
 
 
 def upload_parquet(
@@ -26,4 +27,10 @@ def upload_parquet(
 
 if __name__ == "__main__":
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    print(upload_parquet(f"test1234-{timestr}", input_keys=["content_body", "content_category"], output_keys=["extracted_content_body"]))
+    print(
+        upload_parquet(
+            f"test1234-{timestr}",
+            input_keys=["content_body", "content_category"],
+            output_keys=["extracted_content_body"],
+        )
+    )
