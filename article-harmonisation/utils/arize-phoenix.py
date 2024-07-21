@@ -1,9 +1,12 @@
 import pandas as pd
 import phoenix as px
+import time
 
 
 def upload_parquet(
     dataset_name: str,
+    input_keys: list[str],
+    output_keys: list[str],
     parquet_filepath: str = "../data/merged_data.parquet",
     upload_url: str = "http://127.0.0.1:6006",
 ):
@@ -14,15 +17,13 @@ def upload_parquet(
     dataset = client.upload_dataset(
         dataframe=df,
         dataset_name=dataset_name,
-        input_keys=["content_body", "content_category"],
-        output_keys=["extracted_content_body"],
+        input_keys=input_keys,
+        output_keys=output_keys,
     )
 
     return dataset
 
 
 if __name__ == "__main__":
-    # parquet_filepath = sys.argv[1]
-    # upload_url = sys.argv[2]
-    # print(upload_dataset(upload_url, parquet_filepath))
-    print(upload_parquet("test1234"))
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    print(upload_parquet(f"test1234-{timestr}", input_keys=["content_body", "content_category"], output_keys=["extracted_content_body"]))
