@@ -9,8 +9,8 @@ from harmonisation import (
     RESEARCHER,
     TITLE,
     WRITING_GUIDELINES,
+    execute_graph,
     workflow,
-    execute_graph
 )
 from models import start_llm
 from utils.evaluations import calculate_readability

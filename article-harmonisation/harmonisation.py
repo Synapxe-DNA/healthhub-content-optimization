@@ -1,13 +1,12 @@
 import os
 import time
-from typing import Optional, TypedDict, Any
+from typing import Any, Optional, TypedDict
 
 import phoenix as px
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from models import LLMInterface, start_llm
 from phoenix.trace.langchain import LangChainInstrumentor
-
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
