@@ -1,8 +1,8 @@
+import os
 import re
 from io import StringIO
 
 import streamlit as st
-from evaluations import calculate_readability
 from harmonisation import (
     COMPILER,
     CONTENT_GUIDELINES,
@@ -10,10 +10,13 @@ from harmonisation import (
     RESEARCHER,
     TITLE,
     WRITING_GUIDELINES,
-    app,
-    print_checks,
+    execute_graph,
+    workflow,
 )
 from models import start_llm
+from utils.evaluations import calculate_readability
+
+os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 
 # Available models configured to the project
 MODELS = ["mistral", "llama3"]
@@ -54,7 +57,9 @@ if uploaded_files:
 
     cols = st.columns(len(texts), vertical_alignment="top")
     for i in range(len(cols)):
-        score, level = calculate_readability(texts[i], choice="hemmingway")
+        metrics = calculate_readability(texts[i], choice="hemmingway")
+        score = metrics["score"]
+        level = metrics["level"]
         cols[i].write(f"Readability score: {score}, Reading level: {level}")
         with cols[i].container(height=800):
             st.write(texts[i])
@@ -77,10 +82,7 @@ if texts:
         "writing_guidelines_agent": writing_guidelines_agent,
     }
 
-    result = app.invoke(inputs)
-
-    # Prints the various checks
-    print_checks(result)
+    result = execute_graph(workflow=workflow, input=inputs)
 
     with st.container(height=500):
         compiled_keypoints = re.sub(" +", " ", result["compiled_keypoints"])

@@ -1,14 +1,18 @@
 import os
-from typing import Optional, TypedDict
+import time
+from typing import Any, Optional, TypedDict
+
+import phoenix as px
 import pyarrow.parquet as pq
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from models import LLMInterface, start_llm
+from phoenix.trace.langchain import LangChainInstrumentor
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
-
+os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 # Available models configured to the project
 MODELS = ["mistral", "llama3"]
 
@@ -26,23 +30,28 @@ WRITING_GUIDELINES = "Writing guidelines"
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = 3000
 
+
 # Declaring directorys
 ROOT = os.getcwd()
 EXTRACTED_TEXT_DIRECTORY = (
     f"{ROOT}/content-optimization/data/02_intermediate/all_extracted_text/"
 )
-MERGED_DATA_DIRECTORY = (
-    f"{ROOT}/content-optimization/data/03_primary/merged_data.parquet/2024-07-18T08.05.43.213Z/merged_data.parquet"
-)
+MERGED_DATA_DIRECTORY = f"{ROOT}/content-optimization/data/03_primary/merged_data.parquet/2024-07-18T08.05.43.213Z/merged_data.parquet"
 ARTICLE_CATEGORY = "diseases-and-conditions/"
 
 # Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
 ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
 ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
 
-KEY_PARQUET_INFO = ["title", "article_category_names", "extracted_headers", "extracted_content_body"]
+KEY_PARQUET_INFO = [
+    "title",
+    "article_category_names",
+    "extracted_headers",
+    "extracted_content_body",
+]
 CONTENT_BODY = "extracted_content_body"
 EXTRACTED_HEADERS = "extracted_headers"
+
 
 def print_checks(result):
     """Prints out the various key outputs in graph. Namely, it will help you check for
@@ -58,41 +67,43 @@ def print_checks(result):
 
     # determines the number of articles undergoing the harmonisation process
     num_of_articles = len(result["article_content"])
-    
 
-    f = open(f"article-harmonisation/docs/txt_outputs/{MODEL}_compiled_keypoints_check.txt", "w")
+    f = open(
+        f"article-harmonisation/docs/txt_outputs/{MODEL}_compiled_keypoints_check.txt",
+        "w",
+    )
     f.write("This is article 1 \n")
     f.write(article_1 + "\n")
     f.write("This is article 2 \n")
     f.write(article_2 + "\n")
 
-
     # printing each keypoint produced by researcher LLM
     print("\n RESEARCHER LLM CHECKS \n\n ----------------- \n", file=f)
     for i in range(0, num_of_articles):
-        print(f"These are the keypoints for article {i+1}".upper(), file = f)
-        print(str(result["keypoints"][i]), file = f)
-        print(" \n ----------------- \n", file = f)
+        print(f"These are the keypoints for article {i+1}".upper(), file=f)
+        print(str(result["keypoints"][i]), file=f)
+        print(" \n ----------------- \n", file=f)
 
     # printing compiled keypoints produced by compiler LLM
-    
-    print("COMPILER LLM CHECKS \n\n ----------------- \n", file = f)
+
+    print("COMPILER LLM CHECKS \n\n ----------------- \n", file=f)
     print(str(result["compiled_keypoints"]), file=f)
-    print(" \n ----------------- \n", file = f)
+    print(" \n ----------------- \n", file=f)
 
     # checking for optimised content produced by content optimisation flow
     flags = {"optimised_content", "article_title", "meta_desc"}
     keys = result.keys()
-    print("CONTENT OPTIMISATION CHECKS \n\n ----------------- \n", file = f)
+    print("CONTENT OPTIMISATION CHECKS \n\n ----------------- \n", file=f)
     for flag in flags:
         if flag in keys:
             print(f"These are the optimised {flag.upper()}", file=f)
             print(result[flag], file=f)
-            print(" \n ----------------- \n",file=f)
+            print(" \n ----------------- \n", file=f)
         else:
-            print(f"{flag.upper()} has not been flagged for optimisation.",file=f)
-            print(" \n ----------------- \n",file=f)
+            print(f"{flag.upper()} has not been flagged for optimisation.", file=f)
+            print(" \n ----------------- \n", file=f)
     f.close()
+
 
 class GraphState(TypedDict):
     """This class contains the different keys relevant to the project. It inherits from the TypedDict class.
@@ -105,7 +116,7 @@ class GraphState(TypedDict):
         compiled_keypoints: An optional String containing keypoints compiled from the attribute keypoints.
         optimised_content: An optional String containing the final optimised content.
         article_researcher_counter: An optional integer serving as a counter for number of articles processed by the researcher node.
-        previous_node: An optional String that will store the name of the most recently visited node by the StateGraph. 
+        previous_node: An optional String that will store the name of the most recently visited node by the StateGraph.
         flag_for_content_optimisation: A required boolean value, determining if the user has flagged the article for content optimisation.
         flag_for_title_optimisation: A required boolean value, determining if the user has flagged the article for title optimisation.
         flag_for_meta_desc_optimisation: A required boolean value, determining if the user has flagged the article for meta description optimisation.
@@ -242,6 +253,7 @@ def writing_guidelines_optimisation_node(state):
         "flag_for_content_optimisation": False,
     }
 
+
 # creating a StateGraph object with GraphState as input.
 workflow = StateGraph(GraphState)
 # Adding the nodes to the workflow
@@ -348,8 +360,26 @@ workflow.add_edge(
     "content_guidelines_optimisation_node", "writing_guidelines_optimisation_node"
 )
 
-# Compiling the workflow
-app = workflow.compile()
+
+def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]:
+    # Set up LLM tracing session
+    px.launch_app()
+    LangChainInstrumentor().instrument()
+
+    # Run LangGraph Application
+    app = workflow.compile()
+    result = app.invoke(input=input)
+
+    # Prints the various checks
+    print_checks(result)
+
+    trace_df = px.Client().get_spans_dataframe()
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
+
+    px.close_app()
+
+    return result
 
 
 if __name__ == "__main__":
@@ -360,6 +390,18 @@ if __name__ == "__main__":
     title_agent = start_llm(MODEL, TITLE)
     content_guidelines_agent = start_llm(MODEL, CONTENT_GUIDELINES)
     writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
+
+    # Declaring directories
+    ROOT = os.getcwd()
+    EXTRACTED_TEXT_DIRECTORY = (
+        f"{ROOT}/content-optimization/data/02_intermediate/all_extracted_text/"
+    )
+    ARTICLE_CATEGORY = "diseases-and-conditions/"
+
+    # Declaring title of the articles here. Currently, only 2 articles are used.
+    # This section is declared at the start, which is bound to change with further developments.
+    ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
+    ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
 
     # loading the articles
     with open(
@@ -375,9 +417,10 @@ if __name__ == "__main__":
     extracted_article_content = list(table["extracted_content_body"])
 
     # List with the articles to harmonise
-    article_list = [article_1, 
-                    # article_2
-                    ]
+    article_list = [
+        article_1,
+        # article_2
+    ]
 
     # Number of articles to harmonise
     article_list_length = len(article_list)
@@ -411,10 +454,8 @@ if __name__ == "__main__":
         "flag_for_title_optimisation": False,
         "flag_for_meta_desc_optimisation": False,
         "researcher_agent": researcher_agent,
-        "compiler_agent": compiler_agent
+        "compiler_agent": compiler_agent,
     }
 
-    result = app.invoke(inputs)
-
-    # Prints the various checks
-    print_checks(result)
+    result = execute_graph(workflow, inputs)
+    print(result)

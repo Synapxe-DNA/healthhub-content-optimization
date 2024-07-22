@@ -2,7 +2,7 @@ import math
 import re
 import string
 from functools import reduce
-from typing import Any
+from typing import Any, Union
 
 import textdescriptives as td
 from readability import Readability
@@ -14,7 +14,7 @@ def calculate_readability(text: str, choice: str = "hemmingway") -> Any:
 
     Args:
         text (str): The text to analyze.
-        choice (str, optional): Select the metric to calculate. Defaults to "hemmingway".
+        choice (str, optional): Select the metric to calculate from [py-readability, textdescriptives, hemmingway]. Defaults to "hemmingway".
 
     Returns:
           Any: Returns the readability metric
@@ -25,17 +25,19 @@ def calculate_readability(text: str, choice: str = "hemmingway") -> Any:
 
     match choice.lower():
         case "py-readability":
-            metrics = Readability(text)
+            readability_metrics = Readability(text)
 
-            print(metrics.flesch_kincaid())
-            print(metrics.coleman_liau())
-            print(metrics.dale_chall())
-            print(metrics.ari())
-            print(metrics.linsear_write())
-            print(metrics.gunning_fog())
-            print(metrics.flesch())
-            print(metrics.smog(all_sentences=True))
-            print(metrics.spache())
+            metrics = {
+                "flesch-kincaid reading ease": readability_metrics.flesch(),
+                "flesch-kincaid grade level": readability_metrics.flesch_kincaid(),
+                "coleman liau": readability_metrics.coleman_liau(),
+                "dale chall": readability_metrics.dale_chall(),
+                "automated readability index": readability_metrics.ari(),
+                "linsear write": readability_metrics.linsear_write(),
+                "gunning fog": readability_metrics.gunning_fog(),
+                "smog": readability_metrics.smog(all_sentences=True),
+                "spache": readability_metrics.spache(),
+            }
 
         case "textdescriptives":
             print(td.get_valid_metrics())
@@ -50,7 +52,7 @@ def calculate_readability(text: str, choice: str = "hemmingway") -> Any:
     return metrics
 
 
-def hemmingway_score(text: str) -> tuple[int, str]:
+def hemmingway_score(text: str) -> dict[str, Union[str, int]]:
     """
     Calculates the hemmingway score of the given text.
 
@@ -106,7 +108,7 @@ def hemmingway_score(text: str) -> tuple[int, str]:
     else:
         level = "very hard"
 
-    return score, level
+    return {"score": score, "level": level}
 
 
 if __name__ == "__main__":
