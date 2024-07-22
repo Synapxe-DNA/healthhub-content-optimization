@@ -9,8 +9,8 @@ from harmonisation import (
     RESEARCHER,
     TITLE,
     WRITING_GUIDELINES,
-    app,
-    print_checks,
+    workflow,
+    execute_graph
 )
 from models import start_llm
 from utils.evaluations import calculate_readability
@@ -79,10 +79,7 @@ if texts:
         "writing_guidelines_agent": writing_guidelines_agent,
     }
 
-    result = app.invoke(inputs)
-
-    # Prints the various checks
-    print_checks(result)
+    result = execute_graph(workflow=workflow, input=inputs)
 
     with st.container(height=500):
         compiled_keypoints = re.sub(" +", " ", result["compiled_keypoints"])
