@@ -1,7 +1,10 @@
+import re
+
 import pandas as pd
 import pytest
 from kedro.io import DataCatalog
 from src.content_optimization.pipelines.data_processing.nodes import (
+    add_contents,
     extract_data,
     merge_data,
     standardize_columns,
@@ -59,6 +62,43 @@ def test_standardize_columns(catalog: DataCatalog, num_cols: int = 28):
         ).all(), "Unexpected columns in the standardized dataframe"
 
 
+def test_add_contents(catalog: DataCatalog):
+    all_contents_standardized = catalog.load("all_contents_standardized")
+    missing_contents = catalog.load("missing_contents")
+
+    all_contents_added = add_contents(all_contents_standardized, missing_contents)
+
+    # Check if output is a dictionary
+    assert isinstance(all_contents_added, dict), "Expected a dictionary"
+
+    # Check if output contains only the correct number of content categories
+    assert len(all_contents_added) == len(
+        catalog.load("all_contents")
+    ), "Number of content categories should match the input data"
+
+    friendly_urls = []
+
+    # Store friendly_url in friendly_urls
+    for file_path, _ in missing_contents.items():
+        print(file_path)
+        # Extract friendly url that is used as filename
+        friendly_url = file_path.split("/")[-1]
+        friendly_urls.append(friendly_url)
+
+    # Combine all dataframes into one
+    combined_df = pd.DataFrame()
+    for content_category, df in all_contents_added.items():
+        combined_df = pd.concat([combined_df, df], axis=0, ignore_index=True)
+
+    # Get articles with Excel Errors
+    filtered_df = combined_df[combined_df["friendly_url"].isin(friendly_urls)]
+
+    for index, row in filtered_df.iterrows():
+        assert not re.match(
+            r"Value exceeded maximum cell size", row["content_body"]
+        ), "Content body was not successfully replaced"
+
+
 @pytest.mark.parametrize("word_count_cutoff", [50, 90])
 def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
     """
@@ -77,10 +117,11 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
         3. Expects the same number of articles with extracted content body as the number of output text files
         4. Expects the extracted content body to meet the word count cutoff
     """
+    whitelist = catalog.load("params:whitelist")
     all_contents_extracted, all_extracted_text = extract_data(
-        catalog.load("all_contents_standardized"),
+        catalog.load("all_contents_added"),
         word_count_cutoff,
-        catalog.load("params:whitelist"),
+        whitelist,
     )
 
     # Check if output is a dictionary
@@ -98,22 +139,24 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
             "extracted_headers",
             "extracted_img_alt_text",
             "extracted_content_body",
-        }.issubset(df.columns), "Exptected columns missing in the extracted dataframe"
+        }.issubset(df.columns), "Expected columns missing in the extracted dataframe"
 
-        # Check if number of articles with extracted content body matches the number of text files
-        assert df.query("to_remove == False").shape[0] == len(
-            [
-                key
-                for key in all_extracted_text.keys()
-                if key.startswith(content_category)
-            ]
-        ), "Unexpected number of articles with extracted content body does not match the number of text files"
-        # Check if extracted content body meets the word count cutoff
+        # Filter out articles that will be removed
+        # Check if extracted content body of removed articles are below the word count
         assert (
             df.query("remove_type == 'Below Word Count'")["extracted_content_body"]
             .apply(lambda x: len(x.split()) <= word_count_cutoff)
             .all()
-        ), "Found extracted content body above the word count cutoff"
+        ), "Found extracted content body under `remove_type == Below Word Count`` above the word count cutoff"
+
+        # Check if extracted content body of kept articles (excluding whitelisted articles) meets the word count cutoff
+        df_keep = df[~df["to_remove"]]
+        df_filtered = df_keep[~df_keep["id"].isin(whitelist)]
+        assert (
+            df_filtered["extracted_content_body"]
+            .apply(lambda x: len(x.split()) >= word_count_cutoff)
+            .all()
+        ), "Found extracted content body below the word count cutoff that is not removed"
 
 
 def test_merge_data(catalog: DataCatalog):

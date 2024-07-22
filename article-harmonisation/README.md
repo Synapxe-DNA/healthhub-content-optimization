@@ -37,11 +37,32 @@ To run the project, first ensure that you have installed all the packages in `re
 
 Currently, the article harmonisation and optimisation is a single process but it might be bound to change in future developments.
 
+To run the agentic framework on CLI -
+```python
+    # Install the requirements within `article-harmonisation` directory
+    pip install -r requirements.txt
+    # Change directory to ROOT
+    cd ..
+    # Run the python script
+    python3 ./article-harmonisation/harmonisation.py
+```
+
+To run the streamlit application -
+```python
+    # Install the requirements within `article-harmonisation` directory
+    pip install -r requirements.txt
+    # Run the streamlit demo
+    streamlit run ./app.py
+```
+
+To try out the streamlit demo
+
 ## File Structure
 - [`docs`](docs): contains all miscellaneous documents pertaining to this project
     * [`images/`](docs/images): contains all images pertaining to this project
+- [`app.py`](app.py): python file containing a simple mock application to test the agentic framework
 - [`evaluations.py`](evaluations.py): python file containing the metric to evaluate the articles
 - [`harmonisation.py`](harmonisation.py): python file containing the graph. Run this file to run the article harmonisation process
-- [`models.py`](models.py): python file containing classes to instantiate each LLM used in the project.
-- [`prompts.py`](prompts.py): python file containing classes to instantiate prompts unique to each LLM type. Do note that different LLM will have different prompts that can be retrieved under their respective classes.
-- [`requirements.txt`](requirements.txt): txt file containing all the packages need to run the project.
+- [`models.py`](models.py): python file containing classes to instantiate each LLM used in the project
+- [`prompts.py`](prompts.py): python file containing classes to instantiate prompts unique to each LLM type. Do note that different LLM will have different prompts that can be retrieved under their respective classes
+- [`requirements.txt`](requirements.txt): txt file containing all the packages need to run the project
