@@ -332,7 +332,7 @@ workflow.add_edge(
 
 def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]:
     # Set up LLM tracing session
-    session = px.launch_app()
+    px.launch_app()
     LangChainInstrumentor().instrument()
 
     # Run LangGraph Application
@@ -346,9 +346,6 @@ def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]
     timestr = time.strftime("%Y%m%d-%H%M%S")
     trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
 
-    print(
-        f"View the traces in phoenix: {px.active_session().url} after launching the web UI server."
-    )
     px.close_app()
 
     return result
