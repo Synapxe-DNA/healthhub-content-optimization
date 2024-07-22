@@ -1,3 +1,4 @@
+import os
 import re
 from io import StringIO
 
@@ -14,6 +15,8 @@ from harmonisation import (
 )
 from models import start_llm
 from utils.evaluations import calculate_readability
+
+os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 
 # Available models configured to the project
 MODELS = ["mistral", "llama3"]
