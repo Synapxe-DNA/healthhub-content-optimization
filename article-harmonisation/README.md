@@ -60,7 +60,7 @@ To set up the `arize-phoenix` LLM observability server -
     # Launches the web server at http://127.0.0.1:6006
     python3 -m phoenix.server.main serve
 ```
-For more information, refer to [`Phoenix Setup Environment`](https://docs.arize.com/phoenix/setup/environments)
+If you are unable to run the server, perform the following command - `pip install 'arize-phoenix[evals]'`. For more information, refer to [`Phoenix Setup Environment`](https://docs.arize.com/phoenix/setup/environments).
 
 ## File Structure
 - [`docs`](docs): contains all miscellaneous documents pertaining to this project
