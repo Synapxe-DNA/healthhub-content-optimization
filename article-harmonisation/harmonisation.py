@@ -1,6 +1,6 @@
 import os
 import time
-from typing import Optional, TypedDict
+from typing import Optional, TypedDict, Any
 
 import phoenix as px
 from dotenv import load_dotenv
@@ -8,14 +8,11 @@ from langgraph.graph import END, StateGraph
 from models import LLMInterface, start_llm
 from phoenix.trace.langchain import LangChainInstrumentor
 
-# Set up LLM tracing session
-session = px.launch_app()
-LangChainInstrumentor().instrument()
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
-
+os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 # Available models configured to the project
 MODELS = ["mistral", "llama3"]
 
@@ -333,12 +330,32 @@ workflow.add_edge(
     "content_guidelines_optimisation_node", "writing_guidelines_optimisation_node"
 )
 
-# Compiling the workflow
-app = workflow.compile()
+
+def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]:
+    # Set up LLM tracing session
+    session = px.launch_app()
+    LangChainInstrumentor().instrument()
+
+    # Run LangGraph Application
+    app = workflow.compile()
+    result = app.invoke(input=input)
+
+    # Prints the various checks
+    print_checks(result)
+
+    trace_df = px.Client().get_spans_dataframe()
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
+
+    print(
+        f"View the traces in phoenix: {px.active_session().url} after launching the web UI server."
+    )
+    px.close_app()
+
+    return result
 
 
 if __name__ == "__main__":
-    # TODO: Compact these statements as a modular function that can be executed in streamlit as well
     # starting up the respective llm agents
     researcher_agent = start_llm(MODEL, RESEARCHER)
     compiler_agent = start_llm(MODEL, COMPILER)
@@ -347,7 +364,7 @@ if __name__ == "__main__":
     content_guidelines_agent = start_llm(MODEL, CONTENT_GUIDELINES)
     writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
 
-    # Declaring directorys
+    # Declaring directories
     ROOT = os.getcwd()
     EXTRACTED_TEXT_DIRECTORY = (
         f"{ROOT}/content-optimization/data/02_intermediate/all_extracted_text/"
@@ -391,18 +408,5 @@ if __name__ == "__main__":
         "writing_guidelines_agent": writing_guidelines_agent,
     }
 
-    result = app.invoke(inputs)
-
-    # Prints the various checks
-    print_checks(result)
-
-    print(
-        f"View the traces in phoenix: {px.active_session().url} after launching the web UI server."
-    )
-
-    trace_df = px.Client().get_spans_dataframe()
-
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
-
-    px.close_app()
+    result = execute_graph(workflow, inputs)
+    print(result)
