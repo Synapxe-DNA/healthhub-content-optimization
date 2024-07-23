@@ -4,6 +4,7 @@ import pyarrow.parquet as pq
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from models import LLMInterface, start_llm
+from utils import concat_headers_to_content
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
@@ -39,10 +40,6 @@ ARTICLE_CATEGORY = "diseases-and-conditions/"
 # Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
 ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
 ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
-
-KEY_PARQUET_INFO = ["title", "article_category_names", "extracted_headers", "extracted_content_body"]
-CONTENT_BODY = "extracted_content_body"
-EXTRACTED_HEADERS = "extracted_headers"
 
 def print_checks(result):
     """Prints out the various key outputs in graph. Namely, it will help you check for
@@ -123,6 +120,7 @@ class GraphState(TypedDict):
     flag_for_content_optimisation: bool
     flag_for_title_optimisation: bool
     flag_for_meta_desc_optimisation: bool
+    # look into converting for a optimisation list
     researcher_agent: LLMInterface
     compiler_agent: LLMInterface
 
@@ -143,12 +141,17 @@ def researcher_node(state):
     counter = state.get("article_researcher_counter", 0)
     print("This is article ", counter + 1)
     keypoints = state.get("keypoints", [])
-    article = article_list[counter].strip()
-
+    article = article_list[counter]
     # Runs the researcher LLM agent
     researcher_agent = state.get("researcher_agent")
-    article_keypoints = researcher_agent.generate_keypoints(article)
-    keypoints.append(article_keypoints)
+
+    processed_keypoints = []
+    print('num of kp in article ', len(article))
+    for kp in article:
+        article_keypoints = researcher_agent.generate_keypoints(kp)
+        print("this is", article_keypoints)
+        processed_keypoints.append(article_keypoints)
+    keypoints.append(processed_keypoints)
     return {"keypoints": keypoints, "article_researcher_counter": counter + 1}
 
 
@@ -375,41 +378,21 @@ if __name__ == "__main__":
     extracted_article_content = list(table["extracted_content_body"])
 
     # List with the articles to harmonise
-    article_list = [article_1, 
-                    # article_2
+    article_list = [
+                    article_1, 
+                    article_2
                     ]
 
-    # Number of articles to harmonise
-    article_list_length = len(article_list)
-
-    for content in extracted_article_content:
-        for article_content in article_list:
-            if article_content in str(content):
-                idx = extracted_article_content.index(content)
-                str_content = content.as_py()
-                article_headers = list(table[EXTRACTED_HEADERS][idx])
-                split_content = []
-                for header_details in article_headers:
-                    header = header_details[0].as_py()
-                    print(header)
-                    if split_content == []:
-                        split_content.extend(str_content.split(header))
-                    else:
-                        last_content = split_content.pop()
-                        split_content.extend(last_content.split(header))
-                for x in split_content:
-                    print("THIS IS", x, "\n")
-
-    quit()
+    processed_input_articles = concat_headers_to_content(extracted_article_content, article_list)
 
     # Dictionary with the variouse input keys and items
     inputs = {
-        "article_content": article_list,
+        "article_content": processed_input_articles,
         "keypoints": [],
         "article_researcher_counter": 0,
-        "flag_for_content_optimisation": False,
-        "flag_for_title_optimisation": False,
-        "flag_for_meta_desc_optimisation": False,
+        "flag_for_content_optimisation": True,
+        "flag_for_title_optimisation": True,
+        "flag_for_meta_desc_optimisation": True,
         "researcher_agent": researcher_agent,
         "compiler_agent": compiler_agent
     }
