@@ -188,10 +188,9 @@ class Llama(LLMInterface):
 
         input_keypoints = ""
         for article_index in range(len(keypoints)):
-            article = keypoints[article_index]
-            input_keypoints += f"\n Article {article_index + 1} keypoints:\n"
-            for kp in article:
-                input_keypoints += f"\n {kp}\n"
+            article_kp = keypoints[article_index]
+            input_keypoints += f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
+
         
         chain = prompt_t | self.model
         print("Compiling keypoints for article harmonisation")
@@ -210,9 +209,6 @@ class Llama(LLMInterface):
             self.prompt_template.return_content_prompt()
         )
 
-        print(keypoints)
-
-        quit()
         chain = prompt_t | self.model
         print("Optimising article content")
         r = chain.invoke({"Keypoints": keypoints})

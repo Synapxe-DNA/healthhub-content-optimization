@@ -69,9 +69,8 @@ def print_checks(result):
     # printing each keypoint produced by researcher LLM
     print("\nRESEARCHER LLM CHECKS\n -----------------", file=f)
     for i in range(0, num_of_articles):
-        print(f"These are the keypoints for article {i+1}".upper(), file = f)
-        for kp in result["keypoints"][i]:
-            print(f"{kp} \n", file = f)
+        print(f"These are the keypoints for article {i+1}\n".upper(), file = f)
+        print(result["keypoints"][i], file = f)
         print(" \n -----------------", file = f)
 
     # printing compiled keypoints produced by compiler LLM
@@ -150,7 +149,7 @@ def researcher_node(state):
     # Runs the researcher LLM agent
     researcher_agent = state.get("researcher_agent")
 
-    processed_keypoints = []
+    processed_keypoints = ""
     print(f'Number of keypoints in article {counter + 1}: ', len(article))
 
     #Stores the number of keypoints processed in the current article
@@ -160,7 +159,7 @@ def researcher_node(state):
     for kp in article:
         kp_counter += 1
         article_keypoints = researcher_agent.generate_keypoints(kp, kp_counter)
-        processed_keypoints.append(article_keypoints)
+        processed_keypoints += f"{article_keypoints} \n"
     keypoints.append(processed_keypoints)
     return {"keypoints": keypoints, "article_researcher_counter": counter + 1}
 
@@ -234,9 +233,6 @@ def content_guidelines_optimisation_node(state):
     keypoints = state.get("keypoints")
     if state.get('compiled_keypoints') != None:
         keypoints = state.get("compiled_keypoints")
-
-    print(keypoints)
-    quit()
         
     # Runs the compiler LLM to compile the keypoints
     content_optimisation_agent = state.get("content_optimisation_agent")
