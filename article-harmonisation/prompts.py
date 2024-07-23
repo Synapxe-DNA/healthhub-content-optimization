@@ -70,75 +70,37 @@ class LlamaPrompts(LLMPrompt):
             researcher_prompt (string): this is a string containing the prompt for a researcher llm. {Article} is the only input required to invoke the prompt.
         """
 
-        researcher_prompt_old = """
-            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-            You are part of a article combination process. Your task is to identify the keypoints in the article and categorise each sentence into their respective keypoints.
-
-            Each keypoint must start with a brief explanation as its title, followed by the respective sentences.
-            Do NOT paraphrase sentences from the given article when assigning the sentence, you must use each sentence directly from the given article.
-            ALL sentences in the same keypoint must joined be in a single paragraph.
-            Each sentence must appear only once under each keypoint.
-            You do NOT need to categorise all sentences. If a sentence is irrelevant to all keypoints, you can place it under the last keypoint "Omitted sentences"
-
-            Strictly ONLY include the keypoints you have identified and the sentences you omitted in your answer.
-
-            Please respond with "No keypoints found" if there are no keypoints identified.
-
-            Use this template to structure your answer:
-
-            "
-            Article: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. Buy these essential oils! You can support your friends and family members suffering from Parkinson's through constant encouragement. Remind them that having parkinsons's is not the end of the road.
-
-            Answer:
-            1. Introduction to Parkinson's disease
-            Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body.
-
-            2. Supporting a patient with Parkinson's disease
-            You can support your friends and family members suffering from Parkinson's through constant encouragement. Remind them that having parkinsons's is not the end of the road.
-
-            Omitted sentences
-            Buy these essential oils!
-            "
-            <|eot_id|>
-            <|start_header_id|>user<|end_header_id|>
-
-            Article: {Article}
-            <|eot_id|>
-
-            <|start_header_id|>assistant<|end_header_id|>
-            Answer:
-        """
-
         researcher_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             You are part of a article combination process. Your task is to utilize the keypoint in each article and determine if the sentences under each keypoint are relevant to the keypoint.
 
             Do NOT paraphrase sentences from the given article when assigning the sentence, you must use each sentence directly from the given content.
-            Do NOT modify the keypoints headers.
+            Do NOT modify the keypoint headers.
+            If no keypoint header is provided, you may come up with your own keypoint header that MUST be relevant to the content provided
             You may rephrase the keypoint title to better suit the context of the content if required.
             ALL sentences in the same keypoint must be joined in a single paragraph.
             Each sentence must appear only once under the keypoint.
             You do NOT need to categorise all sentences. If a sentence is irrelevant to all keypoints, you can place it under the last keypoint "Omitted sentences"
-
             Strictly ONLY include the content and the sentences you omitted in your answer.
 
             Use the following examples to structure your answer:
 
-            Start of Example 1
+            ### Start of Example 1
             Keypoint: Introduction to Parkinson's disease
             Parkinson's is a neurodegenerative disease. 
             Buy these essential oils to recover from Parkinson's Disease!
-            It is a progressive disorder that affects the nervous system and other parts of the body.  
+            It is a progressive disorder that affects the nervous system and other parts of the body.
+            There are approximately 90,000 new patients diagnosed with PD annually in the US.
             
             Answer:
             Keypoint: Introduction to Parkinson's disease
-            Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body.
+            Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
 
             Omitted sentences:
             Buy these essential oils to recover from Parkinson's Disease!
-            End of Example 1
+            ### End of Example 1
             
-            Start of Example 2
+            ### Start of Example 2
             Keypoint: Tips to maintain your weight
             Consume a high protein, low carb diet.
             Exercise for 30 minutes daily.
@@ -151,11 +113,10 @@ class LlamaPrompts(LLMPrompt):
 
             Omitted sentences:
             Read these next: Top 10 power foods to eat recommended by a nutrionist
-            End of Example 2
+            ### End of Example 2
 
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
-
             {Article}
             <|eot_id|>
 

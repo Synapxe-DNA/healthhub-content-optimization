@@ -5,7 +5,7 @@ import os
 
 ROOT = os.getcwd()
 MERGED_DATA_DIRECTORY = (
-    f"{ROOT}/content-optimization/data/03_primary/merged_data.parquet/2024-07-18T08.05.43.213Z/merged_data.parquet"
+    f"{ROOT}/article-harmonisation/data/merged_data.parquet"
 )
 
 CONTENT_BODY = "extracted_content_body"
@@ -14,15 +14,16 @@ KEY_PARQUET_INFO = ["title", "article_category_names", EXTRACTED_HEADERS, CONTEN
 TO_REMOVE = ["", " "]
 
 table = pq.read_table(MERGED_DATA_DIRECTORY)
+EXTRACTED_ARTICLE_CONTENT = list(table["extracted_content_body"])
 
 
-def concat_headers_to_content(extracted_article_content,article_list):
+def concat_headers_to_content(article_list):
     final_configured_articles = []
     # for loop iterating through each 
-    for content in extracted_article_content:
+    for content in EXTRACTED_ARTICLE_CONTENT:
         for article_content in article_list:
             if article_content in str(content):
-                idx = extracted_article_content.index(content)
+                idx = EXTRACTED_ARTICLE_CONTENT.index(content)
                 str_content = content.as_py()
                 article_headers = list(table[EXTRACTED_HEADERS][idx])
                 split_content = []

@@ -117,7 +117,7 @@ class Llama(LLMInterface):
         self.prompt_template = prompt_template
         self.role = role.lower()
 
-    def generate_keypoints(self, article: str):
+    def generate_keypoints(self, article: str, num):
         """
         Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
 
@@ -142,9 +142,9 @@ class Llama(LLMInterface):
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print("generating keypoints")
+        print(f"Processing keypoints for header {num}")
         response = chain.invoke(article)
-        print("keypoints generated")
+        print(f"Keypoints processed for header {num}")
         return response
 
     def compile_points(self, keypoints: list = []):

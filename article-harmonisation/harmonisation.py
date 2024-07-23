@@ -32,9 +32,6 @@ ROOT = os.getcwd()
 EXTRACTED_TEXT_DIRECTORY = (
     f"{ROOT}/content-optimization/data/02_intermediate/all_extracted_text/"
 )
-MERGED_DATA_DIRECTORY = (
-    f"{ROOT}/content-optimization/data/03_primary/merged_data.parquet/2024-07-18T08.05.43.213Z/merged_data.parquet"
-)
 ARTICLE_CATEGORY = "diseases-and-conditions/"
 
 # Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
@@ -146,10 +143,15 @@ def researcher_node(state):
     researcher_agent = state.get("researcher_agent")
 
     processed_keypoints = []
-    print('num of kp in article ', len(article))
+    print(f'Number of keypoints in article {counter + 1}: ', len(article))
+
+    #Stores the number of keypoints processed in the current article
+    kp_counter = 0
+
+    #For loop iterating through each keypoint in each article
     for kp in article:
-        article_keypoints = researcher_agent.generate_keypoints(kp)
-        print("this is", article_keypoints)
+        kp_counter += 1
+        article_keypoints = researcher_agent.generate_keypoints(kp, kp_counter)
         processed_keypoints.append(article_keypoints)
     keypoints.append(processed_keypoints)
     return {"keypoints": keypoints, "article_researcher_counter": counter + 1}
@@ -166,7 +168,6 @@ def compiler_node(state):
             - compiled_keypoints: a String containing the compiled keypoints from the compiler LLM
     """
     keypoints = state.get("keypoints")
-    print("this is keypoints", len(keypoints))
 
     # Runs the compiler LLM to compile the keypoints
     compiler_agent = state.get("compiler_agent")
@@ -374,16 +375,13 @@ if __name__ == "__main__":
     ) as file:
         article_2 = file.read()
 
-    table = pq.read_table(MERGED_DATA_DIRECTORY)
-    extracted_article_content = list(table["extracted_content_body"])
-
     # List with the articles to harmonise
     article_list = [
                     article_1, 
                     article_2
                     ]
 
-    processed_input_articles = concat_headers_to_content(extracted_article_content, article_list)
+    processed_input_articles = concat_headers_to_content(article_list)
 
     # Dictionary with the variouse input keys and items
     inputs = {
