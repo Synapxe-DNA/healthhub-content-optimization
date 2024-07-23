@@ -181,7 +181,69 @@ class LlamaPrompts(LLMPrompt):
             Answer:
         """
         return compiler_prompt
+    
+    def return_content_prompt(self) -> str:
+        optimise_health_conditions_content_prompt = """
+            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+            You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
+            
+            Your task is to compare the given keypoints with the requirements below and write your own content to fill in missing sections if necessary.  
 
+            Your final answer must include these sections: Overview of the condition, Causes and Risk Factors, Symptoms and Signs, Complications, Treatment and Prevention, When to see a doctor
+            
+            You must use the given keypoints to FILL IN these sections. 
+            If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
+            Please put "[A]" at the end of each sentence written by you.
+            Do not have more than 2 sections with bullet points.
+            You should avoid conveying negative sentiments, communicating in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
+            You should reassure readers when a situation is not a lost cause.
+            Your answer for each section should be sufficiently elaborate. 
+
+            Use the following example on Influenza to structure your answer. Your answer should contain more content and further elaboration on each points. 
+            Your answer must maintain the same structure given in the example.
+
+            ### Start of example
+            1. What it is
+            Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes or speaks. The virus is airborne and infect people when they breathe it in.
+
+            2. Causes and Risk Factors
+            Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics.
+
+            3. Symptoms and signs
+            Some symtpoms include: High fever, cough, headache, muscle aches. Other symptoms include sneezing, nasal discharge, loss of appetite.
+
+            4. Complications of influenza
+            The following people are at greater risk of influenza-related complications. 
+            - Persons aged 65 years old and above. 
+            - Children aged between 6 months old to 5 years old. 
+            - Persons with chronic disorders of their lungs.
+            - Women in the second or third trimester of pregnancy. [A]
+
+            5. Treatment and Prevention 
+            Here are some ways to battle influenza and to avoid it.
+            Treatment: You can visit the local pharmacist to procure some flu medicine. 
+            Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission.
+            Treatment: Rest at home while avoiding strenuous activites until your symptoms subside.
+
+            6. When to see a doctor
+            You should visit your local doctor your symptoms persists for more than 3 days, or when you see fit. [A]
+            ### End of example
+
+            <|eot_id|>
+            <|start_header_id|>user<|end_header_id|>
+            Keypoints: 
+            {Keypoints}
+            <|eot_id|>
+            <|start_header_id|>assistant<|end_header_id|>
+            Answer:
+            """
+        return optimise_health_conditions_content_prompt
+    
+    def return_writing_prompt(self) -> str:
+        optimise_writing_prompt = """
+                                """
+        return optimise_writing_prompt
+    
 
 class MistralPrompts(LLMPrompt):
     """

@@ -6,6 +6,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from prompts import prompt_tool
+import re
 
 dotenv.load_dotenv()
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY", "")
@@ -29,6 +30,13 @@ MODELS = [
 
 MAX_NEW_TOKENS = 3000
 
+# Declaring node roles
+RESEARCHER = "Researcher"
+COMPILER = "Compiler"
+META_DESC = "Meta description"
+TITLE = "Title"
+CONTENT_OPTIMISATION = "Content optimisation"
+WRITING_GUIDELINES = "Writing guidelines"
 
 def start_llm(model: str, role: str):
     """
@@ -115,7 +123,7 @@ class Llama(LLMInterface):
         """
         self.model = model
         self.prompt_template = prompt_template
-        self.role = role.lower()
+        self.role = role
 
     def generate_keypoints(self, article: str, num):
         """
@@ -131,9 +139,9 @@ class Llama(LLMInterface):
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
         """
         # Raise an error if the role is not a researcher
-        if self.role != "researcher":
+        if self.role != RESEARCHER:
             raise TypeError(
-                f"This node is a {self.role} node and cannot run generate_text()"
+                f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
 
         prompt_t = PromptTemplate(
@@ -143,8 +151,9 @@ class Llama(LLMInterface):
 
         chain = prompt_t | self.model | StrOutputParser()
         print(f"Processing keypoints for header {num}")
-        response = chain.invoke(article)
+        r = chain.invoke(article)
         print(f"Keypoints processed for header {num}")
+        response = re.sub(" +", " ", r)
         return response
 
     def compile_points(self, keypoints: list = []):
@@ -168,7 +177,7 @@ class Llama(LLMInterface):
             )
 
         # Raise an error if the role is not a compiler
-        if self.role != "compiler":
+        if self.role != COMPILER:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run compile_points()"
             )
@@ -177,16 +186,39 @@ class Llama(LLMInterface):
             self.prompt_template.return_compiler_prompt()
         )
 
-        input_keypoints = "--START OF KEYPOINTS--"
-        for index in range(len(keypoints)):
-            input_keypoints += f"\n Article {index + 1} keypoints:\n"
-            input_keypoints += f"\n {keypoints[index]}\n"
-        input_keypoints += "\n --END OF KEYPOINTS--"
-
+        input_keypoints = ""
+        for article_index in range(len(keypoints)):
+            article = keypoints[article_index]
+            input_keypoints += f"\n Article {article_index + 1} keypoints:\n"
+            for kp in article:
+                input_keypoints += f"\n {kp}\n"
+        
         chain = prompt_t | self.model
-        response = chain.invoke({"Keypoints": input_keypoints})
+        print("Compiling keypoints for article harmonisation")
+        r = chain.invoke({"Keypoints": input_keypoints})
+        print("Keypoints compiled for article harmonisation")
+        response = re.sub(" +", " ", r)
         return response
+    
+    def optimise_content(self, keypoints: list = []):
+        if self.role != CONTENT_OPTIMISATION:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_content()"
+            )
+        
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_content_prompt()
+        )
 
+        print(keypoints)
+
+        quit()
+        chain = prompt_t | self.model
+        print("Optimising article content")
+        r = chain.invoke({"Keypoints": keypoints})
+        print("Article content optimised")
+        response = re.sub(" +", " ", r)
+        return response
 
 class Mistral(LLMInterface):
     """
@@ -226,9 +258,9 @@ class Mistral(LLMInterface):
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
         """
         # Raise an error if the role is not a researcher
-        if self.role != "researcher":
+        if self.role != RESEARCHER:
             raise TypeError(
-                f"This node is a {self.role} node and cannot run generate_text()"
+                f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
 
         prompt_t = PromptTemplate(
@@ -312,7 +344,7 @@ class InternLM(LLMInterface):
         # Raise an error if the role is not a researcher
         if self.role != "researcher":
             raise TypeError(
-                f"This node is a {self.role} node and cannot run generate_text()"
+                f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
 
         prompt_t = PromptTemplate(
@@ -343,11 +375,10 @@ class InternLM(LLMInterface):
             self.prompt_template.return_compiler_prompt()
         )
 
-        input_keypoints = "--START OF KEYPOINTS--"
+        input_keypoints = ""
         for index in range(len(keypoints)):
             input_keypoints += f"\n Article {index + 1} keypoints:\n"
             input_keypoints += f"\n {keypoints[index]}\n"
-        input_keypoints += "\n --END OF KEYPOINTS--"
 
         chain = prompt_t | self.model
         response = chain.invoke({"Keypoints": input_keypoints})
