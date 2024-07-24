@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from models import LLMInterface, start_llm
 from phoenix.trace.langchain import LangChainInstrumentor
-from utils import concat_headers_to_content
+from utils.headers import concat_headers_to_content
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
@@ -123,7 +123,6 @@ class GraphState(TypedDict):
     compiled_keypoints: Optional[str]
     optimised_content: Optional[str]
     article_researcher_counter: Optional[int]
-    # previous_node: Optional[str]
     flag_for_content_optimisation: bool
     flag_for_title_optimisation: bool
     flag_for_meta_desc_optimisation: bool
