@@ -13,7 +13,7 @@ from src.content_optimization.pipelines.data_processing.nodes import (
 pd.options.mode.chained_assignment = None
 
 
-def test_standardize_columns(catalog: DataCatalog, num_cols: int = 28):
+def test_standardize_columns(catalog: DataCatalog, num_cols: int = 26):
     """
     A test function for `standardize_columns` that checks the output data.
 
@@ -56,8 +56,6 @@ def test_standardize_columns(catalog: DataCatalog, num_cols: int = 28):
                 *catalog.load("params:default_columns"),
                 # Added columns
                 "content_category",
-                "to_remove",
-                "remove_type",
             ]
         ).all(), "Unexpected columns in the standardized dataframe"
 
@@ -137,7 +135,7 @@ def test_extract_data(catalog: DataCatalog, word_count_cutoff: int):
             "extracted_tables",
             "extracted_links",
             "extracted_headers",
-            "extracted_img_alt_text",
+            "extracted_images",
             "extracted_content_body",
         }.issubset(df.columns), "Expected columns missing in the extracted dataframe"
 

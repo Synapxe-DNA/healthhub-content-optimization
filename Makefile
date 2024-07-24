@@ -1,7 +1,4 @@
-.PHONY: install lint clean-dry-run clean run test local-db-start local-db-stop
-
-install:
-	pip install -r requirements.txt
+.PHONY: lint clean-dry-run clean run test local-db-start local-db-stop
 
 lint:
 	pre-commit run --all-files
@@ -43,4 +40,4 @@ local-db-start:
 local-db-stop:
 	@docker-compose --file ./docker/Dockercompose.yaml --env-file ./docker/dockercompose.env.local down hh-mongo
 
-all: install lint clean-dry-run clean run test local-db-start local-db-stop
+all: lint clean-dry-run clean run test local-db-start local-db-stop

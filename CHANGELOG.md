@@ -1,5 +1,17 @@
 # Changelog
 
+## July 24, 2024 <a id="july-24-2024"></a>
+
+- Renamed column from `extracted_img_alt_text` to `extracted_images`.
+- Updated test cases to ensure that they all pass.
+
+## July 18, 2024 <a id="july-18-2024"></a>
+
+- Extended [`.pre-commit-config.yaml`](.pre-commit-config.yaml) file
+- Updated GitHub Workflows
+  - Renamed `lint.yml` to [`run-checks.yml`](.github/workflows/run-checks.yml)
+  - Improved `run-checks.yml`
+
 ## July 17, 2024 <a id="july-17-2024"></a>
 
 - Integrated code to flag for recipe articles

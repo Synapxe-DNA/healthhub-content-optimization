@@ -7,7 +7,7 @@
 This visualization shows the current (latest) Kedro pipeline. This will be updated as the pipeline progresses.
 
 <p align="center">
-    <img src="docs/images/kedro-pipeline.png" height="1000">
+    <img src="docs/images/kedro-pipeline.png" height="1000", alt="Kedro Pipeline">
 </p>
 
 ## Rules and Guidelines
@@ -28,7 +28,7 @@ This visualization shows the current (latest) Kedro pipeline. This will be updat
 
 Declare any dependencies in `requirements.txt` for `pip` installation. To install them, run:
 
-```bash
+```zsh
 pip install -r requirements.txt
 ```
 
@@ -36,7 +36,7 @@ pip install -r requirements.txt
 
 If you're using Poetry instead, run:
 
-```bash
+```zsh
 cat requirements.txt | xargs poetry add
 ```
 
@@ -114,7 +114,7 @@ cat requirements.txt | xargs poetry add
 
 Similarly, ensure you're in the correct directory. Refer [here](#note) for more information. You can simply run the Kedro project with:
 
-```bash
+```zsh
 kedro run
 ```
 
@@ -129,20 +129,20 @@ This will run the entire project for all pipelines.
 
 You can run the entire `data_processing` pipeline by running:
 
-```bash
+```zsh
 kedro run --pipeline=data_processing
 ```
 
 If for any reason, you would like to run specific nodes in the `data_processing` pipeline, you can run:
 
-```bash
+```zsh
 # Running only the `standardize_columns_node`
 kedro run --nodes="standardize_columns_node"
 ```
 
 If you want to run from a particular node to another node, you can run:
 
-```bash
+```zsh
 # Running from `extract_data_node` to `merge_data_node`
 kedro run --from-nodes="extract_data_node" --to-nodes="merge_data_node"
 ```
@@ -155,17 +155,17 @@ The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/D
 ### Feature Engineering <a id="feature-engineering"></a>
 
 > [!IMPORTANT]
-> Before running the `feature_engineering` [pipeline](src/content_optimization/pipelines/feature_engineering/pipeline.py), ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
+> Before running the [`feature_engineering`](src/content_optimization/pipelines/feature_engineering/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
 
 You can run the entire `feature_engineering` pipeline by running:
 
-```bash
+```zsh
 kedro run --pipeline=feature_engineering
 ```
 
 If for any reason, you would like to run specific nodes in the `feature_engineering` pipeline, you can run:
 
-```bash
+```zsh
 # Running only the `standardize_columns_node`
 kedro run --nodes="extract_keywords_node"
 ```
@@ -195,7 +195,7 @@ kedro run --nodes="extract_keywords_node"
 ### General Information
 
 - **Dataset Name:** `merged_data.parquet`
-- **Location**: [`data/03_primary/`](data/03_primary)
+- **Location**: [`data/03_primary`](data/03_primary)
 - **Dataset Description:** Merged collection of Health Hub articles across different content categories
 - **Version**: v1
 - **Date of Creation:** June 28, 2024
@@ -707,15 +707,15 @@ kedro run --nodes="extract_keywords_node"
 
   </details>
 
-- **`extracted_img_alt_text`**
+- **`extracted_images`**
 
   <details>
 
-  - Data Type: `list[string]`
+  - Data Type: `list[tuple[string, string]]`
   - Description:
-    - A list of alternate text extracted from images based on the `<img>` tag
+    - A list of alternate text and urls extracted from images based on the `<img>` tag
   - Example Values:
-    - `['cabbage']`
+    - `[('chas blue card','https://ch-api.healthhub.sg/api/public/content/059bbb4ca6934cea84c745e45518b15a?v=f726ce14')]`
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
