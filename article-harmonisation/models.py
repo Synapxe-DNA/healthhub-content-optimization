@@ -38,7 +38,7 @@ COMPILER = "Compiler"
 META_DESC = "Meta description"
 TITLE = "Title"
 CONTENT_OPTIMISATION = "Content optimisation"
-WRITING_GUIDELINES = "Writing guidelines"
+WRITING_OPTIMISATION = "Writing optimisation"
 
 def start_llm(model: str, role: str):
     """
@@ -215,6 +215,24 @@ class Llama(LLMInterface):
         print("Optimising article content")
         r = chain.invoke({"Keypoints": keypoints})
         print("Article content optimised")
+        response = re.sub(" +", " ", r)
+        return response
+    
+
+    def optimise_writing(self, content: str):
+        if self.role != WRITING_OPTIMISATION:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_content()"
+            )
+        
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_writing_prompt()
+        )
+
+        chain = prompt_t | self.model
+        print("Optimising article writing")
+        r = chain.invoke({"Content": content})
+        print("Article writing optimised")
         response = re.sub(" +", " ", r)
         return response
 

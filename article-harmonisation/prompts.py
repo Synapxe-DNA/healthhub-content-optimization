@@ -203,47 +203,59 @@ class LlamaPrompts(LLMPrompt):
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
             
-            Your task is to compare the given keypoints with the requirements below and write your own content to fill in missing sections if necessary.  
+            Your task is to compare the given keypoints with the given requirements below and write your own content to fill in missing sections if necessary.  
+            You will also be given a set of instructions that you MUST follow.
 
-            Your final answer must include these sections: Overview of the condition, Causes and Risk Factors, Symptoms and Signs, Complications, Treatment and Prevention, When to see a doctor
-            
-            You must use the given keypoints to FILL IN these sections. 
+            ### Start of content requirements
+            When rewriting the content, your writing MUST meet the requirements stated here. 
             If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
-            Please put "[A]" at the end of each sentence written by you.
-            Do not have more than 2 sections with bullet points.
-            You should avoid conveying negative sentiments, communicating in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
-            You should reassure readers when a situation is not a lost cause.
-            Your answer for each section should be sufficiently elaborate. 
+            You should emulate your writing based on the specific 
 
-            Use the following example on Influenza to structure your answer. Your answer should contain more content and further elaboration on each points. 
-            Your answer must maintain the same structure given in the example.
+            Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
+                1. Overview of the condition
+                    - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
+                2. Causes and Risk Factors 
+                3. Symptoms and Signs
+                    Here are instructions you should follow specifically for this section:
+                    - You must list out the symptoms and signs in bullet points form. 
+                    - You should include a brief explanation before the bullet points in this section.
+                4. Complications
+                5. Treatment and Prevention
+                6. When to see a doctor
 
-            ### Start of example
-            1. Overview of Influenza
-            Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
+            You must also use the following guidelines and examples to phrase your writing. 
+            1. Carry a positive tone
+                Do NOT convey negative sentiments in your writing.
+                You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
+                Example: We recommend taking the diabetes medicine as prescribed by your doctor or pharmacist. This will help in the medicine’s effectiveness and reduce the risk of side effects.
 
-            2. Causes and Risk Factors
-            Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. The flu virus is classified into three main types: A, B, and C. Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. Factors that increase the risk of contracting influenza include close contact with infected individuals, weakened immune system, and lack of vaccination. Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
+            2. Provide reassurance
+                Your writing should reassure readers that the situation is not a lost cause
+                Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
 
-            3. Symptoms and Signs
-            Some symptoms include: High fever, cough, headache, and muscle aches. Other symptoms include sneezing, nasal discharge, and loss of appetite. Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhea, although these are more common in children.
+            3. Break up lengthy sentences
+                You should break up long paragraphs into concise sections.
+                You should also avoid lengthy, wordy bullet points.
+                Example: Mothers may unintentionally pass infectious diseases to their babies:
+                    • The placenta during pregnancy
+                    • Germs in the vagina during birth
+                    • Breast milk after birth
+                    As different viruses spread through different channels, pregnant women should seek their doctor’s advice regarding necessary screening to protect their baby.
 
-            4. Complications of Influenza
-            The following people are at greater risk of influenza-related complications:
-            - Persons aged 65 years old and above.
-            - Children aged between 6 months old to 5 years old.
-            - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
-            - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalization or even death, particularly in vulnerable populations.
+            You should out your content based on the required sections step by step.
+            After each section has been rewritten, you must check your writing with each guideline step by step.
+            ### End of content requirements
 
-            5. Treatment and Prevention
-            Here are some ways to battle influenza and to avoid it:
-            Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
-            Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
-            Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
+            ### Start of instructions
+            You MUST follow these instructions when writing out your content.
 
-            6. When to See a Doctor
-            You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
-            ### End of example
+            You MUST follow the content requirements. 
+            You must use the given keypoints to FILL IN the required sections. 
+            Each sentence should start in a new line, only sentences in bullet points are exempted.
+            You should only use bullet points only if it improves the readability of the content.
+            You should only use bullet points SPARINGLY and only <= 2 sections in your writing should contain bullet points.
+            Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts
+            ### End of instructions
 
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
@@ -263,12 +275,48 @@ class LlamaPrompts(LLMPrompt):
             Your task is to rewrite the content based on the a set of personality and voice guidelines, which is provided below.
             You will also be given a set of instructions that you MUST follow.
 
+            Rewrite the content based on the guidelines here. 
             ### Start of guidelines
-            Structure your content based on the guidelines here. 
+            The goal of rewriting the content is to build credibility and confidence in readers. Every point has a set of guidelines you should adopt in your writing along with an example that you should emulate.
+            You should check these guidelines step by step.
+            
+            1. Approachable
+                Guidelines: You should welcome your reader warmly, understand their needs and accommodate to them wherever possible. You should also account for diverse needs and differing health conditions of all visitors
+                Example: “Living with diabetes doesn't mean you can’t travel. With proper planning, you can still make travel plans safely.”
+            
+            2. Progressive
+                Guidelines: Your writing should be relevant to the visitor's needs and expectations. 
+                Example: “Worried about new COVID-19 variants? Hear from our experts on infectious diseases and learn how you can stay safe!”
+            
+            3. Crafted
+                Guidelines: You should personalize experiences for visitors with relevant content in the article.
+                Example: “Are you a new mum returning to work soon? Here are some tips to help you maintain your milk supply while you work from the office.”
+
+            4. Optimistic
+                Guidelines: Your writing should carry a positive tone to motivate visitors to lead a healthier lifestyle. You should also empathise with the struggles of the readers.
+                Example: “It’s normal to feel stressed, worried or even sad with the daily demands of daily life. And it’s okay to reach out for help and support when you need it.”
+
+            5. Personal
+                Guidelines: Your writing should carry a tone that is caring, sensitive, warm and tactful
+                Example: “Breast cancer is known to be asymptomatic in the early stages. That’s why regular screenings can provide early detection and timely intervention.”
+            
+            6. Human-centric
+                Guidelines: Your writing should concern for visitors’ current health state, without judgment or prescriptive
+                Example: "We admire you for taking care of your loved ones. But have you taken some time for yourself lately? Here are some ways you can practice self-care."
+
+            7. Respectful
+                Guidelines: You should craft your writing to be respectful to visitors regardless of medical condition, race, religion, gender, age, etc.
+                Example: "Diabetes affects people of all ages, genders and backgrounds. With the right care and support, people living with diabetes can lead healthy and fulfilling lives."
             ### End of guidelines
 
             ### Start of instructions
-            Do NOT change the content headers. You MUST keep the original content headers.
+            You MUST follow these instructions when writing out your content.
+
+            You must ONLY rewrite the content under each content header. Do NOT modify the content headers.
+            You MUST use the writing guidelines given above to rewrite the content.
+            You should use the examples given under each keypoint to structure your writing.
+            If the content is given in bullet points, you are to maintain the same structure of the bullet points.
+            Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts
             ### End of instructions
 
             <|eot_id|>
