@@ -1,15 +1,19 @@
 import os
-from typing import Optional, TypedDict
+import time
+from typing import Any, Optional, TypedDict
+
+import phoenix as px
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from models import start_llm
-from utils import concat_headers_to_content
+from phoenix.trace.langchain import LangChainInstrumentor
+from utils.headers import concat_headers_to_content
 from pathlib import Path
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
-
+os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 # Available models configured to the project
 MODELS = ["mistral", "llama3"]
 
@@ -26,6 +30,7 @@ WRITING_OPTIMISATION = "Writing optimisation"
 
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = 3000
+
 
 # Declaring directorys
 ROOT = os.getcwd()
@@ -65,7 +70,6 @@ def print_checks(result):
             f.write(keypoint + "\n")
     f.write(" \n -----------------")
 
-
     # printing each keypoint produced by researcher LLM
     print("\nRESEARCHER LLM CHECKS\n -----------------", file=f)
     for i in range(0, num_of_articles):
@@ -88,11 +92,12 @@ def print_checks(result):
         if flag in keys:
             print(f"These is the optimised {flag.upper()}", file=f)
             print(result[flag], file=f)
-            print(" \n ----------------- \n",file=f)
+            print(" \n ----------------- \n", file=f)
         else:
-            print(f"{flag.upper()} has not been flagged for optimisation.",file=f)
-            print(" \n ----------------- \n",file=f)
+            print(f"{flag.upper()} has not been flagged for optimisation.", file=f)
+            print(" \n ----------------- \n", file=f)
     f.close()
+
 
 class GraphState(TypedDict):
     """This class contains the different keys relevant to the project. It inherits from the TypedDict class.
@@ -105,7 +110,7 @@ class GraphState(TypedDict):
         compiled_keypoints: An optional String containing keypoints compiled from the attribute keypoints.
         optimised_content: An optional String containing the final optimised content.
         article_researcher_counter: An optional integer serving as a counter for number of articles processed by the researcher node.
-        previous_node: An optional String that will store the name of the most recently visited node by the StateGraph. 
+        previous_node: An optional String that will store the name of the most recently visited node by the StateGraph.
         flag_for_content_optimisation: A required boolean value, determining if the user has flagged the article for content optimisation.
         flag_for_title_optimisation: A required boolean value, determining if the user has flagged the article for title optimisation.
         flag_for_meta_desc_optimisation: A required boolean value, determining if the user has flagged the article for meta description optimisation.
@@ -272,6 +277,7 @@ def writing_guidelines_optimisation_node(state):
         "user_flags": user_flags
     }
 
+
 # creating a StateGraph object with GraphState as input.
 workflow = StateGraph(GraphState)
 # Adding the nodes to the workflow
@@ -382,8 +388,26 @@ workflow.add_edge(
     "content_guidelines_optimisation_node", "writing_guidelines_optimisation_node"
 )
 
-# Compiling the workflow
-app = workflow.compile()
+
+def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]:
+    # Set up LLM tracing session
+    px.launch_app()
+    LangChainInstrumentor().instrument()
+
+    # Run LangGraph Application
+    app = workflow.compile()
+    result = app.invoke(input=input)
+
+    # Prints the various checks
+    print_checks(result)
+
+    trace_df = px.Client().get_spans_dataframe()
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
+
+    px.close_app()
+
+    return result
 
 
 if __name__ == "__main__":
@@ -407,9 +431,9 @@ if __name__ == "__main__":
 
     # List with the articles to harmonise
     article_list = [
-                    article_1, 
-                    # article_2
-                    ]
+        article_1,
+        # article_2
+    ]
 
     processed_input_articles = concat_headers_to_content(article_list)
 
@@ -433,7 +457,5 @@ if __name__ == "__main__":
         }       
     }
 
-    result = app.invoke(inputs)
-
-    # Prints the various checks
-    print_checks(result)
+    result = execute_graph(workflow, inputs)
+    print(result)

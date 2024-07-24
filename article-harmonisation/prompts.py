@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+import tiktoken
+
 
 def prompt_tool(model: str):
     """Returns a LLMPrompt object based on the string input
@@ -562,3 +564,16 @@ class InternLMPrompts(LLMPrompt):
             Answer:
         """
         return compiler_prompt
+
+
+def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
+    """Return the number of tokens in a string."""
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
+
+if __name__ == "__main__":
+    prompter = prompt_tool("mistral")
+    prompt = prompter.return_researcher_prompt()
+    print(num_tokens_from_string(prompt))
