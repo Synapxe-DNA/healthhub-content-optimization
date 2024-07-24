@@ -3,7 +3,6 @@ import re
 import string
 from functools import reduce
 from typing import Any
-
 import textdescriptives as td
 from readability import Readability
 

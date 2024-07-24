@@ -17,6 +17,8 @@ os.environ["LANGCHAIN_PROJECT"] = "Multi-agent Collaboration"
 MODELS = [
     # Meta Llama
     "meta-llama/Meta-Llama-3-8B-Instruct",
+    "meta-llama/Meta-Llama-3.1-8B-Instruct",
+
     # "NousResearch/Hermes-2-Pro-Llama-3-8B",
     # "meta-llama/Meta-Llama-3-70B-Instruct",
     # Phi 3
