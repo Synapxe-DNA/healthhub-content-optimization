@@ -29,7 +29,7 @@ MODELS = [
     "internlm/internlm2_5-7b-chat",
 ]
 
-MAX_NEW_TOKENS = 3000
+MAX_NEW_TOKENS = 6000
 
 # Declaring node roles
 RESEARCHER = "Researcher"
@@ -219,21 +219,21 @@ class Llama(LLMInterface):
     
 
     def optimise_writing(self, content: str):
-        if self.role != WRITING_OPTIMISATION:
-            raise TypeError(
-                f"This node is a {self.role} node and cannot run optimise_content()"
-            )
+        # if self.role != WRITING_OPTIMISATION:
+        #     raise TypeError(
+        #         f"This node is a {self.role} node and cannot run optimise_content()"
+        #     )
         
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_writing_prompt()
         )
 
+
         chain = prompt_t | self.model
         print("Optimising article writing")
         r = chain.invoke({"Content": content})
         print("Article writing optimised")
-        response = re.sub(" +", " ", r)
-        return response
+        return r
 
 class Mistral(LLMInterface):
     """

@@ -14,6 +14,9 @@ from pathlib import Path
 load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
+
+SLEEP_TIME = 1
+
 # Available models configured to the project
 MODELS = ["mistral", "llama3"]
 
@@ -163,6 +166,7 @@ def researcher_node(state):
         article_keypoints = researcher_agent.generate_keypoints(kp, kp_counter)
         processed_keypoints += f"{article_keypoints} \n"
     keypoints.append(processed_keypoints)
+    time.sleep(SLEEP_TIME)
     return {"keypoints": keypoints, "article_researcher_counter": counter + 1}
 
 
@@ -182,6 +186,8 @@ def compiler_node(state):
     compiler_agent = state.get("llm_agents")["compiler_agent"]
 
     compiled_keypoints = compiler_agent.compile_points(keypoints)
+    time.sleep(SLEEP_TIME)
+
     return {"compiled_keypoints": compiled_keypoints}
 
 
@@ -198,6 +204,7 @@ def meta_description_optimisation_node(state):
     """
     user_flags = state.get("user_flags")
     user_flags["flag_for_meta_desc_optimisation"] = False
+    time.sleep(SLEEP_TIME)
 
     return {
         "meta_desc": "This is the meta desc",
@@ -246,6 +253,9 @@ def content_guidelines_optimisation_node(state):
     content_optimisation_agent = state.get("llm_agents")["content_optimisation_agent"]
 
     optimised_content = content_optimisation_agent.optimise_content(keypoints)
+
+    time.sleep(SLEEP_TIME)
+
     return {"optimised_content": optimised_content}
 
 
@@ -264,15 +274,16 @@ def writing_guidelines_optimisation_node(state):
             - flag_for_content_optimisation: a False boolean value to indicate that the writing optimisation step has been completed
     """
 
-
+    
     optimised_content = state.get("optimised_content")
-    writing_optimisation_agent = state.get("llm_agents")["writing_optimisation_agent"]
+    writing_optimisation_agent = state.get("llm_agents")["content_optimisation_agent"]
     optimised_writing = writing_optimisation_agent.optimise_writing(optimised_content)
     print(optimised_writing)
 
 
     user_flags = state.get("user_flags")
     user_flags["flag_for_content_optimisation"] = False
+    time.sleep(SLEEP_TIME)
 
     return {
         "optimised_writing": optimised_writing,
@@ -405,7 +416,7 @@ def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]
 
     trace_df = px.Client().get_spans_dataframe()
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
+    # trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
 
     px.close_app()
 
@@ -453,9 +464,9 @@ if __name__ == "__main__":
             "researcher_agent": researcher_agent,
             "compiler_agent": compiler_agent,
             "content_optimisation_agent": content_optimisation_agent,
-            "writing_optimisation_agent": writing_optimisation_agent,
-            "title_optimisation_agent": title_optimisation_agent,
-            "meta_desc_optimisation_agent": meta_desc_optimisation_agent
+            # "writing_optimisation_agent": writing_optimisation_agent,
+            # "title_optimisation_agent": title_optimisation_agent,
+            # "meta_desc_optimisation_agent": meta_desc_optimisation_agent
         }       
     }
 
