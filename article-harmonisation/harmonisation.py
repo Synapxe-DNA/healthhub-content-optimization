@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from models import LLMInterface, start_llm
 from phoenix.trace.langchain import LangChainInstrumentor
+from utils import concat_headers_to_content
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
@@ -24,7 +25,7 @@ RESEARCHER = "Researcher"
 COMPILER = "Compiler"
 META_DESC = "Meta description"
 TITLE = "Title"
-CONTENT_GUIDELINES = "Content guidelines"
+CONTENT_OPTIMISATION = "Content optimisation"
 WRITING_GUIDELINES = "Writing guidelines"
 
 # Declaring maximum new tokens
@@ -36,27 +37,16 @@ ROOT = os.getcwd()
 EXTRACTED_TEXT_DIRECTORY = (
     f"{ROOT}/content-optimization/data/02_intermediate/all_extracted_text/"
 )
-MERGED_DATA_DIRECTORY = f"{ROOT}/content-optimization/data/03_primary/merged_data.parquet/2024-07-18T08.05.43.213Z/merged_data.parquet"
 ARTICLE_CATEGORY = "diseases-and-conditions/"
 
 # Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
 ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
 ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
 
-KEY_PARQUET_INFO = [
-    "title",
-    "article_category_names",
-    "extracted_headers",
-    "extracted_content_body",
-]
-CONTENT_BODY = "extracted_content_body"
-EXTRACTED_HEADERS = "extracted_headers"
-
-
 def print_checks(result):
     """Prints out the various key outputs in graph. Namely, it will help you check for
         1. Researcher LLM outputs -> keypoints: prints out the sentences in their respective categories, including sentences omitted by the llm
-        2. Compiler LLM outputs -> compiled_keypoints: prints out the compiled key points
+        2. Compiler LLM outputs -> compiled_keypoints: prints out the compiled keypoints
         3. Content optimisation LLM outputs -> optimised_content: prints out the optimised article content after optimisation by content and writing guideline LLM
         4. Title optimisation LLM outputs -> article_title: prints out the optimised title
         5. Meta description optimisation LLM outputs -> meta_desc: prints out the optimised meta description
@@ -68,32 +58,35 @@ def print_checks(result):
     # determines the number of articles undergoing the harmonisation process
     num_of_articles = len(result["article_content"])
 
-    f = open(
-        f"article-harmonisation/docs/txt_outputs/{MODEL}_compiled_keypoints_check.txt",
-        "w",
-    )
-    f.write("This is article 1 \n")
-    f.write(article_1 + "\n")
-    f.write("This is article 2 \n")
-    f.write(article_2 + "\n")
+    f = open(f"article-harmonisation/docs/txt_outputs/{MODEL}_compiled_keypoints_check.txt", "w")
+
+    for content_index in range(len(result["article_content"])):
+        if content_index > 0:
+            f.write(" \n ----------------- \n")
+        f.write(f"Original Article {content_index+1} content \n")
+        article = result["article_content"][content_index]
+        for keypoint in article:
+            f.write(keypoint + "\n")
+    f.write(" \n -----------------")
 
     # printing each keypoint produced by researcher LLM
-    print("\n RESEARCHER LLM CHECKS \n\n ----------------- \n", file=f)
+    print("\nRESEARCHER LLM CHECKS\n -----------------", file=f)
     for i in range(0, num_of_articles):
-        print(f"These are the keypoints for article {i+1}".upper(), file=f)
-        print(str(result["keypoints"][i]), file=f)
-        print(" \n ----------------- \n", file=f)
+        print(f"These are the keypoints for article {i+1}\n".upper(), file = f)
+        print(result["keypoints"][i], file = f)
+        print(" \n -----------------", file = f)
 
     # printing compiled keypoints produced by compiler LLM
-
-    print("COMPILER LLM CHECKS \n\n ----------------- \n", file=f)
-    print(str(result["compiled_keypoints"]), file=f)
-    print(" \n ----------------- \n", file=f)
+    
+    if "compiled_keypoints" in result.keys():
+        print("COMPILER LLM CHECKS \n ----------------- ", file = f)
+        print(str(result["compiled_keypoints"]), file=f)
+        print(" \n -----------------", file = f)
 
     # checking for optimised content produced by content optimisation flow
     flags = {"optimised_content", "article_title", "meta_desc"}
     keys = result.keys()
-    print("CONTENT OPTIMISATION CHECKS \n\n ----------------- \n", file=f)
+    print("CONTENT OPTIMISATION CHECKS\n ----------------- \n", file = f)
     for flag in flags:
         if flag in keys:
             print(f"These are the optimised {flag.upper()}", file=f)
@@ -134,8 +127,10 @@ class GraphState(TypedDict):
     flag_for_content_optimisation: bool
     flag_for_title_optimisation: bool
     flag_for_meta_desc_optimisation: bool
+    # look into converting for a optimisation list
     researcher_agent: LLMInterface
     compiler_agent: LLMInterface
+    content_optimisation_agent: LLMInterface
 
 
 # Functions defining the functionality of different nodes
@@ -154,12 +149,22 @@ def researcher_node(state):
     counter = state.get("article_researcher_counter", 0)
     print("This is article ", counter + 1)
     keypoints = state.get("keypoints", [])
-    article = article_list[counter].strip()
-
+    article = article_list[counter]
     # Runs the researcher LLM agent
     researcher_agent = state.get("researcher_agent")
-    article_keypoints = researcher_agent.generate_keypoints(article)
-    keypoints.append(article_keypoints)
+
+    processed_keypoints = ""
+    print(f'Number of keypoints in article {counter + 1}: ', len(article))
+
+    #Stores the number of keypoints processed in the current article
+    kp_counter = 0
+
+    #For loop iterating through each keypoint in each article
+    for kp in article:
+        kp_counter += 1
+        article_keypoints = researcher_agent.generate_keypoints(kp, kp_counter)
+        processed_keypoints += f"{article_keypoints} \n"
+    keypoints.append(processed_keypoints)
     return {"keypoints": keypoints, "article_researcher_counter": counter + 1}
 
 
@@ -174,10 +179,10 @@ def compiler_node(state):
             - compiled_keypoints: a String containing the compiled keypoints from the compiler LLM
     """
     keypoints = state.get("keypoints")
-    print("this is keypoints", len(keypoints))
 
     # Runs the compiler LLM to compile the keypoints
     compiler_agent = state.get("compiler_agent")
+
     compiled_keypoints = compiler_agent.compile_points(keypoints)
     return {"compiled_keypoints": compiled_keypoints}
 
@@ -229,7 +234,16 @@ def content_guidelines_optimisation_node(state):
         a dictionary with keys "optimised_content"
             - optimised_content: a String containing the rewritten article from the content guidelines LLM
     """
-    return {"optimised_content": "This is content"}
+    keypoints = state.get("keypoints")
+    if state.get('compiled_keypoints') != None:
+        keypoints = state.get("compiled_keypoints")
+        
+    # Runs the compiler LLM to compile the keypoints
+    content_optimisation_agent = state.get("content_optimisation_agent")
+
+    optimised_content = content_optimisation_agent.optimise_content(keypoints)
+    print(optimised_content)
+    return {"optimised_content": optimised_content}
 
 
 def writing_guidelines_optimisation_node(state):
@@ -273,7 +287,7 @@ workflow.add_node(
 
 # functions to determine next node
 def check_all_articles(state):
-    """Checks if all articles have gone through the researcher LLM and determines if the state should return to the researcher node or move on to the compiler node
+    """Checks if all articles have gone through the researcher LLM and determines if the state should return to the researcher node or move on to the compiler node. This node also determines if this is a harmonisation or optimisation process.
 
     Args:
         state: a dictionary storing relevant attributes as keys and content as the respective items.
@@ -283,11 +297,13 @@ def check_all_articles(state):
         "compiler_node": returned if counter >= number of articles to be harmonised
     """
 
-    return (
-        "researcher_node"
-        if state.get("article_researcher_counter") < len(state.get("article_content"))
-        else "compiler_node"
-    )
+    if (state.get("article_researcher_counter") < len(state.get("article_content"))):
+        return "researcher_node"
+    elif (len(state.get("article_content")) < 2):
+        return "content_guidelines_optimisation_node"
+    else:
+        return "compiler_node"
+
 
 
 def decide_next_optimisation_node(state):
@@ -316,7 +332,9 @@ def decide_next_optimisation_node(state):
 workflow.add_conditional_edges(
     "researcher_node",
     check_all_articles,
-    {"researcher_node": "researcher_node", "compiler_node": "compiler_node"},
+    {"researcher_node": "researcher_node", 
+     "compiler_node": "compiler_node",
+     "content_guidelines_optimisation_node": "content_guidelines_optimisation_node"},
 )
 
 # Adds a conditional edge to the workflow from compiler node to content guidelines node, title optimmisation node, meta description optimisation node and END
@@ -388,7 +406,7 @@ if __name__ == "__main__":
     compiler_agent = start_llm(MODEL, COMPILER)
     meta_desc_agent = start_llm(MODEL, META_DESC)
     title_agent = start_llm(MODEL, TITLE)
-    content_guidelines_agent = start_llm(MODEL, CONTENT_GUIDELINES)
+    content_optimisation_agent = start_llm(MODEL, CONTENT_OPTIMISATION)
     writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
 
     # Declaring directories
@@ -413,48 +431,25 @@ if __name__ == "__main__":
     ) as file:
         article_2 = file.read()
 
-    table = pq.read_table(MERGED_DATA_DIRECTORY)
-    extracted_article_content = list(table["extracted_content_body"])
-
     # List with the articles to harmonise
     article_list = [
         article_1,
         # article_2
     ]
 
-    # Number of articles to harmonise
-    article_list_length = len(article_list)
-
-    for content in extracted_article_content:
-        for article_content in article_list:
-            if article_content in str(content):
-                idx = extracted_article_content.index(content)
-                str_content = content.as_py()
-                article_headers = list(table[EXTRACTED_HEADERS][idx])
-                split_content = []
-                for header_details in article_headers:
-                    header = header_details[0].as_py()
-                    print(header)
-                    if split_content == []:
-                        split_content.extend(str_content.split(header))
-                    else:
-                        last_content = split_content.pop()
-                        split_content.extend(last_content.split(header))
-                for x in split_content:
-                    print("THIS IS", x, "\n")
-
-    quit()
+    processed_input_articles = concat_headers_to_content(article_list)
 
     # Dictionary with the variouse input keys and items
     inputs = {
-        "article_content": article_list,
+        "article_content": processed_input_articles,
         "keypoints": [],
         "article_researcher_counter": 0,
-        "flag_for_content_optimisation": False,
-        "flag_for_title_optimisation": False,
-        "flag_for_meta_desc_optimisation": False,
+        "flag_for_content_optimisation": True,
+        "flag_for_title_optimisation": True,
+        "flag_for_meta_desc_optimisation": True,
         "researcher_agent": researcher_agent,
         "compiler_agent": compiler_agent,
+        "content_optimisation_agent": content_optimisation_agent
     }
 
     result = execute_graph(workflow, inputs)
