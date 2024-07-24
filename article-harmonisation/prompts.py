@@ -218,9 +218,9 @@ class LlamaPrompts(LLMPrompt):
                     - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
                 2. Causes and Risk Factors 
                 3. Symptoms and Signs
-                    Here are instructions you should follow specifically for this section:
-                    - You must list out the symptoms and signs in bullet points form. 
-                    - You should include a brief explanation before the bullet points in this section.
+                    In this section, you must:
+                        - You must list out the symptoms and signs in bullet points form. 
+                        - You should include a brief explanation before the bullet points in this section.
                 4. Complications
                 5. Treatment and Prevention
                 6. When to see a doctor

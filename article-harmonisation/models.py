@@ -219,10 +219,10 @@ class Llama(LLMInterface):
     
 
     def optimise_writing(self, content: str):
-        # if self.role != WRITING_OPTIMISATION:
-        #     raise TypeError(
-        #         f"This node is a {self.role} node and cannot run optimise_content()"
-        #     )
+        if self.role != WRITING_OPTIMISATION:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_content()"
+            )
         
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_writing_prompt()
