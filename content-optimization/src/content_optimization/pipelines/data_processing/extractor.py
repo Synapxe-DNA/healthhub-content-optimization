@@ -850,7 +850,7 @@ class HTMLExtractor:
             alt_text = img.get("alt", "")
             # Add text if not empty
             cleaned_text = self.clean_text(alt_text)
-            record = image_url, cleaned_text
+            record = cleaned_text, image_url
             extracted_links_and_alt_text.append(record)
 
         # Return unique elements
