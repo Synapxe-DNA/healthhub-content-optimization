@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-x = """
-x
-test
-c"""
-z = x.split("test")
-print(z)
-t = z.pop()
-z.append("test" + t)
-for i in z:
-    print(i)
-=======
-    
 import pyarrow.parquet as pq
 import os
 
@@ -41,16 +28,15 @@ def concat_headers_to_content(article_list):
                 split_content = []
                 for header_details in article_headers:
                     header = header_details[0].as_py()
-                    if split_content == []:
+                    if not split_content:
                         split_content.extend(str_content.split(header))
                     else:
                         last_content = split_content.pop()
                         split_content.extend(last_content.split(header))
-                    split_content[-1] = "Keypoint: "+ header + "\n" + split_content[-1][1:]
-                for content in split_content:
-                    if content in TO_REMOVE:
-                        split_content.pop(split_content.index(content))
+                    split_content[-1] = "Keypoint: " + header + "\n" + split_content[-1][1:]
+                for new_content in split_content:
+                    if new_content in TO_REMOVE:
+                        split_content.pop(split_content.index(new_content))
                 final_configured_articles.append(split_content)
                 
     return final_configured_articles
->>>>>>> article-harmonisation-jc
