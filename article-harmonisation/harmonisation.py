@@ -264,13 +264,15 @@ def writing_guidelines_optimisation_node(state):
             - flag_for_content_optimisation: a False boolean value to indicate that the writing optimisation step has been completed
     """
 
-    user_flags = state.get("user_flags")
-    user_flags["flag_for_content_optimisation"] = False
 
     optimised_content = state.get("optimised_content")
     writing_optimisation_agent = state.get("llm_agents")["writing_optimisation_agent"]
     optimised_writing = writing_optimisation_agent.optimise_writing(optimised_content)
     print(optimised_writing)
+
+
+    user_flags = state.get("user_flags")
+    user_flags["flag_for_content_optimisation"] = False
 
     return {
         "optimised_writing": optimised_writing,
