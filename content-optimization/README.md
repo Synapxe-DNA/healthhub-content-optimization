@@ -677,6 +677,19 @@ kedro run --nodes="extract_keywords_node"
 
   </details>
 
+- **`extracted_raw_html_tables`**
+
+  <details>
+
+  - Data Type: `list[string]`
+  - Description:
+    - A list of extracted tables in HTML extracted from the content body
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
 - **`extracted_links`**
 
   <details>
@@ -707,15 +720,15 @@ kedro run --nodes="extract_keywords_node"
 
   </details>
 
-- **`extracted_img_alt_text`**
+- **`extracted_images`**
 
   <details>
 
-  - Data Type: `list[string]`
+  - Data Type: `list[tuple[string, string]]`
   - Description:
-    - A list of alternate text extracted from images based on the `<img>` tag
+    - A list of alternate text and urls extracted from images based on the `<img>` tag
   - Example Values:
-    - `['cabbage']`
+    - `[('chas blue card','https://ch-api.healthhub.sg/api/public/content/059bbb4ca6934cea84c745e45518b15a?v=f726ce14')]`
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No

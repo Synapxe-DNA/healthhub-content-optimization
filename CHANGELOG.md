@@ -1,5 +1,15 @@
 # Changelog
 
+## July 25, 2024 <a id="july-25-2024"></a>
+
+- Added column from `extracted_raw_html_tables` column
+  - Using raw html of tables for ingestion
+
+## July 24, 2024 <a id="july-24-2024"></a>
+
+- Renamed column from `extracted_img_alt_text` to `extracted_images`.
+- Updated test cases to ensure that they all pass.
+
 ## July 18, 2024 <a id="july-18-2024"></a>
 
 - Extended [`.pre-commit-config.yaml`](.pre-commit-config.yaml) file
