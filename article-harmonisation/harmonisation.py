@@ -5,7 +5,7 @@ from typing import Any, Optional, TypedDict
 import phoenix as px
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
-from models import start_llm
+from models import start_llm, LLMInterface
 from phoenix.trace.langchain import LangChainInstrumentor
 from utils.headers import concat_headers_to_content
 from pathlib import Path
@@ -41,7 +41,7 @@ EXTRACTED_TEXT_DIRECTORY = (
 
 # Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
 # ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
-ARTICLE1_TITLE = "diseases-and-conditions/Rubella_1437892.txt"
+ARTICLE1_TITLE = "diseases-and-conditions/Rubella_1437892.txt" #metric required to determine which prompt to use  
 ARTICLE2_TITLE = "live-healthy-articles/How Dangerous Is Rubella__1445577.txt"
 # ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
 
@@ -101,6 +101,34 @@ def print_checks(result):
     f.close()
 
 
+class OriginalArticleContent(TypedDict):
+    article_content: list
+    article_title: Optional[str]
+    meta_desc: Optional[str]
+
+class OptimisedArticleOutput(TypedDict):
+    researcher_keypoints: Optional[list]
+    article_researcher_counter: Optional[int]
+    compiled_keypoints: Optional[str]
+    optimised_content: Optional[str]
+    optimised_writing: Optional[str]
+    optimised_article_title: Optional[str]
+    optimised_meta_desc: Optional[str]
+
+class UserFlagsForOptimisation(TypedDict):
+    flag_for_content_optimisation: bool
+    flag_for_title_optimisation: bool
+    flag_for_meta_desc_optimisation: bool
+
+class LLMAgents(TypedDict):
+    researcher_agent: LLMInterface
+    compiler_agent: LLMInterface
+    content_optimisation_agent: LLMInterface
+    writing_optimisation_agent: LLMInterface
+    title_optimisation_agent: LLMInterface
+    meta_desc_optimisation_agent: LLMInterface
+
+
 class GraphState(TypedDict):
     """This class contains the different keys relevant to the project. It inherits from the TypedDict class.
 
@@ -120,17 +148,18 @@ class GraphState(TypedDict):
 
     article_content: list
     article_title: Optional[str]
-    article_header: Optional[list]
     meta_desc: Optional[str]
     keypoints: Optional[list]
     compiled_keypoints: Optional[str]
     optimised_content: Optional[str]
     optimised_writing: Optional[str]
     article_researcher_counter: Optional[int]
+    original_article_content: OriginalArticleContent
+    optimised_article_output: OptimisedArticleOutput
     # previous_node: Optional[str]
-    user_flags: dict
+    user_flags: UserFlagsForOptimisation
     # look into converting for a optimisation list
-    llm_agents: dict
+    llm_agents: LLMAgents
 
 
 # Functions defining the functionality of different nodes
@@ -300,13 +329,16 @@ def writing_guidelines_optimisation_node(state):
 
 # creating a StateGraph object with GraphState as input.
 workflow = StateGraph(GraphState)
+
 # Adding the nodes to the workflow
 workflow.add_node("researcher_node", researcher_node)
 workflow.add_node("compiler_node", compiler_node)
 workflow.add_node(
     "meta_description_optimisation_node", meta_description_optimisation_node
 )
-workflow.add_node("title_optimisation_node", title_optimisation_node)
+workflow.add_node(
+    "title_optimisation_node", title_optimisation_node
+)
 workflow.add_node(
     "content_guidelines_optimisation_node", content_guidelines_optimisation_node
 )
@@ -451,7 +483,7 @@ if __name__ == "__main__":
 
     # List with the articles to harmonise
     article_list = [
-        article_1,
+        # article_1,
         article_2
     ]
 
