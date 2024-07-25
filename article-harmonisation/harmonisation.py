@@ -24,8 +24,8 @@ MODEL = MODELS[1]
 # Declaring node roles
 RESEARCHER = "Researcher"
 COMPILER = "Compiler"
-META_DESC = "Meta description"
-TITLE = "Title"
+META_DESC = "Meta description optimisation"
+TITLE = "Title optimisation"
 CONTENT_OPTIMISATION = "Content optimisation"
 WRITING_OPTIMISATION = "Writing optimisation"
 
@@ -38,11 +38,12 @@ ROOT = os.getcwd()
 EXTRACTED_TEXT_DIRECTORY = (
     f"{ROOT}/content-optimization/data/02_intermediate/all_extracted_text/"
 )
-ARTICLE_CATEGORY = "diseases-and-conditions/"
 
 # Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
-ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
-ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
+# ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
+ARTICLE1_TITLE = "diseases-and-conditions/Rubella_1437892.txt"
+ARTICLE2_TITLE = "live-healthy-articles/How Dangerous Is Rubella__1445577.txt"
+# ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
 
 def print_checks(result):
     """Prints out the various key outputs in graph. Namely, it will help you check for
@@ -146,7 +147,7 @@ def researcher_node(state):
     """
     article_list = state.get("article_content", "")
     counter = state.get("article_researcher_counter", 0)
-    print("This is article ", counter + 1)
+    print("Processing keypoints for article", counter + 1)
     keypoints = state.get("keypoints")
     article = article_list[counter]
     # Runs the researcher LLM agent
@@ -198,11 +199,19 @@ def meta_description_optimisation_node(state):
             - meta_desc: a String containing the optimised meta description from the meta description optimisation LLM
             - flag_for_meta_desc_optimisation: a False boolean value to indicate that the meta description optimisation step has been completed
     """
+    content = state.get("keypoints")
+    if state.get("optimised_writing") != None:
+        content = state.get("optimised_writing")
+
+    meta_desc_optimisation_agent = state.get("llm_agents")["meta_desc_optimisation_agent"]
+    optimised_meta_desc = meta_desc_optimisation_agent.optimise_meta_desc(content)
+
+
     user_flags = state.get("user_flags")
     user_flags["flag_for_meta_desc_optimisation"] = False
 
     return {
-        "meta_desc": "This is the meta desc",
+        "meta_desc": optimised_meta_desc,
         "user_flags": user_flags
     }
 
@@ -218,12 +227,20 @@ def title_optimisation_node(state):
             - article_title: a String containing the optimised title from the title optimisation LLM
             - flag_for_title_optimisation: a False boolean value to indicate that the title optimisation step has been completed
     """
+    content = state.get("keypoints")
+    if state.get("optimised_writing") != None:
+        content = state.get("optimised_writing")
+    
+    title_optimisation_agent = state.get("llm_agents")["title_optimisation_agent"]
+
+    optimised_title = title_optimisation_agent.optimise_title(content)
+
 
     user_flags = state.get("user_flags")
     user_flags["flag_for_title_optimisation"] = False
 
     return {
-        "article_title": "This is new article title",
+        "article_title": optimised_title,
         "user_flags": user_flags
     }
 
@@ -271,8 +288,6 @@ def writing_guidelines_optimisation_node(state):
     optimised_content = state.get("optimised_content")
     writing_optimisation_agent = state.get("llm_agents")["writing_optimisation_agent"]
     optimised_writing = writing_optimisation_agent.optimise_writing(optimised_content)
-    print(optimised_writing)
-
 
     user_flags = state.get("user_flags")
     user_flags["flag_for_content_optimisation"] = False
@@ -426,11 +441,11 @@ if __name__ == "__main__":
 
     # loading the articles
     with open(
-        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE1_TITLE}", "r"
+        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE1_TITLE}", "r"
     ) as file:
         article_1 = file.read()
     with open(
-        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE_CATEGORY}{ARTICLE2_TITLE}", "r"
+        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE2_TITLE}", "r"
     ) as file:
         article_2 = file.read()
 

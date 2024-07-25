@@ -29,13 +29,13 @@ MODELS = [
     "internlm/internlm2_5-7b-chat",
 ]
 
-MAX_NEW_TOKENS = 6000
+MAX_NEW_TOKENS = 3000
 
 # Declaring node roles
 RESEARCHER = "Researcher"
 COMPILER = "Compiler"
-META_DESC = "Meta description"
-TITLE = "Title"
+META_DESC = "Meta description optimisation"
+TITLE = "Title optimisation"
 CONTENT_OPTIMISATION = "Content optimisation"
 WRITING_OPTIMISATION = "Writing optimisation"
 
@@ -218,22 +218,50 @@ class Llama(LLMInterface):
         return response
     
 
-    def optimise_writing(self, content: str):
+    def optimise_writing(self, content):
         if self.role != WRITING_OPTIMISATION:
             raise TypeError(
-                f"This node is a {self.role} node and cannot run optimise_content()"
+                f"This node is a {self.role} node and cannot run optimise_writing()"
             )
-        
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_writing_prompt()
         )
 
-
         chain = prompt_t | self.model
         print("Optimising article writing")
-        r = chain.invoke({"Content": content})
+        response = chain.invoke({"Content": content})
         print("Article writing optimised")
-        return r
+        return response
+    
+    def optimise_title(self, content):
+        if self.role != TITLE:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_title()"
+            )
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_title_prompt()
+        )
+
+        chain = prompt_t | self.model
+        print("Optimising article title")
+        response = chain.invoke({"Content": content})
+        print("Article title optimised")
+        return response
+    
+    def optimise_meta_desc(self, content):
+        if self.role != META_DESC:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_meta_desc()"
+            )
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_meta_desc_prompt()
+        )
+
+        chain = prompt_t | self.model
+        print("Optimising article meta description")
+        response = chain.invoke({"Content": content})
+        print("Article meta description optimised")
+        return response
 
 class Mistral(LLMInterface):
     """
