@@ -171,6 +171,7 @@ def extract_data(
         df["has_image"] = False
         df["related_sections"] = None
         df["extracted_tables"] = None
+        df["extracted_raw_html_tables"] = None
         df["extracted_links"] = None
         df["extracted_headers"] = None
         df["extracted_images"] = None
@@ -202,6 +203,7 @@ def extract_data(
             has_image = extractor.check_for_image()
             related_sections = extractor.extract_related_sections()
             extracted_tables = extractor.extract_tables()
+            extracted_raw_html_tables = extractor.extract_raw_html_tables()
             extracted_links = extractor.extract_links()
             extracted_headers = extractor.extract_headers()
             extracted_img_alt_text = extractor.extract_img_links_and_alt_text()
@@ -212,6 +214,7 @@ def extract_data(
             df.at[index, "has_image"] = has_image
             df.at[index, "related_sections"] = related_sections
             df.at[index, "extracted_tables"] = extracted_tables
+            df.at[index, "extracted_raw_html_tables"] = extracted_raw_html_tables
             df.at[index, "extracted_links"] = extracted_links
             df.at[index, "extracted_headers"] = extracted_headers
             df.at[index, "extracted_images"] = extracted_img_alt_text
