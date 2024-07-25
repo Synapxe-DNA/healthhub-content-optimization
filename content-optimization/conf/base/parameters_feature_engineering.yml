@@ -40,12 +40,6 @@ keywords:
   diversity: 0.5
   top_n: 5
 
-embeddings:
-  model: all-MiniLM-L6-v2
-  owner: sentence-transformers
-  trust_remote_code: false
-  pooling_strategy: mean
-
 columns_to_keep_emb:
   - id
   - content_name
@@ -69,6 +63,12 @@ columns_to_keep_emb:
   - extracted_content_body
   - keywords_all-MiniLM-L6-v2
 
+embeddings:
+  model: nomic-embed-text-v1.5
+  owner: nomic-ai
+  trust_remote_code: true
+  pooling_strategy: mean
+
 # columns to generate embeddings
 columns_to_emb:
   - title
@@ -79,8 +79,8 @@ columns_to_emb:
 
 # weightage of each column embedding
 embeddings_weightage:
-  title: 0
+  title: 0.3
   article_category_names: 0
   category_description: 0
-  extracted_content_body: 0.5
-  keywords: 0.5
+  extracted_content_body: 0.7
+  keywords: 0
