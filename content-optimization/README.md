@@ -677,6 +677,19 @@ kedro run --nodes="extract_keywords_node"
 
   </details>
 
+- **`extracted_raw_html_tables`**
+
+  <details>
+
+  - Data Type: `list[string]`
+  - Description:
+    - A list of extracted tables in HTML extracted from the content body
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
 - **`extracted_links`**
 
   <details>

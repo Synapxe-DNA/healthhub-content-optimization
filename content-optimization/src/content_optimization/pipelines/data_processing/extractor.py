@@ -741,6 +741,19 @@ class HTMLExtractor:
 
         return tables if tables else None
 
+    def extract_raw_html_tables(self) -> Optional[list[str]]:
+        """
+        Extract all tables from the HTML content.
+
+        Returns:
+            list[str]: A list of tables in HTML format.
+        """
+        tables = []
+        for table in self.soup.find_all("table"):
+            tables.append(str(table))
+
+        return tables if tables else None
+
     def _process_table(self, table_html: PageElement) -> list[list[str]]:
         """
         Process a single HTML table and convert it to a list of lists.
