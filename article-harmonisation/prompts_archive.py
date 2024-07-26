@@ -1,12 +1,12 @@
 class Llama_archived_prompts:
     def return_researcher_prompt_ver(version):
-        """ This function returns the first version of the researcher prompt
-        
-        Version 1: This researcher prompt which does not preserve the original headers, instead it instructs the llm to sort the sentences into keypoints determined by itself. 
+        """This function returns the first version of the researcher prompt
 
-        Args: 
+        Version 1: This researcher prompt which does not preserve the original headers, instead it instructs the llm to sort the sentences into keypoints determined by itself.
+
+        Args:
             version: an integer where the user will state the version to be retrieved
-        
+
         Returns:
             researcher_prompt: The desired version of the researcher prompt
         """
@@ -51,7 +51,7 @@ class Llama_archived_prompts:
                     Answer:
                 """
                 return researcher_prompt
-    
+
     def return_content_prompt_ver(version, topic):
         match topic.lower():
             case "health conditions":
@@ -60,39 +60,39 @@ class Llama_archived_prompts:
                         optimise_health_conditions_content_prompt = """
                     <|begin_of_text|><|start_header_id|>system<|end_header_id|>
                     You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
-                    
-                    Your task is to compare the given keypoints with the requirements below and write your own content to fill in missing sections if necessary.  
-                    
+
+                    Your task is to compare the given keypoints with the requirements below and write your own content to fill in missing sections if necessary.
+
                     Your final answer must include these sections: Overview of the condition, Causes and Risk Factors, Symptoms and Signs, Complications, Treatment and Prevention, When to see a doctor
-                    
-                    You must use the given keypoints to FILL IN these sections. 
+
+                    You must use the given keypoints to FILL IN these sections.
                     If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
                     Each sentence should start in a new line, only sentences in bullet points are exempted.
                     You should avoid conveying negative sentiments, communicating in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
                     You should reassure readers when a situation is not a lost cause.
-                    Your answer for each section should be sufficiently elaborate. 
+                    Your answer for each section should be sufficiently elaborate.
                     You should only use bullet points only if it improves the readability of the content, but have less than 2 sections with bullet points.
 
-                    Use the following example on Influenza to structure your answer. Your answer should contain more content and further elaboration on each points. 
+                    Use the following example on Influenza to structure your answer. Your answer should contain more content and further elaboration on each points.
                     Your answer must maintain the same structure given in the example.
 
                     ### Start of example
                     1. Overview of Influenza
-                    Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. 
-                    The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. 
+                    Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks.
+                    The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life.
                     It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
 
                     2. Causes and Risk Factors
-                    Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. 
-                    The flu virus is classified into three main types: A, B, and C. 
-                    Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. 
-                    Factors that increase the risk of contracting influenza include close contact with infected individuals, weakened immune system, and lack of vaccination. 
+                    Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics.
+                    The flu virus is classified into three main types: A, B, and C.
+                    Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness.
+                    Factors that increase the risk of contracting influenza include close contact with infected individuals, weakened immune system, and lack of vaccination.
                     Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
 
                     3. Symptoms and Signs
-                    Some symptoms include: High fever, cough, headache, and muscle aches. 
-                    Other symptoms include sneezing, nasal discharge, and loss of appetite. 
-                    Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. 
+                    Some symptoms include: High fever, cough, headache, and muscle aches.
+                    Other symptoms include sneezing, nasal discharge, and loss of appetite.
+                    Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat.
                     Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhea, although these are more common in children.
 
                     4. Complications of Influenza
@@ -109,18 +109,18 @@ class Llama_archived_prompts:
                     Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
 
                     6. When to See a Doctor
-                    You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. 
-                    Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. 
+                    You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit.
+                    Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication.
                     Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
                     ### End of example
 
                     <|eot_id|>
                     <|start_header_id|>user<|end_header_id|>
-                    Keypoints: 
+                    Keypoints:
                     {Keypoints}
                     <|eot_id|>
                     <|start_header_id|>assistant<|end_header_id|>
                     Answer:
                     """
-                    
+
                 return optimise_health_conditions_content_prompt

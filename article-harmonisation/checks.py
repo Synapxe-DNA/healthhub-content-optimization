@@ -1,13 +1,11 @@
 import os
-from typing import TypedDict, Annotated, Any
+from typing import Annotated, Any, TypedDict
 
 import pandas as pd
 from dotenv import load_dotenv
-import json
-import phoenix as px
-from phoenix.trace.langchain import LangChainInstrumentor
+from langgraph.graph import END, START, MessagesState, StateGraph
 from models import start_llm
-from langgraph.graph import MessagesState, StateGraph, END, START
+from phoenix.trace.langchain import LangChainInstrumentor
 from utils.evaluations import calculate_readability
 
 # Setting the environment for HuggingFaceHub
@@ -31,7 +29,7 @@ MAX_NEW_TOKENS = 3000
 
 def merge_dict(dict1, dict2):
     for key, val in dict1.items():
-        if type(val) == dict:
+        if isinstance(val, dict):
             if key in dict2 and type(dict2[key] == dict):
                 merge_dict(dict1[key], dict2[key])
         else:
@@ -39,7 +37,7 @@ def merge_dict(dict1, dict2):
                 dict1[key] = dict2[key]
 
     for key, val in dict2.items():
-        if not key in dict1:
+        if key not in dict1:
             dict1[key] = val
 
     return dict1
@@ -79,8 +77,9 @@ class GraphState(TypedDict):
     # Agents
     llm_agents: dict[str, Any]
 
-
     # Nodes
+
+
 def content_evaluation_rules_node(state: MessagesState) -> str:
     article_content = state.get("article_content", "")
     content_flags = state.get("content_flags", {})
@@ -110,6 +109,7 @@ def content_evaluation_rules_node(state: MessagesState) -> str:
 
     return {"content_flags": content_flags}
 
+
 def content_evaluation_llm_node(state: MessagesState) -> str:
     article_content = state.get("article_content", "")
     content_judge = state.get("content_judge", {})
@@ -119,7 +119,9 @@ def content_evaluation_llm_node(state: MessagesState) -> str:
     # No clear sections
     # No introduction or conclusion
     # Absence of headings or subheadings
-    content_structure_eval = content_evaluation_agent.evaluate_content(article_content, choice="structure")
+    content_structure_eval = content_evaluation_agent.evaluate_content(
+        article_content, choice="structure"
+    )
     content_judge["structure"] = content_structure_eval
 
     # Check whether the writing guideline is followed given the tagged topic
@@ -127,6 +129,7 @@ def content_evaluation_llm_node(state: MessagesState) -> str:
     # TODO: Write up the functions and prompts that are category specific
     pass
     return {"content_judge": content_judge}
+
 
 def content_explanation_node(state: MessagesState) -> str:
     article_content = state.get("article_content", "")
@@ -138,10 +141,13 @@ def content_explanation_node(state: MessagesState) -> str:
 
     if readabilty:
         explanation_agent = state.get("llm_agents")["explanation_agent"]
-        readability_explanation = explanation_agent.evaluate_content(article_content, choice="readability")
+        readability_explanation = explanation_agent.evaluate_content(
+            article_content, choice="readability"
+        )
         content_judge["readability"] = readability_explanation
 
     return {"content_judge": content_judge}
+
 
 def title_evaluation_rules_node(state: MessagesState) -> str:
     article_title = state.get("article_title", "")
@@ -160,6 +166,7 @@ def title_evaluation_rules_node(state: MessagesState) -> str:
 
     return {"title_flags": title_flags}
 
+
 def title_evaluation_llm_node(state: MessagesState) -> str:
     article_title = state.get("article_title", "")
     article_content = state.get("article_content", "")
@@ -167,10 +174,13 @@ def title_evaluation_llm_node(state: MessagesState) -> str:
 
     # Irrelevant Page Title
     title_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
-    title_evaluation = title_evaluation_agent.evaluate_title(article_title, article_content)
+    title_evaluation = title_evaluation_agent.evaluate_title(
+        article_title, article_content
+    )
     title_judge["title"] = title_evaluation
 
     return {"title_judge": title_judge}
+
 
 def meta_desc_evaluation_rules_node(state: MessagesState) -> str:
     meta_desc = state.get("meta_desc", "")
@@ -188,6 +198,7 @@ def meta_desc_evaluation_rules_node(state: MessagesState) -> str:
 
     return {"meta_flags": meta_flags}
 
+
 def meta_desc_evaluation_llm_node(state: MessagesState) -> str:
     meta_desc = state.get("meta_desc", "")
     article_content = state.get("article_content", "")
@@ -195,12 +206,14 @@ def meta_desc_evaluation_llm_node(state: MessagesState) -> str:
 
     # Irrelevant Meta Description
     meta_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
-    meta_evaluation = meta_evaluation_agent.evaluate_meta_description(meta_desc, article_content)
+    meta_evaluation = meta_evaluation_agent.evaluate_meta_description(
+        meta_desc, article_content
+    )
     meta_judge["meta_desc"] = meta_evaluation
 
     return {"meta_judge": meta_judge}
-    
-    
+
+
 # Creating a StateGraph object with GraphState as input.
 workflow = StateGraph(GraphState)
 
@@ -253,10 +266,10 @@ if __name__ == "__main__":
     print(rows)
 
     for i in range(rows):
-        # Set up 
+        # Set up
         article_content = df_sample["extracted_content_body"].iloc[i]
         article_title = df_sample["title"].iloc[i]
-        meta_desc = df_sample["category_description"].iloc[i]   # meta_desc can be null
+        meta_desc = df_sample["category_description"].iloc[i]  # meta_desc can be null
         meta_desc = meta_desc if meta_desc is not None else "No meta description"
 
         print(f"Checking {article_title} now...")
@@ -275,7 +288,7 @@ if __name__ == "__main__":
             "llm_agents": {
                 "evaluation_agent": evaluation_agent,
                 "explanation_agent": explanation_agent,
-            }
+            },
         }
 
         response = graph.invoke(input=inputs)

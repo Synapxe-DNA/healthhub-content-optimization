@@ -117,7 +117,7 @@ class LlamaPrompts(LLMPrompt):
             3. **Coherence and Flow**: Analyze the coherence and logical flow of the text. Point out any abrupt transitions or lack of clarity and provide suggestions for improvement.
             4. **Readability Metrics**: Calculate and provide readability scores using metrics such as Flesch-Kincaid Grade Level, Gunning Fog Index, and any other relevant readability indices.
             5. **Overall Assessment**: Summarize the overall readability of the article, providing specific examples and actionable recommendations for improvement.
-            
+
             Please provide a detailed analysis and critique following the above criteria.
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
@@ -135,58 +135,58 @@ class LlamaPrompts(LLMPrompt):
         structure_evaluation_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             Objective: Critique the content structure of the article, evaluating its effectiveness and coherence based on the following criteria -
-            
+
             1. Opening
             Headline
             -   Does the headline grab attention and stay relevant to the content?
             -   Does it clearly convey the main topic or benefit of the article?
-            
+
             Introduction
             -   Does the introduction hook the reader quickly and effectively?
             -   Is the relevance of the topic established early on?
             -   Does the introduction outline the content of the post clearly?
-            
+
             2. Content Structure
             Main Body
             -   Are subheadings used effectively to organize content?
             -   Are paragraphs short, focused, and easy to read?
             -   Does the article incorporate lists where appropriate?
             -   Are examples or anecdotes included to illustrate points?
-            
+
             Overall Structure
             -   Does the article follow a logical flow of ideas?
             -   Do sections build on each other in a cohesive manner?
             -   Are transitions between sections smooth and logical?
-            
+
             3. Writing Style
             Tone and Language
             -   Is the tone conversational and accessible to the target audience?
             -   Does the article avoid unexplained jargon or overly technical language?
             -   Is the language appropriate for the audience's level of knowledge?
-            
+
             Engagement
             -   Are questions or prompts used to engage the reader?
             -   Is "you" language used to make the content more relatable and direct?
-            
+
             4. Closing
             Call-to-Action (CTA)
             -   Are clear next steps for the reader provided?
             -   Is the CTA strategically placed and compelling?
-            
+
             Conclusion
             -   Are the key points of the article summarized effectively?
             -   Does the conclusion reinforce the main message?
             -   Does it leave the reader with something to think about or a memorable takeaway?
-            
+
             5. Overall Effectiveness
             Value
             -   Does the article provide practical, actionable information?
             -   Does it fulfill the promise made by the headline and introduction?
-            
+
             Length
             -   Is the length appropriate for the topic and audience (generally 300-1500 words)?
             -   Is the content thorough without unnecessary padding?
-            
+
             Instructions:
             1.  Carefully read through the article.
             2.  Use the criteria above to evaluate each section.
@@ -212,45 +212,45 @@ class LlamaPrompts(LLMPrompt):
             Steps to Follow:
             1.  Identify the Title:
             -   What is the title of the article?
-            
+
             2.  Analyze the Title:
             -   What main topic or benefit does the title convey?
             -   Is the title specific and clear in its message?
-            
+
             3.  Review the Content:
             -   Read the entire article carefully.
             -   Summarize the main points and key themes of the article.
             -   Note any specific sections or statements that align with or diverge from the title's promise.
-            
+
             4.  Compare Title and Content:
             -   Does the content directly address the main topic or benefit stated in the title?
             -   Are the main themes and messages of the article consistent with the expectations set by the title?
             -   Identify any significant information in the article that is not reflected in the title and vice versa.
-            
+
             5.  Evaluate Relevance:
             -   Provide a detailed explanation of how well the title reflects the content.
             -   Use specific examples or excerpts from the article to support your evaluation.
             -   Highlight any discrepancies or misalignments between the title and the content.
-            
+
             6.  Suggestions for Improvement:
             -   If the title is not fully relevant, suggest alternative titles that more accurately capture the essence of the article.
             -   Explain why the suggested titles are more appropriate based on the article's content.
-            
+
             Example Analysis:
             Title: "10 Tips for Effective Time Management"
-            
+
             Content Summary:
             -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
-            
+
             Comparison and Evaluation:
             -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
             -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
             -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
             -   The relevance score is high due to the direct alignment of content with the title.
-            
+
             Suggested Title (if needed):
             -   "Mastering Time Management: 10 Essential Tips for Success" (if the original title needs more emphasis on mastery and success).
-            
+
             Instructions:
             1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
             2.  Write a brief report based on your findings, including specific examples and any suggested improvements.
@@ -276,45 +276,45 @@ class LlamaPrompts(LLMPrompt):
         Steps to Follow:
         1.  Identify the Meta Description:
         -   What is the meta description of the article?
-        
+
         2.  Analyze the Meta Description:
         -   What main topic or benefit does the meta description convey?
         -   Is the meta description clear, concise, and engaging?
-        
+
         3.  Review the Content:
         -   Read the entire article carefully.
         -   Summarize the main points and key themes of the article.
         -   Note any specific sections or statements that align with or diverge from the meta description.
-        
+
         4.  Compare Meta Description and Content:
         -   Does the content directly address the main topic or benefit stated in the meta description?
         -   Are the main themes and messages of the article consistent with the expectations set by the meta description?
         -   Identify any significant information in the article that is not reflected in the meta description and vice versa.
-        
+
         5.  Evaluate Relevance:
         -   Provide a detailed explanation of how well the meta description reflects the content.
         -   Use specific examples or excerpts from the article to support your evaluation.
         -   Highlight any discrepancies or misalignments between the meta description and the content.
-        
+
         6.  Suggestions for Improvement:
         -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
         -   Explain why the suggested descriptions are more appropriate based on the article's content.
-        
+
         Example Analysis:
         Meta Description: "Learn 10 effective time management tips to boost your productivity and achieve your goals."
-        
+
         Content Summary:
         -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
-        
+
         Comparison and Evaluation:
         -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
         -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
         -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
         -   The relevance score is high due to the direct alignment of content with the meta description.
-        
+
         Suggested Meta Description (if needed):
         -   "Discover 10 essential time management strategies to enhance productivity and reach your goals."
-        
+
         Instructions:
         -   Use the steps provided to evaluate the relevance of the article's meta description.
         -   Write a brief report based on your findings, including specific examples and any suggested improvements.
@@ -355,11 +355,11 @@ class LlamaPrompts(LLMPrompt):
 
             ### Start of Example 1
             Keypoint: Introduction to Parkinson's disease
-            Parkinson's is a neurodegenerative disease. 
+            Parkinson's is a neurodegenerative disease.
             Buy these essential oils to recover from Parkinson's Disease!
             It is a progressive disorder that affects the nervous system and other parts of the body.
             There are approximately 90,000 new patients diagnosed with PD annually in the US.
-            
+
             Answer:
             Keypoint: Introduction to Parkinson's disease
             Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
@@ -367,7 +367,7 @@ class LlamaPrompts(LLMPrompt):
             Omitted sentences:
             Buy these essential oils to recover from Parkinson's Disease!
             ### End of Example 1
-            
+
             ### Start of Example 2
             Keypoint: Tips to maintain your weight
             Consume a high protein, low carb diet.
@@ -441,7 +441,7 @@ class LlamaPrompts(LLMPrompt):
             "
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
-            Keypoints: 
+            Keypoints:
             {Keypoints}
             <|eot_id|>
 
@@ -449,33 +449,33 @@ class LlamaPrompts(LLMPrompt):
             Answer:
         """
         return compiler_prompt
-    
+
     def return_content_prompt(self) -> str:
         optimise_health_conditions_content_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
-            
-            Your task is to compare the given keypoints with the given requirements below and write your own content to fill in missing sections if necessary.  
+
+            Your task is to compare the given keypoints with the given requirements below and write your own content to fill in missing sections if necessary.
             You will also be given a set of instructions that you MUST follow.
 
             ### Start of content requirements
-            When rewriting the content, your writing MUST meet the requirements stated here. 
+            When rewriting the content, your writing MUST meet the requirements stated here.
             If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
-            You should emulate your writing based on the specific 
+            You should emulate your writing based on the specific
 
             Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
                 1. Overview of the condition
                     - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
-                2. Causes and Risk Factors 
+                2. Causes and Risk Factors
                 3. Symptoms and Signs
                     In this section, you must:
-                        - You must list out the symptoms and signs in bullet points form. 
+                        - You must list out the symptoms and signs in bullet points form.
                         - You should include a brief explanation before the bullet points in this section.
                 4. Complications
                 5. Treatment and Prevention
                 6. When to see a doctor
 
-            You must also use the following guidelines and examples to phrase your writing. 
+            You must also use the following guidelines and examples to phrase your writing.
             1. Carry a positive tone
                 Do NOT convey negative sentiments in your writing.
                 You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
@@ -501,8 +501,8 @@ class LlamaPrompts(LLMPrompt):
             ### Start of instructions
             You MUST follow these instructions when writing out your content.
 
-            You MUST follow the content requirements. 
-            You must use the given keypoints to FILL IN the required sections. 
+            You MUST follow the content requirements.
+            You must use the given keypoints to FILL IN the required sections.
             Each sentence should start in a new line, only sentences in bullet points are exempted.
             You should only use bullet points only if it improves the readability of the content.
             You should only use bullet points SPARINGLY and only <= 2 sections in your writing should contain bullet points.
@@ -511,35 +511,35 @@ class LlamaPrompts(LLMPrompt):
 
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
-            Keypoints: 
+            Keypoints:
             {Keypoints}
             <|eot_id|>
             <|start_header_id|>assistant<|end_header_id|>
             Answer:
             """
         return optimise_health_conditions_content_prompt
-    
+
     def return_writing_prompt(self) -> str:
         optimise_health_conditions_writing_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
-            
+
             Your task is to rewrite the content based on the a set of personality and voice guidelines, which is provided below.
             You will also be given a set of instructions that you MUST follow.
 
-            Rewrite the content based on the guidelines here. 
+            Rewrite the content based on the guidelines here.
             ### Start of guidelines
             The goal of rewriting the content is to build credibility and confidence in readers. Every point has a set of guidelines you should adopt in your writing along with an example that you should emulate.
             You should check these guidelines step by step.
-            
+
             1. Approachable
                 Guidelines: You should welcome your reader warmly, understand their needs and accommodate to them wherever possible. You should also account for diverse needs and differing health conditions of all visitors
                 Example: “Living with diabetes doesn't mean you can’t travel. With proper planning, you can still make travel plans safely.”
-            
+
             2. Progressive
-                Guidelines: Your writing should be relevant to the visitor's needs and expectations. 
+                Guidelines: Your writing should be relevant to the visitor's needs and expectations.
                 Example: “Worried about new COVID-19 variants? Hear from our experts on infectious diseases and learn how you can stay safe!”
-            
+
             3. Crafted
                 Guidelines: You should personalize experiences for visitors with relevant content in the article.
                 Example: “Are you a new mum returning to work soon? Here are some tips to help you maintain your milk supply while you work from the office.”
@@ -551,7 +551,7 @@ class LlamaPrompts(LLMPrompt):
             5. Personal
                 Guidelines: Your writing should carry a tone that is caring, sensitive, warm and tactful
                 Example: “Breast cancer is known to be asymptomatic in the early stages. That’s why regular screenings can provide early detection and timely intervention.”
-            
+
             6. Human-centric
                 Guidelines: Your writing should concern for visitors’ current health state, without judgment or prescriptive
                 Example: "We admire you for taking care of your loved ones. But have you taken some time for yourself lately? Here are some ways you can practice self-care."
@@ -580,7 +580,7 @@ class LlamaPrompts(LLMPrompt):
             Answer:
             """
         return optimise_health_conditions_writing_prompt
-    
+
 
 class MistralPrompts(LLMPrompt):
     """

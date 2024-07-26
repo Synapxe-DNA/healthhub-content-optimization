@@ -1,4 +1,5 @@
 import os
+import re
 from abc import ABC, abstractmethod
 
 import dotenv
@@ -6,7 +7,6 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from prompts import prompt_tool
-import re
 
 dotenv.load_dotenv()
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY", "")
@@ -17,7 +17,6 @@ MODELS = [
     # Meta Llama
     "meta-llama/Meta-Llama-3-8B-Instruct",
     # "meta-llama/Meta-Llama-3.1-8B-Instruct",
-
     # "NousResearch/Hermes-2-Pro-Llama-3-8B",
     # "meta-llama/Meta-Llama-3-70B-Instruct",
     # Phi 3
@@ -265,7 +264,9 @@ class Llama(LLMInterface):
         input_keypoints = ""
         for article_index in range(len(keypoints)):
             article_kp = keypoints[article_index]
-            input_keypoints += f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
+            input_keypoints += (
+                f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
+            )
 
         chain = prompt_t | self.model
         print("Compiling keypoints for article harmonisation")
@@ -274,13 +275,13 @@ class Llama(LLMInterface):
         response = re.sub(" +", " ", res)
 
         return response
-    
+
     def optimise_content(self, keypoints: list = []):
         if self.role != CONTENT_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
-        
+
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_content_prompt()
         )
@@ -298,7 +299,7 @@ class Llama(LLMInterface):
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
-        
+
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_writing_prompt()
         )

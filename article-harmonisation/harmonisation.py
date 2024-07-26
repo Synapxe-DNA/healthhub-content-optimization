@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 from typing import Any, Optional, TypedDict
 
 import phoenix as px
@@ -8,7 +9,6 @@ from langgraph.graph import END, StateGraph
 from models import start_llm
 from phoenix.trace.langchain import LangChainInstrumentor
 from utils.headers import concat_headers_to_content
-from pathlib import Path
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
@@ -40,9 +40,12 @@ EXTRACTED_TEXT_DIRECTORY = (
 )
 ARTICLE_CATEGORY = "diseases-and-conditions/"
 
-# Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
+# Declaring title of the articles here.
+# Currently only 2 articles are used and this section is declared at the start,
+# which is bound to change with further developments.
 ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
 ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
+
 
 def print_checks(result):
     """Prints out the various key outputs in graph. Namely, it will help you check for
@@ -60,7 +63,10 @@ def print_checks(result):
     num_of_articles = len(result["article_content"])
 
     Path("article-harmonisation/docs/txt_outputs").mkdir(parents=True, exist_ok=True)
-    f = open(f"article-harmonisation/docs/txt_outputs/{MODEL}_compiled_keypoints_check.txt", "w")
+    f = open(
+        f"article-harmonisation/docs/txt_outputs/{MODEL}_compiled_keypoints_check.txt",
+        "w",
+    )
 
     for content_index in range(len(result["article_content"])):
         if content_index > 0:
@@ -74,21 +80,21 @@ def print_checks(result):
     # printing each keypoint produced by researcher LLM
     print("\nRESEARCHER LLM CHECKS\n -----------------", file=f)
     for i in range(0, num_of_articles):
-        print(f"These are the keypoints for article {i+1}\n".upper(), file = f)
-        print(result["keypoints"][i], file = f)
-        print(" \n -----------------", file = f)
+        print(f"These are the keypoints for article {i+1}\n".upper(), file=f)
+        print(result["keypoints"][i], file=f)
+        print(" \n -----------------", file=f)
 
     # printing compiled keypoints produced by compiler LLM
-    
+
     if "compiled_keypoints" in result.keys():
-        print("COMPILER LLM CHECKS \n ----------------- ", file = f)
+        print("COMPILER LLM CHECKS \n ----------------- ", file=f)
         print(str(result["compiled_keypoints"]), file=f)
-        print(" \n -----------------", file = f)
+        print(" \n -----------------", file=f)
 
     # checking for optimised content produced by content optimisation flow
-    flags = {"optimised_content", "optimised_writing" ,"article_title", "meta_desc"}
+    flags = {"optimised_content", "optimised_writing", "article_title", "meta_desc"}
     keys = result.keys()
-    print("CONTENT OPTIMISATION CHECKS\n ----------------- \n", file = f)
+    print("CONTENT OPTIMISATION CHECKS\n ----------------- \n", file=f)
     for flag in flags:
         if flag in keys:
             print(f"These is the optimised {flag.upper()}", file=f)
@@ -153,12 +159,12 @@ def researcher_node(state):
     researcher_agent = state.get("llm_agents")["researcher_agent"]
 
     processed_keypoints = ""
-    print(f'Number of keypoints in article {counter + 1}: ', len(article))
+    print(f"Number of keypoints in article {counter + 1}: ", len(article))
 
-    #Stores the number of keypoints processed in the current article
+    # Stores the number of keypoints processed in the current article
     kp_counter = 0
 
-    #For loop iterating through each keypoint in each article
+    # For loop iterating through each keypoint in each article
     for kp in article:
         kp_counter += 1
         article_keypoints = researcher_agent.generate_keypoints(kp, kp_counter)
@@ -201,10 +207,7 @@ def meta_description_optimisation_node(state):
     user_flags = state.get("user_flags")
     user_flags["flag_for_meta_desc_optimisation"] = False
 
-    return {
-        "meta_desc": "This is the meta desc",
-        "user_flags": user_flags
-    }
+    return {"meta_desc": "This is the meta desc", "user_flags": user_flags}
 
 
 def title_optimisation_node(state):
@@ -222,10 +225,7 @@ def title_optimisation_node(state):
     user_flags = state.get("user_flags")
     user_flags["flag_for_title_optimisation"] = False
 
-    return {
-        "article_title": "This is new article title",
-        "user_flags": user_flags
-    }
+    return {"article_title": "This is new article title", "user_flags": user_flags}
 
 
 def content_guidelines_optimisation_node(state):
@@ -241,9 +241,9 @@ def content_guidelines_optimisation_node(state):
             - optimised_content: a String containing the rewritten article from the content guidelines LLM
     """
     keypoints = state.get("keypoints")
-    if state.get('compiled_keypoints') != None:
+    if state.get("compiled_keypoints") is not None:
         keypoints = state.get("compiled_keypoints")
-        
+
     # Runs the compiler LLM to compile the keypoints
     content_optimisation_agent = state.get("llm_agents")["content_optimisation_agent"]
 
@@ -267,20 +267,15 @@ def writing_guidelines_optimisation_node(state):
             - flag_for_content_optimisation: a False boolean value to indicate that the writing optimisation step has been completed
     """
 
-    
     optimised_content = state.get("optimised_content")
     writing_optimisation_agent = state.get("llm_agents")["writing_optimisation_agent"]
     optimised_writing = writing_optimisation_agent.optimise_writing(optimised_content)
     print(optimised_writing)
 
-
     user_flags = state.get("user_flags")
     user_flags["flag_for_content_optimisation"] = False
 
-    return {
-        "optimised_writing": optimised_writing,
-        "user_flags": user_flags
-    }
+    return {"optimised_writing": optimised_writing, "user_flags": user_flags}
 
 
 # creating a StateGraph object with GraphState as input.
@@ -312,13 +307,14 @@ def check_all_articles(state):
         "compiler_node": returned if counter >= number of articles to be harmonised
     """
 
-    if (state.get("article_researcher_counter") < len(state.get("article_content"))):
+    if state.get("article_researcher_counter") < len(state.get("article_content")):
         return "researcher_node"
-    elif (len(state.get("article_content")) < 2) and state.get("user_flags")["flag_for_content_optimisation"]:
+    elif (len(state.get("article_content")) < 2) and state.get("user_flags")[
+        "flag_for_content_optimisation"
+    ]:
         return "content_guidelines_optimisation_node"
     else:
         return "compiler_node"
-
 
 
 def decide_next_optimisation_node(state):
@@ -347,9 +343,11 @@ def decide_next_optimisation_node(state):
 workflow.add_conditional_edges(
     "researcher_node",
     check_all_articles,
-    {"researcher_node": "researcher_node", 
-     "compiler_node": "compiler_node",
-     "content_guidelines_optimisation_node": "content_guidelines_optimisation_node"},
+    {
+        "researcher_node": "researcher_node",
+        "compiler_node": "compiler_node",
+        "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
+    },
 )
 
 # Adds a conditional edge to the workflow from compiler node to content guidelines node, title optimmisation node, meta description optimisation node and END
@@ -408,7 +406,7 @@ def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]
 
     trace_df = px.Client().get_spans_dataframe()
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    # trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
+    trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
 
     px.close_app()
 
@@ -435,10 +433,7 @@ if __name__ == "__main__":
         article_2 = file.read()
 
     # List with the articles to harmonise
-    article_list = [
-        article_1,
-        article_2
-    ]
+    article_list = [article_1, article_2]
 
     processed_input_articles = concat_headers_to_content(article_list)
 
@@ -450,7 +445,7 @@ if __name__ == "__main__":
         "user_flags": {
             "flag_for_content_optimisation": True,
             "flag_for_title_optimisation": True,
-            "flag_for_meta_desc_optimisation": True
+            "flag_for_meta_desc_optimisation": True,
         },
         "llm_agents": {
             "researcher_agent": researcher_agent,
@@ -458,8 +453,8 @@ if __name__ == "__main__":
             "content_optimisation_agent": content_optimisation_agent,
             "writing_optimisation_agent": writing_optimisation_agent,
             "title_optimisation_agent": title_optimisation_agent,
-            "meta_desc_optimisation_agent": meta_desc_optimisation_agent
-        }       
+            "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
+        },
     }
 
     result = execute_graph(workflow, inputs)
