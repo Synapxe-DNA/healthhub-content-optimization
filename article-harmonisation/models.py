@@ -32,6 +32,8 @@ MODELS = [
 MAX_NEW_TOKENS = 5000
 
 # Declaring node roles
+EVALUATOR = "Evaluator"
+EXPLAINER = "Explainer"
 RESEARCHER = "Researcher"
 COMPILER = "Compiler"
 META_DESC = "Meta description"
