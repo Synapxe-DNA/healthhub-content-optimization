@@ -41,6 +41,34 @@ class LLMPrompt(ABC):
     """
 
     @abstractmethod
+    def return_readability_evaluation_prompt(self) -> str:
+        """
+        Abstract method for returning a readability evaluation prompt.
+        """
+        pass
+
+    @abstractmethod
+    def return_structure_evaluation_prompt(self):
+        """
+        Abstract method for returning a content structure evaluation prompt.
+        """
+        pass
+
+    @abstractmethod
+    def return_title_evaluation_prompt(self):
+        """
+        Abstract method for returning a title evaluation prompt.
+        """
+        pass
+
+    @abstractmethod
+    def return_meta_desc_evaluation_prompt(self):
+        """
+        Abstract method for returning a meta description evaluation prompt.
+        """
+        pass
+
+    @abstractmethod
     def return_researcher_prompt(self) -> str:
         """
         Abstract method for returning a researcher prompt
@@ -69,8 +97,6 @@ class LLMPrompt(ABC):
         pass
 
 
-
-
 class LlamaPrompts(LLMPrompt):
     """
     This class contains methods that stores and returns the prompts for Llama3 models.
@@ -79,6 +105,231 @@ class LlamaPrompts(LLMPrompt):
 
     Refer to https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3/ for more information.
     """
+
+    def return_readability_evaluation_prompt(self):
+
+        readability_evaluation_prompt = """
+            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+            I want you to act as an expert in readability analysis. Your task is to evaluate and critique the readability of the provided article. Your analysis should cover the following aspects:
+
+            1. **Sentence Structure**: Assess the complexity of sentences. Identify long, convoluted sentences and suggest ways to simplify them.
+            2. **Vocabulary**: Evaluate the complexity of the vocabulary used. Highlight any overly complex words and suggest simpler alternatives where appropriate.
+            3. **Coherence and Flow**: Analyze the coherence and logical flow of the text. Point out any abrupt transitions or lack of clarity and provide suggestions for improvement.
+            4. **Readability Metrics**: Calculate and provide readability scores using metrics such as Flesch-Kincaid Grade Level, Gunning Fog Index, and any other relevant readability indices.
+            5. **Overall Assessment**: Summarize the overall readability of the article, providing specific examples and actionable recommendations for improvement.
+            
+            Please provide a detailed analysis and critique following the above criteria.
+            <|eot_id|>
+            <|start_header_id|>user<|end_header_id|>
+            Here is the article for analysis:
+            {Article}
+            <|eot_id|>
+            <|start_header_id|>assistant<|end_header_id|>
+            Answer:
+        """
+
+        return readability_evaluation_prompt
+
+    def return_structure_evaluation_prompt(self):
+
+        structure_evaluation_prompt = """
+            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+            Objective: Critique the content structure of the article, evaluating its effectiveness and coherence based on the following criteria -
+            
+            1. Opening
+            Headline
+            -   Does the headline grab attention and stay relevant to the content?
+            -   Does it clearly convey the main topic or benefit of the article?
+            
+            Introduction
+            -   Does the introduction hook the reader quickly and effectively?
+            -   Is the relevance of the topic established early on?
+            -   Does the introduction outline the content of the post clearly?
+            
+            2. Content Structure
+            Main Body
+            -   Are subheadings used effectively to organize content?
+            -   Are paragraphs short, focused, and easy to read?
+            -   Does the article incorporate lists where appropriate?
+            -   Are examples or anecdotes included to illustrate points?
+            
+            Overall Structure
+            -   Does the article follow a logical flow of ideas?
+            -   Do sections build on each other in a cohesive manner?
+            -   Are transitions between sections smooth and logical?
+            
+            3. Writing Style
+            Tone and Language
+            -   Is the tone conversational and accessible to the target audience?
+            -   Does the article avoid unexplained jargon or overly technical language?
+            -   Is the language appropriate for the audience's level of knowledge?
+            
+            Engagement
+            -   Are questions or prompts used to engage the reader?
+            -   Is "you" language used to make the content more relatable and direct?
+            
+            4. Closing
+            Call-to-Action (CTA)
+            -   Are clear next steps for the reader provided?
+            -   Is the CTA strategically placed and compelling?
+            
+            Conclusion
+            -   Are the key points of the article summarized effectively?
+            -   Does the conclusion reinforce the main message?
+            -   Does it leave the reader with something to think about or a memorable takeaway?
+            
+            5. Overall Effectiveness
+            Value
+            -   Does the article provide practical, actionable information?
+            -   Does it fulfill the promise made by the headline and introduction?
+            
+            Length
+            -   Is the length appropriate for the topic and audience (generally 300-1500 words)?
+            -   Is the content thorough without unnecessary padding?
+            
+            Instructions:
+            1.  Carefully read through the article.
+            2.  Use the criteria above to evaluate each section.
+            3.  Provide detailed feedback, noting strengths and areas for improvement.
+            4.  Suggest specific changes or enhancements where applicable.
+            
+            <|eot_id|>
+            <|start_header_id|>user<|end_header_id|>
+            Article:
+            {Article}
+            <|eot_id|>
+            <|start_header_id|>assistant<|end_header_id|>
+            Answer:
+        """
+
+        return structure_evaluation_prompt
+
+    def return_title_evaluation_prompt(self):
+
+        title_evaluation_prompt = """
+            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+            Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
+
+            Steps to Follow:
+            1.  Identify the Title:
+            -   What is the title of the article?
+            
+            2.  Analyze the Title:
+            -   What main topic or benefit does the title convey?
+            -   Is the title specific and clear in its message?
+            
+            3.  Review the Content:
+            -   Read the entire article carefully.
+            -   Summarize the main points and key themes of the article.
+            -   Note any specific sections or statements that align with or diverge from the title's promise.
+            
+            4.  Compare Title and Content:
+            -   Does the content directly address the main topic or benefit stated in the title?
+            -   Are the main themes and messages of the article consistent with the expectations set by the title?
+            -   Identify any significant information in the article that is not reflected in the title and vice versa.
+            
+            5.  Evaluate Relevance:
+            -   Provide a detailed explanation of how well the title reflects the content.
+            -   Use specific examples or excerpts from the article to support your evaluation.
+            -   Highlight any discrepancies or misalignments between the title and the content.
+            
+            6.  Suggestions for Improvement:
+            -   If the title is not fully relevant, suggest alternative titles that more accurately capture the essence of the article.
+            -   Explain why the suggested titles are more appropriate based on the article's content.
+            
+            Example Analysis:
+            Title: "10 Tips for Effective Time Management"
+            
+            Content Summary:
+            -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
+            
+            Comparison and Evaluation:
+            -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
+            -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
+            -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
+            -   The relevance score is high due to the direct alignment of content with the title.
+            
+            Suggested Title (if needed):
+            -   "Mastering Time Management: 10 Essential Tips for Success" (if the original title needs more emphasis on mastery and success).
+            
+            Instructions:
+            1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
+            2.  Write a brief report based on your findings, including specific examples and any suggested improvements.
+            <|eot_id|>
+            <|start_header_id|>user<|end_header_id|>
+            Title:
+            {Title}
+            Article:
+            {Article}
+            <|eot_id|>
+            <|start_header_id|>assistant<|end_header_id|>
+            Answer:
+        """
+
+        return title_evaluation_prompt
+
+    def return_meta_desc_evaluation_prompt(self):
+
+        meta_desc_evaluation_prompt = """
+        <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+        Objective: Assess the relevance of the article's meta description by comparing it with the content of the article.
+
+        Steps to Follow:
+        1.  Identify the Meta Description:
+        -   What is the meta description of the article?
+        
+        2.  Analyze the Meta Description:
+        -   What main topic or benefit does the meta description convey?
+        -   Is the meta description clear, concise, and engaging?
+        
+        3.  Review the Content:
+        -   Read the entire article carefully.
+        -   Summarize the main points and key themes of the article.
+        -   Note any specific sections or statements that align with or diverge from the meta description.
+        
+        4.  Compare Meta Description and Content:
+        -   Does the content directly address the main topic or benefit stated in the meta description?
+        -   Are the main themes and messages of the article consistent with the expectations set by the meta description?
+        -   Identify any significant information in the article that is not reflected in the meta description and vice versa.
+        
+        5.  Evaluate Relevance:
+        -   Provide a detailed explanation of how well the meta description reflects the content.
+        -   Use specific examples or excerpts from the article to support your evaluation.
+        -   Highlight any discrepancies or misalignments between the meta description and the content.
+        
+        6.  Suggestions for Improvement:
+        -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
+        -   Explain why the suggested descriptions are more appropriate based on the article's content.
+        
+        Example Analysis:
+        Meta Description: "Learn 10 effective time management tips to boost your productivity and achieve your goals."
+        
+        Content Summary:
+        -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
+        
+        Comparison and Evaluation:
+        -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
+        -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
+        -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
+        -   The relevance score is high due to the direct alignment of content with the meta description.
+        
+        Suggested Meta Description (if needed):
+        -   "Discover 10 essential time management strategies to enhance productivity and reach your goals."
+        
+        Instructions:
+        -   Use the steps provided to evaluate the relevance of the article's meta description.
+        -   Write a brief report based on your findings, including specific examples and any suggested improvements.
+        <|start_header_id|>user<|end_header_id|>
+        Meta Description:
+        {Meta}
+        Article:
+        {Article}
+        <|eot_id|>
+        <|start_header_id|>assistant<|end_header_id|>
+        Answer:
+        """
+
+        return meta_desc_evaluation_prompt
 
     def return_researcher_prompt(self):
         """
@@ -123,14 +374,14 @@ class LlamaPrompts(LLMPrompt):
             Consume a high protein, low carb diet.
             Exercise for 30 minutes daily.
             Cut down on consumption of saturated fat and sugary food.
-            Read these next: Top 10 power foods to eat recommended by a nutrionist
+            Read these next: Top 10 power foods to eat recommended by a nutritionist
 
             Answer:
             Keypoint: Introduction to Parkinson's disease
             Consume a high protein, low carb diet. Exercise for 30 minutes daily. Cut down on consumption of saturated fat and sugary food.
 
             Omitted sentences:
-            Read these next: Top 10 power foods to eat recommended by a nutrionist
+            Read these next: Top 10 power foods to eat recommended by a nutritionist
             ### End of Example 2
 
             <|eot_id|>
@@ -191,8 +442,8 @@ class LlamaPrompts(LLMPrompt):
             "
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
-
-            Keypoints: {Keypoints}
+            Keypoints: 
+            {Keypoints}
             <|eot_id|>
 
             <|start_header_id|>assistant<|end_header_id|>
@@ -242,7 +493,7 @@ class LlamaPrompts(LLMPrompt):
                     • The placenta during pregnancy
                     • Germs in the vagina during birth
                     • Breast milk after birth
-                    As different viruses spread through different channels, pregnant women should seek their doctor’s advice regarding necessary screening to protect their baby.
+                As different viruses spread through different channels, pregnant women should seek their doctor’s advice regarding necessary screening to protect their baby.
 
             You should out your content based on the required sections step by step.
             After each section has been rewritten, you must check your writing with each guideline step by step.
