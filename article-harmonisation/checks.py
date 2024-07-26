@@ -243,7 +243,6 @@ if __name__ == "__main__":
     evaluation_agent = start_llm(MODEL, EVALUATOR)
     explanation_agent = start_llm(MODEL, EXPLAINER)
 
-    px.launch_app()
     LangChainInstrumentor().instrument()
 
     # Load data from merged_data.parquet and randomly sample 30 rows
@@ -257,7 +256,8 @@ if __name__ == "__main__":
         # Set up 
         article_content = df_sample["extracted_content_body"].iloc[i]
         article_title = df_sample["title"].iloc[i]
-        meta_desc = df_sample["category_description"].iloc[i]
+        meta_desc = df_sample["category_description"].iloc[i]   # meta_desc can be null
+        meta_desc = meta_desc if meta_desc is not None else "No meta description"
 
         print(f"Checking {article_title} now...")
         records = []
@@ -285,5 +285,3 @@ if __name__ == "__main__":
 
     df_save = pd.DataFrame.from_records(records)
     df_save.to_parquet("./data/agentic_response.parquet")
-
-    px.close_app()
