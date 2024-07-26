@@ -1,8 +1,12 @@
 import os
-from typing import TypedDict, Annotated
+from typing import TypedDict, Annotated, Any
 
+import pandas as pd
 from dotenv import load_dotenv
-import operator
+import json
+import phoenix as px
+from phoenix.trace.langchain import LangChainInstrumentor
+from models import start_llm
 from langgraph.graph import MessagesState, StateGraph, END, START
 from utils.evaluations import calculate_readability
 
@@ -18,15 +22,27 @@ MODELS = ["mistral", "llama3"]
 MODEL = MODELS[1]
 
 # Declaring node roles
-RESEARCHER = "Researcher"
-COMPILER = "Compiler"
-META_DESC = "Meta description"
-TITLE = "Title"
-CONTENT_GUIDELINES = "Content guidelines"
-WRITING_GUIDELINES = "Writing guidelines"
+EVALUATOR = "Evaluator"
+EXPLAINER = "Explainer"
 
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = 3000
+
+
+def merge_dict(dict1, dict2):
+    for key, val in dict1.items():
+        if type(val) == dict:
+            if key in dict2 and type(dict2[key] == dict):
+                merge_dict(dict1[key], dict2[key])
+        else:
+            if key in dict2:
+                dict1[key] = dict2[key]
+
+    for key, val in dict2.items():
+        if not key in dict1:
+            dict1[key] = val
+
+    return dict1
 
 
 class GraphState(TypedDict):
@@ -51,17 +67,18 @@ class GraphState(TypedDict):
     meta_desc: str
 
     # Flags for rule-based/statistical-based methods
-    content_flags: Annotated[dict[str, bool], operator.add]
-    title_flags: Annotated[dict[str, bool], operator.add]
-    meta_flags: Annotated[dict[str, bool], operator.add]
+    content_flags: Annotated[dict[str, bool], merge_dict]
+    title_flags: Annotated[dict[str, bool], merge_dict]
+    meta_flags: Annotated[dict[str, bool], merge_dict]
 
     # Explanations for various criteria
-    content_judge: Annotated[dict[str, bool], operator.add]
-    title_judge: Annotated[dict[str, bool], operator.add]
-    meta_judge: Annotated[dict[str, bool], operator.add]
-    
+    content_judge: Annotated[dict[str, str], merge_dict]
+    title_judge: Annotated[dict[str, str], merge_dict]
+    meta_judge: Annotated[dict[str, str], merge_dict]
+
     # Agents
-    llm_agents: dict
+    llm_agents: dict[str, Any]
+
 
     # Nodes
 def content_evaluation_rules_node(state: MessagesState) -> str:
@@ -77,9 +94,9 @@ def content_evaluation_rules_node(state: MessagesState) -> str:
     if score <= 0:
         raise ValueError("The readability score must be greater than 0.")
     elif score >= 10:
-        content_flags["is_unreadable"]: True
+        content_flags["is_unreadable"] = True
     else:
-        content_flags["is_unreadable"]: False
+        content_flags["is_unreadable"] = False
 
     # Check for insufficient content -
     # Less than 300 - 400 words is considered too brief
@@ -87,16 +104,16 @@ def content_evaluation_rules_node(state: MessagesState) -> str:
     # TODO: Plot the word count distribution of articles across each content category
     word_count = len(article_content.split())
     if word_count < 300:
-        content_flags["low_word_count"]: True
+        content_flags["low_word_count"] = True
     else:
-        content_flags["low_word_count"]: False
+        content_flags["low_word_count"] = False
 
     return {"content_flags": content_flags}
 
 def content_evaluation_llm_node(state: MessagesState) -> str:
     article_content = state.get("article_content", "")
     content_judge = state.get("content_judge", {})
-    content_evaluation_agent = state.get("llm_agent")["evaluation_agent"]
+    content_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
 
     # Check poor content structure -
     # No clear sections
@@ -120,7 +137,7 @@ def content_explanation_node(state: MessagesState) -> str:
     readabilty = content_flags.get("is_unreadable", False)
 
     if readabilty:
-        explanation_agent = state.get("llm_agent")["explanation_agent"]
+        explanation_agent = state.get("llm_agents")["explanation_agent"]
         readability_explanation = explanation_agent.evaluate_content(article_content, choice="readability")
         content_judge["readability"] = readability_explanation
 
@@ -137,9 +154,9 @@ def title_evaluation_rules_node(state: MessagesState) -> str:
     if char_count <= 0:
         raise ValueError("The title character count must be greater than 0.")
     elif char_count > 70:
-        title_flags["long_title"]: True
+        title_flags["long_title"] = True
     else:
-        title_flags["long_title"]: False
+        title_flags["long_title"] = False
 
     return {"title_flags": title_flags}
 
@@ -149,7 +166,7 @@ def title_evaluation_llm_node(state: MessagesState) -> str:
     title_judge = state.get("title_judge", {})
 
     # Irrelevant Page Title
-    title_evaluation_agent = state.get("llm_agent")["evaluation_agent"]
+    title_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
     title_evaluation = title_evaluation_agent.evaluate_title(article_title, article_content)
     title_judge["title"] = title_evaluation
 
@@ -165,9 +182,9 @@ def meta_desc_evaluation_rules_node(state: MessagesState) -> str:
     if char_count <= 0:
         raise ValueError("The meta description character count must be greater than 0.")
     elif 70 <= char_count <= 160:
-        meta_flags["not_within_word_count"]: False
+        meta_flags["not_within_word_count"] = False
     else:
-        meta_flags["not_within_word_count"]: True
+        meta_flags["not_within_word_count"] = True
 
     return {"meta_flags": meta_flags}
 
@@ -177,7 +194,7 @@ def meta_desc_evaluation_llm_node(state: MessagesState) -> str:
     meta_judge = state.get("meta_judge", {})
 
     # Irrelevant Meta Description
-    meta_evaluation_agent = state.get("llm_agent")["evaluation_agent"]
+    meta_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
     meta_evaluation = meta_evaluation_agent.evaluate_meta_description(meta_desc, article_content)
     meta_judge["meta_desc"] = meta_evaluation
 
@@ -223,10 +240,50 @@ if __name__ == "__main__":
         f.write(img)
 
     # Start LLM
-    pass
+    evaluation_agent = start_llm(MODEL, EVALUATOR)
+    explanation_agent = start_llm(MODEL, EXPLAINER)
 
-    # Load data from merged_data.parquet
-    pass
+    px.launch_app()
+    LangChainInstrumentor().instrument()
 
-    # Set up Inputs
-    pass
+    # Load data from merged_data.parquet and randomly sample 30 rows
+    df = pd.read_parquet("./data/merged_data.parquet")
+    df_keep = df[~df["to_remove"]]
+    df_sample = df_keep.sample(n=30, replace=False, random_state=42)
+    rows = df_sample.shape[0]
+    print(rows)
+
+    for i in range(rows):
+        # Set up 
+        article_content = df_sample["extracted_content_body"].iloc[i]
+        article_title = df_sample["title"].iloc[i]
+        meta_desc = df_sample["category_description"].iloc[i]
+
+        print(f"Checking {article_title} now...")
+        records = []
+        # Set up Inputs
+        inputs = {
+            "article_content": article_content,
+            "article_title": article_title,
+            "meta_desc": meta_desc,
+            "content_flags": {},
+            "title_flags": {},
+            "meta_flags": {},
+            "content_judge": {},
+            "title_judge": {},
+            "meta_judge": {},
+            "llm_agents": {
+                "evaluation_agent": evaluation_agent,
+                "explanation_agent": explanation_agent,
+            }
+        }
+
+        response = graph.invoke(input=inputs)
+        print(response)
+        del response["llm_agents"]
+        records.append(response)
+
+    df_save = pd.DataFrame.from_records(records)
+    df_save.to_parquet("./data/agentic_response.parquet")
+
+    px.close_app()
