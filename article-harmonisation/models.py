@@ -16,7 +16,7 @@ os.environ["LANGCHAIN_PROJECT"] = "Multi-agent Collaboration"
 MODELS = [
     # Meta Llama
     "meta-llama/Meta-Llama-3-8B-Instruct",
-    "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    # "meta-llama/Meta-Llama-3.1-8B-Instruct",
 
     # "NousResearch/Hermes-2-Pro-Llama-3-8B",
     # "meta-llama/Meta-Llama-3-70B-Instruct",
@@ -29,7 +29,7 @@ MODELS = [
     "internlm/internlm2_5-7b-chat",
 ]
 
-MAX_NEW_TOKENS = 6000
+MAX_NEW_TOKENS = 5000
 
 # Declaring node roles
 RESEARCHER = "Researcher"
@@ -38,6 +38,7 @@ META_DESC = "Meta description"
 TITLE = "Title"
 CONTENT_OPTIMISATION = "Content optimisation"
 WRITING_OPTIMISATION = "Writing optimisation"
+
 
 def start_llm(model: str, role: str):
     """
@@ -85,9 +86,29 @@ class LLMInterface(ABC):
     """
 
     @abstractmethod
-    def generate_keypoints(self, article):
+    def evaluate_content(self, text: str) -> str:
         """
-        Abstract method for generating and returing a summary of keypoints based on the article
+        Abstract method for generating the text of the LLM Model
+
+        Args:
+            text: a String input stating the text
+        """
+        pass
+
+    @abstractmethod
+    def evaluate_title(self, text: str) -> str:
+        """
+        Abstract method for generating the text of the LLM Model
+
+        Args:
+            text: a String input stating the text
+        """
+        pass
+
+    @abstractmethod
+    def generate_keypoints(self, article: str):
+        """
+        Abstract method for generating and returning a summary of keypoints based on the article
 
         Args:
             article: String input of the article to be summarised
@@ -95,7 +116,7 @@ class LLMInterface(ABC):
         pass
 
     @abstractmethod
-    def compile_points(self, keypoints):
+    def compile_points(self, keypoints: list[str]):
         """Abstract method for compiling and returing from a list of keypoints
         Args:
             keypoints: list input of the article keypoints to be compiled
@@ -126,7 +147,58 @@ class Llama(LLMInterface):
         self.prompt_template = prompt_template
         self.role = role
 
-    def generate_keypoints(self, article: str, num):
+    def evaluate_content(self, content: str, choice: str = "readability") -> str:
+
+        match choice.lower():
+            case "readability":
+                template = self.prompt_template.return_readability_evaluation_prompt()
+            case "structure":
+                template = self.prompt_template.return_structure_evaluation_prompt()
+            case _:
+                raise ValueError(f"You entered {choice}, which is not a valid choice")
+
+        prompt_t = PromptTemplate(
+            input_variables=["Article"],
+            template=template,
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+        res = chain.invoke(content)
+        response = re.sub(" +", " ", res)
+
+        return response
+
+    def evaluate_title(self, title: str, content: str) -> str:
+
+        template = self.prompt_template.return_title_evaluation_prompt()
+
+        prompt_t = PromptTemplate(
+            input_variables=["Title", "Article"],
+            template=template,
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+        res = chain.invoke({"Title": title, "Article": content})
+        response = re.sub(" +", " ", res)
+
+        return response
+
+    def evaluate_meta_description(self, meta_description: str, content: str) -> str:
+
+        template = self.prompt_template.return_meta_desc_evaluation_prompt()
+
+        prompt_t = PromptTemplate(
+            input_variables=["Meta", "Article"],
+            template=template,
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+        res = chain.invoke({"Meta": meta_description, "Article": content})
+        response = re.sub(" +", " ", res)
+
+        return response
+
+    def generate_keypoints(self, article: str, num: int):
         """
         Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
 
@@ -152,9 +224,10 @@ class Llama(LLMInterface):
 
         chain = prompt_t | self.model | StrOutputParser()
         print(f"Processing keypoints for header {num}")
-        r = chain.invoke(article)
+        res = chain.invoke(article)
         print(f"Keypoints processed for header {num}")
-        response = re.sub(" +", " ", r)
+        response = re.sub(" +", " ", res)
+
         return response
 
     def compile_points(self, keypoints: list = []):
@@ -192,12 +265,12 @@ class Llama(LLMInterface):
             article_kp = keypoints[article_index]
             input_keypoints += f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
 
-        
         chain = prompt_t | self.model
         print("Compiling keypoints for article harmonisation")
-        r = chain.invoke({"Keypoints": input_keypoints})
+        res = chain.invoke({"Keypoints": input_keypoints})
         print("Keypoints compiled for article harmonisation")
-        response = re.sub(" +", " ", r)
+        response = re.sub(" +", " ", res)
+
         return response
     
     def optimise_content(self, keypoints: list = []):
@@ -212,11 +285,11 @@ class Llama(LLMInterface):
 
         chain = prompt_t | self.model
         print("Optimising article content")
-        r = chain.invoke({"Keypoints": keypoints})
+        res = chain.invoke({"Keypoints": keypoints})
         print("Article content optimised")
-        response = re.sub(" +", " ", r)
+        response = re.sub(" +", " ", res)
+
         return response
-    
 
     def optimise_writing(self, content: str):
         if self.role != WRITING_OPTIMISATION:
@@ -228,12 +301,13 @@ class Llama(LLMInterface):
             self.prompt_template.return_writing_prompt()
         )
 
-
         chain = prompt_t | self.model
         print("Optimising article writing")
-        r = chain.invoke({"Content": content})
+        response = chain.invoke({"Content": content})
         print("Article writing optimised")
-        return r
+
+        return response
+
 
 class Mistral(LLMInterface):
     """
