@@ -48,21 +48,21 @@ class LLMPrompt(ABC):
         pass
 
     @abstractmethod
-    def return_structure_evaluation_prompt(self):
+    def return_structure_evaluation_prompt(self) -> str:
         """
         Abstract method for returning a content structure evaluation prompt.
         """
         pass
 
     @abstractmethod
-    def return_title_evaluation_prompt(self):
+    def return_title_evaluation_prompt(self) -> str:
         """
         Abstract method for returning a title evaluation prompt.
         """
         pass
 
     @abstractmethod
-    def return_meta_desc_evaluation_prompt(self):
+    def return_meta_desc_evaluation_prompt(self) -> str:
         """
         Abstract method for returning a meta description evaluation prompt.
         """
@@ -121,7 +121,7 @@ class LlamaPrompts(LLMPrompt):
             Please provide a detailed analysis and critique following the above criteria.
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
-            Here is the article for analysis:
+            Article:
             {Article}
             <|eot_id|>
             <|start_header_id|>assistant<|end_header_id|>
@@ -192,7 +192,6 @@ class LlamaPrompts(LLMPrompt):
             2.  Use the criteria above to evaluate each section.
             3.  Provide detailed feedback, noting strengths and areas for improvement.
             4.  Suggest specific changes or enhancements where applicable.
-            
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
             Article:
