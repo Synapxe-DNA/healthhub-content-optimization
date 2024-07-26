@@ -88,12 +88,12 @@ class LLMInterface(ABC):
     """
 
     @abstractmethod
-    def evaluate_content(self, text: str) -> str:
+    def evaluate_content(self, content: str, choice: str) -> str:
         """
         Abstract method for generating the text of the LLM Model
 
         Args:
-            text: a String input stating the text
+            content: a String input stating the text
         """
         pass
 
