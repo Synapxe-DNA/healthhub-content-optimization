@@ -8,7 +8,7 @@ from langgraph.graph import END, StateGraph
 from models import start_llm, LLMInterface
 from phoenix.trace.langchain import LangChainInstrumentor
 from utils.headers import concat_headers_to_content
-from pathlib import Path
+from utils.checkers import print_checks
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
@@ -44,61 +44,6 @@ EXTRACTED_TEXT_DIRECTORY = (
 ARTICLE1_TITLE = "diseases-and-conditions/Rubella_1437892.txt" #metric required to determine which prompt to use  
 ARTICLE2_TITLE = "live-healthy-articles/How Dangerous Is Rubella__1445577.txt"
 # ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
-
-def print_checks(result):
-    """Prints out the various key outputs in graph. Namely, it will help you check for
-        1. Researcher LLM outputs -> keypoints: prints out the sentences in their respective categories, including sentences omitted by the llm
-        2. Compiler LLM outputs -> compiled_keypoints: prints out the compiled keypoints
-        3. Content optimisation LLM outputs -> optimised_content: prints out the optimised article content after optimisation by content and writing guideline LLM
-        4. Title optimisation LLM outputs -> article_title: prints out the optimised title
-        5. Meta description optimisation LLM outputs -> meta_desc: prints out the optimised meta description
-
-    Args:
-        result: a AddableValuesDict object containing the final outputs from the graph
-    """
-
-    # determines the number of articles undergoing the harmonisation process
-    num_of_articles = len(result["article_content"])
-
-    Path("article-harmonisation/docs/txt_outputs").mkdir(parents=True, exist_ok=True)
-    f = open(f"article-harmonisation/docs/txt_outputs/{MODEL}_compiled_keypoints_check.txt", "w")
-
-    for content_index in range(len(result["article_content"])):
-        if content_index > 0:
-            f.write(" \n ----------------- \n")
-        f.write(f"Original Article {content_index+1} content \n")
-        article = result["article_content"][content_index]
-        for keypoint in article:
-            f.write(keypoint + "\n")
-    f.write(" \n -----------------")
-
-    # printing each keypoint produced by researcher LLM
-    print("\nRESEARCHER LLM CHECKS\n -----------------", file=f)
-    for i in range(0, num_of_articles):
-        print(f"These are the keypoints for article {i+1}\n".upper(), file = f)
-        print(result["keypoints"][i], file = f)
-        print(" \n -----------------", file = f)
-
-    # printing compiled keypoints produced by compiler LLM
-    
-    if "compiled_keypoints" in result.keys():
-        print("COMPILER LLM CHECKS \n ----------------- ", file = f)
-        print(str(result["compiled_keypoints"]), file=f)
-        print(" \n -----------------", file = f)
-
-    # checking for optimised content produced by content optimisation flow
-    flags = {"optimised_content", "optimised_writing" ,"article_title", "meta_desc"}
-    keys = result.keys()
-    print("CONTENT OPTIMISATION CHECKS\n ----------------- \n", file = f)
-    for flag in flags:
-        if flag in keys:
-            print(f"These is the optimised {flag.upper()}", file=f)
-            print(result[flag], file=f)
-            print(" \n ----------------- \n", file=f)
-        else:
-            print(f"{flag.upper()} has not been flagged for optimisation.", file=f)
-            print(" \n ----------------- \n", file=f)
-    f.close()
 
 
 class OriginalArticleContent(TypedDict):
@@ -145,15 +90,6 @@ class GraphState(TypedDict):
         flag_for_title_optimisation: A required boolean value, determining if the user has flagged the article for title optimisation.
         flag_for_meta_desc_optimisation: A required boolean value, determining if the user has flagged the article for meta description optimisation.
     """
-
-    article_content: list
-    article_title: Optional[str]
-    meta_desc: Optional[str]
-    keypoints: Optional[list]
-    compiled_keypoints: Optional[str]
-    optimised_content: Optional[str]
-    optimised_writing: Optional[str]
-    article_researcher_counter: Optional[int]
     original_article_content: OriginalArticleContent
     optimised_article_output: OptimisedArticleOutput
     # previous_node: Optional[str]
@@ -174,14 +110,13 @@ def researcher_node(state):
             - keypoints: an updated list storing keypoints from all articles output from the researcher node
             - article_researcher_counter: an integer serving as a counter for number of articles processed by the researcher node
     """
-    article_list = state.get("article_content", "")
-    counter = state.get("article_researcher_counter", 0)
-    print("Processing keypoints for article", counter + 1)
-    keypoints = state.get("keypoints")
+    article_list = state.get("original_article_content")["article_content"]
+    counter = state.get("optimised_article_output")["article_researcher_counter"]
     article = article_list[counter]
-    # Runs the researcher LLM agent
+    keypoints = state.get("optimised_article_output")["researcher_keypoints"]
     researcher_agent = state.get("llm_agents")["researcher_agent"]
 
+    print("Processing keypoints for article", counter + 1)
     processed_keypoints = ""
     print(f'Number of keypoints in article {counter + 1}: ', len(article))
 
@@ -194,7 +129,8 @@ def researcher_node(state):
         article_keypoints = researcher_agent.generate_keypoints(kp, kp_counter)
         processed_keypoints += f"{article_keypoints} \n"
     keypoints.append(processed_keypoints)
-    return {"keypoints": keypoints, "article_researcher_counter": counter + 1}
+
+    return {"optimised_article_output": {"researcher_keypoints" : keypoints, "article_researcher_counter": counter + 1}}
 
 
 def compiler_node(state):
@@ -207,14 +143,16 @@ def compiler_node(state):
         a dictionary with keys "compiled_keypoints"
             - compiled_keypoints: a String containing the compiled keypoints from the compiler LLM
     """
-    keypoints = state.get("keypoints")
+    optimised_article_output = state.get("optimised_article_output")
+    keypoints = optimised_article_output["researcher_keypoints"]
 
     # Runs the compiler LLM to compile the keypoints
     compiler_agent = state.get("llm_agents")["compiler_agent"]
 
     compiled_keypoints = compiler_agent.compile_points(keypoints)
+    optimised_article_output['compiled_keypoints'] = compiled_keypoints
 
-    return {"compiled_keypoints": compiled_keypoints}
+    return {"optimised_article_output": optimised_article_output}
 
 
 def meta_description_optimisation_node(state):
@@ -228,19 +166,22 @@ def meta_description_optimisation_node(state):
             - meta_desc: a String containing the optimised meta description from the meta description optimisation LLM
             - flag_for_meta_desc_optimisation: a False boolean value to indicate that the meta description optimisation step has been completed
     """
-    content = state.get("keypoints")
-    if state.get("optimised_writing") != None:
-        content = state.get("optimised_writing")
+    optimised_article_output = state.get("optimised_article_output")
+
+    content = optimised_article_output["researcher_keypoints"]
+    if "optimised_writing" in optimised_article_output.keys():
+        content = optimised_article_output["optimised_writing"]
 
     meta_desc_optimisation_agent = state.get("llm_agents")["meta_desc_optimisation_agent"]
     optimised_meta_desc = meta_desc_optimisation_agent.optimise_meta_desc(content)
 
+    optimised_article_output["optimised_meta_desc"] = optimised_meta_desc
 
     user_flags = state.get("user_flags")
     user_flags["flag_for_meta_desc_optimisation"] = False
 
     return {
-        "meta_desc": optimised_meta_desc,
+        "optimised_article_output": optimised_article_output,
         "user_flags": user_flags
     }
 
@@ -256,20 +197,23 @@ def title_optimisation_node(state):
             - article_title: a String containing the optimised title from the title optimisation LLM
             - flag_for_title_optimisation: a False boolean value to indicate that the title optimisation step has been completed
     """
-    content = state.get("keypoints")
-    if state.get("optimised_writing") != None:
-        content = state.get("optimised_writing")
+    optimised_article_output = state.get("optimised_article_output")
+
+    content = optimised_article_output["researcher_keypoints"]
+    if "optimised_writing" in optimised_article_output.keys():
+        content = optimised_article_output["optimised_writing"]
     
     title_optimisation_agent = state.get("llm_agents")["title_optimisation_agent"]
+    optimised_article_title = title_optimisation_agent.optimise_title(content)
 
-    optimised_title = title_optimisation_agent.optimise_title(content)
+    optimised_article_output["optimised_article_title"] = optimised_article_title
 
 
     user_flags = state.get("user_flags")
     user_flags["flag_for_title_optimisation"] = False
 
     return {
-        "article_title": optimised_title,
+        "optimised_article_output": optimised_article_output,
         "user_flags": user_flags
     }
 
@@ -286,16 +230,22 @@ def content_guidelines_optimisation_node(state):
         a dictionary with keys "optimised_content"
             - optimised_content: a String containing the rewritten article from the content guidelines LLM
     """
-    keypoints = state.get("keypoints")
-    if state.get('compiled_keypoints') != None:
-        keypoints = state.get("compiled_keypoints")
+    optimised_article_output = state.get("optimised_article_output")
+
+    keypoints = optimised_article_output["researcher_keypoints"]
+    if 'compiled_keypoints' in optimised_article_output.keys():
+        keypoints = optimised_article_output['compiled_keypoints']
         
     # Runs the compiler LLM to compile the keypoints
     content_optimisation_agent = state.get("llm_agents")["content_optimisation_agent"]
 
     optimised_content = content_optimisation_agent.optimise_content(keypoints)
 
-    return {"optimised_content": optimised_content}
+    optimised_article_output["optimised_content"] = optimised_content
+
+    return {
+        "optimised_article_output": optimised_article_output
+        }
 
 
 def writing_guidelines_optimisation_node(state):
@@ -312,17 +262,20 @@ def writing_guidelines_optimisation_node(state):
             - optimised_content: a String containing the optimised content from the writing optimisation LLM
             - flag_for_content_optimisation: a False boolean value to indicate that the writing optimisation step has been completed
     """
-
+    optimised_article_output = state.get("optimised_article_output")
     
-    optimised_content = state.get("optimised_content")
+    optimised_content = optimised_article_output["optimised_content"]
     writing_optimisation_agent = state.get("llm_agents")["writing_optimisation_agent"]
     optimised_writing = writing_optimisation_agent.optimise_writing(optimised_content)
 
     user_flags = state.get("user_flags")
     user_flags["flag_for_content_optimisation"] = False
 
+    optimised_article_output["optimised_writing"] = optimised_writing
+
+
     return {
-        "optimised_writing": optimised_writing,
+        "optimised_article_output" : optimised_article_output,
         "user_flags": user_flags
     }
 
@@ -359,9 +312,9 @@ def check_all_articles(state):
         "compiler_node": returned if counter >= number of articles to be harmonised
     """
 
-    if (state.get("article_researcher_counter") < len(state.get("article_content"))):
+    if (state.get("optimised_article_output")["article_researcher_counter"] < len(state.get("original_article_content")["article_content"])):
         return "researcher_node"
-    elif (len(state.get("article_content")) < 2) and state.get("user_flags")["flag_for_content_optimisation"]:
+    elif (len(state.get("original_article_content")["article_content"]) < 2) and state.get("user_flags")["flag_for_content_optimisation"]:
         return "content_guidelines_optimisation_node"
     else:
         return "compiler_node"
@@ -451,7 +404,7 @@ def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]
     result = app.invoke(input=input)
 
     # Prints the various checks
-    print_checks(result)
+    print_checks(result, MODEL)
 
     trace_df = px.Client().get_spans_dataframe()
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -483,7 +436,7 @@ if __name__ == "__main__":
 
     # List with the articles to harmonise
     article_list = [
-        # article_1,
+        article_1,
         article_2
     ]
 
@@ -491,9 +444,14 @@ if __name__ == "__main__":
 
     # Dictionary with the variouse input keys and items
     inputs = {
-        "article_content": processed_input_articles,
-        "article_researcher_counter": 0,
-        "keypoints": [],
+        "original_article_content": {
+            "article_content": processed_input_articles
+        },
+        "optimised_article_output" : {
+            "researcher_keypoints": [],
+            "article_researcher_counter": 0
+
+        },
         "user_flags": {
             "flag_for_content_optimisation": True,
             "flag_for_title_optimisation": True,

@@ -444,7 +444,7 @@ class LlamaPrompts(LLMPrompt):
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
             
-            Your task is to write a new and improved meta description using the content given below. 
+            Your task is to write new and improved meta descriptions using the content given below. 
             You will also be given a set of instructions and a set of guidelines below. 
             You MUST follow the given instructions.
             You MUST consider the given guidelines to craft your meta descriptions.
@@ -481,14 +481,11 @@ class LlamaPrompts(LLMPrompt):
             ### End of instructions
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
-
             Content:
             {Content}
-            
             <|eot_id|>
             <|start_header_id|>assistant<|end_header_id|>
             Answer:
-            <|eot_id|>
             """
         return optimise_meta_desc_prompt
 
