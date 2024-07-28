@@ -45,6 +45,12 @@ ARTICLE1_TITLE = "diseases-and-conditions/Rubella_1437892.txt" #metric required 
 ARTICLE2_TITLE = "live-healthy-articles/How Dangerous Is Rubella__1445577.txt"
 # ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
 
+#Here are pairs of articles that are highly correlated, based on the neo_4j_clustered_data excel sheet
+ARTICLE_HARMONISATION_PAIRS = [
+    ["Rubella", "How Dangerous Is Rubella?"],
+    ["Mumps: Causes, Symptoms, and Treatment", "Mumps Vaccine: Why We Want to Prevent Mumps"]
+                               ]
+
 
 class OriginalArticleContent(TypedDict):
     article_content: list
@@ -424,20 +430,10 @@ if __name__ == "__main__":
     content_optimisation_agent = start_llm(MODEL, CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(MODEL, WRITING_OPTIMISATION)
 
-    # loading the articles
-    with open(
-        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE1_TITLE}", "r"
-    ) as file:
-        article_1 = file.read()
-    with open(
-        f"{EXTRACTED_TEXT_DIRECTORY}{ARTICLE2_TITLE}", "r"
-    ) as file:
-        article_2 = file.read()
-
     # List with the articles to harmonise
     article_list = [
-        article_1,
-        article_2
+        "Rubella",
+        "How Dangerous Is Rubella?"
     ]
 
     processed_input_articles = concat_headers_to_content(article_list)
