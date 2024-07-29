@@ -29,6 +29,9 @@ MODELS = [
     "internlm/internlm2_5-7b-chat",
 ]
 
+LLAMA = "meta-llama/Meta-Llama-3-8B-Instruct"
+MISTRAL = "mistralai/Mistral-7B-Instruct-v0.3"
+
 MAX_NEW_TOKENS = 3000
 
 # Declaring node roles
@@ -60,7 +63,7 @@ def start_llm(model: str, role: str):
             model_prompter = prompt_tool(model)
             # starting an instance of the model using HuggingFaceEndpoint
             llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS[0], max_new_tokens=MAX_NEW_TOKENS
+                endpoint_url=LLAMA, max_new_tokens=MAX_NEW_TOKENS
             )
             return Llama(llm, model_prompter, role)
 
@@ -69,7 +72,7 @@ def start_llm(model: str, role: str):
             model_prompter = prompt_tool(model=model)
             # starting an instance of the model using HuggingFaceEndpoint
             llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS[2], max_new_tokens=MAX_NEW_TOKENS
+                endpoint_url=MISTRAL, max_new_tokens=MAX_NEW_TOKENS
             )
             return Mistral(llm, model_prompter, role)
 
@@ -101,6 +104,43 @@ class LLMInterface(ABC):
             keypoints: list input of the article keypoints to be compiled
         """
         pass
+
+    @abstractmethod
+    def optimise_content(self, keypoints):
+        """Abstract method for optimising the content in the keypoints extracted from previous steps based on the content guidelines from the playbook.
+
+        Args:
+            keypoints: list input of the article keypoints to have their content optimised
+        """
+        pass
+
+    @abstractmethod
+    def optimise_writing(self, content):
+        """Abstract method for optimising the writing in the optimised content from the previous based on the writing guidelines from the playbook.
+
+        Args:
+            content: string input of optimised content from the previous optimise_content_node
+        """
+        pass
+
+    @abstractmethod
+    def optimise_title(self, content):
+        """Abstract method for optimising the article's title based on the article's keypoints or optimised writing
+ 
+        Args:
+            content: string input of article's optimised writing or extracted keypoints
+        """
+        pass
+
+    @abstractmethod
+    def optimise_meta_desc(self, content):
+        """Abstract method for optimising the article's meta description based on the article's keypoints or optimised writing
+ 
+        Args:
+            content: string input of article's optimised writing or extracted keypoints
+        """
+        pass
+
 
 
 class Llama(LLMInterface):

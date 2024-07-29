@@ -19,7 +19,7 @@ os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 MODELS = ["mistral", "llama3"]
 
 # Declaring model to use
-MODEL = MODELS[1]
+MODEL = "llama3"
 
 # Declaring node roles
 RESEARCHER = "Researcher"
