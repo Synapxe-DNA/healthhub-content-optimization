@@ -77,8 +77,6 @@ class GraphState(TypedDict):
     # Agents
     llm_agents: dict[str, Any]
 
-    # Nodes
-
 
 def content_evaluation_rules_node(state: MessagesState) -> str:
     article_content = state.get("article_content", "")
