@@ -1,5 +1,3 @@
-
-
 # Pages
 
 This directory contains the components that are to be rendered as a page.

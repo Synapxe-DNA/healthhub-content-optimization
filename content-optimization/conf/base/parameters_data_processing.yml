@@ -297,8 +297,8 @@ word_count_cutoff: 90 # see word_count.ipynb for analysis on threshold
 # See: https://bitly.cx/IlwNV (Google Excel)
 whitelist:
   - 1445216
-  - 1444496 # has a duplicated URL
-  - 1446090 # has a duplicated URL
+  - 1444496 # has a duplicated URL but whitelisted
+  - 1446090 # has a duplicated URL but whitelisted
   - 1442907
   - 1443325
   - 1445019
@@ -316,3 +316,5 @@ whitelist:
   - 1444991
   - 1445000
   - 1445733
+  - 1445704 # flagged as recipe but whitelisted
+  - 1445707 # flagged as recipe but whitelisted

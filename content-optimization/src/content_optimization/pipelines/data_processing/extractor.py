@@ -832,26 +832,26 @@ class HTMLExtractor:
 
         return extracted_headers
 
-    def extract_alt_text_from_img(self) -> list[str]:
+    def extract_img_links_and_alt_text(self) -> list[tuple[str, str]]:
         """
-        Extracts the alternate text from images
+        Extracts the url and alternate text from images
 
         Returns:
-            list[str]:
-                A list of tuples containing the alternate text of images
+            list[tuple[str, str]]:
+                A list of tuples containing the image url and alternate text
         """
         # Note: In some articles, the img alternate text is the same as the header
-        extracted_alt_text = []
+        extracted_links_and_alt_text = []
         for img in self.soup.find_all("img"):
-            # Get value of alt attribute (treated as dictionary)
-            alt_text = img.get("alt", None)
-            # Skip text if None
-            if alt_text is None:
-                continue
+            # NOTE: Attributes are treated as dictionaries
+            # Get image link from src attribute
+            image_url = img.get("src", None)
+            # Get value of alt attribute
+            alt_text = img.get("alt", "")
             # Add text if not empty
             cleaned_text = self.clean_text(alt_text)
-            if cleaned_text != "":
-                extracted_alt_text.append(cleaned_text)
+            record = cleaned_text, image_url
+            extracted_links_and_alt_text.append(record)
 
         # Return unique elements
-        return list(set(extracted_alt_text))
+        return extracted_links_and_alt_text
