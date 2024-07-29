@@ -40,8 +40,8 @@ EVALUATOR = "Evaluator"
 EXPLAINER = "Explainer"
 RESEARCHER = "Researcher"
 COMPILER = "Compiler"
-META_DESC = "Meta description"
-TITLE = "Title"
+META_DESC = "Meta description optimisation"
+TITLE = "Title optimisation"
 CONTENT_OPTIMISATION = "Content optimisation"
 WRITING_OPTIMISATION = "Writing optimisation"
 
@@ -76,7 +76,7 @@ def start_llm(model: str, role: str):
             model_prompter = prompt_tool(model=model)
             # starting an instance of the model using HuggingFaceEndpoint
             llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS[2], max_new_tokens=MAX_NEW_TOKENS
+                endpoint_url=MISTRAL, max_new_tokens=MAX_NEW_TOKENS
             )
             return HuggingFace(llm, model_prompter, role)
 
@@ -194,6 +194,42 @@ class LLMInterface(ABC):
 
         Returns:
 
+        """
+        pass
+
+    @abstractmethod
+    def optimise_content(self, keypoints):
+        """Abstract method for optimising the content in the keypoints extracted from previous steps based on the content guidelines from the playbook.
+
+        Args:
+            keypoints: list input of the article keypoints to have their content optimised
+        """
+        pass
+
+    @abstractmethod
+    def optimise_writing(self, content):
+        """Abstract method for optimising the writing in the optimised content from the previous based on the writing guidelines from the playbook.
+
+        Args:
+            content: string input of optimised content from the previous optimise_content_node
+        """
+        pass
+
+    @abstractmethod
+    def optimise_title(self, content):
+        """Abstract method for optimising the article's title based on the article's keypoints or optimised writing
+
+        Args:
+            content: string input of article's optimised writing or extracted keypoints
+        """
+        pass
+
+    @abstractmethod
+    def optimise_meta_desc(self, content):
+        """Abstract method for optimising the article's meta description based on the article's keypoints or optimised writing
+
+        Args:
+            content: string input of article's optimised writing or extracted keypoints
         """
         pass
 
@@ -367,10 +403,10 @@ class HuggingFace(LLMInterface):
 
         return response
 
-    def optimise_writing(self, content: str):
+    def optimise_writing(self, content):
         if self.role != WRITING_OPTIMISATION:
             raise TypeError(
-                f"This node is a {self.role} node and cannot run optimise_content()"
+                f"This node is a {self.role} node and cannot run optimise_writing()"
             )
 
         prompt_t = PromptTemplate.from_template(
