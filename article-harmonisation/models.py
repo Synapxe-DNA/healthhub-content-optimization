@@ -1,4 +1,5 @@
 import os
+import re
 from abc import ABC, abstractmethod
 
 import dotenv
@@ -15,6 +16,7 @@ os.environ["LANGCHAIN_PROJECT"] = "Multi-agent Collaboration"
 MODELS = [
     # Meta Llama
     "meta-llama/Meta-Llama-3-8B-Instruct",
+    "meta-llama/Meta-Llama-3.1-8B-Instruct",
     # "NousResearch/Hermes-2-Pro-Llama-3-8B",
     # "meta-llama/Meta-Llama-3-70B-Instruct",
     # Phi 3
@@ -26,7 +28,18 @@ MODELS = [
     "internlm/internlm2_5-7b-chat",
 ]
 
+LLAMA = "meta-llama/Meta-Llama-3-8B-Instruct"
+MISTRAL = "mistralai/Mistral-7B-Instruct-v0.3"
+
 MAX_NEW_TOKENS = 3000
+
+# Declaring node roles
+RESEARCHER = "Researcher"
+COMPILER = "Compiler"
+META_DESC = "Meta description optimisation"
+TITLE = "Title optimisation"
+CONTENT_OPTIMISATION = "Content optimisation"
+WRITING_OPTIMISATION = "Writing optimisation"
 
 
 def start_llm(model: str, role: str):
@@ -49,9 +62,7 @@ def start_llm(model: str, role: str):
             # creating an instance of a LLMPrompt object based on the model used
             model_prompter = prompt_tool(model)
             # starting an instance of the model using HuggingFaceEndpoint
-            llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS[0], max_new_tokens=MAX_NEW_TOKENS
-            )
+            llm = HuggingFaceEndpoint(endpoint_url=LLAMA, max_new_tokens=MAX_NEW_TOKENS)
             return Llama(llm, model_prompter, role)
 
         case "mistral":
@@ -59,7 +70,7 @@ def start_llm(model: str, role: str):
             model_prompter = prompt_tool(model=model)
             # starting an instance of the model using HuggingFaceEndpoint
             llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS[2], max_new_tokens=MAX_NEW_TOKENS
+                endpoint_url=MISTRAL, max_new_tokens=MAX_NEW_TOKENS
             )
             return Mistral(llm, model_prompter, role)
 
@@ -92,6 +103,42 @@ class LLMInterface(ABC):
         """
         pass
 
+    @abstractmethod
+    def optimise_content(self, keypoints):
+        """Abstract method for optimising the content in the keypoints extracted from previous steps based on the content guidelines from the playbook.
+
+        Args:
+            keypoints: list input of the article keypoints to have their content optimised
+        """
+        pass
+
+    @abstractmethod
+    def optimise_writing(self, content):
+        """Abstract method for optimising the writing in the optimised content from the previous based on the writing guidelines from the playbook.
+
+        Args:
+            content: string input of optimised content from the previous optimise_content_node
+        """
+        pass
+
+    @abstractmethod
+    def optimise_title(self, content):
+        """Abstract method for optimising the article's title based on the article's keypoints or optimised writing
+
+        Args:
+            content: string input of article's optimised writing or extracted keypoints
+        """
+        pass
+
+    @abstractmethod
+    def optimise_meta_desc(self, content):
+        """Abstract method for optimising the article's meta description based on the article's keypoints or optimised writing
+
+        Args:
+            content: string input of article's optimised writing or extracted keypoints
+        """
+        pass
+
 
 class Llama(LLMInterface):
     """
@@ -114,9 +161,9 @@ class Llama(LLMInterface):
         """
         self.model = model
         self.prompt_template = prompt_template
-        self.role = role.lower()
+        self.role = role
 
-    def generate_keypoints(self, article: str):
+    def generate_keypoints(self, article: str, num):
         """
         Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
 
@@ -130,9 +177,9 @@ class Llama(LLMInterface):
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
         """
         # Raise an error if the role is not a researcher
-        if self.role != "researcher":
+        if self.role != RESEARCHER:
             raise TypeError(
-                f"This node is a {self.role} node and cannot run generate_text()"
+                f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
 
         prompt_t = PromptTemplate(
@@ -141,9 +188,10 @@ class Llama(LLMInterface):
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print("generating keypoints")
-        response = chain.invoke(article)
-        print("keypoints generated")
+        print(f"Processing keypoints for header {num}")
+        r = chain.invoke(article)
+        print(f"Keypoints processed for header {num}")
+        response = re.sub(" +", " ", r)
         return response
 
     def compile_points(self, keypoints: list = []):
@@ -167,7 +215,7 @@ class Llama(LLMInterface):
             )
 
         # Raise an error if the role is not a compiler
-        if self.role != "compiler":
+        if self.role != COMPILER:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run compile_points()"
             )
@@ -176,14 +224,80 @@ class Llama(LLMInterface):
             self.prompt_template.return_compiler_prompt()
         )
 
-        input_keypoints = "--START OF KEYPOINTS--"
-        for index in range(len(keypoints)):
-            input_keypoints += f"\n Article {index + 1} keypoints:\n"
-            input_keypoints += f"\n {keypoints[index]}\n"
-        input_keypoints += "\n --END OF KEYPOINTS--"
+        input_keypoints = ""
+        for article_index in range(len(keypoints)):
+            article_kp = keypoints[article_index]
+            input_keypoints += (
+                f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
+            )
 
         chain = prompt_t | self.model
-        response = chain.invoke({"Keypoints": input_keypoints})
+        print("Compiling keypoints for article harmonisation")
+        r = chain.invoke({"Keypoints": input_keypoints})
+        print("Keypoints compiled for article harmonisation")
+        response = re.sub(" +", " ", r)
+        return response
+
+    def optimise_content(self, keypoints: list = []):
+        if self.role != CONTENT_OPTIMISATION:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_content()"
+            )
+
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_content_prompt()
+        )
+
+        chain = prompt_t | self.model
+        print("Optimising article content")
+        r = chain.invoke({"Keypoints": keypoints})
+        print("Article content optimised")
+        response = re.sub(" +", " ", r)
+        return response
+
+    def optimise_writing(self, content):
+        if self.role != WRITING_OPTIMISATION:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_writing()"
+            )
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_writing_prompt()
+        )
+
+        chain = prompt_t | self.model
+        print("Optimising article writing")
+        response = chain.invoke({"Content": content})
+        print("Article writing optimised")
+        return response
+
+    def optimise_title(self, content):
+        if self.role != TITLE:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_title()"
+            )
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_title_prompt()
+        )
+
+        chain = prompt_t | self.model
+        print("Optimising article title")
+        response = chain.invoke({"Content": content})
+        print("Article title optimised")
+        return response
+
+    def optimise_meta_desc(self, content):
+        if self.role != META_DESC:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_meta_desc()"
+            )
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_meta_desc_prompt()
+        )
+
+        chain = prompt_t | self.model
+        print("Optimising article meta description")
+        response = chain.invoke({"Content": content})
+        print("Article meta description optimised")
         return response
 
 
@@ -225,9 +339,9 @@ class Mistral(LLMInterface):
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
         """
         # Raise an error if the role is not a researcher
-        if self.role != "researcher":
+        if self.role != RESEARCHER:
             raise TypeError(
-                f"This node is a {self.role} node and cannot run generate_text()"
+                f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
 
         prompt_t = PromptTemplate(
@@ -311,7 +425,7 @@ class InternLM(LLMInterface):
         # Raise an error if the role is not a researcher
         if self.role != "researcher":
             raise TypeError(
-                f"This node is a {self.role} node and cannot run generate_text()"
+                f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
 
         prompt_t = PromptTemplate(
@@ -342,11 +456,10 @@ class InternLM(LLMInterface):
             self.prompt_template.return_compiler_prompt()
         )
 
-        input_keypoints = "--START OF KEYPOINTS--"
+        input_keypoints = ""
         for index in range(len(keypoints)):
             input_keypoints += f"\n Article {index + 1} keypoints:\n"
             input_keypoints += f"\n {keypoints[index]}\n"
-        input_keypoints += "\n --END OF KEYPOINTS--"
 
         chain = prompt_t | self.model
         response = chain.invoke({"Keypoints": input_keypoints})
