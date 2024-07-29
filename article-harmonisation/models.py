@@ -1,4 +1,5 @@
 import os
+import re
 from abc import ABC, abstractmethod
 
 import dotenv
@@ -6,7 +7,6 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from prompts import prompt_tool
-import re
 
 dotenv.load_dotenv()
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY", "")
@@ -17,7 +17,6 @@ MODELS = [
     # Meta Llama
     "meta-llama/Meta-Llama-3-8B-Instruct",
     "meta-llama/Meta-Llama-3.1-8B-Instruct",
-
     # "NousResearch/Hermes-2-Pro-Llama-3-8B",
     # "meta-llama/Meta-Llama-3-70B-Instruct",
     # Phi 3
@@ -42,6 +41,7 @@ TITLE = "Title optimisation"
 CONTENT_OPTIMISATION = "Content optimisation"
 WRITING_OPTIMISATION = "Writing optimisation"
 
+
 def start_llm(model: str, role: str):
     """
     Starts up and returns an instance of a specific model type
@@ -62,9 +62,7 @@ def start_llm(model: str, role: str):
             # creating an instance of a LLMPrompt object based on the model used
             model_prompter = prompt_tool(model)
             # starting an instance of the model using HuggingFaceEndpoint
-            llm = HuggingFaceEndpoint(
-                endpoint_url=LLAMA, max_new_tokens=MAX_NEW_TOKENS
-            )
+            llm = HuggingFaceEndpoint(endpoint_url=LLAMA, max_new_tokens=MAX_NEW_TOKENS)
             return Llama(llm, model_prompter, role)
 
         case "mistral":
@@ -126,7 +124,7 @@ class LLMInterface(ABC):
     @abstractmethod
     def optimise_title(self, content):
         """Abstract method for optimising the article's title based on the article's keypoints or optimised writing
- 
+
         Args:
             content: string input of article's optimised writing or extracted keypoints
         """
@@ -135,12 +133,11 @@ class LLMInterface(ABC):
     @abstractmethod
     def optimise_meta_desc(self, content):
         """Abstract method for optimising the article's meta description based on the article's keypoints or optimised writing
- 
+
         Args:
             content: string input of article's optimised writing or extracted keypoints
         """
         pass
-
 
 
 class Llama(LLMInterface):
@@ -230,22 +227,23 @@ class Llama(LLMInterface):
         input_keypoints = ""
         for article_index in range(len(keypoints)):
             article_kp = keypoints[article_index]
-            input_keypoints += f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
+            input_keypoints += (
+                f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
+            )
 
-        
         chain = prompt_t | self.model
         print("Compiling keypoints for article harmonisation")
         r = chain.invoke({"Keypoints": input_keypoints})
         print("Keypoints compiled for article harmonisation")
         response = re.sub(" +", " ", r)
         return response
-    
+
     def optimise_content(self, keypoints: list = []):
         if self.role != CONTENT_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
-        
+
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_content_prompt()
         )
@@ -256,7 +254,6 @@ class Llama(LLMInterface):
         print("Article content optimised")
         response = re.sub(" +", " ", r)
         return response
-    
 
     def optimise_writing(self, content):
         if self.role != WRITING_OPTIMISATION:
@@ -272,7 +269,7 @@ class Llama(LLMInterface):
         response = chain.invoke({"Content": content})
         print("Article writing optimised")
         return response
-    
+
     def optimise_title(self, content):
         if self.role != TITLE:
             raise TypeError(
@@ -287,7 +284,7 @@ class Llama(LLMInterface):
         response = chain.invoke({"Content": content})
         print("Article title optimised")
         return response
-    
+
     def optimise_meta_desc(self, content):
         if self.role != META_DESC:
             raise TypeError(
@@ -302,6 +299,7 @@ class Llama(LLMInterface):
         response = chain.invoke({"Content": content})
         print("Article meta description optimised")
         return response
+
 
 class Mistral(LLMInterface):
     """
