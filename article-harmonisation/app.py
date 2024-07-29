@@ -5,11 +5,11 @@ from io import StringIO
 import streamlit as st
 from harmonisation import (
     COMPILER,
-    CONTENT_GUIDELINES,
+    CONTENT_OPTIMISATION,
     META_DESC,
     RESEARCHER,
     TITLE,
-    WRITING_GUIDELINES,
+    WRITING_OPTIMISATION,
     execute_graph,
     workflow,
 )
@@ -28,8 +28,8 @@ researcher_agent = start_llm(MODEL, RESEARCHER)
 compiler_agent = start_llm(MODEL, COMPILER)
 meta_desc_agent = start_llm(MODEL, META_DESC)
 title_agent = start_llm(MODEL, TITLE)
-content_guidelines_agent = start_llm(MODEL, CONTENT_GUIDELINES)
-writing_guidelines_agent = start_llm(MODEL, WRITING_GUIDELINES)
+content_guidelines_agent = start_llm(MODEL, CONTENT_OPTIMISATION)
+writing_guidelines_agent = start_llm(MODEL, WRITING_OPTIMISATION)
 
 # Set Page Config and Title for Streamlit
 st.set_page_config(page_title="Article Harmonisation", layout="wide")

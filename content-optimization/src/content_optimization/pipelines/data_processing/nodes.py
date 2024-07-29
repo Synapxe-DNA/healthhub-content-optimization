@@ -173,7 +173,7 @@ def extract_data(
         df["extracted_tables"] = None
         df["extracted_links"] = None
         df["extracted_headers"] = None
-        df["extracted_img_alt_text"] = None
+        df["extracted_images"] = None
         df["extracted_content_body"] = None
 
         for index, row in df.iterrows():
@@ -204,7 +204,7 @@ def extract_data(
             extracted_tables = extractor.extract_tables()
             extracted_links = extractor.extract_links()
             extracted_headers = extractor.extract_headers()
-            extracted_img_alt_text = extractor.extract_alt_text_from_img()
+            extracted_img_alt_text = extractor.extract_img_links_and_alt_text()
             extracted_content_body = extractor.extract_text()
 
             # Store extracted data into the dataframe
@@ -214,7 +214,7 @@ def extract_data(
             df.at[index, "extracted_tables"] = extracted_tables
             df.at[index, "extracted_links"] = extracted_links
             df.at[index, "extracted_headers"] = extracted_headers
-            df.at[index, "extracted_img_alt_text"] = extracted_img_alt_text
+            df.at[index, "extracted_images"] = extracted_img_alt_text
             df.at[index, "extracted_content_body"] = extracted_content_body
 
             # Substitute forbidden characters for filenames with _
@@ -246,7 +246,7 @@ def merge_data(all_contents_extracted: dict[str, Callable[[], Any]]) -> pd.DataF
     Parameters:
         all_contents_extracted (dict[str, Callable[[], Any]]):
             A dictionary containing the `partitions.PartitionedDataset`
-            where the values loads the parquet data as `pandas.DataFrame`.
+            where the values load the parquet data as `pandas.DataFrame`.
 
     Returns:
         pd.DataFrame: The merged dataframe.

@@ -9,6 +9,10 @@ missing_contents:
   path: data/01_raw/missing_contents
   dataset: text.TextDataset
   filename_suffix: ".txt"
+  fs_args:
+    open_args_load:
+      mode: "rb"
+      encoding: "utf-8"
 
 all_contents_standardized:
   type: partitions.PartitionedDataset

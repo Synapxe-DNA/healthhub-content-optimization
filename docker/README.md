@@ -1,5 +1,3 @@
-
-
 # Docker for Healthhub Content Optimization
 
 Docker is currently used to host a MongoDB instance that is used for local development.
@@ -11,7 +9,7 @@ Docker is currently used to host a MongoDB instance that is used for local devel
 1. Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop/) on your local machine.
 2. Started Docker Desktop.
 3. Create an environment file named `dockercompose.env.local` in this directory, and populate the environment variables
-according to `dockercompose.env.sample`.
+   according to `dockercompose.env.sample`.
 
 > [!NOTE]
 > The environment variables set will determine your login credentials to the Mongo DB instance.
