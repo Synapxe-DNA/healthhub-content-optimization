@@ -2,23 +2,27 @@ import os
 import re
 from abc import ABC, abstractmethod
 
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from prompts import prompt_tool
+from langchain_openai import AzureOpenAI
 
 load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 
-credential = DefaultAzureCredential()
+azure_credential = DefaultAzureCredential()
 AZURE_COGNITIVE_SERVICES = os.getenv("AZURE_COGNITIVE_SERVICES", "")
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "")
-AZURE_OPENAI_API_TYPE = os.getenv("AZURE_OPENAI_API_TYPE", "")
-AZURE_OPENAI_AD_TOKEN = credential.get_token(AZURE_COGNITIVE_SERVICES).token
-os.environ["AZURE_OPENAI_API_TYPE"] = AZURE_OPENAI_API_TYPE
-os.environ["AZURE_OPENAI_AD_TOKEN"] = AZURE_OPENAI_AD_TOKEN
+AZURE_OPENAI_API_ENDPOINT = os.getenv("AZURE_OPENAI_API_ENDPOINT", "")
+DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME", "")
+os.environ["AZURE_OPENAI_API_ENDPOINT"] = AZURE_OPENAI_API_ENDPOINT
+AZURE_AD_TOKEN_PROVIDER = get_bearer_token_provider(
+    azure_credential,
+    AZURE_COGNITIVE_SERVICES
+)
 
 MODELS = [
     # Meta Llama
@@ -60,7 +64,6 @@ def start_llm(model: str, role: str):
     Raises:
         ValueError: if the input model is not supported, yet
     """
-
     match model.lower():
         case "llama3":
             # creating an instance of a LLMPrompt object based on the model used
@@ -87,18 +90,35 @@ def start_llm(model: str, role: str):
             )
             return HuggingFace(llm, model_prompter, role)
 
-        # TODO: Complete Azure OpenAI model class and setup
-        # case "azure-openai":
-        #     model_prompter = prompt_tool(model=model)
-        #     llm = AzureOpenAI(
-        #         api_version=AZURE_OPENAI_API_VERSION,
-        #         model_name="gpt-3.5-turbo-instruct",
-        #         azure_ad_token=AZURE_OPENAI_AD_TOKEN,
-        #         max_tokens=MAX_NEW_TOKENS,
-        #     )
+        case "azure":
+            model_prompter = prompt_tool(model=model)
+            llm = AzureOpenAI(
+                azure_ad_token_provider=AZURE_AD_TOKEN_PROVIDER,
+                azure_endpoint=AZURE_OPENAI_API_ENDPOINT,
+                batch_size=20,
+                best_of=1,
+                cache=None,
+                callbacks=None,
+                custom_get_token_ids=None,
+                deployment_name=DEPLOYMENT_NAME,
+                frequency_penalty=0,
+                logprobs=None,
+                max_retries=2,
+                max_tokens=MAX_NEW_TOKENS,
+                model_name="gpt-3.5-turbo-0301",
+                n=1,
+                openai_api_version=AZURE_OPENAI_API_VERSION,
+                request_timeout=None,
+                seed=42,
+                streaming=False,
+                temperature=0,
+                top_p=1,
+                verbose=True,
+            )
+            return llm
 
         case _:
-            raise ValueError(f"You entered {model}, which is not a support model type")
+            raise ValueError(f"You have entered {model}, which is not a supported model type")
 
 
 class LLMInterface(ABC):
@@ -402,6 +422,36 @@ class HuggingFace(LLMInterface):
 
         return response
 
+    def optimise_title(self, content):
+        if self.role != TITLE:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_title()"
+            )
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_title_prompt()
+        )
+
+        chain = prompt_t | self.model
+        print("Optimising article title")
+        response = chain.invoke({"Content": content})
+        print("Article title optimised")
+        return response
+
+    def optimise_meta_desc(self, content):
+        if self.role != META_DESC:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_meta_desc()"
+            )
+        prompt_t = PromptTemplate.from_template(
+            self.prompt_template.return_meta_desc_prompt()
+        )
+
+        chain = prompt_t | self.model
+        print("Optimising article meta description")
+        response = chain.invoke({"Content": content})
+        print("Article meta description optimised")
+        return response
+
 
 class Azure(LLMInterface):
     def __init__(self, model, prompt_template, role):
@@ -571,3 +621,8 @@ class Azure(LLMInterface):
         print("Article writing optimised")
 
         return response
+
+
+if __name__ == "__main__":
+    llm = start_llm(model="azure", role="test")
+    print(llm.invoke("How are you today?"))
