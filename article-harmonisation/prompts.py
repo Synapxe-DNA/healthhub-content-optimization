@@ -1228,45 +1228,45 @@ class InternLMPrompts(LLMPrompt):
             Steps to Follow:
             1.  Identify the Meta Description:
             -   What is the meta description of the article?
-    
+
             2.  Analyze the Meta Description:
             -   What main topic or benefit does the meta description convey?
             -   Is the meta description clear, concise, and engaging?
-    
+
             3.  Review the Content:
             -   Read the entire article carefully.
             -   Summarize the main points and key themes of the article.
             -   Note any specific sections or statements that align with or diverge from the meta description.
-    
+
             4.  Compare Meta Description and Content:
             -   Does the content directly address the main topic or benefit stated in the meta description?
             -   Are the main themes and messages of the article consistent with the expectations set by the meta description?
             -   Identify any significant information in the article that is not reflected in the meta description and vice versa.
-    
+
             5.  Evaluate Relevance:
             -   Provide a detailed explanation of how well the meta description reflects the content.
             -   Use specific examples or excerpts from the article to support your evaluation.
             -   Highlight any discrepancies or misalignments between the meta description and the content.
-    
+
             6.  Suggestions for Improvement:
             -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
             -   Explain why the suggested descriptions are more appropriate based on the article's content.
-    
+
             Example Analysis:
             Meta Description: "Learn 10 effective time management tips to boost your productivity and achieve your goals."
-    
+
             Content Summary:
             -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
-    
+
             Comparison and Evaluation:
             -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
             -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
             -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
             -   The relevance score is high due to the direct alignment of content with the meta description.
-    
+
             Suggested Meta Description (if needed):
             -   "Discover 10 essential time management strategies to enhance productivity and reach your goals."
-    
+
             Instructions:
             -   Use the steps provided to evaluate the relevance of the article's meta description.
             -   Write a brief report based on your findings, including specific examples and any suggested improvements.
