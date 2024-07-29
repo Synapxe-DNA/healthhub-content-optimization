@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
-from prompts import prompt_tool
 from langchain_openai import AzureOpenAI
+from prompts import prompt_tool
 
 load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
@@ -20,8 +20,7 @@ AZURE_OPENAI_API_ENDPOINT = os.getenv("AZURE_OPENAI_API_ENDPOINT", "")
 DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME", "")
 os.environ["AZURE_OPENAI_API_ENDPOINT"] = AZURE_OPENAI_API_ENDPOINT
 AZURE_AD_TOKEN_PROVIDER = get_bearer_token_provider(
-    azure_credential,
-    AZURE_COGNITIVE_SERVICES
+    azure_credential, AZURE_COGNITIVE_SERVICES
 )
 
 MODELS = [
@@ -118,7 +117,9 @@ def start_llm(model: str, role: str):
             return llm
 
         case _:
-            raise ValueError(f"You have entered {model}, which is not a supported model type")
+            raise ValueError(
+                f"You have entered {model}, which is not a supported model type"
+            )
 
 
 class LLMInterface(ABC):
