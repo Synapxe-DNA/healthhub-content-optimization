@@ -3,7 +3,7 @@ import os
 import pyarrow.parquet as pq
 
 ROOT = os.getcwd()
-MERGED_DATA_DIRECTORY = f"{ROOT}/article-harmonisation/data/merged_data.parquet"
+MERGED_DATA_DIRECTORY = f"./data/merged_data.parquet"
 
 CONTENT_BODY = "extracted_content_body"
 EXTRACTED_HEADERS = "extracted_headers"
