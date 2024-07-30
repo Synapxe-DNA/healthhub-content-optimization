@@ -2,9 +2,10 @@ import os
 from typing import Any, Optional, TypedDict
 
 import phoenix as px
+from agents.enums import MODELS, ROLES
+from agents.models import LLMInterface, start_llm
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
-from models import LLMInterface, start_llm
 from phoenix.trace.langchain import LangChainInstrumentor
 from utils.checkers import print_checks
 from utils.headers import concat_headers_to_content
@@ -14,25 +15,14 @@ load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 
-# Available models configured to the project
-MODELS = ["mistral", "llama3"]
+# Declaring maximum new tokens
+MAX_NEW_TOKENS = os.getenv("MAX_NEW_TOKENS", 3000)
 
 # Declaring model to use
-MODEL = MODELS[0]
-
-# Declaring node roles
-RESEARCHER = "Researcher"
-COMPILER = "Compiler"
-META_DESC = "Meta description optimisation"
-TITLE = "Title optimisation"
-CONTENT_OPTIMISATION = "Content optimisation"
-WRITING_OPTIMISATION = "Writing optimisation"
-
-# Declaring maximum new tokens
-MAX_NEW_TOKENS = 3000
+MODEL = MODELS("llama3").name
 
 
-# Declaring directorys
+# Declaring directories
 ROOT = os.getcwd()
 EXTRACTED_TEXT_DIRECTORY = (
     f"{ROOT}/content-optimization/data/02_intermediate/all_extracted_text/"
@@ -106,7 +96,7 @@ class GraphState(TypedDict):
     optimised_article_output: OptimisedArticleOutput
     # previous_node: Optional[str]
     user_flags: UserFlagsForOptimisation
-    # look into converting for a optimisation list
+    # look into converting for an optimisation list
     llm_agents: LLMAgents
 
 
@@ -414,7 +404,6 @@ workflow.add_edge(
 
 def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]:
     # Set up LLM tracing session
-    px.launch_app()
     LangChainInstrumentor().instrument()
 
     # Run LangGraph Application
@@ -428,19 +417,17 @@ def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]
     # timestr = time.strftime("%Y%m%d-%H%M%S")
     # trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
 
-    px.close_app()
-
     return result
 
 
 if __name__ == "__main__":
     # starting up the respective llm agents
-    researcher_agent = start_llm(MODEL, RESEARCHER)
-    compiler_agent = start_llm(MODEL, COMPILER)
-    meta_desc_optimisation_agent = start_llm(MODEL, META_DESC)
-    title_optimisation_agent = start_llm(MODEL, TITLE)
-    content_optimisation_agent = start_llm(MODEL, CONTENT_OPTIMISATION)
-    writing_optimisation_agent = start_llm(MODEL, WRITING_OPTIMISATION)
+    researcher_agent = start_llm(MODEL, ROLES.RESEARCHER)
+    compiler_agent = start_llm(MODEL, ROLES.COMPILER)
+    meta_desc_optimisation_agent = start_llm(MODEL, ROLES.META_DESC)
+    title_optimisation_agent = start_llm(MODEL, ROLES.TITLE)
+    content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
+    writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
 
     # List with the articles to harmonise
     article_list = ["Rubella", "How Dangerous Is Rubella?"]
