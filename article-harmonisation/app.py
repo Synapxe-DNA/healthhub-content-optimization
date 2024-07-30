@@ -4,32 +4,28 @@ from io import StringIO
 
 import streamlit as st
 from harmonisation import (
-    COMPILER,
-    CONTENT_OPTIMISATION,
-    META_DESC,
-    RESEARCHER,
-    TITLE,
-    WRITING_OPTIMISATION,
     execute_graph,
     workflow,
 )
-from models import start_llm
+from agents.enums import MODELS, ROLES
+from agents.models import start_llm
 from utils.evaluations import calculate_readability
+from utils.headers import concat_headers_to_content
 
 os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 
-# Available models configured to the project
-MODELS = ["mistral", "llama3"]
-
 # Declaring model to use
-MODEL = MODELS[1]
+MODEL = MODELS("llama3").name
 
-researcher_agent = start_llm(MODEL, RESEARCHER)
-compiler_agent = start_llm(MODEL, COMPILER)
-meta_desc_agent = start_llm(MODEL, META_DESC)
-title_agent = start_llm(MODEL, TITLE)
-content_guidelines_agent = start_llm(MODEL, CONTENT_OPTIMISATION)
-writing_guidelines_agent = start_llm(MODEL, WRITING_OPTIMISATION)
+# Define Agents
+researcher_agent = start_llm(MODEL, ROLES.RESEARCHER)
+compiler_agent = start_llm(MODEL, ROLES.COMPILER)
+meta_desc_agent = start_llm(MODEL, ROLES.META_DESC)
+title_agent = start_llm(MODEL, ROLES.TITLE)
+content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
+writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
+title_optimisation_agent = start_llm(MODEL, ROLES.TITLE)
+meta_desc_optimisation_agent = start_llm(MODEL, ROLES.META_DESC)
 
 # Set Page Config and Title for Streamlit
 st.set_page_config(page_title="Article Harmonisation", layout="wide")
@@ -67,19 +63,27 @@ st.divider()
 
 # Run AI Agent and Display Output
 if texts:
+    processed_input_articles = concat_headers_to_content(texts)
+    
     inputs = {
-        "article_content": texts,
-        "keypoints": [],
-        "article_researcher_counter": 0,
-        "flag_for_content_optimisation": True,
-        "flag_for_title_optimisation": False,
-        "flag_for_meta_desc_optimisation": False,
-        "researcher_agent": researcher_agent,
-        "compiler_agent": compiler_agent,
-        "meta_desc_agent": meta_desc_agent,
-        "title_agent": title_agent,
-        "content_guidelines_agent": content_guidelines_agent,
-        "writing_guidelines_agent": writing_guidelines_agent,
+        "original_article_content": {"article_content": processed_input_articles},
+        "optimised_article_output": {
+            "researcher_keypoints": [],
+            "article_researcher_counter": 0,
+        },
+        "user_flags": {
+            "flag_for_content_optimisation": True,
+            "flag_for_title_optimisation": True,
+            "flag_for_meta_desc_optimisation": True,
+        },
+        "llm_agents": {
+            "researcher_agent": researcher_agent,
+            "compiler_agent": compiler_agent,
+            "content_optimisation_agent": content_optimisation_agent,
+            "writing_optimisation_agent": writing_optimisation_agent,
+            "title_optimisation_agent": title_optimisation_agent,
+            "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
+        },
     }
 
     result = execute_graph(workflow=workflow, input=inputs)
