@@ -1,46 +1,26 @@
 import os
+from enum import Enum
 from typing import Annotated, Any, TypedDict
 
 import pandas as pd
+from agents.models import start_llm
 from dotenv import load_dotenv
 from langgraph.graph import END, START, MessagesState, StateGraph
-from models import start_llm
 from phoenix.trace.langchain import LangChainInstrumentor
 from utils.evaluations import calculate_readability
+from utils.reducers import merge_dict
+from agents.enums import MODELS, ROLES
 
 # Setting the environment for HuggingFaceHub
 load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 
-# Available models configured to the project
-MODELS = ["mistral", "llama3"]
+# Declaring maximum new tokens
+MAX_NEW_TOKENS = os.getenv("MAX_NEW_TOKENS", 3000)
 
 # Declaring model to use
-MODEL = MODELS[0]
-
-# Declaring node roles
-EVALUATOR = "Evaluator"
-EXPLAINER = "Explainer"
-
-# Declaring maximum new tokens
-MAX_NEW_TOKENS = 3000
-
-
-def merge_dict(dict1, dict2):
-    for key, val in dict1.items():
-        if isinstance(val, dict):
-            if key in dict2 and type(dict2[key] == dict):
-                merge_dict(dict1[key], dict2[key])
-        else:
-            if key in dict2:
-                dict1[key] = dict2[key]
-
-    for key, val in dict2.items():
-        if key not in dict1:
-            dict1[key] = val
-
-    return dict1
+MODEL = MODELS("llama3").name
 
 
 class GraphState(TypedDict):
@@ -247,19 +227,19 @@ graph = workflow.compile()
 if __name__ == "__main__":
     # Save Graph
     img = graph.get_graph(xray=True).draw_mermaid_png()
-    with open("checks.png", "wb") as f:
+    with open("./docs/images/optimisation_checks_flow.png", "wb") as f:
         f.write(img)
 
     # Start LLM
-    evaluation_agent = start_llm(MODEL, EVALUATOR)
-    explanation_agent = start_llm(MODEL, EXPLAINER)
+    evaluation_agent = start_llm(MODEL, ROLES.EVALUATOR)
+    explanation_agent = start_llm(MODEL, ROLES.EXPLAINER)
 
     LangChainInstrumentor().instrument()
 
     # Load data from merged_data.parquet and randomly sample 30 rows
-    df = pd.read_parquet("./data/merged_data.parquet")
+    df = pd.read_parquet("data/merged_data.parquet")
     df_keep = df[~df["to_remove"]]
-    df_sample = df_keep.sample(n=30, replace=False, random_state=42)
+    df_sample = df_keep.sample(n=1, replace=False, random_state=42)
     rows = df_sample.shape[0]
     print(rows)
 
@@ -295,4 +275,4 @@ if __name__ == "__main__":
         records.append(response)
 
     df_save = pd.DataFrame.from_records(records)
-    df_save.to_parquet("./data/agentic_response.parquet")
+    df_save.to_parquet("./data/optimization_checks/agentic_response.parquet")
