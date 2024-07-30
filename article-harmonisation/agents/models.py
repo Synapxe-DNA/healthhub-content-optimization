@@ -4,49 +4,26 @@ from abc import ABC, abstractmethod
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from dotenv import load_dotenv
+from .enums import MODELS, ROLES
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_openai import AzureOpenAI
-from prompts import prompt_tool
+from .prompts import prompt_tool
 
 load_dotenv()
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
+MAX_NEW_TOKENS = os.getenv("MAX_NEW_TOKENS", 3000)
 
 azure_credential = DefaultAzureCredential()
 AZURE_COGNITIVE_SERVICES = os.getenv("AZURE_COGNITIVE_SERVICES", "")
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "")
 AZURE_OPENAI_API_ENDPOINT = os.getenv("AZURE_OPENAI_API_ENDPOINT", "")
-DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME", "")
+AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME", "")
 os.environ["AZURE_OPENAI_API_ENDPOINT"] = AZURE_OPENAI_API_ENDPOINT
 AZURE_AD_TOKEN_PROVIDER = get_bearer_token_provider(
     azure_credential, AZURE_COGNITIVE_SERVICES
 )
-
-MODELS = [
-    # Meta Llama
-    "meta-llama/Meta-Llama-3-8B-Instruct",
-    # "meta-llama/Meta-Llama-3.1-8B-Instruct",
-    # Phi 3
-    "microsoft/Phi-3-mini-128k-instruct",
-    # Mistral
-    "mistralai/Mistral-7B-Instruct-v0.3",
-    # "NousResearch/Hermes-2-Pro-Mistral-7B",
-    # InternLM
-    "internlm/internlm2_5-7b-chat",
-]
-
-MAX_NEW_TOKENS = 5000
-
-# Declaring node roles
-EVALUATOR = "Evaluator"
-EXPLAINER = "Explainer"
-RESEARCHER = "Researcher"
-COMPILER = "Compiler"
-META_DESC = "Meta description optimisation"
-TITLE = "Title optimisation"
-CONTENT_OPTIMISATION = "Content optimisation"
-WRITING_OPTIMISATION = "Writing optimisation"
 
 
 def start_llm(model: str, role: str):
@@ -63,13 +40,15 @@ def start_llm(model: str, role: str):
     Raises:
         ValueError: if the input model is not supported, yet
     """
-    match model.lower():
+    model = model.lower()
+
+    match model:
         case "llama3":
             # creating an instance of a LLMPrompt object based on the model used
             model_prompter = prompt_tool(model)
             # starting an instance of the model using HuggingFaceEndpoint
             llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS[0], max_new_tokens=MAX_NEW_TOKENS
+                endpoint_url=MODELS.llama3.value, max_new_tokens=MAX_NEW_TOKENS
             )
             return HuggingFace(llm, model_prompter, role)
 
@@ -78,14 +57,7 @@ def start_llm(model: str, role: str):
             model_prompter = prompt_tool(model=model)
             # starting an instance of the model using HuggingFaceEndpoint
             llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS[2], max_new_tokens=MAX_NEW_TOKENS
-            )
-            return HuggingFace(llm, model_prompter, role)
-
-        case "internlm":
-            model_prompter = prompt_tool(model=model)
-            llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS[3], max_new_tokens=MAX_NEW_TOKENS
+                endpoint_url=MODELS.mistral.value, max_new_tokens=MAX_NEW_TOKENS
             )
             return HuggingFace(llm, model_prompter, role)
 
@@ -99,7 +71,7 @@ def start_llm(model: str, role: str):
                 cache=None,
                 callbacks=None,
                 custom_get_token_ids=None,
-                deployment_name=DEPLOYMENT_NAME,
+                deployment_name=AZURE_DEPLOYMENT_NAME,
                 frequency_penalty=0,
                 logprobs=None,
                 max_retries=2,
@@ -325,7 +297,7 @@ class HuggingFace(LLMInterface):
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
         """
         # Raise an error if the role is not a researcher
-        if self.role != RESEARCHER:
+        if self.role != ROLES.RESEARCHER:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
@@ -364,7 +336,7 @@ class HuggingFace(LLMInterface):
             )
 
         # Raise an error if the role is not a compiler
-        if self.role != COMPILER:
+        if self.role != ROLES.COMPILER:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run compile_points()"
             )
@@ -389,7 +361,7 @@ class HuggingFace(LLMInterface):
         return response
 
     def optimise_content(self, keypoints: list = []):
-        if self.role != CONTENT_OPTIMISATION:
+        if self.role != ROLES.CONTENT_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
@@ -407,7 +379,7 @@ class HuggingFace(LLMInterface):
         return response
 
     def optimise_writing(self, content):
-        if self.role != WRITING_OPTIMISATION:
+        if self.role != ROLES.WRITING_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_writing()"
             )
@@ -424,7 +396,7 @@ class HuggingFace(LLMInterface):
         return response
 
     def optimise_title(self, content):
-        if self.role != TITLE:
+        if self.role != ROLES.TITLE:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_title()"
             )
@@ -439,7 +411,7 @@ class HuggingFace(LLMInterface):
         return response
 
     def optimise_meta_desc(self, content):
-        if self.role != META_DESC:
+        if self.role != ROLES.META_DESC:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_meta_desc()"
             )
@@ -525,7 +497,7 @@ class Azure(LLMInterface):
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
         """
         # Raise an error if the role is not a researcher
-        if self.role != RESEARCHER:
+        if self.role != ROLES.RESEARCHER:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
@@ -564,7 +536,7 @@ class Azure(LLMInterface):
             )
 
         # Raise an error if the role is not a compiler
-        if self.role != COMPILER:
+        if self.role != ROLES.COMPILER:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run compile_points()"
             )
@@ -589,7 +561,7 @@ class Azure(LLMInterface):
         return response
 
     def optimise_content(self, keypoints: list = []):
-        if self.role != CONTENT_OPTIMISATION:
+        if self.role != ROLES.CONTENT_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
@@ -607,7 +579,7 @@ class Azure(LLMInterface):
         return response
 
     def optimise_writing(self, content: str):
-        if self.role != WRITING_OPTIMISATION:
+        if self.role != ROLES.WRITING_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
@@ -625,5 +597,5 @@ class Azure(LLMInterface):
 
 
 if __name__ == "__main__":
-    llm = start_llm(model="azure", role="test")
+    llm = start_llm(model="llama3", role="test")
     print(llm.invoke("How are you today?"))
