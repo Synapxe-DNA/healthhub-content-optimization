@@ -1,4 +1,5 @@
 import os
+
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from dotenv import load_dotenv
 from openai import AzureOpenAI
@@ -8,7 +9,7 @@ load_dotenv()
 AZURE_OPENAI_SERVICE = os.getenv("AZURE_OPENAI_SERVICE", "")
 AZURE_COGNITIVE_SERVICES = os.getenv("AZURE_COGNITIVE_SERVICES", "")
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "")
-DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME", "")
+AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME", "")
 
 azure_credential = DefaultAzureCredential()
 token_provider = get_bearer_token_provider(
@@ -26,7 +27,7 @@ client = AzureOpenAI(
 print("Sending a test completion job")
 prompt = "Write a tagline for an ice cream shop. "
 response = client.chat.completions.create(
-    model=DEPLOYMENT_NAME,
+    model=AZURE_DEPLOYMENT_NAME,
     messages=[{"role": "system", "content": prompt}],
     temperature=1,
     max_tokens=10,
