@@ -7,7 +7,7 @@ from agents.models import start_llm
 from config import settings
 from harmonisation import execute_graph, workflow
 from utils.evaluations import calculate_readability
-from utils.headers import concat_headers_to_content
+from utils.formatters import concat_headers_to_content
 
 CONFIG = settings
 
