@@ -1,22 +1,16 @@
 import os
 from typing import Any, Optional, TypedDict
 
-import phoenix as px
 from agents.enums import MODELS, ROLES
 from agents.models import LLMInterface, start_llm
-from dotenv import load_dotenv
+from config import settings
 from langgraph.graph import END, StateGraph
 from phoenix.trace.langchain import LangChainInstrumentor
 from utils.checkers import print_checks
 from utils.headers import concat_headers_to_content
 
-# Setting the environment for HuggingFaceHub
-load_dotenv()
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
-os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
-
 # Declaring maximum new tokens
-MAX_NEW_TOKENS = os.getenv("MAX_NEW_TOKENS", 3000)
+MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
 MODEL = MODELS("llama3").name
