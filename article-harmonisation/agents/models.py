@@ -3,10 +3,9 @@ from abc import ABC, abstractmethod
 
 from config import settings
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_openai import AzureChatOpenAI
-
 
 from .enums import MODELS, ROLES
 from .prompts import prompt_tool
@@ -480,9 +479,9 @@ class Azure(LLMInterface):
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
         """
         if self.role != ROLES.RESEARCHER:
-                raise TypeError(
-                    f"This node is a {self.role} node and cannot run generate_keypoints()"
-                )
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run generate_keypoints()"
+            )
 
         prompt_t = ChatPromptTemplate.from_messages(
             self.prompt_template.return_researcher_prompt(),
@@ -493,9 +492,8 @@ class Azure(LLMInterface):
         res = chain.invoke({"Article": article})
         print(f"Keypoints processed for header {num}")
         response = re.sub(" +", " ", res)
-    
-        return response
 
+        return response
 
     def compile_points(self, keypoints: list = []):
         """
@@ -522,7 +520,7 @@ class Azure(LLMInterface):
             raise TypeError(
                 f"This node is a {self.role} node and cannot run compile_points()"
             )
-        
+
         prompt_t = ChatPromptTemplate.from_messages(
             self.prompt_template.return_compiler_prompt()
         )
@@ -577,7 +575,7 @@ class Azure(LLMInterface):
         print("Article writing optimised")
 
         return response
-    
+
     def optimise_title(self, content):
         if self.role != ROLES.TITLE:
             raise TypeError(
@@ -607,8 +605,6 @@ class Azure(LLMInterface):
         response = chain.invoke({"Content": content})
         print("Article meta description optimised")
         return response
-
-
 
 
 if __name__ == "__main__":

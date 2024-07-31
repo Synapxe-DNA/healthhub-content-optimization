@@ -400,9 +400,9 @@ if __name__ == "__main__":
 
     # List with the articles to harmonise
     article_list = [
-        # "Rubella", 
+        # "Rubella",
         "How Dangerous Is Rubella?"
-        ]
+    ]
 
     processed_input_articles = concat_headers_to_content(article_list)
 
