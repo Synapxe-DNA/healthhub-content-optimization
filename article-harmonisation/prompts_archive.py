@@ -124,4 +124,3 @@ class Llama_archived_prompts:
                     """
 
                 return optimise_health_conditions_content_prompt
-            

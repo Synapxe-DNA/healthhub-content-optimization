@@ -530,13 +530,12 @@ class Azure(LLMInterface):
                 f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
 
-        prompt_t = self.prompt_template.return_researcher_prompt()
+        # prompt_t = self.prompt_template.return_researcher_prompt()
 
-        
         print(f"Processing keypoints for header {num}")
         print(f"Keypoints processed for header {num}")
 
-        return 
+        return
 
     def compile_points(self, keypoints: list = []):
         """

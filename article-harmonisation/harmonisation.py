@@ -411,10 +411,12 @@ workflow.add_edge(
     "content_guidelines_optimisation_node", "writing_guidelines_optimisation_node"
 )
 
+
 def draw_graph(graph, filepath: str):
     img = graph.get_graph(xray=True).draw_mermaid_png()
     with open(filepath, "wb") as f:
         f.write(img)
+
 
 def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]:
     # Set up LLM tracing session
@@ -424,7 +426,10 @@ def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]
     # Run LangGraph Application
     app = workflow.compile()
     result = app.invoke(input=input)
-    draw_graph(app, "/Users/jin/Documents/GitHub/healthhub-content-optimization/article-harmonisation/docs/images/graph.png")
+    draw_graph(
+        app,
+        "/Users/jin/Documents/GitHub/healthhub-content-optimization/article-harmonisation/docs/images/graph.png",
+    )
 
     # Prints the various checks
     print_checks(result, MODEL)
@@ -436,8 +441,6 @@ def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]
     px.close_app()
 
     return result
-
-
 
 
 if __name__ == "__main__":
