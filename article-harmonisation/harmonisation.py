@@ -307,89 +307,94 @@ def decide_next_optimisation_node(state):
     elif meta_desc_optimisation_flags:
         return "meta_description_optimisation_node"
     else:
-        return END
+        return "__end__"
+
+
+# Adds a conditional edge to the workflow from researcher node to compiler node
+workflow.add_conditional_edges(
+    "researcher_node",
+    check_all_articles,
+    {
+        "researcher_node": "researcher_node",
+        "compiler_node": "compiler_node",
+        "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
+    },
+)
+
+# Adds a conditional edge to the workflow from compiler node to content guidelines node, title optimmisation node, meta description optimisation node and END
+workflow.add_conditional_edges(
+    "compiler_node",
+    decide_next_optimisation_node,
+    {
+        "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
+        "title_optimisation_node": "title_optimisation_node",
+        "meta_description_optimisation_node": "meta_description_optimisation_node",
+        "__end__": END,
+    },
+)
+
+# Adds a conditional edge to the workflow from compiler node to title optimmisation node, meta description optimisation node and END
+workflow.add_conditional_edges(
+    "writing_guidelines_optimisation_node",
+    decide_next_optimisation_node,
+    {
+        "title_optimisation_node": "title_optimisation_node",
+        "meta_description_optimisation_node": "meta_description_optimisation_node",
+        "__end__": END,
+    },
+)
+
+# Adds a conditional edge to the workflow from compiler node to meta description optimisation node and END
+workflow.add_conditional_edges(
+    "title_optimisation_node",
+    decide_next_optimisation_node,
+    {
+        "meta_description_optimisation_node": "meta_description_optimisation_node",
+        "__end__": END,
+    },
+)
+
+# Setting researcher_node as the entry point for the workflow
+workflow.set_entry_point("researcher_node")
+
+# Adding an edge connecting content_guidelines_optimisation_node to writing_guidelines_optimisation_node in the workflow
+workflow.add_edge(
+    "content_guidelines_optimisation_node", "writing_guidelines_optimisation_node"
+)
+
+
+def draw_graph(graph, filepath: str):
+    img = graph.get_graph(xray=True).draw_mermaid_png()
+    with open(filepath, "wb") as f:
+        f.write(img)
+
+
+def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]:
+    # Set up LLM tracing session
+    px.launch_app()
+    LangChainInstrumentor().instrument()
+
+    # Run LangGraph Application
+    app = workflow.compile()
+    result = app.invoke(input=input)
+    draw_graph(
+        app,
+        "/Users/jin/Documents/GitHub/healthhub-content-optimization/article-harmonisation/docs/images/graph.png",
+    )
+
+    # Prints the various checks
+    print_checks(result, MODEL)
+
+    # trace_df = px.Client().get_spans_dataframe()
+    # timestr = time.strftime("%Y%m%d-%H%M%S")
+    # trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
+
+    px.close_app()
+
+    return result
 
 
 if __name__ == "__main__":
-    ROOT_DIR = get_root_dir()
-    nodes = {
-        "researcher_node": researcher_node,
-        "compiler_node": compiler_node,
-        "content_guidelines_optimisation_node": content_guidelines_optimisation_node,
-        "writing_guidelines_optimisation_node": writing_guidelines_optimisation_node,
-        "title_optimisation_node": title_optimisation_node,
-        "meta_description_optimisation_node": meta_description_optimisation_node,
-    }
-    edges = {
-        START: ["researcher_node"],
-        "content_guidelines_optimisation_node": [
-            "writing_guidelines_optimisation_node"
-        ],
-        "meta_description_optimisation_node": [END],
-    }
-    conditional_edges = {
-        "researcher_node": (
-            check_all_articles,
-            {
-                "researcher_node": "researcher_node",
-                "compiler_node": "compiler_node",
-                "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
-            },
-        ),
-        "compiler_node": (
-            decide_next_optimisation_node,
-            {
-                "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
-                "title_optimisation_node": "title_optimisation_node",
-                "meta_description_optimisation_node": "meta_description_optimisation_node",
-                END: END,
-            },
-        ),
-        "writing_guidelines_optimisation_node": (
-            decide_next_optimisation_node,
-            {
-                "title_optimisation_node": "title_optimisation_node",
-                "meta_description_optimisation_node": "meta_description_optimisation_node",
-                END: END,
-            },
-        ),
-        "title_optimisation_node": (
-            decide_next_optimisation_node,
-            {
-                "meta_description_optimisation_node": "meta_description_optimisation_node",
-                END: END,
-            },
-        ),
-    }
-
-    app = create_graph(RewritingState, nodes, edges, conditional_edges)
-
-    # Save Graph
-    draw_graph(
-        app, f"{ROOT_DIR}/article-harmonisation/docs/images/article_rewriting_flow.png"
-    )
-
-    # Declaring directories
-    EXTRACTED_TEXT_DIRECTORY = (
-        f"{ROOT_DIR}/content-optimization/data/02_intermediate/all_extracted_text/"
-    )
-
-    # Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
-    # ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
-    # ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
-
-    ARTICLE1_TITLE = "diseases-and-conditions/Rubella_1437892.txt"  # metric required to determine which prompt to use
-    ARTICLE2_TITLE = "live-healthy-articles/How Dangerous Is Rubella__1445577.txt"
-
-    # Here are pairs of articles that are highly correlated, based on the neo_4j_clustered_data excel sheet
-    ARTICLE_HARMONISATION_PAIRS = [
-        ["Rubella", "How Dangerous Is Rubella?"],
-        [
-            "Mumps: Causes, Symptoms, and Treatment",
-            "Mumps Vaccine: Why We Want to Prevent Mumps",
-        ],
-    ]
-
     # starting up the respective llm agents
     researcher_agent = start_llm(MODEL, ROLES.RESEARCHER)
     compiler_agent = start_llm(MODEL, ROLES.COMPILER)
