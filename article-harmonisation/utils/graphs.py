@@ -1,19 +1,16 @@
+from typing import Any, Callable, Optional, TypedDict
+
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.graph.graph import CompiledGraph
-
-from typing import Any, Callable, TypedDict, Optional
-import phoenix as px
-import time
 from phoenix.trace.langchain import LangChainInstrumentor
-from .paths import get_root_dir
 
 
 # Creating a StateGraph object with GraphState as input.
 def create_graph(
-        schema: TypedDict,
-        nodes: dict[str, Callable[[MessagesState], dict]],
-        edges: dict[str, list[str]],
-        conditional_edges: Optional[dict[str, tuple[Callable, dict[str, str]]]] = None,
+    schema: TypedDict,
+    nodes: dict[str, Callable[[MessagesState], dict]],
+    edges: dict[str, list[str]],
+    conditional_edges: Optional[dict[str, tuple[Callable, dict[str, str]]]] = None,
 ):
     # creating a StateGraph object with GraphState as input.
     workflow = StateGraph(schema)
@@ -30,11 +27,7 @@ def create_graph(
     if conditional_edges is not None:
         for start_node, values in conditional_edges.items():
             func, path_map = values
-            workflow.add_conditional_edges(
-                start_node,
-                func,
-                path_map
-            )
+            workflow.add_conditional_edges(start_node, func, path_map)
 
     graph = workflow.compile()
 
