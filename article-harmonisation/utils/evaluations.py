@@ -143,6 +143,7 @@ if __name__ == "__main__":
 
     print(calculate_readability(text, choice=choice))
 
+    # # py-readability
     # {'flesch-kincaid reading ease': {'score': 45.93030317164181, 'ease': 'difficult', 'grade_levels': ['college']},
     #  'flesch-kincaid grade level': {'score': 11.845055970149257, 'grade_level': '12'},
     #  'coleman liau': {'score': 11.896656716417908, 'grade_level': '12'},
@@ -153,4 +154,5 @@ if __name__ == "__main__":
     #  'smog': {'score': 14.687709575225732, 'grade_level': '15'},
     #  'spache': {'score': 7.667605410447761, 'grade_level': '8'}}
 
+    # # hemmingway
     # {'score': 11, 'level': 'hard'}
