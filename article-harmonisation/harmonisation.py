@@ -12,7 +12,7 @@ from utils.paths import get_root_dir
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
-MODEL = MODELS("llama3").name
+MODEL = MODELS("azure").name
 
 
 class OriginalArticle(TypedDict):
@@ -399,7 +399,10 @@ if __name__ == "__main__":
     writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
 
     # List with the articles to harmonise
-    article_list = ["Rubella", "How Dangerous Is Rubella?"]
+    article_list = [
+        # "Rubella", 
+        "How Dangerous Is Rubella?"
+        ]
 
     processed_input_articles = concat_headers_to_content(article_list)
 

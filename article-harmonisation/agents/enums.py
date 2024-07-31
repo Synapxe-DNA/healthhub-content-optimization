@@ -15,7 +15,8 @@ class MODELS(Enum):
 
     llama3 = "meta-llama/Meta-Llama-3-8B-Instruct"
     phi3 = "microsoft/Phi-3-mini-128k-instruct"
-    mistral = "mistralai/Mistral-7B-Instruct"
+    mistral = "mistralai/Mistral-7B-Instruct-v0.3"
+    azure = "gpt-35-turbo-0125"
 
     @classmethod
     def _missing_(cls, name: str):
