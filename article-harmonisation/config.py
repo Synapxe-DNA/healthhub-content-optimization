@@ -1,8 +1,9 @@
-from pydantic_settings import BaseSettings
 import os
-from dotenv import load_dotenv
-from typing import ClassVar, Callable
+from typing import Callable, ClassVar
+
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
 
 load_dotenv()
 
@@ -37,8 +38,6 @@ class Settings(BaseSettings):
 
     os.environ["AZURE_OPENAI_ENDPOINT"] = AZURE_OPENAI_ENDPOINT
     os.environ["AZURE_OPENAI_API_TYPE"] = AZURE_OPENAI_API_TYPE
-
-
 
 
 settings = Settings()
