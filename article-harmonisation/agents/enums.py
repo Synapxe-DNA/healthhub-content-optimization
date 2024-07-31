@@ -12,6 +12,7 @@ class MODELS(Enum):
     # "mistralai/Mistral-7B-Instruct-v0.3",
     # "NousResearch/Hermes-2-Pro-Mistral-7B",
     """
+
     llama3 = "meta-llama/Meta-Llama-3-8B-Instruct"
     phi3 = "microsoft/Phi-3-mini-128k-instruct"
     mistral = "mistralai/Mistral-7B-Instruct"

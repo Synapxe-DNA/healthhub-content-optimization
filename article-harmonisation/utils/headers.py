@@ -2,8 +2,9 @@ import os
 
 import pyarrow.parquet as pq
 
+# TODO: Fix ROOT_DIR -> Create a function to set ROOT to healthhub-content-optimization
 ROOT = os.getcwd()
-MERGED_DATA_DIRECTORY = f"./data/merged_data.parquet"
+MERGED_DATA_DIRECTORY = "./data/merged_data.parquet"
 
 CONTENT_BODY = "extracted_content_body"
 EXTRACTED_HEADERS = "extracted_headers"
