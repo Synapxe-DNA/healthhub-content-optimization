@@ -11,6 +11,7 @@ def print_checks(result, model):
 
     Args:
         result: a AddableValuesDict object containing the final outputs from the graph
+        model: a string containing the name of the model
     """
 
     # determines the number of articles undergoing the harmonisation process
