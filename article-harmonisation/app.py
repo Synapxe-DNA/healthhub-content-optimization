@@ -1,18 +1,15 @@
-import os
 import re
 from io import StringIO
 
 import streamlit as st
-from harmonisation import (
-    execute_graph,
-    workflow,
-)
 from agents.enums import MODELS, ROLES
 from agents.models import start_llm
+from config import settings
+from harmonisation import execute_graph, workflow
 from utils.evaluations import calculate_readability
 from utils.headers import concat_headers_to_content
 
-os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
+CONFIG = settings
 
 # Declaring model to use
 MODEL = MODELS("llama3").name
@@ -64,7 +61,7 @@ st.divider()
 # Run AI Agent and Display Output
 if texts:
     processed_input_articles = concat_headers_to_content(texts)
-    
+
     inputs = {
         "original_article_content": {"article_content": processed_input_articles},
         "optimised_article_output": {
