@@ -1,29 +1,21 @@
-import os
 import re
 from abc import ABC, abstractmethod
 
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from dotenv import load_dotenv
-from .enums import MODELS, ROLES
+from config import settings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_openai import AzureOpenAI
+
+from .enums import MODELS, ROLES
 from .prompts import prompt_tool
 
-load_dotenv()
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
-MAX_NEW_TOKENS = os.getenv("MAX_NEW_TOKENS", 3000)
-
-azure_credential = DefaultAzureCredential()
-AZURE_COGNITIVE_SERVICES = os.getenv("AZURE_COGNITIVE_SERVICES", "")
-AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "")
-AZURE_OPENAI_API_ENDPOINT = os.getenv("AZURE_OPENAI_API_ENDPOINT", "")
-AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME", "")
-os.environ["AZURE_OPENAI_API_ENDPOINT"] = AZURE_OPENAI_API_ENDPOINT
-AZURE_AD_TOKEN_PROVIDER = get_bearer_token_provider(
-    azure_credential, AZURE_COGNITIVE_SERVICES
-)
+MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
+AZURE_COGNITIVE_SERVICES = settings.AZURE_COGNITIVE_SERVICES
+AZURE_OPENAI_ENDPOINT = settings.AZURE_OPENAI_ENDPOINT
+AZURE_DEPLOYMENT_NAME = settings.AZURE_DEPLOYMENT_NAME
+AZURE_OPENAI_API_VERSION = settings.AZURE_OPENAI_API_VERSION
+AZURE_AD_TOKEN_PROVIDER = settings.AZURE_AD_TOKEN_PROVIDER
 
 
 def start_llm(model: str, role: str):
@@ -65,7 +57,7 @@ def start_llm(model: str, role: str):
             model_prompter = prompt_tool(model=model)
             llm = AzureOpenAI(
                 azure_ad_token_provider=AZURE_AD_TOKEN_PROVIDER,
-                azure_endpoint=AZURE_OPENAI_API_ENDPOINT,
+                azure_endpoint=AZURE_OPENAI_ENDPOINT,
                 batch_size=20,
                 best_of=1,
                 cache=None,
