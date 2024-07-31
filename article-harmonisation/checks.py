@@ -1,23 +1,16 @@
-import os
-from enum import Enum
 from typing import Annotated, Any, TypedDict
 
 import pandas as pd
+from agents.enums import MODELS, ROLES
 from agents.models import start_llm
-from dotenv import load_dotenv
+from config import settings
 from langgraph.graph import END, START, MessagesState, StateGraph
 from phoenix.trace.langchain import LangChainInstrumentor
 from utils.evaluations import calculate_readability
 from utils.reducers import merge_dict
-from agents.enums import MODELS, ROLES
-
-# Setting the environment for HuggingFaceHub
-load_dotenv()
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
-os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
 
 # Declaring maximum new tokens
-MAX_NEW_TOKENS = os.getenv("MAX_NEW_TOKENS", 3000)
+MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
 MODEL = MODELS("llama3").name
