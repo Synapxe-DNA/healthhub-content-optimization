@@ -108,12 +108,13 @@ class LLMInterface(ABC):
         pass
 
     @abstractmethod
-    def evaluate_title(self, text: str) -> str:
+    def evaluate_title(self, title: str, content: str) -> str:
         """
         Abstract method for generating the text of the LLM Model
 
         Args:
-            text: a String input stating the text
+            title: a String input stating the article title
+            content: a String input stating the article content
 
         Returns:
 
