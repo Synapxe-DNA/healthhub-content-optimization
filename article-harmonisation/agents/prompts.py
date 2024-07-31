@@ -120,7 +120,7 @@ class AzurePrompts(LLMPrompt):
     Refer to https://platform.openai.com/docs/guides/prompt-engineering/strategy-write-clear-instructions for more information.
     """
 
-    def return_readability_evaluation_prompt(self, article):
+    def return_readability_evaluation_prompt(self):
 
         readability_evaluation_prompt = [
             (
@@ -136,12 +136,12 @@ class AzurePrompts(LLMPrompt):
 
                 Please provide a detailed analysis and critique following the above criteria.""",
             ),
-            ("human", f"Evaluate the following article:\n {article}"),
+            ("human", "Evaluate the following article:\n {article}"),
         ]
 
         return readability_evaluation_prompt
 
-    def return_structure_evaluation_prompt(self, article):
+    def return_structure_evaluation_prompt(self):
         structure_evaluation_prompt = [
             (
                 "system",
@@ -205,12 +205,12 @@ class AzurePrompts(LLMPrompt):
                 4.  Suggest specific changes or enhancements where applicable.
                 """,
             ),
-            ("human", f"Evaluate the following article:\n{article}"),
+            ("human", "Evaluate the following article:\n{article}"),
         ]
 
         return structure_evaluation_prompt
 
-    def return_title_evaluation_prompt(self, title, article):
+    def return_title_evaluation_prompt(self):
         title_evaluation_prompt = [
             (
                 "system",
@@ -266,13 +266,13 @@ class AzurePrompts(LLMPrompt):
             ),
             (
                 "human",
-                f"Evaluate the following title:\n{title} \nUsing the following article:\n{article}",
+                "Evaluate the following title:\n{title} \nUsing the following article:\n{article}",
             ),
         ]
 
         return title_evaluation_prompt
 
-    def return_meta_desc_evaluation_prompt(self, meta, article):
+    def return_meta_desc_evaluation_prompt(self):
         meta_desc_evaluation_prompt = [
             (
                 "system",
@@ -332,7 +332,7 @@ class AzurePrompts(LLMPrompt):
             ),
             (
                 "human",
-                f"""
+                """
             Evaluate the following Meta Description:
             {meta}
 
@@ -343,7 +343,7 @@ class AzurePrompts(LLMPrompt):
         ]
         return meta_desc_evaluation_prompt
 
-    def return_researcher_prompt(self, keypoints: str) -> list:
+    def return_researcher_prompt(self) -> list:
         researcher_prompt = [
             (
                 "system",
@@ -394,13 +394,13 @@ class AzurePrompts(LLMPrompt):
             ),
             (
                 "human",
-                f"Sort the keypoints below based on the instructions and examples you have received:\n{keypoints}",
+                "Sort the keypoints below based on the instructions and examples you have received:\n{Article}",
             ),
         ]
 
         return researcher_prompt
 
-    def return_compiler_prompt(self, keypoints: str) -> str:
+    def return_compiler_prompt(self) -> str:
         """
         Returns the compiler prompt for Llama3
 
@@ -446,11 +446,11 @@ class AzurePrompts(LLMPrompt):
                 3. Remedies to Parkinson's disease
                 You may take Levodopa prescribed by your doctor to alleviate the symptoms. """,
             ),
-            ("human", f"Compile the keypoints below:\n{keypoints}"),
+            ("human", "Compile the keypoints below:\n{Keypoints}"),
         ]
         return compiler_prompt
 
-    def return_content_prompt(self, keypoints) -> str:
+    def return_content_prompt(self) -> str:
 
         optimise_health_conditions_content_prompt = [
             (
@@ -544,11 +544,11 @@ class AzurePrompts(LLMPrompt):
                     Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts
                 ### End of instructions""",
             ),
-            ("human", f"Rewrite the following keypoints: \n{keypoints}"),
+            ("human", "Rewrite the following keypoints: \n{Keypoints}"),
         ]
         return optimise_health_conditions_content_prompt
 
-    def return_writing_prompt(self, content) -> str:
+    def return_writing_prompt(self) -> str:
         optimise_health_conditions_writing_prompt = [
             (
                 "system",
@@ -601,11 +601,11 @@ class AzurePrompts(LLMPrompt):
                     Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts
                 ### End of instructions""",
             ),
-            ("human", f"Rewrite the following content:\n {content}"),
+            ("human", "Rewrite the following content:\n {Content}"),
         ]
         return optimise_health_conditions_writing_prompt
 
-    def return_title_prompt(self, content) -> str:
+    def return_title_prompt(self) -> str:
         optimise_title_prompt = [
             (
                 "system",
@@ -674,13 +674,13 @@ class AzurePrompts(LLMPrompt):
             ),
             (
                 "human",
-                f"Use the following content and write your own titles: {content}",
+                "Use the following content and write your own titles:\n {Content}",
             ),
         ]
 
         return optimise_title_prompt
 
-    def return_meta_desc_prompt(self, content) -> str:
+    def return_meta_desc_prompt(self) -> str:
         optimise_meta_desc_prompt = [
             (
                 "system",
@@ -724,7 +724,7 @@ class AzurePrompts(LLMPrompt):
             ),
             (
                 "human",
-                f"Use the following content to write your meta descriptions:\n{content}",
+                "Use the following content to write your meta descriptions:\n{Content}",
             ),
         ]
 

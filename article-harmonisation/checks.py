@@ -14,7 +14,7 @@ from utils.reducers import merge_dict
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
-MODEL = MODELS("llama3").name
+MODEL = MODELS("azure").name
 
 
 class ContentFlags(TypedDict):
