@@ -3,12 +3,16 @@ import time
 import pandas as pd
 import phoenix as px
 
+from .paths import get_root_dir
+
+ROOT_DIR = get_root_dir()
+
 
 def upload_parquet(
     dataset_name: str,
     input_keys: list[str],
     output_keys: list[str],
-    parquet_filepath: str = "../data/merged_data.parquet",
+    parquet_filepath: str = f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet",
     upload_url: str = "http://127.0.0.1:6006",
 ):
     client = px.Client(endpoint=upload_url)
