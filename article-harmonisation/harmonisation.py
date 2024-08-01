@@ -1,6 +1,6 @@
 from typing import Optional, TypedDict
 
-from agents.enums import MODELS, ROLES
+from agents.enums import ROLES
 from agents.models import LLMInterface, start_llm
 from config import settings
 from langgraph.graph import END, START
@@ -12,7 +12,7 @@ from utils.paths import get_root_dir
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
-MODEL = MODELS("azure").name
+MODEL = settings.MODEL_NAME
 
 
 class OriginalArticle(TypedDict):

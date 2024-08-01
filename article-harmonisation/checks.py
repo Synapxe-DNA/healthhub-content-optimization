@@ -1,7 +1,7 @@
 from typing import Annotated, TypedDict
 
 import pandas as pd
-from agents.enums import MODELS, ROLES
+from agents.enums import ROLES
 from agents.models import LLMInterface, start_llm
 from config import settings
 from langgraph.graph import END, START
@@ -14,7 +14,7 @@ from utils.reducers import merge_dict
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
-MODEL = MODELS("azure").name
+MODEL = settings.MODEL_NAME
 
 
 class ContentFlags(TypedDict):
@@ -36,6 +36,7 @@ class TitleJudge(TypedDict):
 
 
 class MetaFlags(TypedDict):
+    # TODO: Decide whether to use word or char
     not_within_word_count: bool
 
 

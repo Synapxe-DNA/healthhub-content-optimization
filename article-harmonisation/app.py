@@ -2,17 +2,15 @@ import re
 from io import StringIO
 
 import streamlit as st
-from agents.enums import MODELS, ROLES
+from agents.enums import ROLES
 from agents.models import start_llm
 from config import settings
-from harmonisation import execute_graph, workflow
+from utils.graphs import create_graph, execute_graph
 from utils.evaluations import calculate_readability
 from utils.formatters import concat_headers_to_content
 
-CONFIG = settings
-
 # Declaring model to use
-MODEL = MODELS("llama3").name
+MODEL = settings.MODEL_NAME
 
 # Define Agents
 researcher_agent = start_llm(MODEL, ROLES.RESEARCHER)

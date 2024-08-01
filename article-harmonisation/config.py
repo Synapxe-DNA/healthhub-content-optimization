@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     # App Settings
     APP_NAME: str = "Multi-Agent Optimisation & Harmonisation System"
 
+    # Chosen model based on agents/enums.py
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "mistral")
+
     # Token Limit
     MAX_NEW_TOKENS: int = os.getenv("MAX_NEW_TOKENS", 3000)
 
