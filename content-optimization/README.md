@@ -63,17 +63,11 @@ cat requirements.txt | xargs poetry add
 
     - `all_contents_standardized/`: contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
 
-    - `all_contents_extracted/`: contains all extracted data; stored in columns named `related_sections`, `extracted_content_body`, `extracted_links` and `extracted_headers`; below is a brief description what each column represents:
-
-      - `related_sections`: related sections from the HTML content body; includes both "Related" as well as "Read these next"
-
-      - `extracted_content_body`: extracted content body from the HTML content body
-
-      - `extracted_links`: extracted links from the HTML content body; for example, links from the "Related" and "Read these next" sections
-
-      - `extracted_headers`: extracted headers from the HTML content body; headers include all `<h>` tags
+    - `all_contents_extracted/`: contains all extracted data; various data was extracted from the HTML content body. Refer to the [Dataset](#dataset-a-iddataseta) description below
 
     - `all_extracted_text/`: contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
+    
+    - `all_contents_mapped/`: contains all the new IA mappings as provided in the [kedro configuration](conf/base/parameters_data_processing.yml) as new columns
 
   - [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
@@ -199,7 +193,7 @@ kedro run --nodes="extract_keywords_node"
 - **Dataset Description:** Merged collection of Health Hub articles across different content categories
 - **Version**: v1
 - **Date of Creation:** June 28, 2024
-- **Last Updated:** June 28, 2024
+- **Last Updated:** August 2, 2024
 
 ### File Information
 
@@ -210,7 +204,7 @@ kedro run --nodes="extract_keywords_node"
 ### Data Schema <a id="data-schema"></a>
 
 - **Number of Rows:** 2613
-- **Number of Columns:** 33
+- **Number of Columns:** 39
 - **Subject Area/Domain:** Health Hub Articles
 
 #### **Columns**
@@ -742,6 +736,32 @@ kedro run --nodes="extract_keywords_node"
   - Data Type: `string`
   - Description:
     - The extracted text from the `content_body` column
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`l1_mappings`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - A list of L1 IA Mappings presented as a joined string, delimited by "|"
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`l2_mappings`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - A list of L2 IA Mappings presented as a joined string, delimited by "|"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No
