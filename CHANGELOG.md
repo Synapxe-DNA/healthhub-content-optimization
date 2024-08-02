@@ -1,5 +1,13 @@
 # Changelog
 
+## August 2, 2024 <a id="august-2-2024"></a>
+
+- Added IA Mappings (L1 and L2) into the dataset as `l1_mappings` and `l2_mappings` column
+- Created `all_contents_mapped` intermediate dataset to hold new IA mappings
+- Renamed `add_contents_node` to `add_data_node` to include the addition of updated URLs as well
+- Refactored `add_content_body` as a separate helper function to add content for articles with Excel error
+
+
 ## July 25, 2024 <a id="july-25-2024"></a>
 
 - Added column from `extracted_raw_html_tables` column
