@@ -461,7 +461,9 @@ def add_updated_urls(
     return df
 
 
-def invert_ia_mappings(mappings: dict[str, dict[str, list[str]]]) -> dict[str, dict[str, str]]:
+def invert_ia_mappings(
+    mappings: dict[str, dict[str, list[str]]]
+) -> dict[str, dict[str, str]]:
     """
 
     Args:
@@ -487,11 +489,11 @@ def invert_ia_mappings(mappings: dict[str, dict[str, list[str]]]) -> dict[str, d
 
 
 def map_category_names(
-        mappings: dict[str, dict[str, str]],
-        df: pd.DataFrame,
-        content_category_column: str,
-        reference_column: str,
-        new_column_name: str
+    mappings: dict[str, dict[str, str]],
+    df: pd.DataFrame,
+    content_category_column: str,
+    reference_column: str,
+    new_column_name: str,
 ) -> pd.DataFrame:
     """
 
@@ -528,7 +530,9 @@ def map_category_names(
         # Assign the new value to the "article_category_names" column
         df.at[index, reference_column] = category_string
         # Remove empty stings
-        categories_list = list(filter(lambda x: len(x.strip()) > 0, category_string.split(",")))
+        categories_list = list(
+            filter(lambda x: len(x.strip()) > 0, category_string.split(","))
+        )
 
         # If the IA Mapping exists for the given content category, perform the IA Mapping for the article
         if category_map is not None:
@@ -538,7 +542,9 @@ def map_category_names(
                 categories_list[ind] = result.strip() if result is not None else None
 
             # Keep unique and non-null values only
-            unique_categories_list = list(filter(lambda x: x is not None, list(set(categories_list))))
+            unique_categories_list = list(
+                filter(lambda x: x is not None, list(set(categories_list)))
+            )
 
             # Assign the new mappings as a joined string
             df.at[index, new_column_name] = " | ".join(unique_categories_list)
