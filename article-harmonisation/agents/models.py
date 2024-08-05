@@ -1,13 +1,13 @@
 import re
 from abc import ABC, abstractmethod
 
+from agents.enums import MODELS, ROLES
 from config import settings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_openai import AzureChatOpenAI
 
-from agents.enums import MODELS, ROLES
 from .prompts import prompt_tool
 
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
@@ -524,9 +524,7 @@ class Azure(LLMInterface):
         input_keypoints = ""
         for article_index in range(len(keypoints)):
             article_kp = keypoints[article_index]
-            input_keypoints += (
-                f"\n Article {article_index + 1}\n{article_kp}\n"
-            )
+            input_keypoints += f"\n Article {article_index + 1}\n{article_kp}\n"
 
         chain = prompt_t | self.model | StrOutputParser()
         print("Compiling keypoints for article harmonisation")

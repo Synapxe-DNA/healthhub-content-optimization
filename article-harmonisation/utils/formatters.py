@@ -23,7 +23,8 @@ TO_REMOVE = ["", " "]
 table = pq.read_table(MERGED_DATA_DIRECTORY)
 EXTRACTED_ARTICLE_TITLES = list(table[ARTICLE_TITLE])
 
-def article_list_indexes(articles:list):
+
+def article_list_indexes(articles: list):
     article_list_idx = []
     for article_title in EXTRACTED_ARTICLE_TITLES:
         if article_title.as_py() in articles:
@@ -31,11 +32,9 @@ def article_list_indexes(articles:list):
             article_list_idx.append(idx)
     return article_list_idx
 
+
 def extract_content_for_evaluation(articles: list):
-    """Extracts out the article content, title and meta descriptions and returns a list in which each element is a dictionary with the respective article's details.
-    
-    
-    """
+    """Extracts out the article content, title and meta descriptions and returns a list in which each element is a dictionary with the respective article's details."""
     article_details = []
     article_list_idx = article_list_indexes(articles)
     for idx in article_list_idx:
@@ -45,15 +44,16 @@ def extract_content_for_evaluation(articles: list):
         meta_desc = meta_desc if meta_desc is not None else "No meta description"
         article_details.append(
             {
-             ARTICLE_TITLE: article_title,
-             META_DESC: meta_desc,
-             CONTENT_BODY: article_content
-            }) 
+                ARTICLE_TITLE: article_title,
+                META_DESC: meta_desc,
+                CONTENT_BODY: article_content,
+            }
+        )
     return article_details
 
 
 def update_header_dict(header_dictionary, header_type, header):
-    header_list = header_dictionary.get(header_type, []) 
+    header_list = header_dictionary.get(header_type, [])
     header_list.append(header)
     header_dictionary[header_type] = header_list
     return header_dictionary
@@ -67,7 +67,7 @@ def concat_headers_to_content(articles: list):
         article_headers = list(table[EXTRACTED_HEADERS][idx])
         article_content = str(table[CONTENT_BODY][idx])
 
-        #this list will store all the headers + content as elements
+        # this list will store all the headers + content as elements
         split_content = []
 
         # Stores headers based on their heading type, h1 - h6
@@ -76,11 +76,13 @@ def concat_headers_to_content(articles: list):
         for header_details in article_headers:
             header_title = header_details[0].as_py()
             header_type = header_details[1].as_py()
-            header_dictionary = update_header_dict(header_dictionary, header_type, header_title)
+            header_dictionary = update_header_dict(
+                header_dictionary, header_type, header_title
+            )
             print(header_dictionary)
 
             match header_type:
-                case "h1": 
+                case "h1":
                     header = f"h1 Main Header: {header_title}"
                 case "h2":
                     header = f"h2 Sub Header: {header_title}"
@@ -89,7 +91,7 @@ def concat_headers_to_content(articles: list):
                 case "h3":
                     header = f"h3 Sub Section: {header_title}"
                     if "h2" in header_dictionary.keys():
-                        header += f"\nSub Section to h2 Sub Header: {header_dictionary['h2'][-1]}"  
+                        header += f"\nSub Section to h2 Sub Header: {header_dictionary['h2'][-1]}"
                 case "h4":
                     header = f"h4 Sub Section: {header_title}"
                     if "h3" in header_dictionary.keys():
@@ -101,16 +103,16 @@ def concat_headers_to_content(articles: list):
                 case "h6":
                     header = f"h6 Sub Section: {header_title}"
                     if "h5" in header_dictionary.keys():
-                        header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}" 
+                        header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}"
             if not split_content:
                 split_content.extend(article_content.split(header_title))
             else:
                 last_content = split_content.pop()
                 split_content.extend(last_content.split(header_title))
-            
+
             split_content[-1] = header + "\n" + split_content[-1][1:]
 
-        #concatenate all into this string
+        # concatenate all into this string
         final_labelled_article = f"h1 Main Header: {articles[num]}\n"
         for new_content in split_content:
             # checking if there are empty strings in split_content and empty headers

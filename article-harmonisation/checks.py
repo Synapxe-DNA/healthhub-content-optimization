@@ -1,4 +1,4 @@
-from typing import Annotated, TypedDict, Optional
+from typing import Annotated, TypedDict
 
 import pandas as pd
 from agents.enums import MODELS, ROLES
@@ -15,6 +15,7 @@ MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
 MODEL = MODELS("azure").name
+
 
 class ContentFlags(TypedDict):
     is_unreadable: bool

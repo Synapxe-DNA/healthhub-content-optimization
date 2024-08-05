@@ -2,12 +2,12 @@ from typing import Optional, TypedDict
 
 from agents.enums import MODELS, ROLES
 from agents.models import LLMInterface, start_llm
+from checks import ChecksState
 from config import settings
 from langgraph.graph import END, START
 from utils.formatters import concat_headers_to_content, print_checks
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
-from checks import ChecksState
 
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
@@ -20,6 +20,7 @@ class OriginalArticle(TypedDict):
     article_content: list
     article_title: Optional[list]
     meta_desc: Optional[list]
+
 
 class OptimisedArticle(TypedDict):
     researcher_keypoints: Optional[list]
@@ -61,6 +62,7 @@ class RewritingState(TypedDict):
         flag_for_title_optimisation: A required boolean value, determining if the user has flagged the article for title optimisation.
         flag_for_meta_desc_optimisation: A required boolean value, determining if the user has flagged the article for meta description optimisation.
     """
+
     article_evaluation: ChecksState
     original_article_content: OriginalArticle
     optimised_article_output: OptimisedArticle
@@ -112,8 +114,6 @@ def compiler_node(state):
     """
     optimised_article_output = state.get("optimised_article_output")
     keypoints = optimised_article_output["researcher_keypoints"]
-
-    
 
     # Runs the compiler LLM to compile the keypoints
     compiler_agent = state.get("llm_agents")["compiler_agent"]
@@ -296,13 +296,13 @@ def decide_next_optimisation_node(state):
         return "meta_description_optimisation_node"
     else:
         return END
-    
+
 
 if __name__ == "__main__":
-    #Gets root directory
+    # Gets root directory
     ROOT_DIR = get_root_dir()
 
-    #Declaring dictionary with all nodes
+    # Declaring dictionary with all nodes
     nodes = {
         "researcher_node": researcher_node,
         "compiler_node": compiler_node,
@@ -312,7 +312,7 @@ if __name__ == "__main__":
         "meta_description_optimisation_node": meta_description_optimisation_node,
     }
 
-    #Declaring dictionary with all edges
+    # Declaring dictionary with all edges
     edges = {
         START: ["researcher_node"],
         "content_guidelines_optimisation_node": [
@@ -321,7 +321,7 @@ if __name__ == "__main__":
         "meta_description_optimisation_node": [END],
     }
 
-    #Declaring dictionary with all conditional edges
+    # Declaring dictionary with all conditional edges
     # Example element in conditional edge dictionary: {"name of node": (conditional edge function, path map)}
     conditional_edges = {
         "researcher_node": (
@@ -381,22 +381,18 @@ if __name__ == "__main__":
 
     processed_input_articles = concat_headers_to_content(article_list)
 
-    
-
     # Dictionary with the variouse input keys and items
     inputs = {
-        "original_article_content": {
-            "article_content": processed_input_articles
-            },
+        "original_article_content": {"article_content": processed_input_articles},
         "optimised_article_output": {
             "researcher_keypoints": [],
             "article_researcher_counter": 0,
-            },
+        },
         "user_flags": {
             "flag_for_content_optimisation": True,
             "flag_for_title_optimisation": True,
             "flag_for_meta_desc_optimisation": True,
-            },
+        },
         "llm_agents": {
             "researcher_agent": researcher_agent,
             "compiler_agent": compiler_agent,
@@ -404,7 +400,7 @@ if __name__ == "__main__":
             "writing_optimisation_agent": writing_optimisation_agent,
             "title_optimisation_agent": title_optimisation_agent,
             "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
-            },
+        },
     }
 
     result = execute_graph(app, inputs)

@@ -1,26 +1,40 @@
-
-import pandas as pd
-
-from utils.paths import get_root_dir
-from harmonisation import researcher_node, compiler_node, content_guidelines_optimisation_node, writing_guidelines_optimisation_node, title_optimisation_node, meta_description_optimisation_node, check_all_articles, decide_next_optimisation_node, RewritingState
-from checks import content_evaluation_llm_node, content_evaluation_rules_node, content_explanation_node, title_evaluation_llm_node, title_evaluation_rules_node,meta_desc_evaluation_llm_node, meta_desc_evaluation_rules_node, ChecksState
-from utils.graphs import create_graph, draw_graph, execute_graph
-from utils.formatters import concat_headers_to_content, print_checks, extract_content_for_evaluation
-from agents.models import start_llm
 from agents.enums import MODELS, ROLES
-from utils.reducers import merge_dict
-
-
+from agents.models import start_llm
+from checks import (
+    ChecksState,
+    content_evaluation_llm_node,
+    content_evaluation_rules_node,
+    content_explanation_node,
+    meta_desc_evaluation_llm_node,
+    meta_desc_evaluation_rules_node,
+    title_evaluation_llm_node,
+    title_evaluation_rules_node,
+)
+from harmonisation import (
+    RewritingState,
+    check_all_articles,
+    compiler_node,
+    content_guidelines_optimisation_node,
+    decide_next_optimisation_node,
+    meta_description_optimisation_node,
+    researcher_node,
+    title_optimisation_node,
+    writing_guidelines_optimisation_node,
+)
 from langgraph.graph import END, START
-import time
-
-
+from utils.formatters import (
+    concat_headers_to_content,
+    extract_content_for_evaluation,
+    print_checks,
+)
+from utils.graphs import create_graph, draw_graph, execute_graph
+from utils.paths import get_root_dir
 
 MODEL = MODELS("azure").name
 ROOT_DIR = get_root_dir()
 
 
-def start_article_evaluation(articles: list ):
+def start_article_evaluation(articles: list):
 
     nodes = {
         "content_evaluation_rules_node": content_evaluation_rules_node,
@@ -62,14 +76,12 @@ def start_article_evaluation(articles: list ):
     # Load data from merged_data.parquet and randomly sample 30 rows
     article_details = extract_content_for_evaluation(articles)
 
-    optimisation_inputs = {}
-
     for i in range(len(article_details)):
         # Set up
         article_content = article_details[i]["extracted_content_body"]
         article_title = article_details[i]["title"]
         meta_desc = article_details[i]["category_description"]  # meta_desc can be null
-        
+
         print(f"Checking {article_title} now...")
         # Set up Inputs
         inputs = {
@@ -93,10 +105,9 @@ def start_article_evaluation(articles: list ):
     return response
 
 
-
 def start_article_harmonisation(stategraph: ChecksState):
 
-    #Declaring dictionary with all nodes
+    # Declaring dictionary with all nodes
     nodes = {
         "researcher_node": researcher_node,
         "compiler_node": compiler_node,
@@ -106,7 +117,7 @@ def start_article_harmonisation(stategraph: ChecksState):
         "meta_description_optimisation_node": meta_description_optimisation_node,
     }
 
-    #Declaring dictionary with all edges
+    # Declaring dictionary with all edges
     edges = {
         START: ["researcher_node"],
         "content_guidelines_optimisation_node": [
@@ -115,7 +126,7 @@ def start_article_harmonisation(stategraph: ChecksState):
         "meta_description_optimisation_node": [END],
     }
 
-    #Declaring dictionary with all conditional edges
+    # Declaring dictionary with all conditional edges
     # Example element in conditional edge dictionary: {"name of node": (conditional edge function, path map)}
     conditional_edges = {
         "researcher_node": (
@@ -167,28 +178,30 @@ def start_article_harmonisation(stategraph: ChecksState):
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
 
-    if type(stategraph.get("article_title")) == list:
-        processed_input_articles = concat_headers_to_content(stategraph.get("article_title"))
+    if isinstance(stategraph.get("article_title"), list):
+        processed_input_articles = concat_headers_to_content(
+            stategraph.get("article_title")
+        )
     else:
-        processed_input_articles = concat_headers_to_content([stategraph.get("article_title")])
+        processed_input_articles = concat_headers_to_content(
+            [stategraph.get("article_title")]
+        )
 
     for i in processed_input_articles:
         print(i)
-    
+
     # Dictionary with the variouse input keys and items
     inputs = {
         "article_evaluation": stategraph,
-        "original_article_content": {
-            "article_content": processed_input_articles
-            },
+        "original_article_content": {"article_content": processed_input_articles},
         "optimised_article_output": {
             "researcher_keypoints": [],
-            },
+        },
         "user_flags": {
             "flag_for_content_optimisation": True,
             "flag_for_title_optimisation": True,
             "flag_for_meta_desc_optimisation": True,
-            },
+        },
         "llm_agents": {
             "researcher_agent": researcher_agent,
             "compiler_agent": compiler_agent,
@@ -196,7 +209,7 @@ def start_article_harmonisation(stategraph: ChecksState):
             "writing_optimisation_agent": writing_optimisation_agent,
             "title_optimisation_agent": title_optimisation_agent,
             "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
-            },
+        },
     }
 
     result = execute_graph(app, inputs)
@@ -205,20 +218,20 @@ def start_article_harmonisation(stategraph: ChecksState):
     print_checks(result, MODEL)
     print(result)
 
+
 if __name__ == "__main__":
     article_list = [
-                    "Rubella", 
-                    "How Dangerous Is Rubella?",
-                    # "Outdoor Activities That Make Fitness Fun in Singapore"
-                    ]
+        "Rubella",
+        "How Dangerous Is Rubella?",
+        # "Outdoor Activities That Make Fitness Fun in Singapore"
+    ]
     num_of_articles = len(article_list)
     match num_of_articles:
         case 0:
             raise ValueError("You need to have at least 1 article as input")
         case 1:
-            evaluation_stategraph = start_article_evaluation(articles = article_list)
+            evaluation_stategraph = start_article_evaluation(articles=article_list)
         case _:
             evaluation_stategraph = {"article_title": article_list}
 
-
-    start_article_harmonisation(stategraph = evaluation_stategraph)
+    start_article_harmonisation(stategraph=evaluation_stategraph)
