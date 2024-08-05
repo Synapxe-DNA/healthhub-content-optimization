@@ -63,10 +63,10 @@ cat requirements.txt | xargs poetry add
 
     - `all_contents_standardized/`: contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
 
-    - `all_contents_extracted/`: contains all extracted data; various data was extracted from the HTML content body. Refer to the [Dataset](#dataset-a-iddataseta) description below
+    - `all_contents_extracted/`: contains all extracted data; various data was extracted from the HTML content body. Refer to the [Dataset](#dataset-info) description below
 
     - `all_extracted_text/`: contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
-    
+
     - `all_contents_mapped/`: contains all the new IA mappings as provided in the [kedro configuration](conf/base/parameters_data_processing.yml) as new columns
 
   - [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
@@ -184,7 +184,7 @@ kedro run --nodes="extract_keywords_node"
 # TODO: Integration Tests Documentation
 ```
 
-## Dataset <a id="dataset"></a>
+## Dataset <a id="dataset-info"></a>
 
 ### General Information
 

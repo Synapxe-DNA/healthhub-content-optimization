@@ -549,6 +549,8 @@ def map_category_names(
 
             # Assign the new mappings as a joined string and assign a null value if empty string
             joined_string = " | ".join(unique_categories_list)
-            df.at[index, new_column_name] = joined_string.strip() if joined_string else None
+            df.at[index, new_column_name] = (
+                joined_string.strip() if joined_string else None
+            )
 
     return df

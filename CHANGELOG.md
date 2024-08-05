@@ -6,7 +6,7 @@
 - Created `all_contents_mapped` intermediate dataset to hold new IA mappings
 - Renamed `add_contents_node` to `add_data_node` to include the addition of updated URLs as well
 - Refactored `add_content_body` as a separate helper function to add content for articles with Excel error
-
+- Created function to update urls for selected articles defined in `parameters_date_processing.yml`
 
 ## July 25, 2024 <a id="july-25-2024"></a>
 
