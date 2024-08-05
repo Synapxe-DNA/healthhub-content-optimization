@@ -455,8 +455,9 @@ def add_updated_urls(
         # Skip if the index is empty
         if article_index.empty:
             continue
-        # Assign updated_url to `full_url` column
+        # Assign updated_url to `full_url` and `full_url2` column
         df.loc[article_index, "full_url"] = url
+        df.loc[article_index, "full_url2"] = url
 
     return df
 
@@ -546,7 +547,8 @@ def map_category_names(
                 filter(lambda x: x is not None, list(set(categories_list)))
             )
 
-            # Assign the new mappings as a joined string
-            df.at[index, new_column_name] = " | ".join(unique_categories_list)
+            # Assign the new mappings as a joined string and assign a null value if empty string
+            joined_string = " | ".join(unique_categories_list)
+            df.at[index, new_column_name] = joined_string.strip() if joined_string else None
 
     return df
