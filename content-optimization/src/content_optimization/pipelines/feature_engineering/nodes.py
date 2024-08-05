@@ -254,18 +254,4 @@ def combine_embeddings_by_weightage(
             "combined_embeddings",
         ]
     ]
-
-    weighted_embeddings = weighted_embeddings.rename(
-        columns={
-            "extracted_content_body": "content",
-            "category_description": "meta_description",
-            "title_embeddings": "vector_title",
-            "article_category_names_embeddings": "vector_article_category_names",
-            "category_description_embeddings": "vector_category_description",
-            "extracted_content_body_embeddings": "vector_extracted_content_body",
-            "keywords_all-MiniLM-L6-v2_embeddings": "vector_keywords",
-            "combined_embeddings": "vector_combined",
-        }
-    )
-
     return weighted_embeddings
