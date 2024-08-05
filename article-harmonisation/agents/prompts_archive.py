@@ -1,6 +1,6 @@
 class Llama_archived_prompts:
     def return_researcher_prompt_ver(version):
-        """This function returns the first version of the researcher prompt
+        """This function returns the previous] version of the researcher prompt
 
         Version 1: This researcher prompt which does not preserve the original headers, instead it instructs the llm to sort the sentences into keypoints determined by itself.
 
@@ -124,3 +124,63 @@ class Llama_archived_prompts:
                     """
 
                 return optimise_health_conditions_content_prompt
+
+class Azure_archived_prompts:
+    def return_researcher_prompt_ver(version) -> list:
+        match version:
+            case 1:
+                researcher_prompt = [
+                    (
+                        "system",
+                        """You are part of a article combination process. Your task is to utilize the keypoint in each article and determine if the sentences under each keypoint are relevant to the keypoint.
+
+                        Do NOT paraphrase sentences from the given article when assigning the sentence, you must use each sentence directly from the given content.
+                        Do NOT modify the keypoint headers.
+                        If no keypoint header is provided, you may come up with your own keypoint header that MUST be relevant to the content provided
+                        ALL sentences in the same keypoint must be joined in a single paragraph.
+                        Each sentence must appear only ONCE under the keypoint.
+                        Not all sentences are relevant to the keypoint header. If a sentence is irrelevant to all keypoints, you can place it under the last keypoint "Omitted sentences".
+                        Strictly ONLY include the content and the sentences you omitted in your answer.""",
+                    ),
+                    (
+                        "human",
+                        """h2 Sub Header: Introduction to Parkinson's disease
+                        Parkinson's is a neurodegenerative disease.
+                        Buy these essential oils to recover from Parkinson's Disease!
+                        It is a progressive disorder that affects the nervous system and other parts of the body.
+                        There are approximately 90,000 new patients diagnosed with PD annually in the US.""",
+                    ),
+                    (
+                        "assistant",
+                        """ Keypoint: Introduction to Parkinson's disease
+                        Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
+
+                        Omitted sentences:
+                        Buy these essential oils to recover from Parkinson's Disease!""",
+                    ),
+                    (
+                        "human",
+                        """ Keypoint: Tips to maintain your weight
+                        Consume a high protein, low carb diet.
+                        Exercise for 30 minutes daily.
+                        Cut down on consumption of saturated fat and sugary food.
+                        Read these next: Top 10 power foods to eat recommended by a nutritionist""",
+                    ),
+                    (
+                        "assistant",
+                        """
+                        Answer:
+                        Keypoint: Introduction to Parkinson's disease
+                        Consume a high protein, low carb diet. Exercise for 30 minutes daily. Cut down on consumption of saturated fat and sugary food.
+
+                        Omitted sentences:
+                        Read these next: Top 10 power foods to eat recommended by a nutritionist
+                        """,
+                    ),
+                    (
+                        "human",
+                        "Sort the keypoints below based on the instructions and examples you have received:\n{Article}",
+                    ),
+                ]
+
+                return researcher_prompt

@@ -7,6 +7,7 @@ from langgraph.graph import END, START
 from utils.formatters import concat_headers_to_content, print_checks
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
+from checks import ChecksState
 
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
@@ -17,13 +18,11 @@ MODEL = MODELS("azure").name
 
 class OriginalArticle(TypedDict):
     article_content: list
-    article_title: Optional[str]
-    meta_desc: Optional[str]
-
+    article_title: Optional[list]
+    meta_desc: Optional[list]
 
 class OptimisedArticle(TypedDict):
     researcher_keypoints: Optional[list]
-    article_researcher_counter: Optional[int]
     compiled_keypoints: Optional[str]
     optimised_content: Optional[str]
     optimised_writing: Optional[str]
@@ -62,7 +61,7 @@ class RewritingState(TypedDict):
         flag_for_title_optimisation: A required boolean value, determining if the user has flagged the article for title optimisation.
         flag_for_meta_desc_optimisation: A required boolean value, determining if the user has flagged the article for meta description optimisation.
     """
-
+    article_evaluation: ChecksState
     original_article_content: OriginalArticle
     optimised_article_output: OptimisedArticle
     user_flags: OptimisationFlags
@@ -82,29 +81,21 @@ def researcher_node(state):
             - article_researcher_counter: an integer serving as a counter for number of articles processed by the researcher node
     """
     article_list = state.get("original_article_content")["article_content"]
-    counter = state.get("optimised_article_output")["article_researcher_counter"]
-    article = article_list[counter]
     keypoints = state.get("optimised_article_output")["researcher_keypoints"]
     researcher_agent = state.get("llm_agents")["researcher_agent"]
 
-    print("Processing keypoints for article", counter + 1)
-    processed_keypoints = ""
-    print(f"Number of keypoints in article {counter + 1}: ", len(article))
+    # For loop iterating through each article
 
-    # Stores the number of keypoints processed in the current article
-    kp_counter = 0
-
-    # For loop iterating through each keypoint in each article
-    for kp in article:
-        kp_counter += 1
-        article_keypoints = researcher_agent.generate_keypoints(kp, kp_counter)
-        processed_keypoints += f"{article_keypoints} \n"
-    keypoints.append(processed_keypoints)
+    for idx in range(len(article_list)):
+        print("Processing keypoints for article", idx + 1)
+        article = article_list[idx]
+        article_keypoints = researcher_agent.generate_keypoints(article)
+        keypoints.append(article_keypoints)
+        print("Finished processing keypoints for article", idx + 1)
 
     return {
         "optimised_article_output": {
             "researcher_keypoints": keypoints,
-            "article_researcher_counter": counter + 1,
         }
     }
 
@@ -121,6 +112,8 @@ def compiler_node(state):
     """
     optimised_article_output = state.get("optimised_article_output")
     keypoints = optimised_article_output["researcher_keypoints"]
+
+    
 
     # Runs the compiler LLM to compile the keypoints
     compiler_agent = state.get("llm_agents")["compiler_agent"]
@@ -265,16 +258,11 @@ def check_all_articles(state):
         "researcher_node": returned if counter < number of articles to be harmonised
         "compiler_node": returned if counter >= number of articles to be harmonised
     """
-    researcher_counter = state.get("optimised_article_output")[
-        "article_researcher_counter"
-    ]
     article_content = state.get("original_article_content")["article_content"]
     content_optimisation_flags = state.get("user_flags")[
         "flag_for_content_optimisation"
     ]
-    if researcher_counter < len(article_content):
-        return "researcher_node"
-    elif (len(article_content) < 2) and content_optimisation_flags:
+    if (len(article_content) < 2) and content_optimisation_flags:
         return "content_guidelines_optimisation_node"
     else:
         return "compiler_node"
@@ -308,10 +296,13 @@ def decide_next_optimisation_node(state):
         return "meta_description_optimisation_node"
     else:
         return END
-
+    
 
 if __name__ == "__main__":
+    #Gets root directory
     ROOT_DIR = get_root_dir()
+
+    #Declaring dictionary with all nodes
     nodes = {
         "researcher_node": researcher_node,
         "compiler_node": compiler_node,
@@ -320,6 +311,8 @@ if __name__ == "__main__":
         "title_optimisation_node": title_optimisation_node,
         "meta_description_optimisation_node": meta_description_optimisation_node,
     }
+
+    #Declaring dictionary with all edges
     edges = {
         START: ["researcher_node"],
         "content_guidelines_optimisation_node": [
@@ -327,11 +320,13 @@ if __name__ == "__main__":
         ],
         "meta_description_optimisation_node": [END],
     }
+
+    #Declaring dictionary with all conditional edges
+    # Example element in conditional edge dictionary: {"name of node": (conditional edge function, path map)}
     conditional_edges = {
         "researcher_node": (
             check_all_articles,
             {
-                "researcher_node": "researcher_node",
                 "compiler_node": "compiler_node",
                 "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
             },
@@ -369,27 +364,6 @@ if __name__ == "__main__":
         app, f"{ROOT_DIR}/article-harmonisation/docs/images/article_rewriting_flow.png"
     )
 
-    # Declaring directories
-    EXTRACTED_TEXT_DIRECTORY = (
-        f"{ROOT_DIR}/content-optimization/data/02_intermediate/all_extracted_text/"
-    )
-
-    # Declaring title of the articles here. Currently only 2 articles are used and this section is declared at the start, which is bound to change with further developments.
-    # ARTICLE1_TITLE = "Diabetic Foot Ulcer_ Symp_1437648.txt"
-    # ARTICLE2_TITLE = "Diabetic Foot Care_1437355.txt"
-
-    ARTICLE1_TITLE = "diseases-and-conditions/Rubella_1437892.txt"  # metric required to determine which prompt to use
-    ARTICLE2_TITLE = "live-healthy-articles/How Dangerous Is Rubella__1445577.txt"
-
-    # Here are pairs of articles that are highly correlated, based on the neo_4j_clustered_data excel sheet
-    ARTICLE_HARMONISATION_PAIRS = [
-        ["Rubella", "How Dangerous Is Rubella?"],
-        [
-            "Mumps: Causes, Symptoms, and Treatment",
-            "Mumps Vaccine: Why We Want to Prevent Mumps",
-        ],
-    ]
-
     # starting up the respective llm agents
     researcher_agent = start_llm(MODEL, ROLES.RESEARCHER)
     compiler_agent = start_llm(MODEL, ROLES.COMPILER)
@@ -401,23 +375,28 @@ if __name__ == "__main__":
     # List with the articles to harmonise
     article_list = [
         # "Rubella",
-        "How Dangerous Is Rubella?"
+        # "How Dangerous Is Rubella?"
+        "Weight, BMI and Health Problems"
     ]
 
     processed_input_articles = concat_headers_to_content(article_list)
 
+    
+
     # Dictionary with the variouse input keys and items
     inputs = {
-        "original_article_content": {"article_content": processed_input_articles},
+        "original_article_content": {
+            "article_content": processed_input_articles
+            },
         "optimised_article_output": {
             "researcher_keypoints": [],
             "article_researcher_counter": 0,
-        },
+            },
         "user_flags": {
             "flag_for_content_optimisation": True,
             "flag_for_title_optimisation": True,
             "flag_for_meta_desc_optimisation": True,
-        },
+            },
         "llm_agents": {
             "researcher_agent": researcher_agent,
             "compiler_agent": compiler_agent,
@@ -425,7 +404,7 @@ if __name__ == "__main__":
             "writing_optimisation_agent": writing_optimisation_agent,
             "title_optimisation_agent": title_optimisation_agent,
             "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
-        },
+            },
     }
 
     result = execute_graph(app, inputs)
