@@ -17,6 +17,13 @@ MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 MODEL = settings.MODEL_NAME
 
 
+class ArticleInputs(TypedDict):
+    article_content: str
+    article_title: str
+    content_category: str
+    meta_desc: str
+
+
 class ContentFlags(TypedDict):
     is_unreadable: bool
     low_words_count: bool
@@ -66,9 +73,7 @@ class ChecksState(TypedDict):
     """
 
     # Article Inputs
-    article_content: str
-    article_title: str
-    meta_desc: str
+    article_inputs: ArticleInputs
 
     # Flags for rule-based/statistical-based methods
     content_flags: Annotated[ContentFlags, merge_dict]
@@ -85,7 +90,8 @@ class ChecksState(TypedDict):
 
 
 def content_evaluation_rules_node(state: ChecksState) -> dict:
-    article_content = state.get("article_content", "")
+    article_content = state.get("article_inputs")["article_content"]
+    content_category = state.get("article_inputs")["content_category"]
     content_flags = state.get("content_flags", {})
 
     # Check readability -
@@ -104,9 +110,18 @@ def content_evaluation_rules_node(state: ChecksState) -> dict:
     # Check for insufficient content -
     # Less than 300 - 400 words is considered too brief
     # to adequately cover a topic unless it's a very specific and narrow subject
-    # TODO: Plot the word count distribution of articles across each content category
+    # Threshold is set at the 25th percentile - Flag articles below 25th percentile for each content category
+    word_count_threshold_dict = {
+        "cost-and-financing": 267,
+        "live-healthy-articles": 413,
+        "diseases-and-conditions": 368,
+        "medical-care-and-facilities": 202,
+        "support-group-and-others": 213,
+    }
     word_count = len(article_content.split())
-    if word_count < 300:
+    # Flag articles based on the provided threshold. Otherwise, flag articles below 300 words
+    threshold = word_count_threshold_dict.get(content_category, 300)
+    if word_count < threshold:
         content_flags["low_word_count"] = True
     else:
         content_flags["low_word_count"] = False
@@ -115,7 +130,7 @@ def content_evaluation_rules_node(state: ChecksState) -> dict:
 
 
 def content_explanation_node(state: ChecksState) -> dict:
-    article_content = state.get("article_content", "")
+    article_content = state.get("article_inputs")["article_content"]
     content_flags = state.get("content_flags", {})
     content_judge = state.get("content_judge", {})
 
@@ -133,7 +148,7 @@ def content_explanation_node(state: ChecksState) -> dict:
 
 
 def content_evaluation_llm_node(state: ChecksState) -> dict:
-    article_content = state.get("article_content", "")
+    article_content = state.get("article_inputs")["article_content"]
     content_judge = state.get("content_judge", {})
     content_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
 
@@ -154,7 +169,7 @@ def content_evaluation_llm_node(state: ChecksState) -> dict:
 
 
 def title_evaluation_rules_node(state: ChecksState) -> dict:
-    article_title = state.get("article_title", "")
+    article_title = state.get("article_inputs")["article_title"]
     title_flags = state.get("title_flags", {})
 
     # Not Within Page Title Char Count - Up to 70 Characters
@@ -172,8 +187,8 @@ def title_evaluation_rules_node(state: ChecksState) -> dict:
 
 
 def title_evaluation_llm_node(state: ChecksState) -> dict:
-    article_title = state.get("article_title", "")
-    article_content = state.get("article_content", "")
+    article_title = state.get("article_inputs")["article_title"]
+    article_content = state.get("article_inputs")["article_content"]
     title_judge = state.get("title_judge", {})
 
     # Irrelevant Page Title
@@ -187,7 +202,7 @@ def title_evaluation_llm_node(state: ChecksState) -> dict:
 
 
 def meta_desc_evaluation_rules_node(state: ChecksState) -> dict:
-    meta_desc = state.get("meta_desc", "")
+    meta_desc = state.get("article_inputs")["meta_desc"]
     meta_flags = state.get("meta_flags", {})
 
     # Not Within Meta Description Char Count - Between 70 and 160 characters
@@ -204,7 +219,7 @@ def meta_desc_evaluation_rules_node(state: ChecksState) -> dict:
 
 
 def meta_desc_evaluation_llm_node(state: ChecksState) -> dict:
-    meta_desc = state.get("meta_desc", "")
+    meta_desc = state.get("article_inputs")["meta_desc"]
     article_content = state.get("article_content", "")
     meta_judge = state.get("meta_judge", {})
 
@@ -272,13 +287,17 @@ if __name__ == "__main__":
         article_title = df_sample["title"].iloc[i]
         meta_desc = df_sample["category_description"].iloc[i]  # meta_desc can be null
         meta_desc = meta_desc if meta_desc is not None else "No meta description"
+        content_category = df_sample["content_category"].iloc[i]
 
         print(f"Checking {article_title} now...")
         # Set up Inputs
         inputs = {
-            "article_content": article_content,
-            "article_title": article_title,
-            "meta_desc": meta_desc,
+            "article_inputs": {
+                "article_content": article_content,
+                "article_title": article_title,
+                "meta_desc": meta_desc,
+                "content_category": content_category,
+            },
             "content_flags": {},
             "title_flags": {},
             "meta_flags": {},
