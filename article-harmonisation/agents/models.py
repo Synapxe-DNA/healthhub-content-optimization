@@ -1,13 +1,13 @@
 import re
 from abc import ABC, abstractmethod
 
+from agents.enums import MODELS, ROLES
 from config import settings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_openai import AzureChatOpenAI
 
-from .enums import MODELS, ROLES
 from .prompts import prompt_tool
 
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
@@ -299,9 +299,7 @@ class HuggingFace(LLMInterface):
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print(f"Processing keypoints for header {num}")
         res = chain.invoke(article)
-        print(f"Keypoints processed for header {num}")
         response = re.sub(" +", " ", res)
 
         return response
@@ -465,7 +463,7 @@ class Azure(LLMInterface):
 
         return response
 
-    def generate_keypoints(self, article: str, num: int):
+    def generate_keypoints(self, article: str):
         """
         Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
 
@@ -488,9 +486,7 @@ class Azure(LLMInterface):
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print(f"Processing keypoints for header {num}")
         res = chain.invoke({"Article": article})
-        print(f"Keypoints processed for header {num}")
         response = re.sub(" +", " ", res)
 
         return response
@@ -528,9 +524,7 @@ class Azure(LLMInterface):
         input_keypoints = ""
         for article_index in range(len(keypoints)):
             article_kp = keypoints[article_index]
-            input_keypoints += (
-                f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
-            )
+            input_keypoints += f"\n Article {article_index + 1}\n{article_kp}\n"
 
         chain = prompt_t | self.model | StrOutputParser()
         print("Compiling keypoints for article harmonisation")

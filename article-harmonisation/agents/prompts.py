@@ -349,53 +349,100 @@ class AzurePrompts(LLMPrompt):
         ]
         return meta_desc_evaluation_prompt
 
-    def return_researcher_prompt(self) -> list[tuple[str, str]]:
+    def return_researcher_prompt(self) -> list:
+
         researcher_prompt = [
             (
                 "system",
-                """You are part of a article combination process. Your task is to utilize the keypoint in each article and determine if the sentences under each keypoint are relevant to the keypoint.
+                """You are part of a article combination process. Your task is to utilize the headers in the article and identify and omit any unnecessary sentences.
+                You will be given a context as well as a set of instructions.
+                You MUST use the Context guidelines given.
+                You MUST strictly follow the instructions given.
 
+                ### Start of Context guidelines
+                    You will be given an article with labelled headers.
+                    Each header will have their header type specified at the front of the header title as html tags.
+                    If a header is a sub header or sub section to another header, it will be specified in the following sentence along with the header title that it is a sub section to.
+                    If a header is a sub header or sub section to another header, you MUST use the title of the parent header along with the title of the sub header to determine if the sentences under the sub section is relevant.
+                    Sentences suggesting an external link SHOULD be omitted.
+
+                    Refer to this example and its explanation:
+                        ### Start of header example
+                            h2 Sub Header: Exercises you can do at home  // This is a h2 Sub Header
+
+                            h3 Sub Section: Wall planks // This is a h3 sub section
+                            Sub section to h2 Sub Header: Exercises you can do at home // This h3 subection is under the h2 sub header "Exercises you can do at home"
+                            # Rest of content
+                        ### End of header example
+
+                    Check through each headline with this context step by step.
+                ### End of Context guidelines
+
+                ### Start of Instructions
                 Do NOT paraphrase sentences from the given article when assigning the sentence, you must use each sentence directly from the given content.
-                Do NOT modify the keypoint headers.
-                If no keypoint header is provided, you may come up with your own keypoint header that MUST be relevant to the content provided
-                ALL sentences in the same keypoint must be joined in a single paragraph.
-                Each sentence must appear only ONCE under the keypoint.
-                Not all sentences are relevant to the keypoint header. If a sentence is irrelevant to all key points, you can place it under the last keypoint "Omitted sentences".
-                Strictly ONLY include the content and the sentences you omitted in your answer.""",
-            ),
-            (
-                "human",
-                """Keypoint: Introduction to Parkinson's disease
-                Parkinson's is a neurodegenerative disease.
-                Buy these essential oils to recover from Parkinson's Disease!
-                It is a progressive disorder that affects the nervous system and other parts of the body.
-                There are approximately 90,000 new patients diagnosed with PD annually in the US.""",
-            ),
-            (
-                "assistant",
-                """ Keypoint: Introduction to Parkinson's disease
-                Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
+                Do NOT modify the headers.
+                If no header is provided, you may come up with your own header that MUST be relevant to the content provided
+                ALL sentences in the same header must be joined in a single paragraph.
+                Each sentence must appear only ONCE under the header.
+                Not all sentences are relevant to the keypoint header. If a sentence is irrelevant to all headers, you can place it under the last header "Omitted sentences" at the end of the article.
+                Check through each instruction step by step.
+                ### End of Instructions
 
-                Omitted sentences:
-                Buy these essential oils to recover from Parkinson's Disease!""",
+                Refer to the example below to format your answer accordingly:
+                """,
             ),
             (
                 "human",
-                """ Keypoint: Tips to maintain your weight
-                Consume a high protein, low carb diet.
-                Exercise for 30 minutes daily.
-                Cut down on consumption of saturated fat and sugary food.
-                Read these next: Top 10 power foods to eat recommended by a nutritionist""",
+                """
+                h2 Sub Header: Introduction to Parkinson's disease
+                Content: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
+
+                Buy these essential oils to recover from Parkinson's Disease!
+
+                h2 Sub Header: Symptoms of Parkinson's disease
+
+                h3 Sub Header: Tremor in hands, arms, legs, jaw, or head
+                Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
+                Content: Patient's of PD may suffer from tremors in their limbs that may worsen over time. For example, people may feel mild tremors or have difficulty getting out of a chair. They may also notice that they speak too softly, or that their handwriting is slow and looks cramped or small.
+
+                h3 Sub Header: Muscle stiffness
+                Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
+                Content: Patient's of PD may also suffer from muscle stiffness and lose their mobility as their conditions worsen over time. During early stages of Parkinson's, family members and close friends will begin to notice that the person may lack facial expression and animation as well.
+
+                h3 Sub Header: Impaired balance and coordination
+                Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
+                Content: Individuals with Parkinson's disease often experience significant challenges with balance and coordination. These impairments can lead to an increased risk of falls and a decreased ability to perform everyday activities.
+
+                Read more: Western medicine vs Alternative healing
+
+                Related: Newest breakthroughs in the field of neuroscience
+                """,
             ),
             (
                 "assistant",
                 """
-                Answer:
-                Keypoint: Introduction to Parkinson's disease
-                Consume a high protein, low carb diet. Exercise for 30 minutes daily. Cut down on consumption of saturated fat and sugary food.
+                h2 Sub Header: Introduction to Parkinson's disease
+                Content: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
 
-                Omitted sentences:
-                Read these next: Top 10 power foods to eat recommended by a nutritionist
+                h2 Sub Header: Symptoms of Parkinson's disease
+
+                h3 Sub Header: Tremor in hands, arms, legs, jaw, or head
+                Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
+                Content: Patient's of PD may suffer from tremors in their limbs that may worsen over time. For example, people may feel mild tremors or have difficulty getting out of a chair. They may also notice that they speak too softly, or that their handwriting is slow and looks cramped or small.
+
+                h3 Sub Header: Muscle stiffness
+                Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
+                Content: Patient's of PD may also suffer from muscle stiffness and lose their mobility as their conditions worsen over time. During early stages of Parkinson's, family members and close friends will begin to notice that the person may lack facial expression and animation as well.
+
+                h3 Sub Header: Impaired balance and coordination
+                Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
+                Content: Individuals with Parkinson's disease often experience significant challenges with balance and coordination. These impairments can lead to an increased risk of falls and a decreased ability to perform everyday activities.
+
+                Omitted Sentences:
+                Buy these essential oils to recover from Parkinson's Disease!
+                Read more: Western medicine vs Alternative healing
+                Related: Newest breakthroughs in the field of neuroscience
+
                 """,
             ),
             (
@@ -408,7 +455,7 @@ class AzurePrompts(LLMPrompt):
 
     def return_compiler_prompt(self) -> list[tuple[str, str]]:
         """
-        Returns the compiler prompt for Llama3
+        Returns the compiler prompt for Azure ChatGPT
 
         Returns:
             compiler_prompt (string): this is a string containing the prompt for a compiler llm. {Keypoints} is the only input required to invoke the prompt.
@@ -417,39 +464,42 @@ class AzurePrompts(LLMPrompt):
         compiler_prompt = [
             (
                 "system",
-                """ You are part of a article combination process. Your task is to compare and compile the key points given to you.
+                """ You are part of a article combination process. Your task is to compare and compile the headers given to you.
+                Each header is referred to as a keypoint.
+                You should analyze each header and it's contents step by step and determine if it's a unique keypoint, or it's content can be combined with another keypoint.
+                If you have identified two keypoints to contain very similar information, combine the sentences underneath and remove redundant sentences if required.
+                Do NOT paraphrase and strictly only add or remove sentences.
 
-                Do NOT paraphrase from the sentences in each keypoint.
-                You may add conjunctions and connectors if it improves the flow of the sentences.
-                If two key points are identical or very similar, combine the points underneath and remove redundant sentences if required. However, do NOT paraphrase and strictly only add or remove sentences.
-                All key points must be returned at the end.
-                Return the compiled key points at the end.""",
+                You may add conjuctions and connectors between sentences if it improves the flow of the sentences.
+                You MUST retain ALL key information, especially information pertaining to specific disease names and medications.
+                Use the example below as an idea on how compiling the keypoints should be:
+                """,
             ),
             (
                 "user",
-                """ Article 1 key points:
-                1. Introduction to Parkinson's disease
+                """ Article 1 keypoints:
+                h2 Sub Header: Introduction to Parkinson's disease
                 Parkinson's disease is a neuro-degenerative disease.
 
-                2. Remedies to Parkinson's disease
+                h2 Sub Header: Remedies to Parkinson's disease
                 You may take Levodopa prescribed by your doctor to alleviate the symptoms.
 
-                Article 2 key points:
-                1. History of Parkinson's disease
+                Article 2 keypoints:
+                h2 Sub Header: History of Parkinson's disease
                 Parkinson's disease was discovered by James Parkinson in 1817. It is a neurodegenerative disease.
 
-                2. Symptoms of Parkinson's disease
-                Symptoms of PD include: Barely noticeable tremors in the hands, soft or slurred speech and little to no facial expressions.""",
+                h2 Sub Header. Symptoms of Parkinson's disease
+                Symptoms of PD include: Barely noticeable tremours in the hands, soft or slurred speech and little to no facial expressions.""",
             ),
             (
                 "assistant",
-                """ 1. Introduction to Parkinson's disease
+                """ Keypoint: Introduction to Parkinson's disease // First headers and their content for both articles 1 and 2 are combined to form this new header.
                 Parkinson's disease is a neuro-degenerative disease. Parkinson's disease was discovered by James Parkinson in 1817.
 
-                2. Symptoms to Parkinson's disease
-                Symptoms of PD include: Barely noticeable tremors in the hands, soft or slurred speech and little to no facial expressions.
+                Keypoint: Symptoms of Parkinson's disease
+                Symptoms of PD include: Barely noticeable tremours in the hands, soft or slurred speech and little to no facial expressions.
 
-                3. Remedies to Parkinson's disease
+                Keypoint: Remedies to Parkinson's disease
                 You may take Levodopa prescribed by your doctor to alleviate the symptoms. """,
             ),
             ("human", "Compile the key points below:\n{Keypoints}"),
@@ -458,10 +508,58 @@ class AzurePrompts(LLMPrompt):
 
     def return_content_prompt(self) -> list[tuple[str, str]]:
 
+        # general_content_prompt = [
+        #     (
+        #         "system",
+        #         """ You are part of an article re-writing process. The article is aimed at enhancing the reader's well-being and lifestyle.
+
+        #         Your task is to utilize content from the given keypoints to fill in for the required sections stated below.
+        #         You will also be given a set of instructions that you MUST follow.
+
+        #         ### Start of content requirements
+
+        #             1. Your writing must carry a natural flow.
+        #                 It is important to have a natural flow to your writing so as to not confuse the readers.
+        #                 Each article should follow a general flow like so:
+        #                     1. Overview of the topic
+        #                     2. Benefits (if applicable to topic)
+        #                     3. Thing to note, remember or consider
+        #                     4. Summary or concluding point
+        #                 You DO NOT need to rename the article headers like so, this is simply an article flow to guide you.
+        #                 You may combine the content under each keypoint if it improves the article flow, or contain similar information.
+        #                 If the article is missing any of these sections and they are applicable to the topic, you should use the content in the keypoints to fill in the missing sections.
+
+        #             2. You MUST retain names and the relevant information specified in the content.
+        #                 If a sentence contains specific names, you can rewrite the sentence, but you MUST retain these names and their relevant information.
+        #                 ## Example 1:  "Hike your way up to Fort Canning Park which is perched on a hill."
+        #                 Answer: "Make your way up the hill to visit the historic Fort Canning Park."
+        #                 ## Example 2: "Head to City Hall for these tasty treats."
+        #                 Answer: "Fill up your tummy with these tasty meals from City Hall!"
+
+        #             3. Your writing should carry a conversational and encouraging tone.
+        #                 You should adopt a more casual tone in your writing as it will spark reader interest.
+        #                 ## Example: "When we think of exercise, what often comes to mind is sweating it out in the blazing sun, panting for a long time afterwards, then aching all over. But that’s not always necessary!"
+
+        #                 Your writing should strike up a more conversational and encouraging tone.
+
+        #                 Do not hesitate to sound more casual when writing lifestyle-related content, such as using “no worries” like in the example below.
+        #                 ## Example: "If the recommended 150 to 300 minutesof exercise such as jogging, brisk walking, swimming or cycling, and 2 days of muscle and bone-strengthening a week is too much for you, no worries! You can still start at your own pace and intensify your workout as you get used to working out."
+
+        #             4. Your writing should address the reader’s concerns and assure them that a situation it’s not as bad as they think.
+
+        #             5. Your article headers should be relevant to it's content while being short and interesting.
+        #                 Here are some guidelines for writng out your article headers:
+
+        #                 You can use subheaders if it improves the flow of the article.
+        #         """,
+        #     ),
+        #     ("human", "Rewrite the following keypoints: \n{Keypoints}"),
+        # ]
+
         optimise_health_conditions_content_prompt = [
             (
                 "system",
-                """ You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
+                """ You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
 
                 Your task is to utilize content from the given key points to fill in for the required sections stated below.
                 You will also be given a set of instructions that you MUST follow.
