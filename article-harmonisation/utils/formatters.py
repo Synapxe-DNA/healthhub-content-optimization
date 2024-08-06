@@ -11,17 +11,13 @@ CONTENT_BODY = "extracted_content_body"
 EXTRACTED_HEADERS = "extracted_headers"
 ARTICLE_TITLE = "title"
 META_DESC = "category_description"
+CONTENT_CATEGORY = "content_category"
+SUBCATEGORIES = "article_category_names"
 
-KEY_PARQUET_INFO = [
-    ARTICLE_TITLE,
-    "article_category_names",
-    EXTRACTED_HEADERS,
-    CONTENT_BODY,
-]
 TO_REMOVE = ["", " "]
 
-table = pq.read_table(MERGED_DATA_DIRECTORY)
-EXTRACTED_ARTICLE_TITLES = list(table[ARTICLE_TITLE])
+MERGED_DF = pq.read_table(MERGED_DATA_DIRECTORY)
+EXTRACTED_ARTICLE_TITLES = list(MERGED_DF[ARTICLE_TITLE])
 
 
 def article_list_indexes(articles: list):
@@ -38,15 +34,17 @@ def extract_content_for_evaluation(articles: list):
     article_details = []
     article_list_idx = article_list_indexes(articles)
     for idx in article_list_idx:
-        article_content = str(table[CONTENT_BODY][idx])
-        article_title = str(table[ARTICLE_TITLE][idx])
-        meta_desc = str(table[META_DESC][idx])
+        article_content = str(MERGED_DF[CONTENT_BODY][idx])
+        article_title = str(MERGED_DF[ARTICLE_TITLE][idx])
+        meta_desc = str(MERGED_DF[META_DESC][idx])
         meta_desc = meta_desc if meta_desc is not None else "No meta description"
+        content_category = str(MERGED_DF[CONTENT_CATEGORY][idx])
         article_details.append(
             {
                 ARTICLE_TITLE: article_title,
                 META_DESC: meta_desc,
                 CONTENT_BODY: article_content,
+                CONTENT_CATEGORY: content_category,
             }
         )
     return article_details
@@ -64,8 +62,8 @@ def concat_headers_to_content(articles: list):
     article_list_idx = article_list_indexes(articles)
     for num in range(len(articles)):
         idx = article_list_idx[num]
-        article_headers = list(table[EXTRACTED_HEADERS][idx])
-        article_content = str(table[CONTENT_BODY][idx])
+        article_headers = list(MERGED_DF[EXTRACTED_HEADERS][idx])
+        article_content = str(MERGED_DF[CONTENT_BODY][idx])
 
         # this list will store all the headers + content as elements
         split_content = []
@@ -139,7 +137,7 @@ def print_checks(result, model):
     """
 
     # determines the number of articles undergoing the harmonisation process
-    num_of_articles = len(result["original_article_content"]["article_content"])
+    num_of_articles = len(result.get("original_article_inputs")["article_content"])
 
     Path(f"{ROOT_DIR}/article-harmonisation/docs/txt_outputs").mkdir(
         parents=True, exist_ok=True
@@ -153,7 +151,7 @@ def print_checks(result, model):
         if content_index > 0:
             f.write(" \n ----------------- \n")
         f.write(f"Original Article {content_index+1} content \n")
-        article = result["original_article_content"]["article_content"][content_index]
+        article = result.get("original_article_inputs")["article_content"][content_index]
         for keypoint in article:
             f.write(keypoint + "\n")
     f.write(" \n -----------------")
@@ -162,24 +160,24 @@ def print_checks(result, model):
     print("\nRESEARCHER LLM CHECKS\n -----------------", file=f)
     for i in range(0, num_of_articles):
         print(f"These are the keypoints for article {i+1}\n".upper(), file=f)
-        print(result["optimised_article_output"]["researcher_keypoints"][i], file=f)
+        print(result.get("optimised_article_output")["researcher_keypoints"][i], file=f)
         print(" \n -----------------", file=f)
 
     # printing compiled keypoints produced by compiler LLM
 
     if "compiled_keypoints" in result["optimised_article_output"].keys():
         print("COMPILER LLM CHECKS \n ----------------- ", file=f)
-        print(str(result["optimised_article_output"]["compiled_keypoints"]), file=f)
+        print(str(result.get("optimised_article_output")["compiled_keypoints"]), file=f)
         print(" \n -----------------", file=f)
 
     # checking for optimised content produced by content optimisation flow
     flags = {"optimised_content", "optimised_writing", "article_title", "meta_desc"}
-    keys = result["optimised_article_output"].keys()
+    keys = result.get("optimised_article_output").keys()
     print("CONTENT OPTIMISATION CHECKS\n ----------------- \n", file=f)
     for flag in flags:
         if flag in keys:
             print(f"These is the optimised {flag.upper()}", file=f)
-            print(result["optimised_article_output"][flag], file=f)
+            print(result.get("optimised_article_output")[flag], file=f)
             print(" \n ----------------- \n", file=f)
         else:
             print(f"{flag.upper()} has not been flagged for optimisation.", file=f)
