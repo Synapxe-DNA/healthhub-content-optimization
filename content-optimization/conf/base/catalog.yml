@@ -38,6 +38,12 @@ all_extracted_text:
   dataset: text.TextDataset
   filename_suffix: ".txt"
 
+all_contents_mapped:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/all_contents_mapped
+  dataset: pandas.ParquetDataset
+  filename_suffix: ".parquet"
+
 merged_data:
   type: pandas.ParquetDataset
   filepath: data/03_primary/merged_data.parquet
