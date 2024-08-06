@@ -167,7 +167,8 @@ kedro run --nodes="extract_keywords_node"
 ### Clustering <a id="clustering"></a>
 > [!IMPORTANT]
 > Before running the [`clustering`](src/content_optimization/pipelines/clustering/pipeline.py) pipeline, ensure that you have already ran the `data_processing` and `feature_engineering` pipeline. Additionally, make sure that Neo4j is set up locally.
-#### Configuration
+#### Prerequisites
+#### 1. Configuration
 Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials: 
 
 ```yaml
@@ -182,7 +183,7 @@ neo4j_config:
   uri: neo4j://localhost:7687
   database: hh-articles
 ```
-#### Neo4j Set Up
+#### 2.Neo4j Set Up
 <details>
   <summary>Local Neo4j Setup Instuctions</summary>
 
@@ -200,6 +201,8 @@ neo4j_config:
 
 </details>
 
+#### 3. Data File
+- Verify that the file `data/01_raw/Synapxe Content Prioritisation - Live Healthy_020724.xlsx` is available in the specified directory.
 
 You can run the entire `clustering` pipeline by running:
 ```zsh
