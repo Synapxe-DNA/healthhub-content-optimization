@@ -22,10 +22,6 @@ class Settings(BaseSettings):
     HUGGINGFACEHUB_API_TOKEN: str = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
     os.environ["HUGGINGFACEHUB_API_TOKEN"] = HUGGINGFACEHUB_API_TOKEN
 
-    # Arize Phoenix
-    PHOENIX_PROJECT_NAME: str = os.getenv("PHOENIX_PROJECT_NAME", "")
-    os.environ["PHOENIX_PROJECT_NAME"] = PHOENIX_PROJECT_NAME
-
     # Microsoft Azure
     AZURE_OPENAI_API_TYPE: str = os.getenv("AZURE_OPENAI_API_TYPE", "")
     AZURE_OPENAI_API_VERSION: str = os.getenv("AZURE_OPENAI_API_VERSION", "")
@@ -41,6 +37,10 @@ class Settings(BaseSettings):
 
     os.environ["AZURE_OPENAI_ENDPOINT"] = AZURE_OPENAI_ENDPOINT
     os.environ["AZURE_OPENAI_API_TYPE"] = AZURE_OPENAI_API_TYPE
+
+    # Arize Phoenix
+    PHOENIX_PROJECT_NAME: str = os.getenv("PHOENIX_PROJECT_NAME", AZURE_DEPLOYMENT_NAME)
+    os.environ["PHOENIX_PROJECT_NAME"] = PHOENIX_PROJECT_NAME
 
 
 settings = Settings()
