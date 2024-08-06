@@ -81,13 +81,17 @@ def start_article_evaluation(articles: list):
         article_content = article_details[i]["extracted_content_body"]
         article_title = article_details[i]["title"]
         meta_desc = article_details[i]["category_description"]  # meta_desc can be null
+        content_category = article_details[i]["content_category"]
 
         print(f"Checking {article_title} now...")
         # Set up Inputs
         inputs = {
-            "article_content": article_content,
-            "article_title": article_title,
-            "meta_desc": meta_desc,
+            "article_inputs": {
+                "article_content": article_content,
+                "article_title": article_title,
+                "meta_desc": meta_desc,
+                "content_category": content_category,
+            },
             "content_flags": {},
             "title_flags": {},
             "meta_flags": {},
@@ -193,7 +197,7 @@ def start_article_harmonisation(stategraph: ChecksState):
     # Dictionary with the variouse input keys and items
     inputs = {
         "article_evaluation": stategraph,
-        "original_article_content": {"article_content": processed_input_articles},
+        "original_article_inputs": {"article_content": processed_input_articles},
         "optimised_article_output": {
             "researcher_keypoints": [],
         },
