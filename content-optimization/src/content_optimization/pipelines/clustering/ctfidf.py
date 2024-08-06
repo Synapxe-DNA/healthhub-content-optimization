@@ -1,9 +1,8 @@
 import numpy as np
 import scipy.sparse as sp
-
-from sklearn.utils import check_array
-from sklearn.preprocessing import normalize
 from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.preprocessing import normalize
+from sklearn.utils import check_array
 from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted
 
 
@@ -23,7 +22,7 @@ class CTFIDFVectorizer(TfidfTransformer):
         """
 
         # Prepare input
-        X = check_array(X, accept_sparse=('csr', 'csc'))
+        X = check_array(X, accept_sparse=("csr", "csc"))
         if not sp.issparse(X):
             X = sp.csr_matrix(X)
         dtype = X.dtype if X.dtype in FLOAT_DTYPES else np.float64
@@ -33,10 +32,9 @@ class CTFIDFVectorizer(TfidfTransformer):
         df = np.squeeze(np.asarray(X.sum(axis=0)))
         avg_nr_samples = int(X.sum(axis=1).mean())
         idf = np.log(avg_nr_samples / df)
-        self._idf_diag = sp.diags(idf, offsets=0,
-                                  shape=(n_features, n_features),
-                                  format='csr',
-                                  dtype=dtype)
+        self._idf_diag = sp.diags(
+            idf, offsets=0, shape=(n_features, n_features), format="csr", dtype=dtype
+        )
         self.idf_ = idf
         return self
 
@@ -55,7 +53,7 @@ class CTFIDFVectorizer(TfidfTransformer):
         """
 
         # Prepare input
-        X = check_array(X, accept_sparse='csr', dtype=FLOAT_DTYPES, copy=copy)
+        X = check_array(X, accept_sparse="csr", dtype=FLOAT_DTYPES, copy=copy)
         if not sp.issparse(X):
             X = sp.csr_matrix(X, dtype=np.float64)
 
@@ -64,19 +62,20 @@ class CTFIDFVectorizer(TfidfTransformer):
         # idf_ being a property, the automatic attributes detection
         # does not work as usual and we need to specify the attribute
         # name:
-        check_is_fitted(self, attributes=["idf_"],
-                        msg='idf vector is not fitted')
+        check_is_fitted(self, attributes=["idf_"], msg="idf vector is not fitted")
 
         # Check if expected nr features is found
         expected_n_features = self._idf_diag.shape[0]
         if n_features != expected_n_features:
-            raise ValueError("Input has n_features=%d while the model"
-                             " has been trained with n_features=%d" % (
-                                 n_features, expected_n_features))
+            raise ValueError(
+                "Input has n_features=%d while the model"
+                " has been trained with n_features=%d"
+                % (n_features, expected_n_features)
+            )
 
         X = X * self._idf_diag
 
         if self.norm:
-            X = normalize(X, axis=1, norm='l1', copy=False)
+            X = normalize(X, axis=1, norm="l1", copy=False)
 
         return X
