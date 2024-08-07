@@ -27,9 +27,9 @@ from langgraph.graph import END, START
 from utils.formatters import (
     concat_headers_to_content,
     extract_content_for_evaluation,
-    print_checks,
     get_article_list_indexes,
-    get_article_titles
+    get_article_titles,
+    print_checks,
 )
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
@@ -222,7 +222,7 @@ def start_article_harmonisation(stategraph: ChecksState):
 
     # Prints the various checks
     print_checks(result, MODEL)
-    
+
     return result
 
 
@@ -233,14 +233,20 @@ def main(article_list: list[str], setting: str = "title") -> TypedDict:
         case 0:
             raise ValueError("You need to have at least 1 article as input")
         case 1:
-            evaluation_stategraph = start_article_evaluation(articles=article_list, setting=setting)
+            evaluation_stategraph = start_article_evaluation(
+                articles=article_list, setting=setting
+            )
         case _:
             if setting == "title":
-                evaluation_stategraph = {"article_inputs": {"article_title": article_list}}
+                evaluation_stategraph = {
+                    "article_inputs": {"article_title": article_list}
+                }
             elif setting == "filename":
                 articles_idx = get_article_list_indexes(article_list, setting)
                 article_titles = get_article_titles(articles_idx)
-                evaluation_stategraph = {"article_inputs": {"article_title": article_titles}}
+                evaluation_stategraph = {
+                    "article_inputs": {"article_title": article_titles}
+                }
 
     res = start_article_harmonisation(stategraph=evaluation_stategraph)
 

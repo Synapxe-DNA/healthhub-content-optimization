@@ -5,8 +5,8 @@ import streamlit as st
 from agents.enums import ROLES
 from agents.models import start_llm
 from config import settings
-from utils.evaluations import calculate_readability
 from main import main
+from utils.evaluations import calculate_readability
 
 # Declaring model to use
 MODEL = settings.MODEL_NAME
@@ -63,8 +63,12 @@ if texts:
     result = main(filenames, setting="filename")
 
     with st.container(height=500):
-        optimised_article_content = result["optimised_article_output"]["optimised_writing"]
-        optimised_article_title = result["optimised_article_output"]["optimised_article_title"]
+        optimised_article_content = result["optimised_article_output"][
+            "optimised_writing"
+        ]
+        optimised_article_title = result["optimised_article_output"][
+            "optimised_article_title"
+        ]
         optimised_meta_desc = result["optimised_article_output"]["optimised_meta_desc"]
 
         text = f"Title:\n{optimised_article_title}\n\nMeta Description:\n{optimised_meta_desc}\n\nContent:\n{optimised_article_content}"
