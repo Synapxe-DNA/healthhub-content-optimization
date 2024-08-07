@@ -8,7 +8,7 @@ from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted
 
 class CTFIDFVectorizer(TfidfTransformer):
     def __init__(self, *args, **kwargs):
-        super(CTFIDFVectorizer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._idf_diag = None
 
     def fit(self, X: sp.csr_matrix, n_samples: int):

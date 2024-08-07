@@ -222,7 +222,8 @@ def generate_subclusters(
     cluster_size (pd.Series): Series containing the size of each cluster in bins of size 5.
     """
     cluster_size_count = pred_cluster.cluster.value_counts()
-    to_keep = cluster_size_count[cluster_size_count > 10].index
+    size_threshold = 10
+    to_keep = cluster_size_count[cluster_size_count > size_threshold].index
     cluster_morethan10 = pred_cluster[pred_cluster.cluster.isin(to_keep)]
     cluster_morethan10_embeddings = pd.merge(
         cluster_morethan10,

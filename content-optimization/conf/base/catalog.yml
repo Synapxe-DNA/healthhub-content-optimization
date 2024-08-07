@@ -100,6 +100,10 @@ metrics:
   type: pandas.CSVDataset
   filepath: data/07_model_output/metrics.csv
 
+initial_cluster_size:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/initial_cluster_size.csv
+
 final_cluster_size:
   type: pandas.CSVDataset
   filepath: data/07_model_output/final_cluster_size.csv

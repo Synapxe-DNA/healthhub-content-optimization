@@ -44,7 +44,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "clustered_nodes",
                     "unclustered_nodes",
                     "metrics",
-                    "cluster_size",
+                    "initial_cluster_size",
                 ],
                 name="generate_clusters_node",
             ),
