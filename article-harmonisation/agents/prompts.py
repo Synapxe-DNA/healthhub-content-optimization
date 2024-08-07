@@ -36,6 +36,7 @@ class LLMPrompt(ABC):
 
     This class inherits from ABC class.
     """
+
     @staticmethod
     @abstractmethod
     def return_readability_evaluation_prompt():

@@ -5,15 +5,15 @@ from agents.models import start_llm
 from checks import ChecksState
 from config import settings
 from langgraph.graph import END, START
+from states.definitions import (
+    OptimisationAgents,
+    OptimisationFlags,
+    OptimisedArticle,
+    OriginalArticles,
+)
 from utils.formatters import concat_headers_to_content, print_checks
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
-from states.definitions import (
-    OriginalArticles,
-    OptimisedArticle,
-    OptimisationFlags,
-    OptimisationAgents
-)
 
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS

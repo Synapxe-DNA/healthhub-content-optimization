@@ -5,20 +5,20 @@ from agents.enums import ROLES
 from agents.models import start_llm
 from config import settings
 from langgraph.graph import END, START
+from states.definitions import (
+    ArticleInputs,
+    ChecksAgents,
+    ContentFlags,
+    ContentJudge,
+    MetaFlags,
+    MetaJudge,
+    TitleFlags,
+    TitleJudge,
+)
 from utils.evaluations import calculate_readability
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
 from utils.reducers import merge_dict
-from states.definitions import (
-    ArticleInputs,
-    ContentFlags,
-    TitleFlags,
-    MetaFlags,
-    ContentJudge,
-    TitleJudge,
-    MetaJudge,
-    ChecksAgents
-)
 
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
