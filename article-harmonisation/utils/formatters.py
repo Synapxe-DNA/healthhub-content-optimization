@@ -19,15 +19,15 @@ TO_REMOVE = ["", " "]
 MERGED_DF = pq.read_table(MERGED_DATA_DIRECTORY)
 
 
-def get_article_list_indexes(articles: list, type: str = "title") -> list:
+def get_article_list_indexes(articles: list, setting: str = "title") -> list:
     article_list_idx = []
-    if type == "title":
+    if setting == "title":
         extracted_titles = list(MERGED_DF[ARTICLE_TITLE])
         for article_title in extracted_titles:
             if article_title.as_py() in articles:
                 idx = extracted_titles.index(article_title)
                 article_list_idx.append(idx)
-    elif type == "filename":
+    elif setting == "filename":
         extracted_ids = list(MERGED_DF["id"])
         for article in articles:
             article_id = int(article.split("/")[-1].split(".")[0].split("_")[-1])
@@ -39,10 +39,18 @@ def get_article_list_indexes(articles: list, type: str = "title") -> list:
     return article_list_idx
 
 
-def extract_content_for_evaluation(articles: list):
+def get_article_titles(article_idxs: list) -> list:
+    article_titles = []
+    for idx in article_idxs:
+        title = str(MERGED_DF[ARTICLE_TITLE][idx])
+        article_titles.append(title)
+    return article_titles
+
+
+def extract_content_for_evaluation(articles: list, setting: str = "title") -> list:
     """Extracts out the article content, title and meta descriptions and returns a list in which each element is a dictionary with the respective article's details."""
     article_details = []
-    article_list_idx = get_article_list_indexes(articles)
+    article_list_idx = get_article_list_indexes(articles, setting)
     for idx in article_list_idx:
         article_content = str(MERGED_DF[CONTENT_BODY][idx])
         article_title = str(MERGED_DF[ARTICLE_TITLE][idx])
