@@ -27,6 +27,7 @@ MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 MODEL = settings.MODEL_NAME
 
 
+
 class ChecksState(TypedDict):
     """This class contains the different keys relevant to the project. It inherits from the TypedDict class.
 
@@ -75,6 +76,8 @@ def content_evaluation_rules_node(state: ChecksState) -> dict:
         content_flags["is_unreadable"] = True
     else:
         content_flags["is_unreadable"] = False
+
+    content_flags["readability_score"] = score
 
     # Check for insufficient content -
     # Less than 300 - 400 words is considered too brief

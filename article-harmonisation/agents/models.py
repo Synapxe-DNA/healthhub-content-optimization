@@ -335,9 +335,11 @@ class HuggingFace(LLMInterface):
         input_keypoints = ""
         for article_index in range(len(keypoints)):
             article_kp = keypoints[article_index]
-            input_keypoints += (
-                f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
-            )
+            input_keypoints += f"""
+                ### Start of Article {article_index + 1} Keypoints ###
+                {article_kp}
+                ### End of Article {article_index + 1} Keypoints ###
+                """
 
         chain = prompt_t | self.model
         print("Compiling keypoints for article harmonisation")
@@ -461,6 +463,18 @@ class Azure(LLMInterface):
 
         return response
 
+    def evaluate_personality(self, content: str) -> bool:
+
+        template = self.prompt_template.return_personality_evaluation_prompt()
+
+        prompt_t = ChatPromptTemplate.from_messages(template)
+
+        chain = prompt_t | self.model | StrOutputParser()
+        res = chain.invoke({"Content": content})
+        response = re.sub(" +", " ", res)
+
+        return response
+
     def generate_keypoints(self, article: str):
         """
         Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
@@ -522,7 +536,11 @@ class Azure(LLMInterface):
         input_keypoints = ""
         for article_index in range(len(keypoints)):
             article_kp = keypoints[article_index]
-            input_keypoints += f"\n Article {article_index + 1}\n{article_kp}\n"
+            input_keypoints += f"""
+            ### Start of Article {article_index + 1} Keypoints ###
+            {article_kp}
+            ### End of Article {article_index + 1} Keypoints ###
+            """
 
         chain = prompt_t | self.model | StrOutputParser()
         print("Compiling keypoints for article harmonisation")
@@ -533,7 +551,7 @@ class Azure(LLMInterface):
 
         return response
 
-    def optimise_content(self, keypoints: list = []):
+    def optimise_content(self, keypoints, structure_evaluation: str):
         if self.role != ROLES.CONTENT_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
@@ -545,7 +563,9 @@ class Azure(LLMInterface):
 
         chain = prompt_t | self.model | StrOutputParser()
         print("Optimising article content")
-        res = chain.invoke({"Keypoints": keypoints})
+        res = chain.invoke(
+            {"Keypoints": keypoints, "Structure_evaluation": structure_evaluation}
+        )
         print("Article content optimised")
         response = re.sub(" +", " ", res)
 
@@ -566,6 +586,24 @@ class Azure(LLMInterface):
         response = chain.invoke({"Content": content})
         print("Article writing optimised")
 
+        return response
+
+    def optimise_readability(self, content: str, readability_evaluation: str):
+        """Rewrites the content based on the fiven feedback"""
+        if self.role != ROLES.READABILITY_OPTIMISATION:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_readability()"
+            )
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_readability_optimisation_prompt()
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+        print("-- Optimising article readability --")
+        response = chain.invoke(
+            {"Readability_evaluation": readability_evaluation, "Content": content}
+        )
+        print("-- Article readability optimised --")
         return response
 
     def optimise_title(self, content):
