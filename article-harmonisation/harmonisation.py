@@ -6,10 +6,10 @@ from checks import ChecksState
 from config import settings
 from langgraph.graph import END, START
 from states.definitions import (
+    ArticleInputs,
     OptimisationAgents,
     OptimisationFlags,
     OptimisedArticle,
-    OriginalArticles,
 )
 from utils.formatters import concat_headers_to_content, print_checks
 from utils.graphs import create_graph, draw_graph, execute_graph
@@ -40,7 +40,7 @@ class RewritingState(TypedDict):
     """
 
     article_evaluation: ChecksState
-    original_article_inputs: OriginalArticles
+    original_article_inputs: ArticleInputs
     optimised_article_output: OptimisedArticle
     user_flags: OptimisationFlags
     llm_agents: OptimisationAgents

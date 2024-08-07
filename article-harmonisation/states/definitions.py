@@ -1,17 +1,17 @@
-from typing import Optional, TypedDict
+from typing import Optional, TypedDict, Union
 
 from agents.models import LLMInterface
 
 
 class ArticleInputs(TypedDict):
-    article_id: int
-    article_content: str
-    article_title: str
-    meta_desc: str
-    article_url: str
-    content_category: str
-    article_category_names: str
-    page_views: int
+    article_id: Union[int, Optional[list[int]]]
+    article_content: Union[str, list[str]]
+    article_title: Union[str, Optional[list[str]]]
+    meta_desc: Union[str, Optional[list[str]]]
+    article_url: Union[str, Optional[list[str]]]
+    content_category: Union[str, Optional[list[str]]]
+    article_category_names: Union[str, Optional[list[str]]]
+    page_views: Union[int, Optional[list[int]]]
 
 
 class ContentFlags(TypedDict):
@@ -43,14 +43,6 @@ class MetaJudge(TypedDict):
 class ChecksAgents(TypedDict):
     evaluation_agent: LLMInterface
     explanation_agent: LLMInterface
-
-
-# TODO: Explore combining ArticleInputs and OriginalArticles class
-class OriginalArticles(TypedDict):
-    article_content: list[str]
-    article_title: Optional[list[str]]
-    content_category: Optional[list[str]]
-    meta_desc: Optional[list[str]]
 
 
 class OptimisedArticle(TypedDict):
