@@ -28,6 +28,8 @@ from utils.formatters import (
     concat_headers_to_content,
     extract_content_for_evaluation,
     print_checks,
+    get_article_list_indexes,
+    get_article_titles
 )
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
@@ -36,7 +38,7 @@ MODEL = MODELS("azure").name
 ROOT_DIR = get_root_dir()
 
 
-def start_article_evaluation(articles: list):
+def start_article_evaluation(articles: list, setting: str = "title"):
     nodes = {
         "content_evaluation_rules_node": content_evaluation_rules_node,
         "content_explanation_node": content_explanation_node,
@@ -75,7 +77,7 @@ def start_article_evaluation(articles: list):
     explanation_agent = start_llm(MODEL, ROLES.EXPLAINER)
 
     # Load data from merged_data.parquet and randomly sample 30 rows
-    article_details = extract_content_for_evaluation(articles)
+    article_details = extract_content_for_evaluation(articles, setting)
 
     for i in range(len(article_details)):
         # Set up
@@ -220,19 +222,25 @@ def start_article_harmonisation(stategraph: ChecksState):
 
     # Prints the various checks
     print_checks(result, MODEL)
-    print(result)
+    
+    return result
 
 
-def main(article_list: list[str]) -> TypedDict:
+def main(article_list: list[str], setting: str = "title") -> TypedDict:
     num_of_articles = len(article_list)
 
     match num_of_articles:
         case 0:
             raise ValueError("You need to have at least 1 article as input")
         case 1:
-            evaluation_stategraph = start_article_evaluation(articles=article_list)
+            evaluation_stategraph = start_article_evaluation(articles=article_list, setting=setting)
         case _:
-            evaluation_stategraph = {"article_inputs": {"article_title": article_list}}
+            if setting == "title":
+                evaluation_stategraph = {"article_inputs": {"article_title": article_list}}
+            elif setting == "filename":
+                articles_idx = get_article_list_indexes(article_list, setting)
+                article_titles = get_article_titles(articles_idx)
+                evaluation_stategraph = {"article_inputs": {"article_title": article_titles}}
 
     res = start_article_harmonisation(stategraph=evaluation_stategraph)
 
