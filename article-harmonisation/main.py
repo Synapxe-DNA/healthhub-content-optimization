@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from agents.enums import MODELS, ROLES
 from agents.models import start_llm
 from checks import (
@@ -35,7 +37,6 @@ ROOT_DIR = get_root_dir()
 
 
 def start_article_evaluation(articles: list):
-
     nodes = {
         "content_evaluation_rules_node": content_evaluation_rules_node,
         "content_explanation_node": content_explanation_node,
@@ -110,7 +111,6 @@ def start_article_evaluation(articles: list):
 
 
 def start_article_harmonisation(stategraph: ChecksState):
-
     # Declaring dictionary with all nodes
     nodes = {
         "researcher_node": researcher_node,
@@ -182,13 +182,13 @@ def start_article_harmonisation(stategraph: ChecksState):
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
 
-    if isinstance(stategraph.get("article_title"), list):
+    if isinstance(stategraph.get("article_inputs")["article_title"], list):
         processed_input_articles = concat_headers_to_content(
-            stategraph.get("article_title")
+            stategraph.get("article_inputs")["article_title"]
         )
     else:
         processed_input_articles = concat_headers_to_content(
-            [stategraph.get("article_title")]
+            [stategraph.get("article_inputs")["article_title"]]
         )
 
     for i in processed_input_articles:
@@ -223,19 +223,26 @@ def start_article_harmonisation(stategraph: ChecksState):
     print(result)
 
 
-if __name__ == "__main__":
-    article_list = [
-        "Rubella",
-        "How Dangerous Is Rubella?",
-        # "Outdoor Activities That Make Fitness Fun in Singapore"
-    ]
+def main(article_list: list[str]) -> TypedDict:
     num_of_articles = len(article_list)
+
     match num_of_articles:
         case 0:
             raise ValueError("You need to have at least 1 article as input")
         case 1:
             evaluation_stategraph = start_article_evaluation(articles=article_list)
         case _:
-            evaluation_stategraph = {"article_title": article_list}
+            evaluation_stategraph = {"article_inputs": {"article_title": article_list}}
 
-    start_article_harmonisation(stategraph=evaluation_stategraph)
+    res = start_article_harmonisation(stategraph=evaluation_stategraph)
+
+    return res
+
+
+if __name__ == "__main__":
+    article_list = [
+        "Rubella",
+        "How Dangerous Is Rubella?",
+        # "Outdoor Activities That Make Fitness Fun in Singapore"
+    ]
+    print(main(article_list))
