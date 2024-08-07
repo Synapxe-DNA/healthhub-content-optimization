@@ -5,9 +5,9 @@ import streamlit as st
 from agents.enums import ROLES
 from agents.models import start_llm
 from config import settings
-from utils.graphs import create_graph, execute_graph
 from utils.evaluations import calculate_readability
 from utils.formatters import concat_headers_to_content
+from utils.graphs import execute_graph
 
 # Declaring model to use
 MODEL = settings.MODEL_NAME
@@ -38,12 +38,13 @@ texts = []
 if uploaded_files:
     if len(uploaded_files) > 2:
         st.warning(
-            "Maximum number of files reached. Only the last two files will be processed"
+            "Maximum number of files reached. Only the first two files will be processed"
         )
-        uploaded_texts = uploaded_files[:2]
+        uploaded_files = uploaded_files[-2:]
 
-    for uploaded_file in uploaded_files:
-        text_string = StringIO(uploaded_file.getvalue().decode("utf-8")).read()
+    for file in uploaded_files:
+        print(file)
+        text_string = StringIO(file.getvalue().decode("utf-8")).read()
         texts.append(text_string)
 
     cols = st.columns(len(texts), vertical_alignment="top")
@@ -61,7 +62,7 @@ if texts:
     processed_input_articles = concat_headers_to_content(texts)
 
     inputs = {
-        "original_article_content": {"article_content": processed_input_articles},
+        "original_article_inputs": {"article_content": processed_input_articles},
         "optimised_article_output": {
             "researcher_keypoints": [],
             "article_researcher_counter": 0,
