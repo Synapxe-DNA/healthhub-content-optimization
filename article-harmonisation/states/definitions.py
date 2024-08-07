@@ -5,7 +5,7 @@ from agents.models import LLMInterface
 
 class ArticleInputs(TypedDict):
     article_id: Union[int, Optional[list[int]]]
-    article_content: Union[str, list[str]]
+    article_content: Union[str, Optional[list[str]]]
     article_title: Union[str, Optional[list[str]]]
     meta_desc: Union[str, Optional[list[str]]]
     article_url: Union[str, Optional[list[str]]]
