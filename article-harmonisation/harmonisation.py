@@ -5,6 +5,7 @@ from agents.models import LLMInterface, start_llm
 from checks import ChecksState
 from config import settings
 from langgraph.graph import END, START
+from utils.evaluations import calculate_readability
 from utils.formatters import concat_headers_to_content, print_checks
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
@@ -15,11 +16,19 @@ MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 # Declaring model to use
 MODEL = MODELS("azure").name
 
+# Declaring the number of retries
+REWRITING_TRIES = 3
+
 
 class OriginalArticle(TypedDict):
     article_content: list
     article_title: Optional[list]
     meta_desc: Optional[list]
+    group_number: Optional[str]
+    subgroup: Optional[str]
+    group_description: Optional[str]
+    article_ids: list
+    urls: list
 
 
 class OptimisedArticle(TypedDict):
@@ -29,10 +38,13 @@ class OptimisedArticle(TypedDict):
     optimised_writing: Optional[str]
     optimised_article_title: Optional[str]
     optimised_meta_desc: Optional[str]
+    readability_score: Optional[int]
+    rewriting_tries: Optional[int]
 
 
 class OptimisationFlags(TypedDict):
     flag_for_content_optimisation: bool
+    flag_for_writing_optimisation: bool
     flag_for_title_optimisation: bool
     flag_for_meta_desc_optimisation: bool
 
@@ -42,6 +54,7 @@ class LLMAgents(TypedDict):
     compiler_agent: LLMInterface
     content_optimisation_agent: LLMInterface
     writing_optimisation_agent: LLMInterface
+    writing_evaluation_agent: LLMInterface
     title_optimisation_agent: LLMInterface
     meta_desc_optimisation_agent: LLMInterface
 
@@ -206,14 +219,26 @@ def content_guidelines_optimisation_node(state):
     if "compiled_keypoints" in optimised_article_output.keys():
         keypoints = optimised_article_output["compiled_keypoints"]
 
+    content_evaluation = (
+        state.get("article_evaluation").get("content_judge", {}).get("structure", "")
+    )
+
     # Runs the compiler LLM to compile the keypoints
     content_optimisation_agent = state.get("llm_agents")["content_optimisation_agent"]
 
-    optimised_content = content_optimisation_agent.optimise_content(keypoints)
+    optimised_content = content_optimisation_agent.optimise_content(
+        keypoints, content_evaluation
+    )
 
     optimised_article_output["optimised_content"] = optimised_content
 
-    return {"optimised_article_output": optimised_article_output}
+    user_flags = state.get("user_flags")
+    user_flags["flag_for_content_optimisation"] = False
+
+    return {
+        "optimised_article_output": optimised_article_output,
+        "user_flags": user_flags,
+    }
 
 
 def writing_guidelines_optimisation_node(state):
@@ -232,14 +257,36 @@ def writing_guidelines_optimisation_node(state):
     """
     optimised_article_output = state.get("optimised_article_output")
 
-    optimised_content = optimised_article_output["optimised_content"]
+    content = optimised_article_output.get(
+        "optimised_writing",
+        optimised_article_output.get(
+            "optimised_content",
+            optimised_article_output.get(
+                "compiled_keypoints",
+                optimised_article_output.get("researcher_keypoints"),
+            ),
+        ),
+    )
+
     writing_optimisation_agent = state.get("llm_agents")["writing_optimisation_agent"]
-    optimised_writing = writing_optimisation_agent.optimise_writing(optimised_content)
+
+    # readability_evaluation = state.get("article_evaluation").get("content_judge",{}).get("readability", "")
+
+    optimised_writing = writing_optimisation_agent.optimise_writing(content)
 
     user_flags = state.get("user_flags")
-    user_flags["flag_for_content_optimisation"] = False
+    user_flags["flag_for_writing_optimisation"] = False
 
+    # Updating the new optimised writing in the state
     optimised_article_output["optimised_writing"] = optimised_writing
+
+    # Updating the readability score in the state
+    new_readability_score = calculate_readability(optimised_writing)["score"]
+    optimised_article_output["readability_score"] = new_readability_score
+
+    # Updating the rewriting tries in the state
+    rewriting_tries = optimised_article_output.get("rewriting_tries", 0)
+    optimised_article_output["rewriting_tries"] = rewriting_tries + 1
 
     return {
         "optimised_article_output": optimised_article_output,
@@ -247,9 +294,43 @@ def writing_guidelines_optimisation_node(state):
     }
 
 
+# TODO: fix this up
+def writing_evaluation_node(
+    state,
+):
+    """Creates a readability evaluation node, used to provide feedback on an already optimised article to determine if the optimisation is sufficient good. This serves as a process of feedback loop for the writing optimisation process.
+
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+
+    Returns:
+    """
+    optimised_article_output = state.get("optimised_article_output")
+    optimised_writing = optimised_article_output.get("optimised_writing")
+    writing_evaluation_agent = state.get("llm_agents")["writing_evaluation_agent"]
+    print("Evaluating article writing")
+    readability_explanation = writing_evaluation_agent.evaluate_content(
+        content=optimised_writing, choice="readability"
+    )
+    print("Article writing evaluated")
+    article_evaluation = state.get("article_evaluation")
+    content_judge = article_evaluation.get("content_judge", {})
+
+    # Updating content_judge with the new readability evaluation
+    content_judge["readability"] = readability_explanation
+
+    # Updating state with the most recent content_judge updated with the new readability evaluation
+    article_evaluation["content_judge"] = content_judge
+
+    return {
+        "article_evaluation": article_evaluation,
+        "optimised_article_output": optimised_article_output,
+    }
+
+
 # functions to determine next node
-def check_all_articles(state):
-    """Checks if all articles have gone through the researcher LLM and determines if the state should return to the researcher node or move on to the compiler node. This node also determines if this is a harmonisation or optimisation process.
+def check_for_compiler(state):
+    """Determines if the state should move on to the compiler node for harmonisation or content_guidelines for optimisation.
 
     Args:
         state: a dictionary storing relevant attributes as keys and content as the respective items.
@@ -259,11 +340,24 @@ def check_all_articles(state):
         "compiler_node": returned if counter >= number of articles to be harmonised
     """
     article_content = state.get("original_article_content")["article_content"]
-    content_optimisation_flags = state.get("user_flags")[
-        "flag_for_content_optimisation"
+    content_optimisation_flag = state.get("user_flags")["flag_for_content_optimisation"]
+    writing_optimisation_flag = state.get("user_flags")["flag_for_writing_optimisation"]
+    title_optimisation_flag = state.get("user_flags")["flag_for_title_optimisation"]
+    meta_desc_optimisation_flag = state.get("user_flags")[
+        "flag_for_meta_desc_optimisation"
     ]
-    if (len(article_content) < 2) and content_optimisation_flags:
-        return "content_guidelines_optimisation_node"
+
+    if len(article_content) < 2:
+        if content_optimisation_flag:
+            return "content_guidelines_optimisation_node"
+        elif writing_optimisation_flag:
+            return "writing_guidelines_optimisation_node"
+        elif title_optimisation_flag:
+            return "title_optimisation_node"
+        elif meta_desc_optimisation_flag:
+            return "meta_description_optimisation_node"
+        else:
+            return END
     else:
         return "compiler_node"
 
@@ -280,22 +374,73 @@ def decide_next_optimisation_node(state):
         "meta_description_node": returned if previous flags are False and flag_for_meta_desc_optimisation is True
         END: returned if all flags are False, as no further optimisation is required for the article
     """
-    content_optimisation_flags = state.get("user_flags")[
-        "flag_for_content_optimisation"
-    ]
-    title_optimisation_flags = state.get("user_flags")["flag_for_title_optimisation"]
-    meta_desc_optimisation_flags = state.get("user_flags")[
+    content_optimisation_flag = state.get("user_flags")["flag_for_content_optimisation"]
+    writing_optimisation_flag = state.get("user_flags")["flag_for_writing_optimisation"]
+    title_optimisation_flag = state.get("user_flags")["flag_for_title_optimisation"]
+    meta_desc_optimisation_flag = state.get("user_flags")[
         "flag_for_meta_desc_optimisation"
     ]
 
-    if content_optimisation_flags:
+    if content_optimisation_flag:
         return "content_guidelines_optimisation_node"
-    elif title_optimisation_flags:
+    elif writing_optimisation_flag:
+        return "writing_guidelines_optimisation_node"
+    elif title_optimisation_flag:
         return "title_optimisation_node"
-    elif meta_desc_optimisation_flags:
+    elif meta_desc_optimisation_flag:
         return "meta_description_optimisation_node"
     else:
         return END
+
+
+# TODO: fix this up too bruh
+def check_readability_after_writing_optimisation(state):
+    """Checks for the readability score of the writing optimised article and determines if a subsequent round of rewriting is required to improve the article readability score."""
+    optimised_article_output = state.get("optimised_article_output")
+
+    rewriting_tries = optimised_article_output["rewriting_tries"] - 1
+    new_readability_score = optimised_article_output["readability_score"]
+    print(
+        f"Number of retries: {rewriting_tries}, Readability score: {new_readability_score}"
+    )
+
+    if rewriting_tries > REWRITING_TRIES or new_readability_score < 10:
+        if rewriting_tries >= REWRITING_TRIES:
+            print("Number of writing retries exceeded limit hit")
+        elif new_readability_score < 10:
+            print(
+                f"Readability score is now {new_readability_score} and considered readable"
+            )
+
+        # Checks if article is flagged for title and meta_desc optimisation
+        title_optimisation_flags = state.get("user_flags")[
+            "flag_for_title_optimisation"
+        ]
+        meta_desc_optimisation_flags = state.get("user_flags")[
+            "flag_for_meta_desc_optimisation"
+        ]
+
+        if title_optimisation_flags:
+            return "title_optimisation_node"
+        elif meta_desc_optimisation_flags:
+            return "meta_description_optimisation_node"
+        else:
+            return END
+
+    else:
+        content_flags = state.get("article_evaluation").get("content_flags", {})
+
+        # Checks if the current readability score is >= 10
+        if new_readability_score >= 10:
+            return "writing_evaluation_node"
+
+        # checks if the current readability score is worse than original readability score after writing optimisation
+        original_readability_score = content_flags.get("readability_score", None)
+        if (
+            original_readability_score
+        ):  # this means that this is an individual article input and it's for optimisation
+            if new_readability_score >= original_readability_score:
+                return "writing_evaluation_node"
 
 
 if __name__ == "__main__":
@@ -308,16 +453,15 @@ if __name__ == "__main__":
         "compiler_node": compiler_node,
         "content_guidelines_optimisation_node": content_guidelines_optimisation_node,
         "writing_guidelines_optimisation_node": writing_guidelines_optimisation_node,
+        "writing_evaluation_node": writing_evaluation_node,
         "title_optimisation_node": title_optimisation_node,
         "meta_description_optimisation_node": meta_description_optimisation_node,
     }
 
-    # Declaring dictionary with all edges
+    # # Declaring dictionary with all edges
     edges = {
         START: ["researcher_node"],
-        "content_guidelines_optimisation_node": [
-            "writing_guidelines_optimisation_node"
-        ],
+        "writing_evaluation_node": ["writing_guidelines_optimisation_node"],
         "meta_description_optimisation_node": [END],
     }
 
@@ -325,7 +469,7 @@ if __name__ == "__main__":
     # Example element in conditional edge dictionary: {"name of node": (conditional edge function, path map)}
     conditional_edges = {
         "researcher_node": (
-            check_all_articles,
+            check_for_compiler,
             {
                 "compiler_node": "compiler_node",
                 "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
@@ -335,14 +479,25 @@ if __name__ == "__main__":
             decide_next_optimisation_node,
             {
                 "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
+                "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
+                "title_optimisation_node": "title_optimisation_node",
+                "meta_description_optimisation_node": "meta_description_optimisation_node",
+                END: END,
+            },
+        ),
+        "content_guidelines_optimisation_node": (
+            decide_next_optimisation_node,
+            {
+                "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
                 "title_optimisation_node": "title_optimisation_node",
                 "meta_description_optimisation_node": "meta_description_optimisation_node",
                 END: END,
             },
         ),
         "writing_guidelines_optimisation_node": (
-            decide_next_optimisation_node,
+            check_readability_after_writing_optimisation,
             {
+                "writing_evaluation_node": "writing_evaluation_node",
                 "title_optimisation_node": "title_optimisation_node",
                 "meta_description_optimisation_node": "meta_description_optimisation_node",
                 END: END,
@@ -371,18 +526,20 @@ if __name__ == "__main__":
     title_optimisation_agent = start_llm(MODEL, ROLES.TITLE)
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
+    writing_evaluation_agent = start_llm(MODEL, ROLES.WRITING_EVALUATION)
 
     # List with the articles to harmonise
     article_list = [
         # "Rubella",
-        # "How Dangerous Is Rubella?"
-        "Weight, BMI and Health Problems"
+        "How Dangerous Is Rubella?"
+        # "Weight, BMI and Health Problems"
     ]
 
     processed_input_articles = concat_headers_to_content(article_list)
 
     # Dictionary with the variouse input keys and items
     inputs = {
+        "article_evaluation": {"article_title": article_list},
         "original_article_content": {"article_content": processed_input_articles},
         "optimised_article_output": {
             "researcher_keypoints": [],
@@ -390,6 +547,7 @@ if __name__ == "__main__":
         },
         "user_flags": {
             "flag_for_content_optimisation": True,
+            "flag_for_writing_optimisation": True,
             "flag_for_title_optimisation": True,
             "flag_for_meta_desc_optimisation": True,
         },
@@ -400,6 +558,7 @@ if __name__ == "__main__":
             "writing_optimisation_agent": writing_optimisation_agent,
             "title_optimisation_agent": title_optimisation_agent,
             "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
+            "writing_evaluation_agent": writing_evaluation_agent,
         },
     }
 

@@ -37,3 +37,6 @@ class ROLES(Enum):
     TITLE = "Title optimisation"
     CONTENT_OPTIMISATION = "Content optimisation"
     WRITING_OPTIMISATION = "Writing optimisation"
+    WRITING_EVALUATION = "Writing evaluation"
+    READABILITY_OPTIMISATION = "Readability optimisation"
+    PERSONALITY_EVALUATION = "Personality evaluation"

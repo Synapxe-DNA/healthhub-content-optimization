@@ -11,13 +11,10 @@ CONTENT_BODY = "extracted_content_body"
 EXTRACTED_HEADERS = "extracted_headers"
 ARTICLE_TITLE = "title"
 META_DESC = "category_description"
+ARTICLE_CATEGORY_NAMES = "article_category_names"
+ARTICLE_ID = "id"
+ARTICLE_URL = "full_url"
 
-KEY_PARQUET_INFO = [
-    ARTICLE_TITLE,
-    "article_category_names",
-    EXTRACTED_HEADERS,
-    CONTENT_BODY,
-]
 TO_REMOVE = ["", " "]
 
 table = pq.read_table(MERGED_DATA_DIRECTORY)
@@ -52,13 +49,6 @@ def extract_content_for_evaluation(articles: list):
     return article_details
 
 
-def update_header_dict(header_dictionary, header_type, header):
-    header_list = header_dictionary.get(header_type, [])
-    header_list.append(header)
-    header_dictionary[header_type] = header_list
-    return header_dictionary
-
-
 def concat_headers_to_content(articles: list):
     final_configured_articles = []
     article_list_idx = article_list_indexes(articles)
@@ -70,17 +60,18 @@ def concat_headers_to_content(articles: list):
         # this list will store all the headers + content as elements
         split_content = []
 
+        # this is the title of the article
+        article_title = articles[num]
+
         # Stores headers based on their heading type, h1 - h6
         header_dictionary = {}
 
         for header_details in article_headers:
             header_title = header_details[0].as_py()
             header_type = header_details[1].as_py()
-            header_dictionary = update_header_dict(
-                header_dictionary, header_type, header_title
-            )
-            print(header_dictionary)
-
+            header_list = header_dictionary.get(header_type, [])
+            header_list.append(header_title)
+            header_dictionary[header_type] = header_list
             match header_type:
                 case "h1":
                     header = f"h1 Main Header: {header_title}"
@@ -112,8 +103,8 @@ def concat_headers_to_content(articles: list):
 
             split_content[-1] = header + "\n" + split_content[-1][1:]
 
-        # concatenate all into this string
-        final_labelled_article = f"h1 Main Header: {articles[num]}\n"
+        # concatenate all into this string. The title is used as the main header.
+        final_labelled_article = f"Article Header: {article_title}\n"
         for new_content in split_content:
             # checking if there are empty strings in split_content and empty headers
             if new_content in TO_REMOVE:
@@ -123,6 +114,18 @@ def concat_headers_to_content(articles: list):
 
         final_configured_articles.append(final_labelled_article)
     return final_configured_articles
+
+
+def extract_article_details(articles: list):
+    article_ids = []
+    urls = []
+    article_indexes = article_list_indexes(articles)
+    for i in range(len(articles)):
+        idx = article_indexes[i]
+        article_ids.append(int(table[ARTICLE_ID][idx]))
+        urls.append(str(table[ARTICLE_URL][idx]))
+
+    return article_ids, urls
 
 
 def print_checks(result, model):
