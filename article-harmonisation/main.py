@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from agents.enums import MODELS, ROLES
 from agents.models import start_llm
 from checks import (
@@ -25,6 +27,8 @@ from langgraph.graph import END, START
 from utils.formatters import (
     concat_headers_to_content,
     extract_content_for_evaluation,
+    get_article_list_indexes,
+    get_article_titles,
     print_checks,
 )
 from utils.graphs import create_graph, draw_graph, execute_graph
@@ -34,8 +38,7 @@ MODEL = MODELS("azure").name
 ROOT_DIR = get_root_dir()
 
 
-def start_article_evaluation(articles: list):
-
+def start_article_evaluation(articles: list, setting: str = "title"):
     nodes = {
         "content_evaluation_rules_node": content_evaluation_rules_node,
         "content_explanation_node": content_explanation_node,
@@ -74,20 +77,24 @@ def start_article_evaluation(articles: list):
     explanation_agent = start_llm(MODEL, ROLES.EXPLAINER)
 
     # Load data from merged_data.parquet and randomly sample 30 rows
-    article_details = extract_content_for_evaluation(articles)
+    article_details = extract_content_for_evaluation(articles, setting)
 
     for i in range(len(article_details)):
         # Set up
         article_content = article_details[i]["extracted_content_body"]
         article_title = article_details[i]["title"]
         meta_desc = article_details[i]["category_description"]  # meta_desc can be null
+        content_category = article_details[i]["content_category"]
 
         print(f"Checking {article_title} now...")
         # Set up Inputs
         inputs = {
-            "article_content": article_content,
-            "article_title": article_title,
-            "meta_desc": meta_desc,
+            "article_inputs": {
+                "article_content": article_content,
+                "article_title": article_title,
+                "meta_desc": meta_desc,
+                "content_category": content_category,
+            },
             "content_flags": {},
             "title_flags": {},
             "meta_flags": {},
@@ -106,7 +113,6 @@ def start_article_evaluation(articles: list):
 
 
 def start_article_harmonisation(stategraph: ChecksState):
-
     # Declaring dictionary with all nodes
     nodes = {
         "researcher_node": researcher_node,
@@ -178,13 +184,13 @@ def start_article_harmonisation(stategraph: ChecksState):
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
 
-    if isinstance(stategraph.get("article_title"), list):
+    if isinstance(stategraph.get("article_inputs")["article_title"], list):
         processed_input_articles = concat_headers_to_content(
-            stategraph.get("article_title")
+            stategraph.get("article_inputs")["article_title"]
         )
     else:
         processed_input_articles = concat_headers_to_content(
-            [stategraph.get("article_title")]
+            [stategraph.get("article_inputs")["article_title"]]
         )
 
     for i in processed_input_articles:
@@ -193,7 +199,7 @@ def start_article_harmonisation(stategraph: ChecksState):
     # Dictionary with the variouse input keys and items
     inputs = {
         "article_evaluation": stategraph,
-        "original_article_content": {"article_content": processed_input_articles},
+        "original_article_inputs": {"article_content": processed_input_articles},
         "optimised_article_output": {
             "researcher_keypoints": [],
         },
@@ -216,7 +222,35 @@ def start_article_harmonisation(stategraph: ChecksState):
 
     # Prints the various checks
     print_checks(result, MODEL)
-    print(result)
+
+    return result
+
+
+def main(article_list: list[str], setting: str = "title") -> TypedDict:
+    num_of_articles = len(article_list)
+
+    match num_of_articles:
+        case 0:
+            raise ValueError("You need to have at least 1 article as input")
+        case 1:
+            evaluation_stategraph = start_article_evaluation(
+                articles=article_list, setting=setting
+            )
+        case _:
+            if setting == "title":
+                evaluation_stategraph = {
+                    "article_inputs": {"article_title": article_list}
+                }
+            elif setting == "filename":
+                articles_idx = get_article_list_indexes(article_list, setting)
+                article_titles = get_article_titles(articles_idx)
+                evaluation_stategraph = {
+                    "article_inputs": {"article_title": article_titles}
+                }
+
+    res = start_article_harmonisation(stategraph=evaluation_stategraph)
+
+    return res
 
 
 if __name__ == "__main__":
@@ -225,13 +259,4 @@ if __name__ == "__main__":
         "How Dangerous Is Rubella?",
         # "Outdoor Activities That Make Fitness Fun in Singapore"
     ]
-    num_of_articles = len(article_list)
-    match num_of_articles:
-        case 0:
-            raise ValueError("You need to have at least 1 article as input")
-        case 1:
-            evaluation_stategraph = start_article_evaluation(articles=article_list)
-        case _:
-            evaluation_stategraph = {"article_title": article_list}
-
-    start_article_harmonisation(stategraph=evaluation_stategraph)
+    print(main(article_list))

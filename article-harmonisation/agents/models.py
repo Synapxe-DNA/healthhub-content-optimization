@@ -1,19 +1,18 @@
 import re
 from abc import ABC, abstractmethod
 
-from agents.enums import MODELS, ROLES
 from config import settings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_openai import AzureChatOpenAI
 
+from .enums import MODELS, ROLES
 from .prompts import prompt_tool
 
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 AZURE_COGNITIVE_SERVICES = settings.AZURE_COGNITIVE_SERVICES
 AZURE_OPENAI_ENDPOINT = settings.AZURE_OPENAI_ENDPOINT
-AZURE_DEPLOYMENT_NAME = settings.AZURE_DEPLOYMENT_NAME
 AZURE_OPENAI_API_VERSION = settings.AZURE_OPENAI_API_VERSION
 AZURE_AD_TOKEN_PROVIDER = settings.AZURE_AD_TOKEN_PROVIDER
 
@@ -61,12 +60,11 @@ def start_llm(model: str, role: str):
                 cache=None,
                 callbacks=None,
                 custom_get_token_ids=None,
-                azure_deployment=AZURE_DEPLOYMENT_NAME,
+                azure_deployment=MODELS.azure.value,
                 frequency_penalty=0,
                 logprobs=None,
                 max_retries=2,
                 max_tokens=MAX_NEW_TOKENS,
-                # model=AZURE_DEPLOYMENT_NAME,
                 n=1,
                 api_version=AZURE_OPENAI_API_VERSION,
                 timeout=None,
