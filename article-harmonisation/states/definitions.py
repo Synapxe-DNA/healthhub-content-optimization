@@ -1,6 +1,6 @@
 from typing import Optional, TypedDict
 
-from ..agents.models import LLMInterface
+from agents.models import LLMInterface
 
 
 class ArticleInputs(TypedDict):
