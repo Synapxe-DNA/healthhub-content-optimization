@@ -1,9 +1,16 @@
-from typing import Optional, TypedDict
+from typing import TypedDict
 
-from agents.enums import MODELS, ROLES
-from agents.models import LLMInterface, start_llm
+from agents.enums import ROLES
+from agents.models import start_llm
+from checks import ChecksState
 from config import settings
 from langgraph.graph import END, START
+from states.definitions import (
+    ArticleInputs,
+    OptimisationAgents,
+    OptimisationFlags,
+    OptimisedArticle,
+)
 from utils.formatters import concat_headers_to_content, print_checks
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
@@ -12,38 +19,7 @@ from utils.paths import get_root_dir
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
-MODEL = MODELS("llama3").name
-
-
-class OriginalArticle(TypedDict):
-    article_content: list
-    article_title: Optional[str]
-    meta_desc: Optional[str]
-
-
-class OptimisedArticle(TypedDict):
-    researcher_keypoints: Optional[list]
-    article_researcher_counter: Optional[int]
-    compiled_keypoints: Optional[str]
-    optimised_content: Optional[str]
-    optimised_writing: Optional[str]
-    optimised_article_title: Optional[str]
-    optimised_meta_desc: Optional[str]
-
-
-class OptimisationFlags(TypedDict):
-    flag_for_content_optimisation: bool
-    flag_for_title_optimisation: bool
-    flag_for_meta_desc_optimisation: bool
-
-
-class LLMAgents(TypedDict):
-    researcher_agent: LLMInterface
-    compiler_agent: LLMInterface
-    content_optimisation_agent: LLMInterface
-    writing_optimisation_agent: LLMInterface
-    title_optimisation_agent: LLMInterface
-    meta_desc_optimisation_agent: LLMInterface
+MODEL = settings.MODEL_NAME
 
 
 class RewritingState(TypedDict):
@@ -63,10 +39,11 @@ class RewritingState(TypedDict):
         flag_for_meta_desc_optimisation: A required boolean value, determining if the user has flagged the article for meta description optimisation.
     """
 
-    original_article_content: OriginalArticle
+    article_evaluation: ChecksState
+    original_article_inputs: ArticleInputs
     optimised_article_output: OptimisedArticle
     user_flags: OptimisationFlags
-    llm_agents: LLMAgents
+    llm_agents: OptimisationAgents
 
 
 # Functions defining the functionality of different nodes
@@ -81,30 +58,22 @@ def researcher_node(state):
             - keypoints: an updated list storing keypoints from all articles output from the researcher node
             - article_researcher_counter: an integer serving as a counter for number of articles processed by the researcher node
     """
-    article_list = state.get("original_article_content")["article_content"]
-    counter = state.get("optimised_article_output")["article_researcher_counter"]
-    article = article_list[counter]
+    article_list = state.get("original_article_inputs")["article_content"]
     keypoints = state.get("optimised_article_output")["researcher_keypoints"]
     researcher_agent = state.get("llm_agents")["researcher_agent"]
 
-    print("Processing keypoints for article", counter + 1)
-    processed_keypoints = ""
-    print(f"Number of keypoints in article {counter + 1}: ", len(article))
+    # For loop iterating through each article
 
-    # Stores the number of keypoints processed in the current article
-    kp_counter = 0
-
-    # For loop iterating through each keypoint in each article
-    for kp in article:
-        kp_counter += 1
-        article_keypoints = researcher_agent.generate_keypoints(kp, kp_counter)
-        processed_keypoints += f"{article_keypoints} \n"
-    keypoints.append(processed_keypoints)
+    for idx in range(len(article_list)):
+        print("Processing keypoints for article", idx + 1)
+        article = article_list[idx]
+        article_keypoints = researcher_agent.generate_keypoints(article)
+        keypoints.append(article_keypoints)
+        print("Finished processing keypoints for article", idx + 1)
 
     return {
         "optimised_article_output": {
             "researcher_keypoints": keypoints,
-            "article_researcher_counter": counter + 1,
         }
     }
 
@@ -265,16 +234,11 @@ def check_all_articles(state):
         "researcher_node": returned if counter < number of articles to be harmonised
         "compiler_node": returned if counter >= number of articles to be harmonised
     """
-    researcher_counter = state.get("optimised_article_output")[
-        "article_researcher_counter"
-    ]
-    article_content = state.get("original_article_content")["article_content"]
+    article_content = state.get("original_article_inputs")["article_content"]
     content_optimisation_flags = state.get("user_flags")[
         "flag_for_content_optimisation"
     ]
-    if researcher_counter < len(article_content):
-        return "researcher_node"
-    elif (len(article_content) < 2) and content_optimisation_flags:
+    if (len(article_content) < 2) and content_optimisation_flags:
         return "content_guidelines_optimisation_node"
     else:
         return "compiler_node"
@@ -307,94 +271,75 @@ def decide_next_optimisation_node(state):
     elif meta_desc_optimisation_flags:
         return "meta_description_optimisation_node"
     else:
-        return "__end__"
-
-
-# Adds a conditional edge to the workflow from researcher node to compiler node
-workflow.add_conditional_edges(
-    "researcher_node",
-    check_all_articles,
-    {
-        "researcher_node": "researcher_node",
-        "compiler_node": "compiler_node",
-        "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
-    },
-)
-
-# Adds a conditional edge to the workflow from compiler node to content guidelines node, title optimmisation node, meta description optimisation node and END
-workflow.add_conditional_edges(
-    "compiler_node",
-    decide_next_optimisation_node,
-    {
-        "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
-        "title_optimisation_node": "title_optimisation_node",
-        "meta_description_optimisation_node": "meta_description_optimisation_node",
-        "__end__": END,
-    },
-)
-
-# Adds a conditional edge to the workflow from compiler node to title optimmisation node, meta description optimisation node and END
-workflow.add_conditional_edges(
-    "writing_guidelines_optimisation_node",
-    decide_next_optimisation_node,
-    {
-        "title_optimisation_node": "title_optimisation_node",
-        "meta_description_optimisation_node": "meta_description_optimisation_node",
-        "__end__": END,
-    },
-)
-
-# Adds a conditional edge to the workflow from compiler node to meta description optimisation node and END
-workflow.add_conditional_edges(
-    "title_optimisation_node",
-    decide_next_optimisation_node,
-    {
-        "meta_description_optimisation_node": "meta_description_optimisation_node",
-        "__end__": END,
-    },
-)
-
-# Setting researcher_node as the entry point for the workflow
-workflow.set_entry_point("researcher_node")
-
-# Adding an edge connecting content_guidelines_optimisation_node to writing_guidelines_optimisation_node in the workflow
-workflow.add_edge(
-    "content_guidelines_optimisation_node", "writing_guidelines_optimisation_node"
-)
-
-
-def draw_graph(graph, filepath: str):
-    img = graph.get_graph(xray=True).draw_mermaid_png()
-    with open(filepath, "wb") as f:
-        f.write(img)
-
-
-def execute_graph(workflow: StateGraph, input: dict[str, Any]) -> dict[str, Any]:
-    # Set up LLM tracing session
-    px.launch_app()
-    LangChainInstrumentor().instrument()
-
-    # Run LangGraph Application
-    app = workflow.compile()
-    result = app.invoke(input=input)
-    draw_graph(
-        app,
-        "/Users/jin/Documents/GitHub/healthhub-content-optimization/article-harmonisation/docs/images/graph.png",
-    )
-
-    # Prints the various checks
-    print_checks(result, MODEL)
-
-    # trace_df = px.Client().get_spans_dataframe()
-    # timestr = time.strftime("%Y%m%d-%H%M%S")
-    # trace_df.to_parquet(f"traces-{timestr}.parquet", index=False)
-
-    px.close_app()
-
-    return result
+        return END
 
 
 if __name__ == "__main__":
+    # Gets root directory
+    ROOT_DIR = get_root_dir()
+
+    # Declaring dictionary with all nodes
+    nodes = {
+        "researcher_node": researcher_node,
+        "compiler_node": compiler_node,
+        "content_guidelines_optimisation_node": content_guidelines_optimisation_node,
+        "writing_guidelines_optimisation_node": writing_guidelines_optimisation_node,
+        "title_optimisation_node": title_optimisation_node,
+        "meta_description_optimisation_node": meta_description_optimisation_node,
+    }
+
+    # Declaring dictionary with all edges
+    edges = {
+        START: ["researcher_node"],
+        "content_guidelines_optimisation_node": [
+            "writing_guidelines_optimisation_node"
+        ],
+        "meta_description_optimisation_node": [END],
+    }
+
+    # Declaring dictionary with all conditional edges
+    # Example element in conditional edge dictionary: {"name of node": (conditional edge function, path map)}
+    conditional_edges = {
+        "researcher_node": (
+            check_all_articles,
+            {
+                "compiler_node": "compiler_node",
+                "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
+            },
+        ),
+        "compiler_node": (
+            decide_next_optimisation_node,
+            {
+                "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
+                "title_optimisation_node": "title_optimisation_node",
+                "meta_description_optimisation_node": "meta_description_optimisation_node",
+                END: END,
+            },
+        ),
+        "writing_guidelines_optimisation_node": (
+            decide_next_optimisation_node,
+            {
+                "title_optimisation_node": "title_optimisation_node",
+                "meta_description_optimisation_node": "meta_description_optimisation_node",
+                END: END,
+            },
+        ),
+        "title_optimisation_node": (
+            decide_next_optimisation_node,
+            {
+                "meta_description_optimisation_node": "meta_description_optimisation_node",
+                END: END,
+            },
+        ),
+    }
+
+    app = create_graph(RewritingState, nodes, edges, conditional_edges)
+
+    # Save Graph
+    draw_graph(
+        app, f"{ROOT_DIR}/article-harmonisation/docs/images/article_rewriting_flow.png"
+    )
+
     # starting up the respective llm agents
     researcher_agent = start_llm(MODEL, ROLES.RESEARCHER)
     compiler_agent = start_llm(MODEL, ROLES.COMPILER)
@@ -404,13 +349,17 @@ if __name__ == "__main__":
     writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
 
     # List with the articles to harmonise
-    article_list = ["Rubella", "How Dangerous Is Rubella?"]
+    article_list = [
+        # "Rubella",
+        # "How Dangerous Is Rubella?"
+        "Weight, BMI and Health Problems"
+    ]
 
     processed_input_articles = concat_headers_to_content(article_list)
 
-    # Dictionary with the variouse input keys and items
+    # Dictionary with the various input keys and items
     inputs = {
-        "original_article_content": {"article_content": processed_input_articles},
+        "original_article_inputs": {"article_content": processed_input_articles},
         "optimised_article_output": {
             "researcher_keypoints": [],
             "article_researcher_counter": 0,

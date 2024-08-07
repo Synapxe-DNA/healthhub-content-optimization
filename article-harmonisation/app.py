@@ -2,17 +2,14 @@ import re
 from io import StringIO
 
 import streamlit as st
-from agents.enums import MODELS, ROLES
+from agents.enums import ROLES
 from agents.models import start_llm
 from config import settings
-from harmonisation import execute_graph, workflow
+from main import main
 from utils.evaluations import calculate_readability
-from utils.formatters import concat_headers_to_content
-
-CONFIG = settings
 
 # Declaring model to use
-MODEL = MODELS("llama3").name
+MODEL = settings.MODEL_NAME
 
 # Define Agents
 researcher_agent = start_llm(MODEL, ROLES.RESEARCHER)
@@ -37,15 +34,18 @@ st.divider()
 
 # Show Extracted Text and Readability Score
 texts = []
+filenames = []
 if uploaded_files:
     if len(uploaded_files) > 2:
         st.warning(
-            "Maximum number of files reached. Only the last two files will be processed"
+            "Maximum number of files reached. Only the first two files will be processed"
         )
-        uploaded_texts = uploaded_files[:2]
+        uploaded_files = uploaded_files[-2:]
 
-    for uploaded_file in uploaded_files:
-        text_string = StringIO(uploaded_file.getvalue().decode("utf-8")).read()
+    for file in uploaded_files:
+        print(file)
+        filenames.append(file.name)
+        text_string = StringIO(file.getvalue().decode("utf-8")).read()
         texts.append(text_string)
 
     cols = st.columns(len(texts), vertical_alignment="top")
@@ -60,31 +60,17 @@ st.divider()
 
 # Run AI Agent and Display Output
 if texts:
-    processed_input_articles = concat_headers_to_content(texts)
-
-    inputs = {
-        "original_article_content": {"article_content": processed_input_articles},
-        "optimised_article_output": {
-            "researcher_keypoints": [],
-            "article_researcher_counter": 0,
-        },
-        "user_flags": {
-            "flag_for_content_optimisation": True,
-            "flag_for_title_optimisation": True,
-            "flag_for_meta_desc_optimisation": True,
-        },
-        "llm_agents": {
-            "researcher_agent": researcher_agent,
-            "compiler_agent": compiler_agent,
-            "content_optimisation_agent": content_optimisation_agent,
-            "writing_optimisation_agent": writing_optimisation_agent,
-            "title_optimisation_agent": title_optimisation_agent,
-            "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
-        },
-    }
-
-    result = execute_graph(workflow=workflow, input=inputs)
+    result = main(filenames, setting="filename")
 
     with st.container(height=500):
-        compiled_keypoints = re.sub(" +", " ", result["compiled_keypoints"])
+        optimised_article_content = result["optimised_article_output"][
+            "optimised_writing"
+        ]
+        optimised_article_title = result["optimised_article_output"][
+            "optimised_article_title"
+        ]
+        optimised_meta_desc = result["optimised_article_output"]["optimised_meta_desc"]
+
+        text = f"Title:\n{optimised_article_title}\n\nMeta Description:\n{optimised_meta_desc}\n\nContent:\n{optimised_article_content}"
+        compiled_keypoints = re.sub(" +", " ", text)
         st.write(compiled_keypoints)

@@ -10,8 +10,12 @@ from typing import Any, Callable
 import pandas as pd
 from content_optimization.pipelines.data_processing.extractor import HTMLExtractor
 from content_optimization.pipelines.data_processing.utils import (
+    add_content_body,
+    add_updated_urls,
     flag_articles_to_remove_after_extraction,
     flag_articles_to_remove_before_extraction,
+    invert_ia_mappings,
+    map_category_names,
     select_and_rename_columns,
 )
 from tqdm import tqdm
@@ -89,10 +93,33 @@ def standardize_columns(
     return all_contents_standardized
 
 
-def add_contents(
+def add_data(
     all_contents_standardized: dict[str, Callable[[], Any]],
     missing_contents: dict[str, Callable[[], Any]],
+    updated_urls: dict[str, dict[int, str]],
 ) -> dict[str, Callable[[], Any]]:
+    """
+    Process and add data to standardized content, incorporating missing contents and updated URLs.
+
+    This function performs the following operations:
+    1. Adds missing content from text files to correct Excel errors.
+    2. Adds content body to the dataframe for each content category.
+    3. Updates URLs in the dataframe.
+    4. Flags articles that should be removed before extraction.
+
+    Args:
+        all_contents_standardized (dict[str, Callable[[], Any]]): A dictionary where keys are content
+            categories and values are functions that return dataframes of standardized content.
+        missing_contents (dict[str, Callable[[], Any]]): A dictionary where keys are file paths and
+            values are functions that load the content of text files.
+        updated_urls (dict[str, dict[int, str]]): A dictionary where keys are content categories and
+            values are dictionaries mapping index to updated URLs.
+
+    Returns:
+        dict[str, Callable[[], Any]]: A dictionary where keys are content categories and values are
+        functions that return processed dataframes with added data.
+
+    """
     excel_errors = {}
     all_contents_added = {}
 
@@ -109,14 +136,13 @@ def add_contents(
     for content_category, partition_load_func in pbar:
         pbar.set_description(f"Adding: {content_category}")
         df = partition_load_func()
-        for friendly_url, text in excel_errors.items():
-            # Fetch rows where `friendly_url` column value must match filename
-            article_index = df.index[df["friendly_url"] == friendly_url]
-            # Skip if the index is empty
-            if article_index.empty:
-                continue
-            # Assign Raw HTML content to `content_body` column
-            df.loc[article_index, "content_body"] = text
+
+        # Add back contents that are previously indicated as excel errors into the `content_body` column
+        df = add_content_body(df, excel_errors)
+
+        # Add updated urls into the `full_url` column
+        urls_dict = updated_urls.get(content_category, {})
+        df = add_updated_urls(df, urls_dict)
 
         # Mark articles with no content, was rejected by Excel due to a "Value
         # exceeded maximum cell size" error or with dummy content in `to_remove` column
@@ -171,6 +197,7 @@ def extract_data(
         df["has_image"] = False
         df["related_sections"] = None
         df["extracted_tables"] = None
+        df["extracted_raw_html_tables"] = None
         df["extracted_links"] = None
         df["extracted_headers"] = None
         df["extracted_images"] = None
@@ -202,6 +229,7 @@ def extract_data(
             has_image = extractor.check_for_image()
             related_sections = extractor.extract_related_sections()
             extracted_tables = extractor.extract_tables()
+            extracted_raw_html_tables = extractor.extract_raw_html_tables()
             extracted_links = extractor.extract_links()
             extracted_headers = extractor.extract_headers()
             extracted_img_alt_text = extractor.extract_img_links_and_alt_text()
@@ -212,6 +240,7 @@ def extract_data(
             df.at[index, "has_image"] = has_image
             df.at[index, "related_sections"] = related_sections
             df.at[index, "extracted_tables"] = extracted_tables
+            df.at[index, "extracted_raw_html_tables"] = extracted_raw_html_tables
             df.at[index, "extracted_links"] = extracted_links
             df.at[index, "extracted_headers"] = extracted_headers
             df.at[index, "extracted_images"] = extracted_img_alt_text
@@ -239,12 +268,75 @@ def extract_data(
     return all_contents_extracted, all_extracted_text
 
 
-def merge_data(all_contents_extracted: dict[str, Callable[[], Any]]) -> pd.DataFrame:
+def map_data(
+    all_contents_extracted: dict[str, Callable[[], Any]],
+    l1_mappings: dict[str, dict[str, list[str]]],
+    l2_mappings: dict[str, dict[str, list[str]]],
+) -> dict[str, Callable[[], Any]]:
+    """
+    Map extracted content data to L1 and L2 Information Architecture (IA) categories.
+
+    This function processes the extracted content data, applying L1 and L2 IA mappings for each content category.
+    It inverts the provided mappings, iterates through each content category, and applies the mappings
+    to the 'article_category_names' column in the dataframe.
+
+    Args:
+        all_contents_extracted (dict[str, Callable[[], Any]]): A dictionary where keys are
+            content categories and values are functions that return dataframes of extracted content.
+        l1_mappings (dict[str, dict[str, list[str]]]): A dictionary of L1 category mappings.
+            The outer key is the content category, inner key is the target (new) category,
+            and the value is a list of source (old) categories.
+        l2_mappings (dict[str, dict[str, list[str]]]): A dictionary of L2 category mappings,
+            structured similarly to l1_mappings.
+
+    Returns:
+        dict[str, Callable[[], Any]]: A dictionary where keys are content categories and values
+        are functions that return dataframes with mapped L1 and L2 categories. The returned
+        dataframes include new columns for the mapped categories.
+
+    Note:
+        - This function uses the `invert_ia_mappings` and `map_category_names` helper functions.
+    """
+    all_contents_mapped = {}
+    inverted_l1_mappings = invert_ia_mappings(l1_mappings)
+    inverted_l2_mappings = invert_ia_mappings(l2_mappings)
+
+    pbar = tqdm(all_contents_extracted.items())
+
+    for content_category, partition_load_func in pbar:
+        pbar.set_description(f"Mapping: {content_category}")
+        # Load partition data
+        df = partition_load_func()
+
+        # Map the values from the `article_category_names` column to the new L1 IA mapping
+        mapped_l1_df = map_category_names(
+            inverted_l1_mappings,
+            df,
+            "content_category",
+            "article_category_names",
+            "l1_mappings",
+        )
+
+        # Map the values from the `article_category_names` column to the new L2 IA mapping
+        mapped_df = map_category_names(
+            inverted_l2_mappings,
+            mapped_l1_df,
+            "content_category",
+            "article_category_names",
+            "l2_mappings",
+        )
+
+        all_contents_mapped[content_category] = mapped_df
+
+    return all_contents_mapped
+
+
+def merge_data(all_contents_mapped: dict[str, Callable[[], Any]]) -> pd.DataFrame:
     """
     Merge the data from multiple partitioned dataframes into a single `pandas.DataFrame`.
 
     Parameters:
-        all_contents_extracted (dict[str, Callable[[], Any]]):
+        all_contents_mapped (dict[str, Callable[[], Any]]):
             A dictionary containing the `partitions.PartitionedDataset`
             where the values load the parquet data as `pandas.DataFrame`.
 
@@ -252,7 +344,7 @@ def merge_data(all_contents_extracted: dict[str, Callable[[], Any]]) -> pd.DataF
         pd.DataFrame: The merged dataframe.
     """
     merged_df = pd.DataFrame()
-    for _, partition_load_func in all_contents_extracted.items():
+    for _, partition_load_func in all_contents_mapped.items():
         # Load partition data
         df = partition_load_func()
         merged_df = pd.concat([merged_df, df], axis=0, ignore_index=True)

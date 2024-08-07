@@ -12,16 +12,15 @@ class Settings(BaseSettings):
     # App Settings
     APP_NAME: str = "Multi-Agent Optimisation & Harmonisation System"
 
+    # Chosen model based on agents/enums.py
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "mistral")
+
     # Token Limit
     MAX_NEW_TOKENS: int = os.getenv("MAX_NEW_TOKENS", 3000)
 
     # Huggingface
     HUGGINGFACEHUB_API_TOKEN: str = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
     os.environ["HUGGINGFACEHUB_API_TOKEN"] = HUGGINGFACEHUB_API_TOKEN
-
-    # Arize Phoenix
-    PHOENIX_PROJECT_NAME: str = os.getenv("PHOENIX_PROJECT_NAME", "")
-    os.environ["PHOENIX_PROJECT_NAME"] = PHOENIX_PROJECT_NAME
 
     # Microsoft Azure
     AZURE_OPENAI_API_TYPE: str = os.getenv("AZURE_OPENAI_API_TYPE", "")
@@ -38,6 +37,10 @@ class Settings(BaseSettings):
 
     os.environ["AZURE_OPENAI_ENDPOINT"] = AZURE_OPENAI_ENDPOINT
     os.environ["AZURE_OPENAI_API_TYPE"] = AZURE_OPENAI_API_TYPE
+
+    # Arize Phoenix
+    PHOENIX_PROJECT_NAME: str = os.getenv("PHOENIX_PROJECT_NAME", AZURE_DEPLOYMENT_NAME)
+    os.environ["PHOENIX_PROJECT_NAME"] = PHOENIX_PROJECT_NAME
 
 
 settings = Settings()

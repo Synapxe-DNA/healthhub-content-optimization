@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 
 from config import settings
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
-from langchain_openai import AzureOpenAI
+from langchain_openai import AzureChatOpenAI
 
 from .enums import MODELS, ROLES
 from .prompts import prompt_tool
@@ -13,7 +13,6 @@ from .prompts import prompt_tool
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 AZURE_COGNITIVE_SERVICES = settings.AZURE_COGNITIVE_SERVICES
 AZURE_OPENAI_ENDPOINT = settings.AZURE_OPENAI_ENDPOINT
-AZURE_DEPLOYMENT_NAME = settings.AZURE_DEPLOYMENT_NAME
 AZURE_OPENAI_API_VERSION = settings.AZURE_OPENAI_API_VERSION
 AZURE_AD_TOKEN_PROVIDER = settings.AZURE_AD_TOKEN_PROVIDER
 
@@ -55,30 +54,27 @@ def start_llm(model: str, role: str):
 
         case "azure":
             model_prompter = prompt_tool(model=model)
-            llm = AzureOpenAI(
+            llm = AzureChatOpenAI(
                 azure_ad_token_provider=AZURE_AD_TOKEN_PROVIDER,
                 azure_endpoint=AZURE_OPENAI_ENDPOINT,
-                batch_size=20,
-                best_of=1,
                 cache=None,
                 callbacks=None,
                 custom_get_token_ids=None,
-                deployment_name=AZURE_DEPLOYMENT_NAME,
+                azure_deployment=MODELS.azure.value,
                 frequency_penalty=0,
                 logprobs=None,
                 max_retries=2,
                 max_tokens=MAX_NEW_TOKENS,
-                model_name="gpt-3.5-turbo-0301",
                 n=1,
-                openai_api_version=AZURE_OPENAI_API_VERSION,
-                request_timeout=None,
+                api_version=AZURE_OPENAI_API_VERSION,
+                timeout=None,
                 seed=42,
                 streaming=False,
                 temperature=0,
                 top_p=1,
                 verbose=True,
             )
-            return llm
+            return Azure(llm, model_prompter, role)
 
         case _:
             raise ValueError(
@@ -301,9 +297,7 @@ class HuggingFace(LLMInterface):
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print(f"Processing keypoints for header {num}")
         res = chain.invoke(article)
-        print(f"Keypoints processed for header {num}")
         response = re.sub(" +", " ", res)
 
         return response
@@ -435,13 +429,10 @@ class Azure(LLMInterface):
             case _:
                 raise ValueError(f"You entered {choice}, which is not a valid choice")
 
-        prompt_t = PromptTemplate(
-            input_variables=["Article"],
-            template=template,
-        )
+        prompt_t = ChatPromptTemplate.from_messages(template)
 
         chain = prompt_t | self.model | StrOutputParser()
-        res = chain.invoke(content)
+        res = chain.invoke({"article": content})
         response = re.sub(" +", " ", res)
 
         return response
@@ -450,13 +441,10 @@ class Azure(LLMInterface):
 
         template = self.prompt_template.return_title_evaluation_prompt()
 
-        prompt_t = PromptTemplate(
-            input_variables=["Title", "Article"],
-            template=template,
-        )
+        prompt_t = ChatPromptTemplate.from_messages(template)
 
         chain = prompt_t | self.model | StrOutputParser()
-        res = chain.invoke({"Title": title, "Article": content})
+        res = chain.invoke({"title": title, "article": content})
         response = re.sub(" +", " ", res)
 
         return response
@@ -465,18 +453,15 @@ class Azure(LLMInterface):
 
         template = self.prompt_template.return_meta_desc_evaluation_prompt()
 
-        prompt_t = PromptTemplate(
-            input_variables=["Meta", "Article"],
-            template=template,
-        )
+        prompt_t = ChatPromptTemplate.from_messages(template)
 
         chain = prompt_t | self.model | StrOutputParser()
-        res = chain.invoke({"Meta": meta_description, "Article": content})
+        res = chain.invoke({"meta": meta_description, "article": content})
         response = re.sub(" +", " ", res)
 
         return response
 
-    def generate_keypoints(self, article: str, num: int):
+    def generate_keypoints(self, article: str):
         """
         Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
 
@@ -489,18 +474,20 @@ class Azure(LLMInterface):
         Raises:
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
         """
-        # Raise an error if the role is not a researcher
         if self.role != ROLES.RESEARCHER:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
 
-        # prompt_t = self.prompt_template.return_researcher_prompt()
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_researcher_prompt(),
+        )
 
-        print(f"Processing keypoints for header {num}")
-        print(f"Keypoints processed for header {num}")
+        chain = prompt_t | self.model | StrOutputParser()
+        res = chain.invoke({"Article": article})
+        response = re.sub(" +", " ", res)
 
-        return
+        return response
 
     def compile_points(self, keypoints: list = []):
         """
@@ -528,20 +515,19 @@ class Azure(LLMInterface):
                 f"This node is a {self.role} node and cannot run compile_points()"
             )
 
-        prompt_t = PromptTemplate.from_template(
+        prompt_t = ChatPromptTemplate.from_messages(
             self.prompt_template.return_compiler_prompt()
         )
 
         input_keypoints = ""
         for article_index in range(len(keypoints)):
             article_kp = keypoints[article_index]
-            input_keypoints += (
-                f"\n Article {article_index + 1} Keypoints:\n{article_kp}"
-            )
+            input_keypoints += f"\n Article {article_index + 1}\n{article_kp}\n"
 
-        chain = prompt_t | self.model
+        chain = prompt_t | self.model | StrOutputParser()
         print("Compiling keypoints for article harmonisation")
         res = chain.invoke({"Keypoints": input_keypoints})
+
         print("Keypoints compiled for article harmonisation")
         response = re.sub(" +", " ", res)
 
@@ -553,11 +539,11 @@ class Azure(LLMInterface):
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
 
-        prompt_t = PromptTemplate.from_template(
+        prompt_t = ChatPromptTemplate.from_messages(
             self.prompt_template.return_content_prompt()
         )
 
-        chain = prompt_t | self.model
+        chain = prompt_t | self.model | StrOutputParser()
         print("Optimising article content")
         res = chain.invoke({"Keypoints": keypoints})
         print("Article content optimised")
@@ -571,15 +557,45 @@ class Azure(LLMInterface):
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
 
-        prompt_t = PromptTemplate.from_template(
+        prompt_t = ChatPromptTemplate.from_messages(
             self.prompt_template.return_writing_prompt()
         )
 
-        chain = prompt_t | self.model
+        chain = prompt_t | self.model | StrOutputParser()
         print("Optimising article writing")
         response = chain.invoke({"Content": content})
         print("Article writing optimised")
 
+        return response
+
+    def optimise_title(self, content):
+        if self.role != ROLES.TITLE:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_title()"
+            )
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_title_prompt()
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+        print("Optimising article title")
+        response = chain.invoke({"Content": content})
+        print("Article title optimised")
+        return response
+
+    def optimise_meta_desc(self, content):
+        if self.role != ROLES.META_DESC:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_meta_desc()"
+            )
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_meta_desc_prompt()
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+        print("Optimising article meta description")
+        response = chain.invoke({"Content": content})
+        print("Article meta description optimised")
         return response
 
 
