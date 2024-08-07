@@ -295,6 +295,7 @@ default_columns:
 word_count_cutoff: 90 # see word_count.ipynb for analysis on threshold
 
 # See: https://bitly.cx/IlwNV (Google Excel)
+# Also see: https://docs.google.com/spreadsheets/d/1PjRx_GkdlNZpV--Ui6sLd0Hvk-3LJ6qk
 whitelist:
   - 1445216
   - 1444496 # has a duplicated URL but whitelisted
@@ -318,3 +319,101 @@ whitelist:
   - 1445733
   - 1445704 # flagged as recipe but whitelisted
   - 1445707 # flagged as recipe but whitelisted
+  - 1497409 # flagged as duplicated content but whitelisted
+  - 1469472 # flagged as duplicated content but whitelisted
+  - 1446081 # flagged as duplicated url but whitelisted
+  - 1445828 # flagged as duplicated url but whitelisted
+  - 1445798 # flagged as duplicated url but whitelisted
+  - 1435335 # flagged as duplicated url but whitelisted
+  - 1435183 # flagged as duplicated url but whitelisted
+  - 1434614 # flagged as duplicated url but whitelisted
+
+# Refer to https://docs.google.com/spreadsheets/d/1bcmD7GXILn4LqF0Bo9dcdCnRomwCVFQv (IA Mappings)
+l1_mappings:
+  medical-care-and-facilities:
+    Support & Tools:
+      - Body Care
+      - Pregnancy and Infant Health
+
+  live-healthy-articles:
+    Well-being & Lifestyle:
+      - Exercise and Fitness
+      - Food and Nutrition
+      - Body Care
+      - Mind and Balance
+      - Child and Teen Health
+      - Pregnancy and Infant Health
+      - Sexual Health and Caregiving
+      - Intoxicates and Addictions
+      - FIGHT and Travel Health
+
+    Highlights & Insights:
+      - Alerts and Advisories
+
+    Well-being & Lifestyle_imputed:
+      - Conditions and Illnesses
+
+  diseases-and-conditions:
+    Health Conditions:
+      - Conditions and Illnesses
+      - Child and Teen Health
+      - Sexual Health and Relationships
+      - Body Care
+      - Pregnancy and Infant Health
+      - Food and Nutrition
+
+  cost-and-financing:
+    Support & Tools:
+      - Conditions and Illnesses
+
+# Refer to https://docs.google.com/spreadsheets/d/1bcmD7GXILn4LqF0Bo9dcdCnRomwCVFQv (IA Mappings)
+l2_mappings:
+  medical-care-and-facilities:
+    Support and Care Programmes:
+      - Body Care
+      - Pregnancy and Infant Health
+
+  live-healthy-articles:
+    Exercise and Fitness:
+      - Exercise and Fitness
+
+    Food, Diet and Nutrition:
+      - Food and Nutrition
+
+    Personal Care:
+      - Body Care
+
+    Mental Wellness:
+      - Mind and Balance
+
+    Child and Teen Health:
+      - Child and Teen Health
+
+    Pregnancy and Infant Health:
+      - Pregnancy and Infant Health
+
+    Sexual Health and Caregiving:
+      - Sexual Health and Caregiving
+
+    Substance Addiction:
+      - Intoxicates and Addictions
+
+    Travel Health:
+      - FIGHT and Travel Health
+
+    Health Safety Advisory:
+      - Alerts and Advisories
+
+  cost-and-financing:
+    Cost and Financing:
+      - Conditions and Illnesses
+
+# Refer to https://docs.google.com/spreadsheets/d/1PjRx_GkdlNZpV--Ui6sLd0Hvk-3LJ6qk
+# NOTE: The content categories were reversed engineered from other data sources
+updated_urls:
+  live-healthy-articles:
+    1445601: "https://www.healthhub.sg/live-healthy/calcium-for-greater-bone-strength"
+    1445603: "https://www.healthhub.sg/live-healthy/benefits-of-fruit-and-vegetables"
+    1445556: "https://www.healthhub.sg/live-healthy/getting-the-fats-right"
+    1445543: "https://www.healthhub.sg/live-healthy/child-obesity-causes"
+    1445673: "https://www.healthhub.sg/live-healthy/a-healthy-food-foundation-for-kids-and-teens"

@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from kedro.io import DataCatalog
 from src.content_optimization.pipelines.data_processing.nodes import (
-    add_contents,
+    add_data,
     extract_data,
     merge_data,
     standardize_columns,
@@ -60,11 +60,11 @@ def test_standardize_columns(catalog: DataCatalog, num_cols: int = 26):
         ).all(), "Unexpected columns in the standardized dataframe"
 
 
-def test_add_contents(catalog: DataCatalog):
+def test_add_data(catalog: DataCatalog):
     all_contents_standardized = catalog.load("all_contents_standardized")
     missing_contents = catalog.load("missing_contents")
 
-    all_contents_added = add_contents(all_contents_standardized, missing_contents)
+    all_contents_added = add_data(all_contents_standardized, missing_contents)
 
     # Check if output is a dictionary
     assert isinstance(all_contents_added, dict), "Expected a dictionary"
