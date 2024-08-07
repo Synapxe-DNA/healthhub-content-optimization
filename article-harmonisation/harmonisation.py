@@ -1,50 +1,25 @@
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 from agents.enums import ROLES
-from agents.models import LLMInterface, start_llm
+from agents.models import start_llm
 from checks import ChecksState
 from config import settings
 from langgraph.graph import END, START
 from utils.formatters import concat_headers_to_content, print_checks
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
+from states.definitions import (
+    OriginalArticles,
+    OptimisedArticle,
+    OptimisationFlags,
+    OptimisationAgents
+)
 
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
 MODEL = settings.MODEL_NAME
-
-
-class OriginalArticles(TypedDict):
-    article_content: list[str]
-    article_title: Optional[list[str]]
-    content_category: Optional[list[str]]
-    meta_desc: Optional[list[str]]
-
-
-class OptimisedArticle(TypedDict):
-    researcher_keypoints: Optional[list[str]]
-    compiled_keypoints: Optional[str]
-    optimised_content: Optional[str]
-    optimised_writing: Optional[str]
-    optimised_article_title: Optional[str]
-    optimised_meta_desc: Optional[str]
-
-
-class OptimisationFlags(TypedDict):
-    flag_for_content_optimisation: bool
-    flag_for_title_optimisation: bool
-    flag_for_meta_desc_optimisation: bool
-
-
-class LLMAgents(TypedDict):
-    researcher_agent: LLMInterface
-    compiler_agent: LLMInterface
-    content_optimisation_agent: LLMInterface
-    writing_optimisation_agent: LLMInterface
-    title_optimisation_agent: LLMInterface
-    meta_desc_optimisation_agent: LLMInterface
 
 
 class RewritingState(TypedDict):
@@ -68,7 +43,7 @@ class RewritingState(TypedDict):
     original_article_inputs: OriginalArticles
     optimised_article_output: OptimisedArticle
     user_flags: OptimisationFlags
-    llm_agents: LLMAgents
+    llm_agents: OptimisationAgents
 
 
 # Functions defining the functionality of different nodes
