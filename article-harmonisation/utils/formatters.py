@@ -17,22 +17,32 @@ SUBCATEGORIES = "article_category_names"
 TO_REMOVE = ["", " "]
 
 MERGED_DF = pq.read_table(MERGED_DATA_DIRECTORY)
-EXTRACTED_ARTICLE_TITLES = list(MERGED_DF[ARTICLE_TITLE])
 
 
-def article_list_indexes(articles: list):
+def get_article_list_indexes(articles: list, type: str = "title") -> list:
     article_list_idx = []
-    for article_title in EXTRACTED_ARTICLE_TITLES:
-        if article_title.as_py() in articles:
-            idx = EXTRACTED_ARTICLE_TITLES.index(article_title)
-            article_list_idx.append(idx)
+    if type == "title":
+        extracted_titles = list(MERGED_DF[ARTICLE_TITLE])
+        for article_title in extracted_titles:
+            if article_title.as_py() in articles:
+                idx = extracted_titles.index(article_title)
+                article_list_idx.append(idx)
+    elif type == "filename":
+        extracted_ids = list(MERGED_DF["id"])
+        for article in articles:
+            article_id = int(article.split("/")[-1].split(".")[0].split("_")[-1])
+            for row_id in extracted_ids:
+                if row_id.as_py() == article_id:
+                    idx = extracted_ids.index(row_id)
+                    article_list_idx.append(idx)
+
     return article_list_idx
 
 
 def extract_content_for_evaluation(articles: list):
     """Extracts out the article content, title and meta descriptions and returns a list in which each element is a dictionary with the respective article's details."""
     article_details = []
-    article_list_idx = article_list_indexes(articles)
+    article_list_idx = get_article_list_indexes(articles)
     for idx in article_list_idx:
         article_content = str(MERGED_DF[CONTENT_BODY][idx])
         article_title = str(MERGED_DF[ARTICLE_TITLE][idx])
@@ -59,7 +69,7 @@ def update_header_dict(header_dictionary, header_type, header):
 
 def concat_headers_to_content(articles: list):
     final_configured_articles = []
-    article_list_idx = article_list_indexes(articles)
+    article_list_idx = get_article_list_indexes(articles)
     for num in range(len(articles)):
         idx = article_list_idx[num]
         article_headers = list(MERGED_DF[EXTRACTED_HEADERS][idx])
@@ -151,7 +161,9 @@ def print_checks(result, model):
         if content_index > 0:
             f.write(" \n ----------------- \n")
         f.write(f"Original Article {content_index+1} content \n")
-        article = result.get("original_article_inputs")["article_content"][content_index]
+        article = result.get("original_article_inputs")["article_content"][
+            content_index
+        ]
         for keypoint in article:
             f.write(keypoint + "\n")
     f.write(" \n -----------------")
