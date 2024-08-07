@@ -1,10 +1,17 @@
-from typing import Optional, TypedDict
+from typing import TypedDict
 
-from agents.enums import MODELS, ROLES
-from agents.models import LLMInterface, start_llm
+from agents.enums import ROLES
+from agents.models import start_llm
 from checks import ChecksState
 from config import settings
 from langgraph.graph import END, START
+
+from states.definitions import (
+    ArticleInputs,
+    OptimisationAgents,
+    OptimisationFlags,
+    OptimisedArticle,
+)
 from utils.evaluations import calculate_readability
 from utils.formatters import concat_headers_to_content, print_checks
 from utils.graphs import create_graph, draw_graph, execute_graph
@@ -14,50 +21,10 @@ from utils.paths import get_root_dir
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
-MODEL = MODELS("azure").name
+MODEL = settings.MODEL_NAME
 
 # Declaring the number of retries
 REWRITING_TRIES = 3
-
-
-class OriginalArticle(TypedDict):
-    article_content: list
-    article_title: Optional[list]
-    meta_desc: Optional[list]
-    group_number: Optional[str]
-    subgroup: Optional[str]
-    group_description: Optional[str]
-    article_ids: list
-    urls: list
-
-
-class OptimisedArticle(TypedDict):
-    researcher_keypoints: Optional[list]
-    compiled_keypoints: Optional[str]
-    optimised_content: Optional[str]
-    optimised_writing: Optional[str]
-    optimised_article_title: Optional[str]
-    optimised_meta_desc: Optional[str]
-    readability_score: Optional[int]
-    rewriting_tries: Optional[int]
-
-
-class OptimisationFlags(TypedDict):
-    flag_for_content_optimisation: bool
-    flag_for_writing_optimisation: bool
-    flag_for_title_optimisation: bool
-    flag_for_meta_desc_optimisation: bool
-
-
-class LLMAgents(TypedDict):
-    researcher_agent: LLMInterface
-    compiler_agent: LLMInterface
-    content_optimisation_agent: LLMInterface
-    writing_optimisation_agent: LLMInterface
-    writing_evaluation_agent: LLMInterface
-    title_optimisation_agent: LLMInterface
-    meta_desc_optimisation_agent: LLMInterface
-
 
 class RewritingState(TypedDict):
     """This class contains the different keys relevant to the project. It inherits from the TypedDict class.
@@ -77,10 +44,10 @@ class RewritingState(TypedDict):
     """
 
     article_evaluation: ChecksState
-    original_article_content: OriginalArticle
+    original_article_inputs: ArticleInputs
     optimised_article_output: OptimisedArticle
     user_flags: OptimisationFlags
-    llm_agents: LLMAgents
+    llm_agents: OptimisationAgents
 
 
 # Functions defining the functionality of different nodes
@@ -95,7 +62,7 @@ def researcher_node(state):
             - keypoints: an updated list storing keypoints from all articles output from the researcher node
             - article_researcher_counter: an integer serving as a counter for number of articles processed by the researcher node
     """
-    article_list = state.get("original_article_content")["article_content"]
+    article_list = state.get("original_article_inputs")["article_content"]
     keypoints = state.get("optimised_article_output")["researcher_keypoints"]
     researcher_agent = state.get("llm_agents")["researcher_agent"]
 
@@ -339,6 +306,7 @@ def check_for_compiler(state):
         "researcher_node": returned if counter < number of articles to be harmonised
         "compiler_node": returned if counter >= number of articles to be harmonised
     """
+
     article_content = state.get("original_article_content")["article_content"]
     content_optimisation_flag = state.get("user_flags")["flag_for_content_optimisation"]
     writing_optimisation_flag = state.get("user_flags")["flag_for_writing_optimisation"]
@@ -537,10 +505,10 @@ if __name__ == "__main__":
 
     processed_input_articles = concat_headers_to_content(article_list)
 
-    # Dictionary with the variouse input keys and items
+    # Dictionary with the various input keys and items
     inputs = {
+        "original_article_inputs": {"article_content": processed_input_articles},
         "article_evaluation": {"article_title": article_list},
-        "original_article_content": {"article_content": processed_input_articles},
         "optimised_article_output": {
             "researcher_keypoints": [],
             "article_researcher_counter": 0,

@@ -1,10 +1,20 @@
 from typing import Annotated, TypedDict
 
 import pandas as pd
-from agents.enums import MODELS, ROLES
-from agents.models import LLMInterface, start_llm
+from agents.enums import ROLES
+from agents.models import start_llm
 from config import settings
 from langgraph.graph import END, START
+from states.definitions import (
+    ArticleInputs,
+    ChecksAgents,
+    ContentFlags,
+    ContentJudge,
+    MetaFlags,
+    MetaJudge,
+    TitleFlags,
+    TitleJudge,
+)
 from utils.evaluations import calculate_readability
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
@@ -14,48 +24,15 @@ from utils.reducers import merge_dict
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
 
 # Declaring model to use
-MODEL = MODELS("azure").name
+MODEL = settings.MODEL_NAME
 
-
-class ContentFlags(TypedDict):
-    is_unreadable: bool
-    low_words_count: bool
-    readability_score: int
-
-
-class ContentJudge(TypedDict):
-    readability: str
-    structure: str
-
-
-class TitleFlags(TypedDict):
-    long_title: bool
-
-
-class TitleJudge(TypedDict):
-    title: str
-
-
-class MetaFlags(TypedDict):
-    not_within_word_count: bool
-
-
-class MetaJudge(TypedDict):
-    meta_desc: str
-
-
-class LLMAgents(TypedDict):
-    evaluation_agent: LLMInterface
-    explanation_agent: LLMInterface
 
 
 class ChecksState(TypedDict):
     """This class contains the different keys relevant to the project. It inherits from the TypedDict class.
 
     Attributes:
-        article_content: A required String where each element is a String containing the article content.
-        article_title: A required String which will contain the article title.
-        meta_desc: A required String that will contain article's meta description.
+        article_inputs:
         content_flags:
         title_flags:
         meta_flags:
@@ -66,9 +43,7 @@ class ChecksState(TypedDict):
     """
 
     # Article Inputs
-    article_content: str
-    article_title: str
-    meta_desc: str
+    article_inputs: ArticleInputs
 
     # Flags for rule-based/statistical-based methods
     content_flags: Annotated[ContentFlags, merge_dict]
@@ -81,11 +56,12 @@ class ChecksState(TypedDict):
     meta_judge: Annotated[MetaJudge, merge_dict]
 
     # Agents
-    llm_agents: LLMAgents
+    llm_agents: ChecksAgents
 
 
 def content_evaluation_rules_node(state: ChecksState) -> dict:
-    article_content = state.get("article_content", "")
+    article_content = state.get("article_inputs")["article_content"]
+    content_category = state.get("article_inputs")["content_category"]
     content_flags = state.get("content_flags", {})
 
     # Check readability -
@@ -106,9 +82,18 @@ def content_evaluation_rules_node(state: ChecksState) -> dict:
     # Check for insufficient content -
     # Less than 300 - 400 words is considered too brief
     # to adequately cover a topic unless it's a very specific and narrow subject
-    # TODO: Plot the word count distribution of articles across each content category
+    # Threshold is set at the 25th percentile - Flag articles below 25th percentile for each content category
+    word_count_threshold_dict = {
+        "cost-and-financing": 267,
+        "live-healthy-articles": 413,
+        "diseases-and-conditions": 368,
+        "medical-care-and-facilities": 202,
+        "support-group-and-others": 213,
+    }
     word_count = len(article_content.split())
-    if word_count < 300:
+    # Flag articles based on the provided threshold. Otherwise, flag articles below 300 words
+    threshold = word_count_threshold_dict.get(content_category, 300)
+    if word_count < threshold:
         content_flags["low_word_count"] = True
     else:
         content_flags["low_word_count"] = False
@@ -117,14 +102,14 @@ def content_evaluation_rules_node(state: ChecksState) -> dict:
 
 
 def content_explanation_node(state: ChecksState) -> dict:
-    article_content = state.get("article_content", "")
+    article_content = state.get("article_inputs")["article_content"]
     content_flags = state.get("content_flags", {})
     content_judge = state.get("content_judge", {})
 
     # Explain Poor Readability based on Readability Matrix - Low Priority
-    readabilty = content_flags.get("is_unreadable", False)
+    readability = content_flags.get("is_unreadable", False)
 
-    if readabilty:
+    if readability:
         explanation_agent = state.get("llm_agents")["explanation_agent"]
         readability_explanation = explanation_agent.evaluate_content(
             article_content, choice="readability"
@@ -135,7 +120,7 @@ def content_explanation_node(state: ChecksState) -> dict:
 
 
 def content_evaluation_llm_node(state: ChecksState) -> dict:
-    article_content = state.get("article_content", "")
+    article_content = state.get("article_inputs")["article_content"]
     content_judge = state.get("content_judge", {})
     content_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
 
@@ -148,15 +133,11 @@ def content_evaluation_llm_node(state: ChecksState) -> dict:
     )
     content_judge["structure"] = content_structure_eval
 
-    # Check whether the writing guideline is followed given the tagged topic
-    # Refer to Content Playbook - https://drive.google.com/file/d/1I6k4FDiX8zsARs4DAPnkhbtUl71K-bhv/view
-    # TODO: Write up the functions and prompts that are category specific
-    pass
     return {"content_judge": content_judge}
 
 
 def title_evaluation_rules_node(state: ChecksState) -> dict:
-    article_title = state.get("article_title", "")
+    article_title = state.get("article_inputs")["article_title"]
     title_flags = state.get("title_flags", {})
 
     # Not Within Page Title Char Count - Up to 70 Characters
@@ -174,8 +155,8 @@ def title_evaluation_rules_node(state: ChecksState) -> dict:
 
 
 def title_evaluation_llm_node(state: ChecksState) -> dict:
-    article_title = state.get("article_title", "")
-    article_content = state.get("article_content", "")
+    article_title = state.get("article_inputs")["article_title"]
+    article_content = state.get("article_inputs")["article_content"]
     title_judge = state.get("title_judge", {})
 
     # Irrelevant Page Title
@@ -189,7 +170,7 @@ def title_evaluation_llm_node(state: ChecksState) -> dict:
 
 
 def meta_desc_evaluation_rules_node(state: ChecksState) -> dict:
-    meta_desc = state.get("meta_desc", "")
+    meta_desc = state.get("article_inputs")["meta_desc"]
     meta_flags = state.get("meta_flags", {})
 
     # Not Within Meta Description Char Count - Between 70 and 160 characters
@@ -198,16 +179,16 @@ def meta_desc_evaluation_rules_node(state: ChecksState) -> dict:
     if char_count <= 0:
         raise ValueError("The meta description character count must be greater than 0.")
     elif 70 <= char_count <= 160:
-        meta_flags["not_within_word_count"] = False
+        meta_flags["not_within_char_count"] = False
     else:
-        meta_flags["not_within_word_count"] = True
+        meta_flags["not_within_char_count"] = True
 
     return {"meta_flags": meta_flags}
 
 
 def meta_desc_evaluation_llm_node(state: ChecksState) -> dict:
-    meta_desc = state.get("meta_desc", "")
-    article_content = state.get("article_content", "")
+    meta_desc = state.get("article_inputs")["meta_desc"]
+    article_content = state.get("article_inputs")["article_content"]
     meta_judge = state.get("meta_judge", {})
 
     # Irrelevant Meta Description
@@ -268,19 +249,32 @@ if __name__ == "__main__":
     print(rows)
 
     records = []
+
     for i in range(rows):
         # Set up
+        article_id = df_sample["id"].iloc[i]
         article_content = df_sample["extracted_content_body"].iloc[i]
         article_title = df_sample["title"].iloc[i]
         meta_desc = df_sample["category_description"].iloc[i]  # meta_desc can be null
         meta_desc = meta_desc if meta_desc is not None else "No meta description"
+        article_url = df_sample["full_url"].iloc[i]
+        content_category = df_sample["content_category"].iloc[i]
+        article_category_names = df_sample["article_category_names"].iloc[i]
+        page_views = df_sample["page_views"].iloc[i]
 
         print(f"Checking {article_title} now...")
         # Set up Inputs
         inputs = {
-            "article_content": article_content,
-            "article_title": article_title,
-            "meta_desc": meta_desc,
+            "article_inputs": {
+                "article_id": article_id,
+                "article_content": article_content,
+                "article_title": article_title,
+                "meta_desc": meta_desc,
+                "article_url": article_url,
+                "content_category": content_category,
+                "article_category_names": article_category_names,
+                "page_views": page_views,
+            },
             "content_flags": {},
             "title_flags": {},
             "meta_flags": {},

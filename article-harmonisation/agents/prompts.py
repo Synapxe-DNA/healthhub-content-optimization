@@ -17,16 +17,13 @@ def prompt_tool(model: str):
     """
     match model.lower():
         case "mistral":
-            prompter = MistralPrompts()
-            return prompter
+            return MistralPrompts()
 
         case "llama3":
-            prompter = LlamaPrompts()
-            return prompter
+            return LlamaPrompts()
 
         case "azure":
-            prompter = AzurePrompts()
-            return prompter
+            return AzurePrompts()
 
         case _:
             raise ValueError(f"Prompts for model ({model}) have not been created.")
@@ -40,71 +37,81 @@ class LLMPrompt(ABC):
     This class inherits from ABC class.
     """
 
+    @staticmethod
     @abstractmethod
-    def return_readability_evaluation_prompt(self) -> str:
+    def return_readability_evaluation_prompt():
         """
         Abstract method for returning a readability evaluation prompt.
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def return_structure_evaluation_prompt(self) -> str:
+    def return_structure_evaluation_prompt():
         """
         Abstract method for returning a content structure evaluation prompt.
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def return_title_evaluation_prompt(self) -> str:
+    def return_title_evaluation_prompt():
         """
         Abstract method for returning a title evaluation prompt.
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def return_meta_desc_evaluation_prompt(self) -> str:
+    def return_meta_desc_evaluation_prompt():
         """
         Abstract method for returning a meta description evaluation prompt.
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def return_researcher_prompt(self) -> str:
+    def return_researcher_prompt():
         """
         Abstract method for returning a researcher prompt
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def return_compiler_prompt(self) -> str:
+    def return_compiler_prompt():
         """
         Abstract method for returning a compiler prompt
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def return_content_prompt(self) -> str:
+    def return_content_prompt():
         """
         Abstract method for returning a content optimisation prompt
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def return_writing_prompt(self) -> str:
+    def return_writing_prompt():
         """
         Abstract method for returning a writing optimisation prompt
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def return_title_prompt(self) -> str:
+    def return_title_prompt():
         """
         Abstract method for returning a title optimisation prompt
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def return_meta_desc_prompt(self) -> str:
+    def return_meta_desc_prompt():
         """
         Abstract method for returning a meta description optimisation prompt
         """
@@ -120,7 +127,8 @@ class AzurePrompts(LLMPrompt):
     Refer to https://platform.openai.com/docs/guides/prompt-engineering/strategy-write-clear-instructions for more information.
     """
 
-    def return_readability_evaluation_prompt(self):
+    def return_readability_evaluation_prompt(self) -> list[tuple[str, str]]:
+
         readability_evaluation_prompt = [
             (
                 "system",
@@ -140,7 +148,7 @@ class AzurePrompts(LLMPrompt):
 
         return readability_evaluation_prompt
 
-    def return_structure_evaluation_prompt(self):
+    def return_structure_evaluation_prompt(self) -> list[tuple[str, str]]:
         structure_evaluation_prompt = [
             (
                 "system",
@@ -209,7 +217,7 @@ class AzurePrompts(LLMPrompt):
 
         return structure_evaluation_prompt
 
-    def return_title_evaluation_prompt(self):
+    def return_title_evaluation_prompt(self) -> list[tuple[str, str]]:
         title_evaluation_prompt = [
             (
                 "system",
@@ -236,7 +244,7 @@ class AzurePrompts(LLMPrompt):
                 5.  Evaluate Relevance:
                 -   Provide a detailed explanation of how well the title reflects the content.
                 -   Use specific examples or excerpts from the article to support your evaluation.
-                -   Highlight any discrepancies or misalignments between the title and the content.
+                -   Highlight any discrepancies or misalignment between the title and the content.
 
                 6.  Suggestions for Improvement:
                 -   If the title is not fully relevant, suggest alternative titles that more accurately capture the essence of the article.
@@ -271,7 +279,7 @@ class AzurePrompts(LLMPrompt):
 
         return title_evaluation_prompt
 
-    def return_meta_desc_evaluation_prompt(self):
+    def return_meta_desc_evaluation_prompt(self) -> list[tuple[str, str]]:
         meta_desc_evaluation_prompt = [
             (
                 "system",
@@ -299,7 +307,7 @@ class AzurePrompts(LLMPrompt):
             5.  Evaluate Relevance:
             -   Provide a detailed explanation of how well the meta description reflects the content.
             -   Use specific examples or excerpts from the article to support your evaluation.
-            -   Highlight any discrepancies or misalignments between the meta description and the content.
+            -   Highlight any discrepancies or misalignment between the meta description and the content.
 
             6.  Suggestions for Improvement:
             -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
@@ -440,13 +448,13 @@ class AzurePrompts(LLMPrompt):
             ),
             (
                 "human",
-                "Sort the keypoints below based on the instructions and examples you have received:\n{Article}",
+                "Sort the key points below based on the instructions and examples you have received:\n{Article}",
             ),
         ]
 
         return researcher_prompt
 
-    def return_compiler_prompt(self) -> str:
+    def return_compiler_prompt(self) -> list[tuple[str, str]]:
         """
         Returns the compiler prompt for Azure ChatGPT
 
@@ -538,10 +546,11 @@ class AzurePrompts(LLMPrompt):
                 """,
             ),
             ("human", "Merge the keypoints below:\n{Keypoints}"),
+
         ]
         return compiler_prompt
 
-    def return_content_prompt(self) -> str:
+    def return_content_prompt(self) -> list[tuple[str, str]]:
 
         # general_content_prompt = [
         #     (
@@ -596,7 +605,7 @@ class AzurePrompts(LLMPrompt):
                 "system",
                 """ You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
 
-                Your task is to utilize content from the given keypoints to fill in for the required sections stated below.
+                Your task is to utilize content from the given key points to fill in for the required sections stated below.
                 You will also be given a set of instructions that you MUST follow.
 
                 You may also be given a series of feedback on the article's structure. If you are given such feedback, you MUST consider the feedback when writing your answer.
@@ -620,7 +629,7 @@ class AzurePrompts(LLMPrompt):
                     You must also use the following guidelines and examples to phrase your writing.
 
                     1. Elaborate and Insightful
-                        Your writing should be expand upon the given keypoints and write new content aimed at educating readers on the condition.
+                        Your writing should be expand upon the given key points and write new content aimed at educating readers on the condition.
                         Your MUST the primary intent, goals and glimpse of information in the first paragraph.
 
                     2. Carry a positive tone
@@ -679,7 +688,7 @@ class AzurePrompts(LLMPrompt):
 
                     You MUST consider the feedback when writing out your answer, if given any.
                     You MUST follow the content requirements.
-                    You must use the given keypoints to FILL IN the required sections.
+                    You must use the given key points to FILL IN the required sections.
                     You should only use bullet points only if it improves the readability of the content.
                     You should only use bullet points list SPARINGLY and only <= 2 sections in your writing should contain bullet points.
                     Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts.
@@ -700,7 +709,7 @@ class AzurePrompts(LLMPrompt):
         ]
         return optimise_health_conditions_content_prompt
 
-    def return_writing_prompt(self) -> str:
+    def return_writing_prompt(self) -> list[tuple[str, str]]:
         optimise_health_conditions_writing_prompt = [
             (
                 "system",
@@ -924,7 +933,7 @@ class AzurePrompts(LLMPrompt):
 
         return optimise_title_prompt
 
-    def return_meta_desc_prompt(self) -> str:
+    def return_meta_desc_prompt(self) -> list[tuple[str, str]]:
         optimise_meta_desc_prompt = [
             (
                 "system",
@@ -948,7 +957,7 @@ class AzurePrompts(LLMPrompt):
                 ### End of guidelines
 
                 ### Start of instructions
-                These are the set of insructions that you MUST follow in your writing.
+                These are the set of instructions that you MUST follow in your writing.
                 Check your writing with these instructions step by step carefully.
 
                 You MUST come up with 2 different meta descriptions based on the given content. Use the following example to structure your answer.
@@ -981,7 +990,7 @@ class LlamaPrompts(LLMPrompt):
     Refer to https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3/ for more information.
     """
 
-    def return_readability_evaluation_prompt(self):
+    def return_readability_evaluation_prompt(self) -> str:
 
         readability_evaluation_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -1005,7 +1014,7 @@ class LlamaPrompts(LLMPrompt):
 
         return readability_evaluation_prompt
 
-    def return_structure_evaluation_prompt(self):
+    def return_structure_evaluation_prompt(self) -> str:
 
         structure_evaluation_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -1078,7 +1087,7 @@ class LlamaPrompts(LLMPrompt):
 
         return structure_evaluation_prompt
 
-    def return_title_evaluation_prompt(self):
+    def return_title_evaluation_prompt(self) -> str:
 
         title_evaluation_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -1105,7 +1114,7 @@ class LlamaPrompts(LLMPrompt):
             5.  Evaluate Relevance:
             -   Provide a detailed explanation of how well the title reflects the content.
             -   Use specific examples or excerpts from the article to support your evaluation.
-            -   Highlight any discrepancies or misalignments between the title and the content.
+            -   Highlight any discrepancies or misalignment between the title and the content.
 
             6.  Suggestions for Improvement:
             -   If the title is not fully relevant, suggest alternative titles that more accurately capture the essence of the article.
@@ -1142,7 +1151,7 @@ class LlamaPrompts(LLMPrompt):
 
         return title_evaluation_prompt
 
-    def return_meta_desc_evaluation_prompt(self):
+    def return_meta_desc_evaluation_prompt(self) -> str:
 
         meta_desc_evaluation_prompt = """
         <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -1169,7 +1178,7 @@ class LlamaPrompts(LLMPrompt):
         5.  Evaluate Relevance:
         -   Provide a detailed explanation of how well the meta description reflects the content.
         -   Use specific examples or excerpts from the article to support your evaluation.
-        -   Highlight any discrepancies or misalignments between the meta description and the content.
+        -   Highlight any discrepancies or misalignment between the meta description and the content.
 
         6.  Suggestions for Improvement:
         -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
@@ -1205,7 +1214,7 @@ class LlamaPrompts(LLMPrompt):
 
         return meta_desc_evaluation_prompt
 
-    def return_researcher_prompt(self):
+    def return_researcher_prompt(self) -> str:
         """
         Returns the researcher prompt for Llama3
 
@@ -1223,7 +1232,7 @@ class LlamaPrompts(LLMPrompt):
             You may rephrase the keypoint title to better suit the context of the content if required.
             ALL sentences in the same keypoint must be joined in a single paragraph.
             Each sentence must appear only once under the keypoint.
-            You do NOT need to categorise all sentences. If a sentence is irrelevant to all keypoints, you can place it under the last keypoint "Omitted sentences"
+            You do NOT need to categorise all sentences. If a sentence is irrelevant to all key points, you can place it under the last keypoint "Omitted sentences"
             Strictly ONLY include the content and the sentences you omitted in your answer.
 
             Use the following examples to structure your answer:
@@ -1280,44 +1289,44 @@ class LlamaPrompts(LLMPrompt):
 
         compiler_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-            You are part of a article combination process. Your task is to compare and compile the keypoints given to you.
+            You are part of a article combination process. Your task is to compare and compile the key points given to you.
 
             Do NOT paraphrase from the sentences in each keypoint.
-            You may add conjuctions and connectors if it improves the flow of the sentences.
-            If two keypoints are identical or very similar, combine the points underneath and remove redundant sentences if required. However, do NOT paraphrase and strictly only add or remove sentences.
-            All keypoints must be returned at the end.
-            Return the compiled keypoints at the end.
+            You may add conjunctions and connectors if it improves the flow of the sentences.
+            If two key points are identical or very similar, combine the points underneath and remove redundant sentences if required. However, do NOT paraphrase and strictly only add or remove sentences.
+            All key points must be returned at the end.
+            Return the compiled key points at the end.
 
             Use the following example to form your article:
 
             "
-            Article 1 keypoints:
+            Article 1 key points:
             1. Introduction to Parkinson's disease
             Parkinson's disease is a neuro-degenerative disease
 
             2. Remedies to Parkinson's disease
             You may take Levodopa prescribed by your doctor to alleviate the symptoms
 
-            Article 2 keypoints:
+            Article 2 key points:
             1. History of Parkinson's disease
             Parkinson's disease was discovered by James Parkinson in 1817. It is a neurodegenerative disease.
 
             2. Symptoms of Parkinson's disease
-            Symptoms of PD include: Barely noticeable tremours in the hands, soft or slurred speech and little to no facial expressions.
+            Symptoms of PD include: Barely noticeable tremors in the hands, soft or slurred speech and little to no facial expressions.
 
             Answer:
             1. Introduction to Parkinson's disease
             Parkinson's disease is a neuro-degenerative disease. Parkinson's disease was discovered by James Parkinson in 1817.
 
             2. Symptoms to Parkinson's disease
-            Symptoms of PD include: Barely noticeable tremours in the hands, soft or slurred speech and little to no facial expressions.
+            Symptoms of PD include: Barely noticeable tremors in the hands, soft or slurred speech and little to no facial expressions.
 
             3. Remedies to Parkinson's disease
             You may take Levodopa prescribed by your doctor to alleviate the symptoms
             "
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
-            Compile the keypoints below:
+            Compile the key points below:
             {Keypoints}
             <|eot_id|>
 
@@ -1332,12 +1341,12 @@ class LlamaPrompts(LLMPrompt):
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
 
-            Your task is to utilize content from the given keypoints to fill in for the required sections stated below.
+            Your task is to utilize content from the given key points to fill in for the required sections stated below.
             You will also be given a set of instructions that you MUST follow.
 
             ### Start of content requirements
                 When rewriting the content, your writing MUST meet the requirements stated here.
-                If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
+                If the key points do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
                 You should emulate your writing based on the specific
 
                 Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
@@ -1355,7 +1364,7 @@ class LlamaPrompts(LLMPrompt):
                 You must also use the following guidelines and examples to phrase your writing.
 
                 1. Elaborate and Insightful
-                    Your writing should be expand upon the given keypoints and write new content aimed at educating readers on the condition.
+                    Your writing should be expand upon the given key points and write new content aimed at educating readers on the condition.
                     Your MUST the primary intent, goals and glimpse of information in the first paragraph.
 
                 2. Carry a positive tone
@@ -1413,7 +1422,7 @@ class LlamaPrompts(LLMPrompt):
                 You MUST follow these instructions when writing out your content.
 
                 You MUST follow the content requirements.
-                You must use the given keypoints to FILL IN the required sections.
+                You must use the given key points to FILL IN the required sections.
                 You should only use bullet points only if it improves the readability of the content.
                 You should only use bullet points list SPARINGLY and only <= 2 sections in your writing should contain bullet points.
                 Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts
@@ -1421,7 +1430,7 @@ class LlamaPrompts(LLMPrompt):
 
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
-            Keypoints to rewrite:
+            Key points to rewrite:
             {Keypoints}
             <|eot_id|>
             <|start_header_id|>assistant<|end_header_id|>
@@ -1588,7 +1597,7 @@ class LlamaPrompts(LLMPrompt):
             ### End of guidelines
 
             ### Start of instructions
-            These are the set of insructions that you MUST follow in your writing.
+            These are the set of instructions that you MUST follow in your writing.
             Check your writing with these instructions step by step carefully.
 
             You MUST come up with 5 different meta descriptions based on the given content. Use the following example to structure your answer.
@@ -1749,7 +1758,7 @@ class MistralPrompts(LLMPrompt):
             5.  Evaluate Relevance:
             -   Provide a detailed explanation of how well the title reflects the content.
             -   Use specific examples or excerpts from the article to support your evaluation.
-            -   Highlight any discrepancies or misalignments between the title and the content.
+            -   Highlight any discrepancies or misalignment between the title and the content.
 
             6.  Suggestions for Improvement:
             -   If the title is not fully relevant, suggest alternative titles that more accurately capture the essence of the article.
@@ -1813,7 +1822,7 @@ class MistralPrompts(LLMPrompt):
             5.  Evaluate Relevance:
             -   Provide a detailed explanation of how well the meta description reflects the content.
             -   Use specific examples or excerpts from the article to support your evaluation.
-            -   Highlight any discrepancies or misalignments between the meta description and the content.
+            -   Highlight any discrepancies or misalignment between the meta description and the content.
 
             6.  Suggestions for Improvement:
             -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
@@ -1850,7 +1859,7 @@ class MistralPrompts(LLMPrompt):
 
         return meta_desc_evaluation_prompt
 
-    def return_researcher_prompt(self):
+    def return_researcher_prompt(self) -> str:
         """
         Returns the researcher prompt for Mistral 7b
 
@@ -1860,31 +1869,31 @@ class MistralPrompts(LLMPrompt):
 
         researcher_prompt = """
             <s> [INST]
-            You are part of a article combination process. Your task is to identify the keypoints in the article and categorise each sentence into their respective keypoints.
+            You are part of a article combination process. Your task is to identify the key points in the article and categorise each sentence into their respective key points.
 
             Each keypoint must start with a brief explanation as its title, followed by the respective sentences.
             Do NOT paraphrase sentences from the given article when assigning the sentence, you must use each sentence directly from the given article.
             ALL sentences in the same keypoint must joined be in a single paragraph.
             Each sentence must appear only once under each keypoint.
-            You do NOT need to categorise all sentences. If a sentence is irrelevant to all keypoints, you can place it under the last keypoint "Omitted sentences"
+            You do NOT need to categorise all sentences. If a sentence is irrelevant to all key points, you can place it under the last keypoint "Omitted sentences"
 
-            Strictly ONLY include the keypoints you have identified and the sentences you omitted in your answer.
+            Strictly ONLY include the key points you have identified and the sentences you omitted in your answer.
 
-            Please respond with "No keypoints found" if there are no keypoints identified.
+            Please respond with "No key points found" if there are no key points identified.
 
             Use this template to structure your answer:
 
             "
-            Article: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. Buy these essential oils! You can support your friends and family members suffering from Parkinson's through constant encouragement. Remind them that having parkinsons's is not the end of the road.
+            Article: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. Buy these essential oils! You can support your friends and family members suffering from Parkinson's through constant encouragement. Remind them that having parkinson's is not the end of the road.
 
             Answer:
             1. Introduction to Parkinson's disease
             Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body.
 
             2. Supporting a patient with Parkinson's disease
-            You can support your friends and family members suffering from Parkinson's through constant encouragement. Remind them that having parkinsons's is not the end of the road.
+            You can support your friends and family members suffering from Parkinson's through constant encouragement. Remind them that having parkinson's is not the end of the road.
 
-            Ommitted sentences
+            Omitted sentences
             Buy these essential oils!
             "
 
@@ -1897,7 +1906,7 @@ class MistralPrompts(LLMPrompt):
 
         return researcher_prompt
 
-    def return_compiler_prompt(self):
+    def return_compiler_prompt(self) -> str:
         """
         Returns the compiler prompt for Mistral 7b
 
@@ -1907,45 +1916,45 @@ class MistralPrompts(LLMPrompt):
 
         compiler_prompt = """
             <s> [INST]
-            You are part of a article combination process. Your task is to compile the keypoints given to you.
+            You are part of a article combination process. Your task is to compile the key points given to you.
 
-            There are multiple articles with their respective keypoints that you must compile.
-            You MUST compile ALL keypoints from ALL articles given.
+            There are multiple articles with their respective key points that you must compile.
+            You MUST compile ALL key points from ALL articles given.
             Do NOT paraphrase from the sentences in each keypoint.
-            If two keypoints are identical or very similar, combine the points underneath and remove redundant sentences if required. However, do NOT paraphrase and strictly only add or remove sentences.
-            Return the compilation of keypoints at the end.
-            Do NOT return the compiled keypoints in bullet points.
-            Do NOT include keypoints under omitted sentences in your compilation.
+            If two key points are identical or very similar, combine the points underneath and remove redundant sentences if required. However, do NOT paraphrase and strictly only add or remove sentences.
+            Return the compilation of key points at the end.
+            Do NOT return the compiled key points in bullet points.
+            Do NOT include key points under omitted sentences in your compilation.
 
             Use the following example to form your compilation:
 
             "
-            Article 1 keypoints:
+            Article 1 key points:
             1. Introduction to Parkinson's disease
             Parkinson's disease is a neuro-degenerative disease
 
             2. Remedies to Parkinson's disease
             You may take Levodopa prescribed by your doctor to alleviate the symptoms
 
-            Article 2 keypoints:
+            Article 2 key points:
             1. History of Parkinson's disease
             Parkinson's disease was discovered by James Parkinson in 1817. It is a neurodegenerative disease.
 
             2. Symptoms of Parkinson's disease
-            Symptoms of PD include: Barely noticeable tremours in the hands, soft or slurred speech and little to no facial expressions.
+            Symptoms of PD include: Barely noticeable tremors in the hands, soft or slurred speech and little to no facial expressions.
 
             Answer:
             1. Introduction to Parkinson's disease
             Parkinson's disease is a neuro-degenerative disease. Parkinson's disease was discovered by James Parkinson in 1817.
 
             2. Symptoms to Parkinson's disease
-            Symptoms of PD include: Barely noticeable tremours in the hands, soft or slurred speech and little to no facial expressions.
+            Symptoms of PD include: Barely noticeable tremors in the hands, soft or slurred speech and little to no facial expressions.
 
             3. Remedies to Parkinson's disease
             You may take Levodopa prescribed by your doctor to alleviate the symptoms
             "
 
-            Below are the keypoints you will need to compile:
+            Below are the key points you will need to compile:
             {Keypoints}
             [/INST]
 
@@ -1960,12 +1969,12 @@ class MistralPrompts(LLMPrompt):
             <s> [INST]
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
 
-            Your task is to compare the given keypoints with the given requirements below and write your own content to fill in missing sections if necessary.
+            Your task is to compare the given key points with the given requirements below and write your own content to fill in missing sections if necessary.
             You will also be given a set of instructions that you MUST follow.
 
             ### Start of content requirements
             When rewriting the content, your writing MUST meet the requirements stated here.
-            If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
+            If the key points do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
             You should emulate your writing based on the specific
 
             Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
@@ -2007,7 +2016,7 @@ class MistralPrompts(LLMPrompt):
             You MUST follow these instructions when writing out your content.
 
             You MUST follow the content requirements.
-            You must use the given keypoints to FILL IN the required sections.
+            You must use the given key points to FILL IN the required sections.
             Each sentence should start in a new line, only sentences in bullet points are exempted.
             You should only use bullet points only if it improves the readability of the content.
             You should only use bullet points SPARINGLY and only <= 2 sections in your writing should contain bullet points.
@@ -2015,7 +2024,7 @@ class MistralPrompts(LLMPrompt):
             ### End of instructions
             [/INST]
 
-            Keypoints:
+            Key points:
             {Keypoints}
 
             Answer:
@@ -2184,7 +2193,7 @@ class MistralPrompts(LLMPrompt):
             ### End of guidelines
 
             ### Start of instructions
-                These are the set of insructions that you MUST follow in your writing.
+                These are the set of instructions that you MUST follow in your writing.
                 Check your writing with these instructions step by step carefully.
 
                 You MUST come up with 5 different meta descriptions based on the given content. Use the following example to structure your answer.
