@@ -389,8 +389,32 @@ def flag_multilingual_content(df: pd.DataFrame, whitelist: list[int]) -> pd.Data
     return df
 
 
+def flag_articles_via_blacklist(
+    df: pd.DataFrame, blacklist: dict[int, str]
+) -> pd.DataFrame:
+    """
+    Flags articles to remove based on blacklist provided in `parameters_data_processing.yml`
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the articles.
+        blacklist (dict[int, str]): The list of article IDs to remove. See https://bitly.cx/f8FIk.
+
+    Returns:
+        pd.DataFrame: The DataFrame with updated flags for articles to remove.
+    """
+    for article_id, remove_type in blacklist.items():
+        idx = df.loc[df["id"] == article_id].index
+        df.loc[idx, "to_remove"] = True
+        df.loc[idx, "remove_type"] = remove_type
+
+    return df
+
+
 def flag_articles_to_remove_after_extraction(
-    df: pd.DataFrame, word_count_cutoff: int, whitelist: list[int]
+    df: pd.DataFrame,
+    word_count_cutoff: int,
+    whitelist: list[int],
+    blacklist: dict[int, str],
 ) -> pd.DataFrame:
     """
     Flags articles to remove after extraction based on several different criteria.
@@ -399,6 +423,7 @@ def flag_articles_to_remove_after_extraction(
         df (pd.DataFrame): The DataFrame containing the articles.
         word_count_cutoff (int): The word count threshold for flagging articles.
         whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
+        blacklist (dict[int, str]): The list of article IDs to remove. See https://bitly.cx/f8FIk.
 
     Returns:
         pd.DataFrame: The DataFrame with updated flags for articles to remove.
@@ -409,6 +434,7 @@ def flag_articles_to_remove_after_extraction(
     df = flag_recipe_articles(df, whitelist)
     df = flag_multilingual_content(df, whitelist)
     df = flag_below_word_count_cutoff(df, word_count_cutoff, whitelist)
+    df = flag_articles_via_blacklist(df, blacklist)
 
     return df
 
