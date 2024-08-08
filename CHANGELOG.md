@@ -2,7 +2,7 @@
 
 ## August 8, 2024 <a id="august-8-2024"></a>
 
-- Added `blacklist` dictionary in `parameters_data_processing.yml` with remove_type description 
+- Added `blacklist` dictionary in `parameters_data_processing.yml` with remove_type description
 - Added `flag_articles_via_blacklist` to flag articles stated as blacklisted in `parameters_data_processing.yml`
 - Updated `data_processing` pipeline to include `blacklist` parameter for flagging
 
