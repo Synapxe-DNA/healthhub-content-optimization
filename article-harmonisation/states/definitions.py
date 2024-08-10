@@ -20,8 +20,8 @@ class ContentFlags(TypedDict):
 
 
 class ContentJudge(TypedDict):
-    readability: str
-    structure: str
+    readability: dict[str, str]
+    structure: dict[str, str]
 
 
 class TitleFlags(TypedDict):
@@ -29,7 +29,7 @@ class TitleFlags(TypedDict):
 
 
 class TitleJudge(TypedDict):
-    title: str
+    title: dict[str, str]
 
 
 class MetaFlags(TypedDict):
@@ -37,7 +37,7 @@ class MetaFlags(TypedDict):
 
 
 class MetaJudge(TypedDict):
-    meta_desc: str
+    meta_desc: dict[str, str]
 
 
 class ChecksAgents(TypedDict):

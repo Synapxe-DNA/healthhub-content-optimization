@@ -127,21 +127,56 @@ class AzurePrompts(LLMPrompt):
     Refer to https://platform.openai.com/docs/guides/prompt-engineering/strategy-write-clear-instructions for more information.
     """
 
+    def return_decision_prompt(self) -> list[tuple[str, str]]:
+
+        decision_prompt = [
+            (
+                "system",
+                """
+                You are to evaluate whether an article should be optimised given the critique provided.
+                Return a boolean (True/False) indicating whether the article should be optimised given the critique provided.
+                """,
+            ),
+            ("human", "Evaluate the following text:\n{text}"),
+        ]
+
+        return decision_prompt
+
+    def return_summarization_prompt(self) -> list[tuple[str, str]]:
+
+        evaluation_summary_prompt = [
+            (
+                "system",
+                """
+                Summarize the following text into 3 to 5 sentences. Ensure the summary is concise, succinct, and direct, focusing only on the most essential points.
+                You must maintain the goal and context of providing the critique and recommendation to the individual.
+                """,
+            ),
+            ("human", "Evaluate the following text:\n{text}"),
+        ]
+
+        return evaluation_summary_prompt
+
     def return_readability_evaluation_prompt(self) -> list[tuple[str, str]]:
 
         readability_evaluation_prompt = [
             (
                 "system",
-                """ I want you to act as an expert in readability analysis.
+                """
+                I want you to act as an expert in readability analysis.
                 Your task is to evaluate and critique the readability of the provided article. Your analysis should cover the following aspects:
 
-                1. **Sentence Structure**: Assess the complexity of sentences. Identify long, convoluted sentences and suggest ways to simplify them.
-                2. **Vocabulary**: Evaluate the complexity of the vocabulary used. Highlight any overly complex words and suggest simpler alternatives where appropriate.
-                3. **Coherence and Flow**: Analyze the coherence and logical flow of the text. Point out any abrupt transitions or lack of clarity and provide suggestions for improvement.
-                4. **Readability Metrics**: Calculate and provide readability scores using metrics such as Flesch-Kincaid Grade Level, Gunning Fog Index, and any other relevant readability indices.
-                5. **Overall Assessment**: Summarize the overall readability of the article, providing specific examples and actionable recommendations for improvement.
+                Let's think step by step.
 
-                Please provide a detailed analysis and critique following the above criteria.""",
+                1. You are to conduct a detailed analysis and critique following the criteria below:
+                    - **Sentence Structure**: Assess the complexity of sentences. Identify long, convoluted sentences and suggest ways to simplify them.
+                    - **Vocabulary**: Evaluate the complexity of the vocabulary used. Highlight any overly complex words and suggest simpler alternatives where appropriate.
+                    - **Coherence and Flow**: Analyze the coherence and logical flow of the text. Point out any abrupt transitions or lack of clarity and provide suggestions for improvement.
+                2. You are to explain why the article has poor readability by performing the following instructions below:
+                    - **Overall Assessment**: Summarize the overall readability of the article,
+                    - **Explanation**: Explain why the article suffers from poor readability.
+                    - **Recommendation**: Provide specific examples and actionable recommendations for improvement.
+                """,
             ),
             ("human", "Evaluate the following article:\n {article}"),
         ]
@@ -152,7 +187,8 @@ class AzurePrompts(LLMPrompt):
         structure_evaluation_prompt = [
             (
                 "system",
-                """ Objective: Critique the content structure of the article, evaluating its effectiveness and coherence based on the following criteria -
+                """
+                Objective: Critique the content structure of the article, evaluating its effectiveness and coherence based on the following criteria -
 
                 1. Opening
                 Headline
@@ -221,7 +257,8 @@ class AzurePrompts(LLMPrompt):
         title_evaluation_prompt = [
             (
                 "system",
-                """ Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
+                """
+                Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
 
                 Steps to Follow:
                 1.  Identify the Title:
@@ -248,7 +285,8 @@ class AzurePrompts(LLMPrompt):
 
                 6.  Suggestions for Improvement:
                 -   If the title is not fully relevant, suggest alternative titles that more accurately capture the essence of the article.
-                -   Explain why the suggested titles are more appropriate based on the article's content. """,
+                -   Explain why the suggested titles are more appropriate based on the article's content.
+                """,
             ),
             ("human", """ Title: "10 Tips for Effective Time Management" """),
             (
@@ -284,34 +322,35 @@ class AzurePrompts(LLMPrompt):
             (
                 "system",
                 """
-            Objective: Assess the relevance of the article's meta description by comparing it with the content of the article.
+                Objective: Assess the relevance of the article's meta description by comparing it with the content of the article.
 
-            Steps to Follow:
-            1.  Identify the Meta Description:
-            -   What is the meta description of the article?
+                Steps to Follow:
+                1.  Identify the Meta Description:
+                -   What is the meta description of the article?
 
-            2.  Analyze the Meta Description:
-            -   What main topic or benefit does the meta description convey?
-            -   Is the meta description clear, concise, and engaging?
+                2.  Analyze the Meta Description:
+                -   What main topic or benefit does the meta description convey?
+                -   Is the meta description clear, concise, and engaging?
 
-            3.  Review the Content:
-            -   Read the entire article carefully.
-            -   Summarize the main points and key themes of the article.
-            -   Note any specific sections or statements that align with or diverge from the meta description.
+                3.  Review the Content:
+                -   Read the entire article carefully.
+                -   Summarize the main points and key themes of the article.
+                -   Note any specific sections or statements that align with or diverge from the meta description.
 
-            4.  Compare Meta Description and Content:
-            -   Does the content directly address the main topic or benefit stated in the meta description?
-            -   Are the main themes and messages of the article consistent with the expectations set by the meta description?
-            -   Identify any significant information in the article that is not reflected in the meta description and vice versa.
+                4.  Compare Meta Description and Content:
+                -   Does the content directly address the main topic or benefit stated in the meta description?
+                -   Are the main themes and messages of the article consistent with the expectations set by the meta description?
+                -   Identify any significant information in the article that is not reflected in the meta description and vice versa.
 
-            5.  Evaluate Relevance:
-            -   Provide a detailed explanation of how well the meta description reflects the content.
-            -   Use specific examples or excerpts from the article to support your evaluation.
-            -   Highlight any discrepancies or misalignment between the meta description and the content.
+                5.  Evaluate Relevance:
+                -   Provide a detailed explanation of how well the meta description reflects the content.
+                -   Use specific examples or excerpts from the article to support your evaluation.
+                -   Highlight any discrepancies or misalignment between the meta description and the content.
 
-            6.  Suggestions for Improvement:
-            -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
-            -   Explain why the suggested descriptions are more appropriate based on the article's content. """,
+                6.  Suggestions for Improvement:
+                -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
+                -   Explain why the suggested descriptions are more appropriate based on the article's content.
+                """,
             ),
             (
                 "human",
@@ -355,7 +394,8 @@ class AzurePrompts(LLMPrompt):
         researcher_prompt = [
             (
                 "system",
-                """You are part of a article combination process. Your task is to utilize the headers in the article and identify and omit any unnecessary sentences.
+                """
+                You are part of a article combination process. Your task is to utilize the headers in the article and identify and omit any unnecessary sentences.
                 You will be given a context as well as a set of instructions.
                 You MUST use the Context guidelines given.
                 You MUST strictly follow the instructions given.

@@ -1,11 +1,14 @@
 import re
 from abc import ABC, abstractmethod
+from operator import itemgetter
 
 from config import settings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_openai import AzureChatOpenAI
+from utils.formatters import parse_string_to_boolean
 
 from .enums import MODELS, ROLES
 from .prompts import prompt_tool
@@ -423,43 +426,155 @@ class Azure(LLMInterface):
 
         match choice.lower():
             case "readability":
-                template = self.prompt_template.return_readability_evaluation_prompt()
+                evaluation_prompt = ChatPromptTemplate.from_messages(
+                    self.prompt_template.return_readability_evaluation_prompt()
+                )
+                summarization_prompt = ChatPromptTemplate.from_messages(
+                    self.prompt_template.return_summarization_prompt()
+                )
+
+                evaluation_chain = (
+                    evaluation_prompt
+                    | self.model
+                    | StrOutputParser()
+                    | {"evaluation": RunnablePassthrough()}
+                )
+                summarization_chain = (
+                    summarization_prompt | self.model | StrOutputParser()
+                )
+
+                chain = (
+                    evaluation_chain
+                    | {"text": itemgetter("evaluation")}
+                    | {
+                        "explanation": summarization_chain,
+                    }
+                )
+
             case "structure":
-                template = self.prompt_template.return_structure_evaluation_prompt()
+                evaluation_prompt = ChatPromptTemplate.from_messages(
+                    self.prompt_template.return_structure_evaluation_prompt()
+                )
+                summarization_prompt = ChatPromptTemplate.from_messages(
+                    self.prompt_template.return_summarization_prompt()
+                )
+                decision_prompt = ChatPromptTemplate.from_messages(
+                    self.prompt_template.return_decision_prompt()
+                )
+
+                evaluation_chain = (
+                    evaluation_prompt
+                    | self.model
+                    | StrOutputParser()
+                    | {"evaluation": RunnablePassthrough()}
+                )
+                summarization_chain = (
+                    summarization_prompt | self.model | StrOutputParser()
+                )
+                decision_chain = (
+                    decision_prompt
+                    | self.model
+                    | StrOutputParser()
+                    | RunnableLambda(parse_string_to_boolean)
+                )
+
+                chain = (
+                    evaluation_chain
+                    | {"text": itemgetter("evaluation")}
+                    | {
+                        "decision": decision_chain,
+                        "explanation": summarization_chain,
+                    }
+                )
+
             case _:
                 raise ValueError(f"You entered {choice}, which is not a valid choice")
 
-        prompt_t = ChatPromptTemplate.from_messages(template)
-
-        chain = prompt_t | self.model | StrOutputParser()
+        print(f"Evaluating content {choice}")
         res = chain.invoke({"article": content})
-        response = re.sub(" +", " ", res)
+        print(f"Content {choice} evaluated")
 
-        return response
+        return res
 
     def evaluate_title(self, title: str, content: str) -> str:
+        evaluation_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_title_evaluation_prompt()
+        )
+        summarization_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_summarization_prompt()
+        )
+        decision_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_decision_prompt()
+        )
 
-        template = self.prompt_template.return_title_evaluation_prompt()
+        evaluation_chain = (
+            evaluation_prompt
+            | self.model
+            | StrOutputParser()
+            | {"evaluation": RunnablePassthrough()}
+        )
+        summarization_chain = summarization_prompt | self.model | StrOutputParser()
+        decision_chain = (
+            decision_prompt
+            | self.model
+            | StrOutputParser()
+            | RunnableLambda(parse_string_to_boolean)
+        )
 
-        prompt_t = ChatPromptTemplate.from_messages(template)
+        chain = (
+            evaluation_chain
+            | {"text": itemgetter("evaluation")}
+            | {
+                "decision": decision_chain,
+                "explanation": summarization_chain,
+            }
+        )
 
-        chain = prompt_t | self.model | StrOutputParser()
+        print("Evaluating title")
         res = chain.invoke({"title": title, "article": content})
-        response = re.sub(" +", " ", res)
+        print("Title evaluated")
 
-        return response
+        return res
 
     def evaluate_meta_description(self, meta_description: str, content: str) -> str:
+        evaluation_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_meta_desc_evaluation_prompt()
+        )
+        summarization_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_summarization_prompt()
+        )
+        decision_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_decision_prompt()
+        )
 
-        template = self.prompt_template.return_meta_desc_evaluation_prompt()
+        evaluation_chain = (
+            evaluation_prompt
+            | self.model
+            | StrOutputParser()
+            | {"evaluation": RunnablePassthrough()}
+        )
+        summarization_chain = summarization_prompt | self.model | StrOutputParser()
+        decision_chain = (
+            decision_prompt
+            | self.model
+            | StrOutputParser()
+            | RunnableLambda(parse_string_to_boolean)
+        )
 
-        prompt_t = ChatPromptTemplate.from_messages(template)
+        chain = (
+            evaluation_chain
+            | {"text": itemgetter("evaluation")}
+            | {
+                "decision": decision_chain,
+                "explanation": summarization_chain,
+            }
+        )
 
-        chain = prompt_t | self.model | StrOutputParser()
+        print("Evaluating meta description")
         res = chain.invoke({"meta": meta_description, "article": content})
-        response = re.sub(" +", " ", res)
+        print("Meta description evaluated")
 
-        return response
+        return res
 
     def generate_keypoints(self, article: str):
         """
