@@ -203,3 +203,95 @@ def print_checks(result, model):
             print(f"{flag.upper()} has not been flagged for optimisation.", file=f)
             print(" \n ----------------- \n", file=f)
     f.close()
+
+
+def parse_string_to_boolean(string_to_check: str) -> bool:
+    if isinstance(string_to_check, str):
+        string_to_check = string_to_check.lower()
+        if string_to_check == "true":
+            res = True
+        elif string_to_check == "false":
+            res = False
+        else:
+            res = None
+
+    return res
+
+
+def format_checks_outputs(checks: dict) -> dict:
+    result = {}
+
+    article_inputs = checks.get("article_inputs")
+    article_id = int(article_inputs.get("article_id"))
+    title = article_inputs.get("article_title")
+    url = article_inputs.get("article_url")
+    content_category = article_inputs.get("content_category")
+    article_category_names = article_inputs.get("article_category_names")
+    page_views = int(article_inputs.get("page_views"))
+
+    content_flags = checks.get("content_flags")
+    poor_readability = bool(content_flags.get("is_unreadable"))
+    insufficient_content = bool(content_flags.get("low_word_count"))
+
+    content_judge = checks.get("content_judge")
+    readability_explanation = content_judge.get("readability").get("explanation")
+    structure_decision = bool(content_judge.get("structure").get("decision"))
+    structure_explanation = content_judge.get("structure").get("explanation")
+
+    title_flags = checks.get("title_flags")
+    long_title = bool(title_flags.get("long_title"))
+
+    title_judge = checks.get("title_judge")
+    irrelevant_title_decision = bool(title_judge.get("title").get("decision"))
+    irrelevant_title_explanation = title_judge.get("title").get("explanation")
+
+    meta_flags = checks.get("meta_flags")
+    meta_not_within_char_count = bool(meta_flags.get("not_within_char_count"))
+
+    meta_judge = checks.get("meta_judge")
+    irrelevant_meta_desc_decision = bool(meta_judge.get("meta_desc").get("decision"))
+    irrelevant_meta_desc_explanation = meta_judge.get("meta_desc").get("explanation")
+
+    result["article_id"] = article_id
+    result["title"] = title
+    result["url"] = url
+    result["content category"] = content_category
+    result["article category names"] = article_category_names
+    result["page views"] = page_views
+
+    result["overall flags"] = (
+        poor_readability
+        | insufficient_content
+        | structure_decision
+        | long_title
+        | irrelevant_title_decision
+        | meta_not_within_char_count
+        | irrelevant_meta_desc_decision
+    )
+
+    result["overall title flags"] = long_title | irrelevant_title_decision
+    result["long title"] = long_title
+    result["irrelevant title"] = irrelevant_title_decision
+    result["reason for irrelevant title"] = irrelevant_title_explanation
+
+    result["overall meta description flags"] = (
+        meta_not_within_char_count | irrelevant_meta_desc_decision
+    )
+    result["meta description not within 70 and 160 characters"] = (
+        meta_not_within_char_count
+    )
+    result["irrelevant meta description"] = irrelevant_meta_desc_decision
+    result["reason for irrelevant meta description"] = irrelevant_meta_desc_explanation
+
+    result["overall content flags"] = (
+        poor_readability | insufficient_content | structure_decision
+    )
+    result["poor readability"] = poor_readability
+    result["reason for poor readability"] = readability_explanation
+    result["insufficient content"] = insufficient_content
+    result["writing style needs improvement"] = structure_decision
+    result["reason for improving writing style"] = structure_explanation
+    result["Action"] = ""
+    result["Additional Content"] = ""
+
+    return result
