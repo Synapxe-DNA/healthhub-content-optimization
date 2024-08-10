@@ -16,6 +16,7 @@ from states.definitions import (
     TitleJudge,
 )
 from utils.evaluations import calculate_readability
+from utils.formatters import format_checks_outputs
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
 from utils.reducers import merge_dict
@@ -241,7 +242,9 @@ if __name__ == "__main__":
     # Load data from merged_data.parquet and randomly sample 30 rows
     df = pd.read_parquet(f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet")
     df_keep = df[~df["to_remove"]]
-    df_sample = df_keep.sample(n=1, replace=False, random_state=42)
+
+    df_sample = df_keep[df_keep["id"] == 1445402]
+    # df_sample = df_keep.sample(n=1, replace=False, random_state=42)
     rows = df_sample.shape[0]
     print(rows)
 
@@ -264,13 +267,13 @@ if __name__ == "__main__":
         inputs = {
             "article_inputs": {
                 "article_id": article_id,
-                "article_content": article_content,
                 "article_title": article_title,
-                "meta_desc": meta_desc,
                 "article_url": article_url,
                 "content_category": content_category,
                 "article_category_names": article_category_names,
                 "page_views": page_views,
+                "article_content": article_content,
+                "meta_desc": meta_desc,
             },
             "content_flags": {},
             "title_flags": {},
@@ -285,9 +288,8 @@ if __name__ == "__main__":
         }
 
         response = execute_graph(app, inputs)
-        print(response)
-        del response["llm_agents"]
-        records.append(response)
+        result = format_checks_outputs(response)
+        records.append(result)
 
     df_save = pd.DataFrame.from_records(records)
     df_save.to_parquet(
