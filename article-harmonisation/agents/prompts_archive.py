@@ -1,5 +1,5 @@
-class Llama_archived_prompts:
-    def return_researcher_prompt_ver(version):
+class LlamaArchivedPrompts:
+    def return_researcher_prompt_ver(self, version):
         """This function returns the previous] version of the researcher prompt
 
         Version 1: This researcher prompt which does not preserve the original headers, instead it instructs the llm to sort the sentences into keypoints determined by itself.
@@ -52,7 +52,7 @@ class Llama_archived_prompts:
                 """
                 return researcher_prompt
 
-    def return_content_prompt_ver(version, topic):
+    def return_content_prompt_ver(self, version, topic):
         match topic.lower():
             case "health conditions":
                 match version:
@@ -126,8 +126,31 @@ class Llama_archived_prompts:
                 return optimise_health_conditions_content_prompt
 
 
-class Azure_archived_prompts:
-    def return_researcher_prompt_ver(version) -> list:
+class AzureArchivedPrompts:
+
+    def return_readability_evaluation_prompt_ver(self, version) -> list:
+        match version:
+            case 1:
+                readability_evaluation_prompt = [
+                    (
+                        "system",
+                        """ I want you to act as an expert in readability analysis.
+                        Your task is to evaluate and critique the readability of the provided article. Your analysis should cover the following aspects:
+
+                        1. **Sentence Structure**: Assess the complexity of sentences. Identify long, convoluted sentences and suggest ways to simplify them.
+                        2. **Vocabulary**: Evaluate the complexity of the vocabulary used. Highlight any overly complex words and suggest simpler alternatives where appropriate.
+                        3. **Coherence and Flow**: Analyze the coherence and logical flow of the text. Point out any abrupt transitions or lack of clarity and provide suggestions for improvement.
+                        4. **Readability Metrics**: Calculate and provide readability scores using metrics such as Flesch-Kincaid Grade Level, Gunning Fog Index, and any other relevant readability indices.
+                        5. **Overall Assessment**: Summarize the overall readability of the article, providing specific examples and actionable recommendations for improvement.
+
+                        Please provide a detailed analysis and critique following the above criteria.""",
+                    ),
+                    ("human", "Evaluate the following article:\n {article}"),
+                ]
+
+        return readability_evaluation_prompt
+
+    def return_researcher_prompt_ver(self, version) -> list:
         match version:
             case 1:
                 researcher_prompt = [
