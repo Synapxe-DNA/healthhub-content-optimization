@@ -165,7 +165,7 @@ class AzurePrompts(LLMPrompt):
                 """
                 I want you to act as an expert in readability analysis.
                 Your task is to evaluate and critique the readability of the provided article. Your analysis should cover the following aspects:
-                
+
                 Let's think step by step.
 
                 1. You are to conduct a detailed analysis and critique following the criteria below:
