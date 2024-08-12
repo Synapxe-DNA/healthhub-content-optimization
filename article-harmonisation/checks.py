@@ -1,3 +1,5 @@
+import time
+from datetime import datetime
 from typing import Annotated, TypedDict
 
 import pandas as pd
@@ -244,9 +246,21 @@ if __name__ == "__main__":
     # Load data from merged_data.parquet and randomly sample 30 rows
     df = pd.read_parquet(f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet")
     df_keep = df[~df["to_remove"]]
+    df_keep = df_keep[df_keep["pr_name"] == "Health Promotion Board"]
+    df_keep = df_keep[
+        df_keep["content_category"].isin(
+            [
+                "cost-and-financing",
+                "live-healthy-articles",
+                "diseases-and-conditions",
+                "medical-care-and-facilities",
+                "support-group-and-others",
+            ]
+        )
+    ]
 
-    df_sample = df_keep[df_keep["id"] == 1445402]
-    # df_sample = df_keep.sample(n=1, replace=False, random_state=42)
+    # df_sample = df_keep[df_keep["id"] == 1445402]
+    df_sample = df_keep.sample(n=10, replace=False, random_state=42)
     rows = df_sample.shape[0]
     print(rows)
 
@@ -291,9 +305,15 @@ if __name__ == "__main__":
 
         response = execute_graph(app, inputs)
         result = format_checks_outputs(response)
+        print("Result generated!")
+        print(response)
         records.append(result)
+        print("Sleeping for 30 seconds...")
+        time.sleep(30)
+        print("Awake!")
 
+    current_datetime = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
     df_save = pd.DataFrame.from_records(records)
     df_save.to_parquet(
-        f"{ROOT_DIR}/article-harmonisation/data/optimization_checks/agentic_response.parquet"
+        f"{ROOT_DIR}/article-harmonisation/data/optimization_checks/agentic_response_{current_datetime}.parquet"
     )
