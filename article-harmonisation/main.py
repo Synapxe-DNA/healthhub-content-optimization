@@ -14,7 +14,7 @@ from checks import (
 )
 from harmonisation import (
     RewritingState,
-    check_all_articles,
+    check_for_compiler,
     compiler_node,
     content_guidelines_optimisation_node,
     decide_next_optimisation_node,
@@ -136,7 +136,7 @@ def start_article_harmonisation(stategraph: ChecksState):
     # Example element in conditional edge dictionary: {"name of node": (conditional edge function, path map)}
     conditional_edges = {
         "researcher_node": (
-            check_all_articles,
+            check_for_compiler,
             {
                 "researcher_node": "researcher_node",
                 "compiler_node": "compiler_node",

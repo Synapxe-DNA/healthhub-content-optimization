@@ -77,6 +77,8 @@ def content_evaluation_rules_node(state: ChecksState) -> dict:
     else:
         content_flags["is_unreadable"] = False
 
+    content_flags["readability_score"] = score
+
     # Check for insufficient content -
     # Less than 300 - 400 words is considered too brief
     # to adequately cover a topic unless it's a very specific and narrow subject
