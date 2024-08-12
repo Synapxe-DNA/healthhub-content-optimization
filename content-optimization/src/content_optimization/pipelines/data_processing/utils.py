@@ -179,49 +179,19 @@ def flag_duplicated(
 
     if column == "extracted_content_body":
         duplicated_df = df[
-            (df[column].duplicated())  # we want duplicated articles
+            (df[column].duplicated(keep="first"))  # we want duplicated articles, first instance is not flagged
             & (df[column].notna())  # ignore null values
             & (df[column] != "")  # ignore empty extracted content
             & (~df["to_remove"])  # ignore articles that were already flagged
-        ].sort_values(
-            [
-                "title",
-                "date_modified",
-                "extracted_content_body",
-                "page_views",
-            ]
-        )
-
-        keep_df_content = duplicated_df.drop_duplicates(
-            subset=["extracted_content_body"],
-            keep="last",
-        )
-
-        duplicated_df = duplicated_df[
-            ~duplicated_df["id"].isin(list(keep_df_content["id"]))
         ]
 
         value = "Duplicated Content"
 
     elif column == "full_url":
         duplicated_df = df[
-            (df[column].duplicated())  # we want duplicated URLs
+            (df[column].duplicated(keep="first"))  # we want duplicated URLs, first instance is not flagged
             & (df[column].notna())  # ignore null values
             & (~df["to_remove"])  # ignore articles that were already flagged
-        ].sort_values(
-            [
-                "full_url",
-                "date_modified",
-            ]
-        )
-
-        keep_df_url = duplicated_df.drop_duplicates(
-            subset=["full_url"],
-            keep="last",
-        )
-
-        duplicated_df = duplicated_df[
-            ~duplicated_df["id"].isin(list(keep_df_url["id"]))
         ]
 
         value = "Duplicated URL"
