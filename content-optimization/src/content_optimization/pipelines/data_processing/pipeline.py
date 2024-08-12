@@ -43,6 +43,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "all_contents_added",
                     "params:word_count_cutoff",
                     "params:whitelist",
+                    "params:blacklist",
                 ],
                 outputs=["all_contents_extracted", "all_extracted_text"],
                 name="extract_data_node",

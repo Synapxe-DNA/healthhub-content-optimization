@@ -328,6 +328,18 @@ whitelist:
   - 1435183 # flagged as duplicated url but whitelisted
   - 1434614 # flagged as duplicated url but whitelisted
 
+# See: https://docs.google.com/spreadsheets/d/1W5GuJ2beB7rICJyIOuEyCNmCTaVhC8I7/edit?gid=575939891#gid=575939891
+# Filter by `Remove from Website` under `Action` column)
+# These articles were flagged for removal during clustering due to their respective reasons
+blacklist:
+  1443526: "Table of Contents"
+  1443534: "Table of Contents"
+  1444997: "Irrelevant Content"
+  1445002: "Irrelevant Content"
+  1444991: "Irrelevant Content"
+  1444996: "Irrelevant Content"
+  1445000: "Irrelevant Content"
+
 # Refer to https://docs.google.com/spreadsheets/d/1bcmD7GXILn4LqF0Bo9dcdCnRomwCVFQv (IA Mappings)
 l1_mappings:
   medical-care-and-facilities:
