@@ -179,19 +179,25 @@ def flag_duplicated(
 
     if column == "extracted_content_body":
         duplicated_df = df[
-            (df[column].duplicated())  # we want duplicated articles
+            (
+                df[column].duplicated(keep="first")
+            )  # we want duplicated articles, first instance is not flagged
             & (df[column].notna())  # ignore null values
             & (df[column] != "")  # ignore empty extracted content
             & (~df["to_remove"])  # ignore articles that were already flagged
         ]
+
         value = "Duplicated Content"
 
     elif column == "full_url":
         duplicated_df = df[
-            (df[column].duplicated())  # we want duplicated URLs
+            (
+                df[column].duplicated(keep="first")
+            )  # we want duplicated URLs, first instance is not flagged
             & (df[column].notna())  # ignore null values
             & (~df["to_remove"])  # ignore articles that were already flagged
         ]
+
         value = "Duplicated URL"
 
     for i in range(len(duplicated_df)):
