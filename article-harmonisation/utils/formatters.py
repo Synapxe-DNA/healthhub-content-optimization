@@ -231,6 +231,7 @@ def parse_string_to_boolean(string_to_check: str) -> bool:
 def format_checks_outputs(checks: dict) -> dict:
     result = {}
 
+    # Article Inputs
     article_inputs = checks.get("article_inputs")
     article_id = int(article_inputs.get("article_id"))
     title = article_inputs.get("article_title")
@@ -239,28 +240,33 @@ def format_checks_outputs(checks: dict) -> dict:
     article_category_names = article_inputs.get("article_category_names")
     page_views = int(article_inputs.get("page_views"))
 
+    # Content flags (Rule-based)
     content_flags = checks.get("content_flags")
     poor_readability = bool(content_flags.get("is_unreadable"))
     insufficient_content = bool(content_flags.get("low_word_count"))
 
+    # Content flags (LLM-based)
     content_judge = checks.get("content_judge")
-    readability_explanation = content_judge.get("readability").get("explanation")
+    # Readability explanation is dependent on poor_readability rule - Can be false, hence null
+    readability_explanation = content_judge.get("readability", {}).get(
+        "explanation", None
+    )
     structure_decision = bool(content_judge.get("structure").get("decision"))
-    structure_explanation = content_judge.get("structure").get("explanation")
+    structure_explanation = content_judge.get("structure").get("explanation", None)
 
     title_flags = checks.get("title_flags")
     long_title = bool(title_flags.get("long_title"))
 
     title_judge = checks.get("title_judge")
     irrelevant_title_decision = bool(title_judge.get("title").get("decision"))
-    irrelevant_title_explanation = title_judge.get("title").get("explanation")
+    irrelevant_title_explanation = title_judge.get("title").get("explanation", None)
 
     meta_flags = checks.get("meta_flags")
     meta_not_within_char_count = bool(meta_flags.get("not_within_char_count"))
 
     meta_judge = checks.get("meta_judge")
     irrelevant_meta_desc_decision = bool(meta_judge.get("meta_desc").get("decision"))
-    irrelevant_meta_desc_explanation = meta_judge.get("meta_desc").get("explanation")
+    irrelevant_meta_desc_explanation = meta_judge.get("meta_desc").get("explanation", None)
 
     result["article_id"] = article_id
     result["title"] = title
