@@ -225,18 +225,22 @@ def writing_guidelines_optimisation_node(state):
     """
     optimised_article_output = state.get("optimised_article_output")
 
-    content = optimised_article_output.get(
-        "optimised_writing",  # article optimisation, subsequent rewrites
-        optimised_article_output.get(
-            "optimised_content",  # article optimisation, after content optimisation and first rewriting
-            optimised_article_output.get(
-                "compiled_keypoints",  # article harmonisation, without any content optimisation
-                optimised_article_output.get(
-                    "researcher_keypoints"
-                ),  # article optimisation, without any content optimisation
-            ),
-        ),
-    )
+    if (
+        optimised_article_output.get("optimised_writing") is not None
+    ):  # article optimisation/harmonisation, subsequent rewrites
+        content = optimised_article_output.get("optimised_writing")
+    elif (
+        optimised_article_output.get("optimised_content") is not None
+    ):  # article optimisation/harmonisation, first rewriting after content optimisation
+        content = optimised_article_output.get("optimised_content")
+    elif (
+        optimised_article_output.get("compiled_keypoints") is not None
+    ):  # article optimisation, first rewriting without any content optimisation
+        content = optimised_article_output.get("compiled_keypoints")
+    else:
+        content = optimised_article_output.get(
+            "researcher_keypoints"
+        )  # article optimisation, first rewriting without any content optimisation
 
     writing_optimisation_agent = state.get("llm_agents")["writing_optimisation_agent"]
     optimised_writing = writing_optimisation_agent.optimise_writing(content)
