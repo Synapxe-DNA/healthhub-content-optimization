@@ -265,6 +265,17 @@ def readability_evaluation_node(state):
 
     Returns:
     """
+    # Obtaining the number of rewriting_tries
+    rewriting_tries = state.get("article_rewriting_tries", 0)
+
+    # Obtaining the readability score
+    optimised_article_output = state.get("optimised_article_output")
+    new_readability_score = optimised_article_output["readability_score"]
+
+    print(
+        f"Number of retries: {rewriting_tries}, Readability score: {new_readability_score}"
+    )
+    
     # Getting the optimised writing from writing_guidelines_optimisation_node
     optimised_article_output = state.get("optimised_article_output")
     optimised_writing = optimised_article_output.get("optimised_writing")
@@ -286,8 +297,6 @@ def readability_evaluation_node(state):
     # Updating state with the most recent content_judge updated with the new readability evaluation
     article_evaluation["content_judge"] = content_judge
 
-    rewriting_tries = state.get("article_rewriting_tries", 0)
-
     return {
         "article_rewriting_tries": rewriting_tries + 1,
         "article_evaluation": article_evaluation,
@@ -295,7 +304,6 @@ def readability_evaluation_node(state):
     }
 
 
-# TODO: finish this
 def readability_optimisation_node(state):
     """Creates a readability optimisation node that optimises the writing based on the feedback given."""
     # Obtaining the optimised writing
@@ -310,11 +318,9 @@ def readability_optimisation_node(state):
         "readability_optimisation_agent"
     ]
 
-    print("Optimising article readability")
     optimised_readability_article = readability_optimisation_agent.optimise_readability(
         content=optimised_writing, readability_evaluation=readability_evaluation
     )
-    print("Article readability optimised")
 
     # Updating state with the newly readability optimised article
     optimised_article_output["optimised_writing"] = optimised_readability_article
@@ -363,7 +369,7 @@ def personality_guidelines_evaluation_node(state):
 
 # functions to determine next node
 def check_for_compiler(state):
-    """Determines if the state should move on to the compiler node for harmonisation or content_guidelines for optimisation.
+    """Determines if the state should move on to the compiler node for harmonisation or other article optimisation nodes.
 
     Args:
         state: a dictionary storing relevant attributes as keys and content as the respective items.
@@ -439,6 +445,31 @@ def check_personality_after_readability_optimisation(state):
     else:
         return "writing_guidelines_optimisation_node"
 
+def check_num_of_tries_after_writing_evaluation(state):
+    """An additional condition edge checking the number of retires has hit the limit. This function is needed as there are personality evaluation node > readability evaluation node can lead to an infinite loop despite multiple rewrites."""
+
+    # Extracting the number of article rewriting tries
+    rewriting_tries = state.get("article_rewriting_tries", 0)
+
+    if rewriting_tries > REWRITING_TRIES:
+        print("Number of writing retries exceeded limit hit")
+
+        title_optimisation_flags = state.get("user_flags")[
+                "flag_for_title_optimisation"
+            ]
+        meta_desc_optimisation_flags = state.get("user_flags")[
+            "flag_for_meta_desc_optimisation"
+        ]
+
+        if title_optimisation_flags:
+            return "title_optimisation_node"
+        elif meta_desc_optimisation_flags:
+            return "meta_description_optimisation_node"
+        else:
+            return END
+    else:
+        return "readability_optimisation_node"
+
 
 def check_readability_after_writing_optimisation(state):
     """Checks for the readability score of the writing optimised article and determines if a subsequent round of rewriting is required to improve the article readability score."""
@@ -447,20 +478,9 @@ def check_readability_after_writing_optimisation(state):
     optimised_article_output = state.get("optimised_article_output")
     new_readability_score = optimised_article_output["readability_score"]
 
-    # Extractung the number of article rewriting tries
-    rewriting_tries = state.get("article_rewriting_tries", 0)
-
-    print(
-        f"Number of retries: {rewriting_tries}, Readability score: {new_readability_score}"
-    )
-
-    if rewriting_tries > REWRITING_TRIES or new_readability_score < 10:
-        # Respective print statements for exiting loop due to maximum number of rewritting tries or readability score
-        if rewriting_tries >= REWRITING_TRIES:
-            print("Number of writing retries exceeded limit hit")
-        elif new_readability_score < 10:
-            print(
-                f"Readability score is now {new_readability_score} and considered readable"
+    if new_readability_score < 10:
+        print(
+            f"Readability score is now {new_readability_score} and considered readable"
             )
         # Checks if article is flagged for title and meta_desc optimisation
         title_optimisation_flags = state.get("user_flags")[
@@ -514,7 +534,6 @@ if __name__ == "__main__":
     # Declaring dictionary with all edges
     edges = {
         START: ["researcher_node"],
-        "readability_evaluation_node": ["readability_optimisation_node"],
         "readability_optimisation_node": ["personality_guidelines_evaluation_node"],
         "meta_description_optimisation_node": [END],
     }
@@ -527,6 +546,7 @@ if __name__ == "__main__":
             {
                 "compiler_node": "compiler_node",
                 "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
+                "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node"
             },
         ),
         "compiler_node": (
@@ -557,6 +577,15 @@ if __name__ == "__main__":
                 END: END,
             },
         ),
+        "readability_evaluation_node" : (
+            check_num_of_tries_after_writing_evaluation,
+            {
+                "readability_optimisation_node": "readability_optimisation_node",
+                "title_optimisation_node": "title_optimisation_node",
+                "meta_description_optimisation_node": "meta_description_optimisation_node",
+                END: END,
+            }
+        ),
         "personality_guidelines_evaluation_node": (
             check_personality_after_readability_optimisation,
             {
@@ -586,14 +615,14 @@ if __name__ == "__main__":
     meta_desc_optimisation_agent = start_llm(MODEL, ROLES.META_DESC)
     title_optimisation_agent = start_llm(MODEL, ROLES.TITLE)
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
-    writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
-    readability_evaluation_agent = start_llm(MODEL, ROLES.READABILITY_OPTIMISATION)
+    writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION, temperature= 0.4)
+    readability_evaluation_agent = start_llm(MODEL, ROLES.READABILITY_OPTIMISATION, temperature= 0.3)
     personality_evaluation_agent = start_llm(MODEL, ROLES.PERSONALITY_EVALUATION)
-    readability_optimisation_agent = start_llm(MODEL, ROLES.READABILITY_OPTIMISATION)
+    readability_optimisation_agent = start_llm(MODEL, ROLES.READABILITY_OPTIMISATION, temperature= 0.5)
 
     # List with the articles to harmonise
     article_list = [
-        # "Rubella",
+        "Rubella",
         "How Dangerous Is Rubella?"
         # "Weight, BMI and Health Problems"
     ]
@@ -610,10 +639,10 @@ if __name__ == "__main__":
             "article_researcher_counter": 0,
         },
         "user_flags": {
-            "flag_for_content_optimisation": True,
+            "flag_for_content_optimisation": False,
             "flag_for_writing_optimisation": True,
-            "flag_for_title_optimisation": True,
-            "flag_for_meta_desc_optimisation": True,
+            "flag_for_title_optimisation": False,
+            "flag_for_meta_desc_optimisation": False,
         },
         "llm_agents": {
             "researcher_agent": researcher_agent,
