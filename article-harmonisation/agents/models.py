@@ -17,7 +17,7 @@ AZURE_OPENAI_API_VERSION = settings.AZURE_OPENAI_API_VERSION
 AZURE_AD_TOKEN_PROVIDER = settings.AZURE_AD_TOKEN_PROVIDER
 
 
-def start_llm(model: str, role: str):
+def start_llm(model: str, role: str, temperature: int = 0):
     """
     Starts up and returns an instance of a specific model type
 
@@ -70,7 +70,7 @@ def start_llm(model: str, role: str):
                 timeout=None,
                 seed=42,
                 streaming=False,
-                temperature=0,
+                temperature=temperature,
                 top_p=1,
                 verbose=True,
             )

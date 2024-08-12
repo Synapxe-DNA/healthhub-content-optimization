@@ -275,7 +275,7 @@ def readability_evaluation_node(state):
     print(
         f"Number of retries: {rewriting_tries}, Readability score: {new_readability_score}"
     )
-    
+
     # Getting the optimised writing from writing_guidelines_optimisation_node
     optimised_article_output = state.get("optimised_article_output")
     optimised_writing = optimised_article_output.get("optimised_writing")
@@ -445,6 +445,7 @@ def check_personality_after_readability_optimisation(state):
     else:
         return "writing_guidelines_optimisation_node"
 
+
 def check_num_of_tries_after_writing_evaluation(state):
     """An additional condition edge checking the number of retires has hit the limit. This function is needed as there are personality evaluation node > readability evaluation node can lead to an infinite loop despite multiple rewrites."""
 
@@ -455,8 +456,8 @@ def check_num_of_tries_after_writing_evaluation(state):
         print("Number of writing retries exceeded limit hit")
 
         title_optimisation_flags = state.get("user_flags")[
-                "flag_for_title_optimisation"
-            ]
+            "flag_for_title_optimisation"
+        ]
         meta_desc_optimisation_flags = state.get("user_flags")[
             "flag_for_meta_desc_optimisation"
         ]
@@ -481,7 +482,7 @@ def check_readability_after_writing_optimisation(state):
     if new_readability_score < 10:
         print(
             f"Readability score is now {new_readability_score} and considered readable"
-            )
+        )
         # Checks if article is flagged for title and meta_desc optimisation
         title_optimisation_flags = state.get("user_flags")[
             "flag_for_title_optimisation"
@@ -546,7 +547,7 @@ if __name__ == "__main__":
             {
                 "compiler_node": "compiler_node",
                 "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
-                "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node"
+                "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
             },
         ),
         "compiler_node": (
@@ -577,14 +578,14 @@ if __name__ == "__main__":
                 END: END,
             },
         ),
-        "readability_evaluation_node" : (
+        "readability_evaluation_node": (
             check_num_of_tries_after_writing_evaluation,
             {
                 "readability_optimisation_node": "readability_optimisation_node",
                 "title_optimisation_node": "title_optimisation_node",
                 "meta_description_optimisation_node": "meta_description_optimisation_node",
                 END: END,
-            }
+            },
         ),
         "personality_guidelines_evaluation_node": (
             check_personality_after_readability_optimisation,
@@ -615,15 +616,21 @@ if __name__ == "__main__":
     meta_desc_optimisation_agent = start_llm(MODEL, ROLES.META_DESC)
     title_optimisation_agent = start_llm(MODEL, ROLES.TITLE)
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
-    writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION, temperature= 0.4)
-    readability_evaluation_agent = start_llm(MODEL, ROLES.READABILITY_OPTIMISATION, temperature= 0.3)
+    writing_optimisation_agent = start_llm(
+        MODEL, ROLES.WRITING_OPTIMISATION, temperature=0.4
+    )
+    readability_evaluation_agent = start_llm(
+        MODEL, ROLES.READABILITY_OPTIMISATION, temperature=0.3
+    )
     personality_evaluation_agent = start_llm(MODEL, ROLES.PERSONALITY_EVALUATION)
-    readability_optimisation_agent = start_llm(MODEL, ROLES.READABILITY_OPTIMISATION, temperature= 0.5)
+    readability_optimisation_agent = start_llm(
+        MODEL, ROLES.READABILITY_OPTIMISATION, temperature=0.5
+    )
 
     # List with the articles to harmonise
     article_list = [
         "Rubella",
-        "How Dangerous Is Rubella?"
+        "How Dangerous Is Rubella?",
         # "Weight, BMI and Health Problems"
     ]
 

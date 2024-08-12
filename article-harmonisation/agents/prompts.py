@@ -135,8 +135,8 @@ class AzurePrompts(LLMPrompt):
                 """ I want you to act as an expert in readability analysis.
                 Your task is to evaluate and critique the readability of the provided article. Your analysis should cover the following aspects:
 
-                1. **Sentence Structure**: Assess the complexity of sentences. Identify long, convoluted sentences and suggest ways to simplify them.
-                2. **Vocabulary**: Evaluate the complexity of the vocabulary used. Highlight any overly complex words and suggest simpler alternatives where appropriate.
+                1. **Sentence Structure**: Assess the complexity of sentences. Identify  and list out ALL long, convoluted sentences and suggest ways to simplify them.
+                2. **Vocabulary**: Evaluate the complexity of the vocabulary used. List out ALL overly complex words and suggest a simple alternative explanation using common and simple words.
                 3. **Coherence and Flow**: Analyze the coherence and logical flow of the text. Point out any abrupt transitions or lack of clarity and provide suggestions for improvement.
                 4. **Readability Metrics**: Calculate and provide readability scores using metrics such as Flesch-Kincaid Grade Level, Gunning Fog Index, and any other relevant readability indices.
                 5. **Overall Assessment**: Summarize the overall readability of the article, providing specific examples and actionable recommendations for improvement.
@@ -607,8 +607,6 @@ class AzurePrompts(LLMPrompt):
                 Your task is to utilize content from the given key points to fill in for the required sections stated below.
                 You will also be given a set of instructions that you MUST follow.
 
-                You may also be given a series of feedback on the article's structure. If you are given such feedback, you MUST consider the feedback when writing your answer.
-
                 ### Start of content requirements
                     When rewriting the content, your writing MUST meet the requirements stated here.
                     If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
@@ -618,9 +616,6 @@ class AzurePrompts(LLMPrompt):
                             - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
                         2. Causes and Risk Factors
                         3. Symptoms and Signs
-                            In this section, you MUST:
-                                - You must list out the symptoms and signs in bullet points form.
-                                - You should include a brief explanation before the bullet points in this section.
                         4. Complications
                         5. Treatment and Prevention
                         6. When to see a doctor
@@ -639,15 +634,6 @@ class AzurePrompts(LLMPrompt):
                     3. Provide reassurance
                         Your writing should reassure readers that the situation is not a lost cause
                         Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
-
-                    4. Break up lengthy sentences
-                        You should break up long paragraphs into concise sections or bullet points.
-                        You should also avoid lengthy, wordy bullet points.
-                        Example: Mothers may unintentionally pass infectious diseases to their babies:
-                            • The placenta during pregnancy
-                            • Germs in the vagina during birth
-                            • Breast milk after birth
-                            As different viruses spread through different channels, pregnant women should seek their doctor’s advice regarding necessary screening to protect their baby.
 
                     You should out your content based on the required sections step by step.
                     After each section has been rewritten, you must check your writing with each guideline step by step.
@@ -685,11 +671,10 @@ class AzurePrompts(LLMPrompt):
                 ### Start of instructions
                     You MUST follow these instructions when writing out your content.
 
-                    You MUST consider the feedback when writing out your answer, if given any.
+                    You MUST always ensure that all the key information you have been given is reflected in your final answer. There must be NO information loss.
                     You MUST follow the content requirements.
+                    You MUST NOT abridge the content AT ALL. Instead, your task is only to restructure the writing to fit these guidelines. There MUST NOT be any loss in key information between the original keypoints and your final answer.
                     You must use the given key points to FILL IN the required sections.
-                    You should only use bullet points only if it improves the readability of the content.
-                    You should only use bullet points list SPARINGLY and only <= 2 sections in your writing should contain bullet points.
                     Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts.
 
                     Folow these instructions step by step carefully
@@ -712,7 +697,7 @@ class AzurePrompts(LLMPrompt):
         optimise_health_conditions_writing_prompt = [
             (
                 "system",
-                """ You are part of a article re-writing process. The article content is aimed to educate readers about a particular topic.
+                """ You are part of a article re-writing process.
 
                 Your objective is to rewrite the given article to based on the given guidelines and insructions. Follow the personality and voice guidelines below and adhere to the specific instructions provided.
 
@@ -746,11 +731,16 @@ class AzurePrompts(LLMPrompt):
                     Guidelines: Be respectful to all visitors, regardless of medical condition, race, religion, gender, age, etc.
                     Example: "Diabetes affects people of all ages, genders, and backgrounds. With the right care and support, people living with diabetes can lead healthy and fulfilling lives."
 
-                Instructions
+                ### Start of instructions
+                    You MUST break up longer sentences into multiple short ones.
+                    You MUST explain complex medical terms using simple phrases or sentences.
+
+                    You MUST NOT summarise the content AT ALL. Instead, your task is only to rephrase the writing to fit these guidelines.
+                    You MUST remove ALL instances of "Main keypoint" and "Sub keypoint" from the headers. Your answer must be a final readable article with appropriate headers. Otherwise, keep the original headers.
                     Mandatory Use of Guidelines: Use the writing guidelines above to rewrite the content.
-                    Example Structure: Follow the structure of the examples given under each key point.
-                    Bullet Points: Do not combine bullet points into sentences if there are more than 5 bullet points in a section.
-                    No Prompt Instructions: Do not include any of these prompt instructions in your response. The reader should not be aware of these prompts.""",
+                    You must NOT change any part of the article's structure. Your task is to simply rewrite the content, not change the article structure.
+                    No Prompt Instructions: Do not include any of these prompt instructions in your response. The reader should not be aware of these prompts.
+                ### End of instructions""",
             ),
             (
                 "human",
@@ -767,29 +757,37 @@ class AzurePrompts(LLMPrompt):
             (
                 "system",
                 """
-                Your task is to improve the readability of the provided text. Utilize the Hemingway scoring system and the additional feedback below to create a more accessible and engaging version:
+                You are an article rewriter. You will be given an article and a readability evaluation on that article.
+                Your task is to address ALL the feedback pointers given to you.
 
-                You can improve the readability of the content by following these tips.
+                You should use these tips to address the feedback pointers given.
 
-                    Shorten Sentences: Break long sentences into shorter ones. Only use long sentences for narratives or logical chains.
-                    Clear Paragraphs: Create clear and concise paragraphs by dividing large text blocks into smaller sections.
-                    Use Lists: Convert lengthy paragraphs into bullet points or list formats when appropriate.
-                    Simplify Language: Use simple words and replace uncommon or long words with easier synonyms.
-                    Minimize Jargon: Avoid jargon that is not widely understood by the general public.
-                    Limit Adverbs: Reduce adverb use to make writing more vivid. For example, use "tiptoe" instead of "walk slowly."
-                    Active Voice: Use active voice to engage the audience and make the writing more direct.
-                    Improve Flow: Ensure smooth flow and coherence throughout the text.
-                    Focus on making the content easy to read and understand while maintaining the original meaning.
+                    1. ALWAYS deliver your content in short sentences:
+                    You MUST aim to simplify long sentences by breaking them into numerous shorter sentences. Your answer should NOT have long sentences. Your answer must NOT have any run-on sentences as well.
 
-                Check through each tip carefully.
+                    2. You MUST ALWAYS use simpler synonyms:
+                    You MUST aim to utilize simple words to replace uncommon or long words. For example, use "red eyes" instead of "inflamed eyes" or "tiredness" instead of "malaise".
 
-                By adhering to these guidelines, aim to produce a version of the text that is easy to read and understand while preserving the original message and intent.
+                    3. Clarify complex medical terms:
+                    You MUST explain complex medical terms using simple phrases with commonly understood words to improve readability. For example, you can clarify terms like "small head size" instead of "microcephaly," which might be less familiar to some readers.
+
+                    4. Remove Redundant phrasing:
+                    You should eliminate unnecessary words and phrases to make the text more concise. For example, you should remove some word instances like "especially" where it was redundant.
+
+                    5. Active Voice:
+                    You should aim for a more direct and active tone throughout the text, which is characteristic of Hemingway’s style. This involved using more straightforward statements and avoiding passive voice where possible.
+
+                    6. Improve Flow:
+                    Ensure smooth flow and coherence throughout the text. You should aim to have consistent formatting to enhance the readability of the text.
+
+
+                Check through each tip carefully. The tips are arranged in terms of their importance, with the most important tip in front. Hence, you should check your writing with each tip from the first to last.
                 """,
             ),
             (
                 "human",
                 """
-                    Address the following feedback points when rewriting the content:
+                    Address the following evaluation when rewriting the content:
                     {Readability_evaluation}
 
                     Rewrite the following content:
