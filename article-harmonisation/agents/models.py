@@ -425,7 +425,7 @@ class Azure(LLMInterface):
         self.role = role
 
     def evaluate_content(self, content: str, choice: str = "readability") -> str:
-
+        
         match choice.lower():
             case "readability":
                 evaluation_prompt = ChatPromptTemplate.from_messages(
@@ -470,14 +470,14 @@ class Azure(LLMInterface):
                     | StrOutputParser()
                     | {"evaluation": RunnablePassthrough()}
                 )
-                summarization_chain = (
-                    summarization_prompt | self.model | StrOutputParser()
-                )
                 decision_chain = (
                     decision_prompt
                     | self.model
                     | StrOutputParser()
                     | RunnableLambda(parse_string_to_boolean)
+                )
+                summarization_chain = (
+                    summarization_prompt | self.model | StrOutputParser()
                 )
 
                 chain = (
@@ -515,13 +515,13 @@ class Azure(LLMInterface):
             | StrOutputParser()
             | {"evaluation": RunnablePassthrough()}
         )
-        summarization_chain = summarization_prompt | self.model | StrOutputParser()
         decision_chain = (
             decision_prompt
             | self.model
             | StrOutputParser()
             | RunnableLambda(parse_string_to_boolean)
         )
+        summarization_chain = summarization_prompt | self.model | StrOutputParser()
 
         chain = (
             evaluation_chain
@@ -555,13 +555,13 @@ class Azure(LLMInterface):
             | StrOutputParser()
             | {"evaluation": RunnablePassthrough()}
         )
-        summarization_chain = summarization_prompt | self.model | StrOutputParser()
         decision_chain = (
             decision_prompt
             | self.model
             | StrOutputParser()
             | RunnableLambda(parse_string_to_boolean)
         )
+        summarization_chain = summarization_prompt | self.model | StrOutputParser()
 
         chain = (
             evaluation_chain
@@ -753,8 +753,3 @@ class Azure(LLMInterface):
         response = chain.invoke({"Content": content})
         print("Article meta description optimised")
         return response
-
-
-if __name__ == "__main__":
-    llm = start_llm(model="llama3", role="test")
-    print(llm.invoke("How are you today?"))
