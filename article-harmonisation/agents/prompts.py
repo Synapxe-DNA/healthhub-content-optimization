@@ -149,7 +149,7 @@ class AzurePrompts(LLMPrompt):
                 "system",
                 """
                 Summarize the following text into 3 to 5 sentences. Ensure the summary is concise, succinct, and direct, focusing only on the most essential points.
-                You must maintain the goal and context of providing the critique and recommendation to the individual.
+                You must maintain the goal and context of providing the critique and recommendation to the individual. There should be greater focus on the areas of improvement.
                 """,
             ),
             ("human", "Evaluate the following text:\n{text}"),
@@ -191,46 +191,27 @@ class AzurePrompts(LLMPrompt):
                 Objective: Critique the content structure of the article, evaluating its effectiveness and coherence based on the following criteria -
 
                 1. Opening
-                Headline
-                -   Does the headline grab attention and stay relevant to the content?
-                -   Does it clearly convey the main topic or benefit of the article?
-
                 Introduction
-                -   Does the introduction hook the reader quickly and effectively?
-                -   Is the relevance of the topic established early on?
-                -   Does the introduction outline the content of the post clearly?
+                -   Does the introduction grab the attention of readers quickly and effectively?
+                -   Does the introduction outline the content of the article clearly?
 
                 2. Content Structure
                 Main Body
                 -   Are subheadings used effectively to organize content?
                 -   Are paragraphs short, focused, and easy to read?
                 -   Does the article incorporate lists where appropriate?
-                -   Are examples or anecdotes included to illustrate points?
-
-                Overall Structure
-                -   Does the article follow a logical flow of ideas?
-                -   Do sections build on each other in a cohesive manner?
-                -   Are transitions between sections smooth and logical?
 
                 3. Writing Style
                 Tone and Language
-                -   Is the tone conversational and accessible to the target audience?
+                -   Is the tone conversational?
                 -   Does the article avoid unexplained jargon or overly technical language?
                 -   Is the language appropriate for the audience's level of knowledge?
-
-                Engagement
-                -   Are questions or prompts used to engage the reader?
-                -   Is "you" language used to make the content more relatable and direct?
+                -   Does the article make the content more relatable and personal by writing from a second-person point of view, e.g. using pronouns such as "you" or "your"?
 
                 4. Closing
-                Call-to-Action (CTA)
-                -   Are clear next steps for the reader provided?
-                -   Is the CTA strategically placed and compelling?
-
                 Conclusion
-                -   Are the key points of the article summarized effectively?
+                -   Are clear next steps and call-to-action for the reader provided?
                 -   Does the conclusion reinforce the main message?
-                -   Does it leave the reader with something to think about or a memorable takeaway?
 
                 5. Overall Effectiveness
                 Value
@@ -282,10 +263,8 @@ class AzurePrompts(LLMPrompt):
                 -   Provide a detailed explanation of how well the title reflects the content.
                 -   Use specific examples or excerpts from the article to support your evaluation.
                 -   Highlight any discrepancies or misalignment between the title and the content.
-
-                6.  Suggestions for Improvement:
-                -   If the title is not fully relevant, suggest alternative titles that more accurately capture the essence of the article.
-                -   Explain why the suggested titles are more appropriate based on the article's content.
+                
+                Your assessment should emphasize the relevance of the article and explain why the title is irrelevant as and when needed.
                 """,
             ),
             ("human", """ Title: "10 Tips for Effective Time Management" """),
@@ -298,16 +277,13 @@ class AzurePrompts(LLMPrompt):
                 -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
                 -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
                 -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
-                -   The relevance score is high due to the direct alignment of content with the title.
-
-                Suggested Title (if needed):
-                -   "Mastering Time Management: 10 Essential Tips for Success" (if the original title needs more emphasis on mastery and success). """,
+                -   The relevance score is high due to the direct alignment of content with the title.""",
             ),
             (
                 "system",
                 """ Instructions:
                 1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
-                2.  Write a brief report based on your findings, including specific examples and any suggested improvements. """,
+                2.  Write a brief report based on your findings, including specific examples.""",
             ),
             (
                 "human",
@@ -346,10 +322,8 @@ class AzurePrompts(LLMPrompt):
                 -   Provide a detailed explanation of how well the meta description reflects the content.
                 -   Use specific examples or excerpts from the article to support your evaluation.
                 -   Highlight any discrepancies or misalignment between the meta description and the content.
-
-                6.  Suggestions for Improvement:
-                -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
-                -   Explain why the suggested descriptions are more appropriate based on the article's content.
+                
+                Your assessment should emphasize the relevance of the article and explain why the meta description is irrelevant as and when needed.
                 """,
             ),
             (
@@ -365,16 +339,13 @@ class AzurePrompts(LLMPrompt):
             -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
             -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
             -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
-            -   The relevance score is high due to the direct alignment of content with the meta description.
-
-            Suggested Meta Description (if needed):
-            -   "Discover 10 essential time management strategies to enhance productivity and reach your goals." """,
+            -   The relevance score is high due to the direct alignment of content with the meta description.""",
             ),
             (
                 "system",
                 """ Instructions:
             -   Use the steps provided to evaluate the relevance of the article's meta description.
-            -   Write a brief report based on your findings, including specific examples and any suggested improvements. """,
+            -   Write a brief report based on your findings, including specific examples.""",
             ),
             (
                 "human",
