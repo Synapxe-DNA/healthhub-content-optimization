@@ -2,13 +2,14 @@ import sys
 import time
 from datetime import datetime
 from glob import glob
-from typing import Annotated, TypedDict
+from typing import Annotated, Optional, TypedDict
 
 import pandas as pd
 from agents.enums import ROLES
 from agents.models import start_llm
 from config import settings
 from langgraph.graph import END, START
+from langgraph.graph.graph import CompiledGraph
 from states.definitions import (
     ArticleInputs,
     ChecksAgents,
@@ -206,8 +207,7 @@ def meta_desc_evaluation_llm_node(state: ChecksState) -> dict:
     return {"meta_judge": meta_judge}
 
 
-if __name__ == "__main__":
-    ROOT_DIR = get_root_dir()
+def create_checks_graph(state: ChecksState) -> CompiledGraph:
 
     nodes = {
         "content_evaluation_rules_node": content_evaluation_rules_node,
@@ -234,18 +234,18 @@ if __name__ == "__main__":
         "meta_desc_evaluation_llm_node": [END],
     }
 
-    app = create_graph(ChecksState, nodes, edges)
+    app = create_graph(state, nodes, edges)
 
-    # Save Graph
-    draw_graph(
-        app,
-        f"{ROOT_DIR}/article-harmonisation/docs/images/optimisation_checks_flow.png",
-    )
+    # # Save Graph
+    # draw_graph(
+    #     app,
+    #     f"{ROOT_DIR}/article-harmonisation/docs/images/optimisation_checks_flow.png",
+    # )
 
-    # Start LLM
-    evaluation_agent = start_llm(MODEL, ROLES.EVALUATOR)
-    explanation_agent = start_llm(MODEL, ROLES.EXPLAINER)
+    return app
 
+
+def load_evaluation_dataframe() -> pd.DataFrame:
     # Load data from merged_data.parquet and randomly sample 30 rows
     df = pd.read_parquet(f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet")
 
@@ -255,11 +255,15 @@ if __name__ == "__main__":
             f"{ROOT_DIR}/article-harmonisation/data/optimization_checks/agentic_response_*.parquet"
         )
     )
-    latest_fpath = filepaths[-1]
-    print(f"Loading latest article evaluation dataframe from {latest_fpath}...")
-    df_evaluated = pd.read_parquet(latest_fpath)
-    evaluated_article_ids = list(df_evaluated.article_id)
-    print(f"Evaluated Article IDs: {evaluated_article_ids}")
+    if len(filepaths) == 0:
+        evaluated_article_ids = []
+        df_eval = None
+    else:
+        latest_fpath = filepaths[-1]
+        print(f"Loading latest article evaluation dataframe from {latest_fpath}...")
+        df_eval = pd.read_parquet(latest_fpath)
+        evaluated_article_ids = list(df_eval.article_id)
+        print(f"Evaluated Article IDs: {evaluated_article_ids}")
 
     # Filter for relevant HPB articles
     df_keep = df[~df["to_remove"]]
@@ -280,9 +284,95 @@ if __name__ == "__main__":
     df_keep = df_keep[~df_keep["id"].isin(evaluated_article_ids)]
     ids_to_evaluate = list(df_keep.id)
     print(
-        f"Total number of articles: {len(ids_to_evaluate)}\nArticle IDs: {ids_to_evaluate}"
+        f"Total number of articles to evaluate: {len(ids_to_evaluate)}\nArticle IDs: {ids_to_evaluate}",
+        end="\n\n",
     )
 
+    return df_keep, df_eval
+
+
+def save_evaluation_dataframe(
+    records_list: list[dict], df_eval: Optional[pd.DataFrame]
+):
+    current_datetime = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+    df_save = pd.DataFrame.from_records(records_list)
+
+    if df_eval is not None:
+        df_store = pd.concat([df_eval, df_save], ignore_index=True)
+    else:
+        df_store = df_save
+    df_store.to_parquet(
+        f"{ROOT_DIR}/article-harmonisation/data/optimization_checks/agentic_response_{current_datetime}.parquet",
+        index=False,
+    )
+    print("Results saved!")
+
+
+if __name__ == "__main__":
+    ROOT_DIR = get_root_dir()
+
+    app = create_checks_graph(ChecksState)
+
+    # Start LLM
+    evaluation_agent = start_llm(MODEL, ROLES.EVALUATOR)
+    explanation_agent = start_llm(MODEL, ROLES.EXPLAINER)
+
+    df_keep, df_evaluated = load_evaluation_dataframe()
+
+    special_ids = [
+        1443462,
+        1445298,
+        1444927,
+        1445235,
+        1445763,
+        1445720,
+        1442481,
+        1444553,
+        1442882,
+        1442515,
+        1445372,
+        1442644,
+        1445620,
+        1445986,
+        1446045,
+        1442801,
+        1442828,
+        1444879,
+        1446057,
+        1444636,
+        1442395,
+        1445630,
+        1445319,
+        1444921,
+        1442364,
+        1445310,
+        1445116,
+        1445166,
+        1445147,
+        1442829,
+        1442713,
+        1442640,
+        1443631,
+        1445061,
+        1442389,
+        1444922,
+        1445097,
+        1442884,
+        1445556,
+        1445277,
+        1437896,
+        1446038,
+        1442600,
+        1443047,
+        1445136,
+        1444391,
+        1445266,
+        1442558,
+        1443093,
+        1444991,
+        1437331,
+    ]
+    df_sample = df_keep[df_keep["id"].isin(special_ids)]
     # df_sample = df_keep[df_keep["id"] == 1445402]
     df_sample = df_keep.sample(n=30, replace=False, random_state=42)
     n_samples = df_sample.shape[0]
@@ -332,9 +422,9 @@ if __name__ == "__main__":
             }
 
             response = execute_graph(app, inputs)
+            print(response)
             result = format_checks_outputs(response)
             print("Result generated!")
-            print(response)
             records.append(result)
             print("Sleeping for 15 seconds...")
             time.sleep(15)
@@ -349,12 +439,5 @@ if __name__ == "__main__":
         print(f"Exception traceback: {ex_traceback}")
     finally:
         print("Saving results...")
-        current_datetime = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-        df_save = pd.DataFrame.from_records(records)
-
-        df_store = pd.concat([df_evaluated, df_save], ignore_index=True)
-        df_store.to_parquet(
-            f"{ROOT_DIR}/article-harmonisation/data/optimization_checks/agentic_response_{current_datetime}.parquet",
-            index=False,
-        )
-        print("Results saved!")
+        save_evaluation_dataframe(records, df_evaluated)
+        print("Completed.")
