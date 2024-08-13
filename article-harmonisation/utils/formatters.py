@@ -266,7 +266,9 @@ def format_checks_outputs(checks: dict) -> dict:
 
     meta_judge = checks.get("meta_judge")
     irrelevant_meta_desc_decision = bool(meta_judge.get("meta_desc").get("decision"))
-    irrelevant_meta_desc_explanation = meta_judge.get("meta_desc").get("explanation", None)
+    irrelevant_meta_desc_explanation = meta_judge.get("meta_desc").get(
+        "explanation", None
+    )
 
     result["article_id"] = article_id
     result["title"] = title

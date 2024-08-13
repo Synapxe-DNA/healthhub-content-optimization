@@ -70,6 +70,7 @@ def start_llm(model: str, role: str, temperature: int = 0):
                 max_tokens=MAX_NEW_TOKENS,
                 n=1,
                 api_version=AZURE_OPENAI_API_VERSION,
+                # timeout=240,  # Added request timeout of 240 seconds
                 timeout=None,
                 seed=42,
                 streaming=False,
@@ -425,7 +426,7 @@ class Azure(LLMInterface):
         self.role = role
 
     def evaluate_content(self, content: str, choice: str = "readability") -> str:
-        
+
         match choice.lower():
             case "readability":
                 evaluation_prompt = ChatPromptTemplate.from_messages(
