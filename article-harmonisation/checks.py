@@ -1,5 +1,7 @@
+import sys
 import time
 from datetime import datetime
+from glob import glob
 from typing import Annotated, TypedDict
 
 import pandas as pd
@@ -17,6 +19,7 @@ from states.definitions import (
     TitleFlags,
     TitleJudge,
 )
+from tqdm import tqdm
 from utils.evaluations import calculate_readability
 from utils.formatters import format_checks_outputs
 from utils.graphs import create_graph, draw_graph, execute_graph
@@ -245,6 +248,20 @@ if __name__ == "__main__":
 
     # Load data from merged_data.parquet and randomly sample 30 rows
     df = pd.read_parquet(f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet")
+
+    # Get latest evaluation dataframe
+    filepaths = sorted(
+        glob(
+            f"{ROOT_DIR}/article-harmonisation/data/optimization_checks/agentic_response_*.parquet"
+        )
+    )
+    latest_fpath = filepaths[-1]
+    print(f"Loading latest article evaluation dataframe from {latest_fpath}...")
+    df_evaluated = pd.read_parquet(latest_fpath)
+    evaluated_article_ids = list(df_evaluated.article_id)
+    print(f"Evaluated Article IDs: {evaluated_article_ids}")
+
+    # Filter for relevant HPB articles
     df_keep = df[~df["to_remove"]]
     df_keep = df_keep[df_keep["pr_name"] == "Health Promotion Board"]
     df_keep = df_keep[
@@ -259,61 +276,85 @@ if __name__ == "__main__":
         )
     ]
 
+    # Filter for articles whose evaluation has not been generated
+    df_keep = df_keep[~df_keep["id"].isin(evaluated_article_ids)]
+    ids_to_evaluate = list(df_keep.id)
+    print(
+        f"Total number of articles: {len(ids_to_evaluate)}\nArticle IDs: {ids_to_evaluate}"
+    )
+
     # df_sample = df_keep[df_keep["id"] == 1445402]
-    df_sample = df_keep.sample(n=10, replace=False, random_state=42)
-    rows = df_sample.shape[0]
-    print(rows)
+    df_sample = df_keep.sample(n=30, replace=False, random_state=42)
+    n_samples = df_sample.shape[0]
+    print(f"Number of samples: {n_samples}")
 
     records = []
 
-    for i in range(rows):
-        # Set up
-        article_id = df_sample["id"].iloc[i]
-        article_content = df_sample["extracted_content_body"].iloc[i]
-        article_title = df_sample["title"].iloc[i]
-        meta_desc = df_sample["category_description"].iloc[i]  # meta_desc can be null
-        meta_desc = meta_desc if meta_desc is not None else "No meta description"
-        article_url = df_sample["full_url"].iloc[i]
-        content_category = df_sample["content_category"].iloc[i]
-        article_category_names = df_sample["article_category_names"].iloc[i]
-        page_views = df_sample["page_views"].iloc[i]
+    try:
+        pbar = tqdm(range(n_samples))
+        for i in pbar:
+            # Set up
+            article_id = df_sample["id"].iloc[i]
+            article_content = df_sample["extracted_content_body"].iloc[i]
+            article_title = df_sample["title"].iloc[i]
+            meta_desc = df_sample["category_description"].iloc[
+                i
+            ]  # meta_desc can be null
+            meta_desc = meta_desc if meta_desc is not None else "No meta description"
+            article_url = df_sample["full_url"].iloc[i]
+            content_category = df_sample["content_category"].iloc[i]
+            article_category_names = df_sample["article_category_names"].iloc[i]
+            page_views = df_sample["page_views"].iloc[i]
 
-        print(f"Checking {article_title} now...")
-        # Set up Inputs
-        inputs = {
-            "article_inputs": {
-                "article_id": article_id,
-                "article_title": article_title,
-                "article_url": article_url,
-                "content_category": content_category,
-                "article_category_names": article_category_names,
-                "page_views": page_views,
-                "article_content": article_content,
-                "meta_desc": meta_desc,
-            },
-            "content_flags": {},
-            "title_flags": {},
-            "meta_flags": {},
-            "content_judge": {},
-            "title_judge": {},
-            "meta_judge": {},
-            "llm_agents": {
-                "evaluation_agent": evaluation_agent,
-                "explanation_agent": explanation_agent,
-            },
-        }
+            print(f"Checking {article_title} now...")
+            # Set up Inputs
+            inputs = {
+                "article_inputs": {
+                    "article_id": article_id,
+                    "article_title": article_title,
+                    "article_url": article_url,
+                    "content_category": content_category,
+                    "article_category_names": article_category_names,
+                    "page_views": page_views,
+                    "article_content": article_content,
+                    "meta_desc": meta_desc,
+                },
+                "content_flags": {},
+                "title_flags": {},
+                "meta_flags": {},
+                "content_judge": {},
+                "title_judge": {},
+                "meta_judge": {},
+                "llm_agents": {
+                    "evaluation_agent": evaluation_agent,
+                    "explanation_agent": explanation_agent,
+                },
+            }
 
-        response = execute_graph(app, inputs)
-        result = format_checks_outputs(response)
-        print("Result generated!")
-        print(response)
-        records.append(result)
-        print("Sleeping for 30 seconds...")
-        time.sleep(30)
-        print("Awake!")
+            response = execute_graph(app, inputs)
+            result = format_checks_outputs(response)
+            print("Result generated!")
+            print(response)
+            records.append(result)
+            print("Sleeping for 15 seconds...")
+            time.sleep(15)
+            print("Awake!")
+    except KeyboardInterrupt:
+        print("Interrupted!")
+    except Exception as ex:
+        ex_type, ex_value, ex_traceback = sys.exc_info()
+        print(f"Exception raised: {repr(ex)}")
+        print(f"Exception type: {ex_type}")
+        print(f"Exception value: {ex_value}")
+        print(f"Exception traceback: {ex_traceback}")
+    finally:
+        print("Saving results...")
+        current_datetime = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        df_save = pd.DataFrame.from_records(records)
 
-    current_datetime = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-    df_save = pd.DataFrame.from_records(records)
-    df_save.to_parquet(
-        f"{ROOT_DIR}/article-harmonisation/data/optimization_checks/agentic_response_{current_datetime}.parquet"
-    )
+        df_store = pd.concat([df_evaluated, df_save], ignore_index=True)
+        df_store.to_parquet(
+            f"{ROOT_DIR}/article-harmonisation/data/optimization_checks/agentic_response_{current_datetime}.parquet",
+            index=False,
+        )
+        print("Results saved!")
