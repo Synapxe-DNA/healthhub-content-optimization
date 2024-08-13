@@ -5,7 +5,11 @@ from operator import itemgetter
 from config import settings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_core.runnables import (
+    RunnableLambda,
+    RunnableParallel,
+    RunnablePassthrough,
+)
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_openai import AzureChatOpenAI
 from utils.formatters import parse_string_to_boolean
@@ -425,6 +429,19 @@ class Azure(LLMInterface):
         self.prompt_template = prompt_template
         self.role = role
 
+    def evaluation_summary_router(self, info):
+        summarization_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_summarization_prompt()
+        )
+        summarization_chain = summarization_prompt | self.model | StrOutputParser()
+
+        decision = info.get("decision")
+        if decision:
+            explanation = summarization_chain.invoke({"text": info.get("text")})
+            return {"decision": decision, "explanation": explanation}
+        else:
+            return {"decision": decision, "explanation": None}
+
     def evaluate_content(self, content: str, choice: str = "readability") -> str:
 
         match choice.lower():
@@ -458,9 +475,6 @@ class Azure(LLMInterface):
                 evaluation_prompt = ChatPromptTemplate.from_messages(
                     self.prompt_template.return_structure_evaluation_prompt()
                 )
-                summarization_prompt = ChatPromptTemplate.from_messages(
-                    self.prompt_template.return_summarization_prompt()
-                )
                 decision_prompt = ChatPromptTemplate.from_messages(
                     self.prompt_template.return_decision_prompt()
                 )
@@ -477,21 +491,18 @@ class Azure(LLMInterface):
                     | StrOutputParser()
                     | RunnableLambda(parse_string_to_boolean)
                 )
-                summarization_chain = (
-                    summarization_prompt | self.model | StrOutputParser()
-                )
 
                 chain = (
                     evaluation_chain
                     | {"text": itemgetter("evaluation")}
-                    | {
-                        "decision": decision_chain,
-                        "explanation": summarization_chain,
-                    }
+                    | RunnableParallel(text=itemgetter("text"), decision=decision_chain)
+                    | RunnableLambda(self.evaluation_summary_router)
                 )
 
             case _:
                 raise ValueError(f"You entered {choice}, which is not a valid choice")
+
+        # print(chain.get_graph().print_ascii())
 
         print(f"Evaluating content {choice}")
         res = chain.invoke({"article": content})
@@ -503,9 +514,6 @@ class Azure(LLMInterface):
         evaluation_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_title_evaluation_prompt()
         )
-        summarization_prompt = ChatPromptTemplate.from_messages(
-            self.prompt_template.return_summarization_prompt()
-        )
         decision_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_decision_prompt()
         )
@@ -522,16 +530,15 @@ class Azure(LLMInterface):
             | StrOutputParser()
             | RunnableLambda(parse_string_to_boolean)
         )
-        summarization_chain = summarization_prompt | self.model | StrOutputParser()
 
         chain = (
             evaluation_chain
             | {"text": itemgetter("evaluation")}
-            | {
-                "decision": decision_chain,
-                "explanation": summarization_chain,
-            }
+            | RunnableParallel(text=itemgetter("text"), decision=decision_chain)
+            | RunnableLambda(self.evaluation_summary_router)
         )
+
+        # print(chain.get_graph().print_ascii())
 
         print("Evaluating title")
         res = chain.invoke({"title": title, "article": content})
@@ -543,9 +550,6 @@ class Azure(LLMInterface):
         evaluation_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_meta_desc_evaluation_prompt()
         )
-        summarization_prompt = ChatPromptTemplate.from_messages(
-            self.prompt_template.return_summarization_prompt()
-        )
         decision_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_decision_prompt()
         )
@@ -562,16 +566,15 @@ class Azure(LLMInterface):
             | StrOutputParser()
             | RunnableLambda(parse_string_to_boolean)
         )
-        summarization_chain = summarization_prompt | self.model | StrOutputParser()
 
         chain = (
             evaluation_chain
             | {"text": itemgetter("evaluation")}
-            | {
-                "decision": decision_chain,
-                "explanation": summarization_chain,
-            }
+            | RunnableParallel(text=itemgetter("text"), decision=decision_chain)
+            | RunnableLambda(self.evaluation_summary_router)
         )
+
+        # print(chain.get_graph().print_ascii())
 
         print("Evaluating meta description")
         res = chain.invoke({"meta": meta_description, "article": content})
