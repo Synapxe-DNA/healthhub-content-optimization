@@ -435,9 +435,9 @@ def flag_articles_to_remove_after_extraction(
         pd.DataFrame: The DataFrame with updated flags for articles to remove.
     """
     df = flag_no_extracted_content(df, whitelist)
+    df = flag_recipe_articles(df, whitelist)
     df = flag_duplicated(df, whitelist, column="extracted_content_body")
     df = flag_duplicated(df, whitelist, column="full_url")
-    df = flag_recipe_articles(df, whitelist)
     df = flag_multilingual_content(df, whitelist)
     df = flag_below_word_count_cutoff(df, word_count_cutoff, whitelist)
     df = flag_articles_via_blacklist(df, blacklist)
