@@ -468,9 +468,12 @@ class Azure(LLMInterface):
         template = self.prompt_template.return_personality_evaluation_prompt()
 
         prompt_t = ChatPromptTemplate.from_messages(template)
-
+        
         chain = prompt_t | self.model | StrOutputParser()
+        print("Evaluating personality of article")
         res = chain.invoke({"Content": content})
+        print("Article personality evaluated")
+
         response = re.sub(" +", " ", res)
 
         if "True" in response:
@@ -546,7 +549,7 @@ class Azure(LLMInterface):
             """
 
         chain = prompt_t | self.model | StrOutputParser()
-        print("Compiling keypoints for article harmonisation")
+        print("Compiling keypoints for article harmonisation...")
         res = chain.invoke({"Keypoints": input_keypoints})
 
         print("Keypoints compiled for article harmonisation")
@@ -565,9 +568,11 @@ class Azure(LLMInterface):
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print("Optimising article content")
+        print("Optimising article content based on content guidelines...")
         res = chain.invoke(
-            {"Keypoints": keypoints, "Structure_evaluation": structure_evaluation}
+            {"Keypoints": keypoints, 
+            #  "Structure_evaluation": structure_evaluation
+             }
         )
         print("Article content optimised")
         response = re.sub(" +", " ", res)
@@ -585,28 +590,31 @@ class Azure(LLMInterface):
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print("Optimising article writing")
+        print("Optimising article writing based on writing guidelines...")
         response = chain.invoke({"Content": content})
         print("Article writing optimised")
 
         return response
 
-    def optimise_readability(self, content: str, readability_evaluation: str):
+    def optimise_readability(self, content: str, step: str, readability_evaluation):
         """Rewrites the content based on the fiven feedback"""
         if self.role != ROLES.READABILITY_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_readability()"
             )
+
         prompt_t = ChatPromptTemplate.from_messages(
-            self.prompt_template.return_readability_optimisation_prompt()
+            self.prompt_template.return_hemingway_readability_optimisation_prompt(step)
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print("-- Optimising article readability --")
+        print(f"-- {step} --")
         response = chain.invoke(
-            {"Readability_evaluation": readability_evaluation, "Content": content}
+            {
+                # "Readability_evaluation": readability_evaluation, 
+                "content": content
+            }
         )
-        print("-- Article readability optimised --")
         return response
 
     def optimise_title(self, content):
@@ -619,7 +627,7 @@ class Azure(LLMInterface):
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print("Optimising article title")
+        print("Optimising article title...")
         response = chain.invoke({"Content": content})
         print("Article title optimised")
         return response
@@ -634,7 +642,7 @@ class Azure(LLMInterface):
         )
 
         chain = prompt_t | self.model | StrOutputParser()
-        print("Optimising article meta description")
+        print("Optimising article meta description...")
         response = chain.invoke({"Content": content})
         print("Article meta description optimised")
         return response

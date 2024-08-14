@@ -67,14 +67,16 @@ def researcher_node(state):
     keypoints = state.get("optimised_article_output")["researcher_keypoints"]
     researcher_agent = state.get("llm_agents")["researcher_agent"]
 
+    article_titles = state.get("article_evaluation")["article_title"]
     # For loop iterating through each article
 
     for idx in range(len(article_list)):
-        print("Processing keypoints for article", idx + 1)
+        article_title = article_titles[idx]
+        print(f"Processing keypoints for article {idx + 1} of {len(article_list)}: {article_title}")
         article = article_list[idx]
         article_keypoints = researcher_agent.generate_keypoints(article)
         keypoints.append(article_keypoints)
-        print("Finished processing keypoints for article", idx + 1)
+        print(f"Finished processing keypoints for {article_title}")
 
     return {
         "optimised_article_output": {
@@ -210,6 +212,7 @@ def content_guidelines_optimisation_node(state):
 
 
 def writing_guidelines_optimisation_node(state):
+    quit()
     """Creates a writing optimisation node, which will optimise the article content based on the writing guidelines from the content playbook
 
         Content covered from the playbook include:
@@ -225,22 +228,14 @@ def writing_guidelines_optimisation_node(state):
     """
     optimised_article_output = state.get("optimised_article_output")
 
-    if (
-        optimised_article_output.get("optimised_writing") is not None
-    ):  # article optimisation/harmonisation, subsequent rewrites
-        content = optimised_article_output.get("optimised_writing")
-    elif (
-        optimised_article_output.get("optimised_content") is not None
-    ):  # article optimisation/harmonisation, first rewriting after content optimisation
-        content = optimised_article_output.get("optimised_content")
-    elif (
-        optimised_article_output.get("compiled_keypoints") is not None
-    ):  # article optimisation, first rewriting without any content optimisation
-        content = optimised_article_output.get("compiled_keypoints")
+    if (content := optimised_article_output.get("optimised_writing")) is not None:  # article optimisation/harmonisation, subsequent rewrites
+        pass
+    elif (content := optimised_article_output.get("optimised_content")) is not None:  # article optimisation/harmonisation, first rewriting after content optimisation
+        pass
+    elif (content := optimised_article_output.get("compiled_keypoints")) is not None:  # article optimisation, first rewriting without any content optimisation
+        pass
     else:
-        content = optimised_article_output.get(
-            "researcher_keypoints"
-        )  # article optimisation, first rewriting without any content optimisation
+        content = optimised_article_output.get("researcher_keypoints")  # article optimisation, first rewriting without any content optimisation
 
     writing_optimisation_agent = state.get("llm_agents")["writing_optimisation_agent"]
     optimised_writing = writing_optimisation_agent.optimise_writing(content)
@@ -251,9 +246,12 @@ def writing_guidelines_optimisation_node(state):
     # Updating the new optimised writing in the state
     optimised_article_output["optimised_writing"] = optimised_writing
 
-    # Updating the readability score in the state
+    # Calculating the new readability score
     new_readability_score = calculate_readability(optimised_writing)["score"]
+
+    # Updating the state with the new readability score
     optimised_article_output["readability_score"] = new_readability_score
+
 
     return {
         "optimised_article_output": optimised_article_output,
@@ -274,45 +272,55 @@ def readability_evaluation_node(state):
 
     # Obtaining the readability score
     optimised_article_output = state.get("optimised_article_output")
-    new_readability_score = optimised_article_output["readability_score"]
+    optimised_writing = optimised_article_output["optimised_writing"]
+
+    # Calculating the new readability score
+    new_readability_score = calculate_readability(optimised_writing)["score"]
+
+    # Updating the state with the new readability score
+    optimised_article_output["readability_score"] = new_readability_score
+
 
     print(
         f"Number of retries: {rewriting_tries}, Readability score: {new_readability_score}"
     )
 
-    # Getting the optimised writing from writing_guidelines_optimisation_node
-    optimised_article_output = state.get("optimised_article_output")
-    optimised_writing = optimised_article_output.get("optimised_writing")
+    # # Getting the optimised writing from writing_guidelines_optimisation_node
+    # optimised_article_output = state.get("optimised_article_output")
+    # optimised_writing = optimised_article_output.get("optimised_writing")
 
-    readability_evaluation_agent = state.get("llm_agents")[
-        "readability_evaluation_agent"
-    ]
-    print("Evaluating article writing")
-    readability_explanation = readability_evaluation_agent.evaluate_content(
-        content=optimised_writing, choice="readability"
-    )
-    print("Article writing evaluated")
-    article_evaluation = state.get("article_evaluation")
-    content_judge = article_evaluation.get("content_judge", {})
+    # readability_evaluation_agent = state.get("llm_agents")[
+    #     "readability_evaluation_agent"
+    # ]
+    # print("Evaluating article writing")
+    # readability_explanation = readability_evaluation_agent.evaluate_content(
+    #     content=optimised_writing, choice="readability"
+    # )
+    # print("Article writing evaluated")
+    # article_evaluation = state.get("article_evaluation")
+    # content_judge = article_evaluation.get("content_judge", {})
 
-    # Updating content_judge with the new readability evaluation
-    content_judge["readability"] = readability_explanation
+    # # Updating content_judge with the new readability evaluation
+    # content_judge["readability"] = readability_explanation
 
-    # Updating state with the most recent content_judge updated with the new readability evaluation
-    article_evaluation["content_judge"] = content_judge
+    # # Updating state with the most recent content_judge updated with the new readability evaluation
+    # article_evaluation["content_judge"] = content_judge
 
     return {
         "article_rewriting_tries": rewriting_tries + 1,
-        "article_evaluation": article_evaluation,
+        # "article_evaluation": article_evaluation,
         "optimised_article_output": optimised_article_output,
     }
 
-
 def readability_optimisation_node(state):
     """Creates a readability optimisation node that optimises the writing based on the feedback given."""
-    # Obtaining the optimised writing
-    optimised_article_output = state.get("optimised_article_output")
-    optimised_writing = optimised_article_output.get("optimised_writing")
+    readability_optimisation_steps = {
+        1: "cutting out redundant areas",
+        2: "shortening sentences",
+        3: "breaking into bullet points",
+        4: "simplifying complex terms",
+
+    }
 
     readability_evaluation = (
         state.get("article_evaluation").get("content_judge", {}).get("readability", "")
@@ -322,12 +330,21 @@ def readability_optimisation_node(state):
         "readability_optimisation_agent"
     ]
 
-    optimised_readability_article = readability_optimisation_agent.optimise_readability(
-        content=optimised_writing, readability_evaluation=readability_evaluation
-    )
+    optimised_article_output = state.get("optimised_article_output")
 
-    # Updating state with the newly readability optimised article
-    optimised_article_output["optimised_writing"] = optimised_readability_article
+    print("## Beginning readability optimisation process ##")
+    for step_num in range(1, len(readability_optimisation_steps.keys())+1):
+        # Obtaining the optimised writing
+        optimised_writing = optimised_article_output.get("optimised_writing")
+        step=readability_optimisation_steps[step_num]
+
+        optimised_readability_article = readability_optimisation_agent.optimise_readability(
+            content=optimised_writing, step=step, readability_evaluation = readability_evaluation
+        )
+
+        # Updating state with the newly readability optimised article
+        optimised_article_output["optimised_writing"] = optimised_readability_article
+    print("## Readability optimisation process completed ##")
 
     return {
         "optimised_article_output": optimised_article_output,
@@ -352,11 +369,9 @@ def personality_guidelines_evaluation_node(state):
         "personality_evaluation_agent"
     ]
 
-    print("Evaluating personality of article")
     personality_evaluation = personality_evaluation_agent.evaluate_personality(
         content=optimised_writing
     )
-    print("Article personality evaluated")
 
     # Obtaining article_flags dict
     article_evaluation = state.get("article_evaluation")
@@ -453,11 +468,18 @@ def check_personality_after_readability_optimisation(state):
 def check_num_of_tries_after_writing_evaluation(state):
     """An additional condition edge checking the number of retires has hit the limit. This function is needed as there are personality evaluation node > readability evaluation node can lead to an infinite loop despite multiple rewrites."""
 
+    # Extracting the new readability score from state
+    optimised_article_output = state.get("optimised_article_output")
+    new_readability_score = optimised_article_output["readability_score"]
+
     # Extracting the number of article rewriting tries
     rewriting_tries = state.get("article_rewriting_tries", 0)
 
-    if rewriting_tries > REWRITING_TRIES:
-        print("Number of writing retries exceeded limit hit")
+    if rewriting_tries > REWRITING_TRIES or new_readability_score < 10:
+        if rewriting_tries > REWRITING_TRIES:
+            print("Number of writing retries exceeded limit hit")
+        elif new_readability_score < 10:
+            print(f"Readability score is now {new_readability_score} and considered readable")
 
         title_optimisation_flags = state.get("user_flags")[
             "flag_for_title_optimisation"
@@ -552,6 +574,9 @@ if __name__ == "__main__":
                 "compiler_node": "compiler_node",
                 "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
                 "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
+                "title_optimisation_node": "title_optimisation_node",
+                "meta_description_optimisation_node": "meta_description_optimisation_node",
+                END:END
             },
         ),
         "compiler_node": (
@@ -621,22 +646,43 @@ if __name__ == "__main__":
     title_optimisation_agent = start_llm(MODEL, ROLES.TITLE)
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(
-        MODEL, ROLES.WRITING_OPTIMISATION, temperature=0.4
+        MODEL, ROLES.WRITING_OPTIMISATION, temperature=0.6
     )
     readability_evaluation_agent = start_llm(
-        MODEL, ROLES.READABILITY_OPTIMISATION, temperature=0.3
+        MODEL, ROLES.READABILITY_OPTIMISATION
     )
     personality_evaluation_agent = start_llm(MODEL, ROLES.PERSONALITY_EVALUATION)
     readability_optimisation_agent = start_llm(
         MODEL, ROLES.READABILITY_OPTIMISATION, temperature=0.5
     )
 
-    # List with the articles to harmonise
+    # Tesitng list with articles to harmonise
     article_list = [
-        "Rubella",
-        "How Dangerous Is Rubella?",
-        # "Weight, BMI and Health Problems"
+        # "Rubella", # health conditions
+        # "How Dangerous Is Rubella?", # health conditions
+        # "Weight, BMI and Health Problems" # live health
+        # "Does Your Child Need The Influenza Vaccine?" #live-healthy, null, original readability of 13
+        # "Smoking Control Programmes" #live-healthy, body care, original readability of 14
+        "Chickenpox: Symptoms and Treatment Options" # diseases-and-conditions, conditions and illnesses, original readability of 11
     ]
+
+    # # This article list contains all articles under group 7 
+    # article_list = [
+    #     "Common childhood conditions – Gastroenteritis",
+    #     "Food Poisoning in Children",
+    #     "Stomach Flu in Children"
+    # ]
+
+
+    # # This article list contains all articles under group 139
+    # article_list = [
+    #     "10 Essential Tips for Mental Well-Being",
+    #     "7 Easy Tips for Better Mental Well-being",
+    #     "Achieve Mental Wellness by Practising Mindfulness",
+    #     "Improve Your Mental Well-being by Going Solo",
+    #     "Mental Wellness Is About the Little Habits Too",
+    #     "Positive Mental Well-being—The Foundation for a Flourishing Life"
+    # ]
 
     processed_input_articles = concat_headers_to_content(article_list)
 
@@ -651,9 +697,9 @@ if __name__ == "__main__":
         },
         "user_flags": {
             "flag_for_content_optimisation": False,
-            "flag_for_writing_optimisation": True,
-            "flag_for_title_optimisation": False,
-            "flag_for_meta_desc_optimisation": False,
+            "flag_for_writing_optimisation": False,
+            "flag_for_title_optimisation": True,
+            "flag_for_meta_desc_optimisation": True,
         },
         "llm_agents": {
             "researcher_agent": researcher_agent,

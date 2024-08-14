@@ -156,3 +156,5 @@ if __name__ == "__main__":
 
     # # hemmingway
     # {'score': 11, 'level': 'hard'}
+
+# print(hemmingway_score(""""""))

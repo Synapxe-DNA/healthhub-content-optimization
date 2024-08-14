@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     MODEL_NAME: str = os.getenv("MODEL_NAME", "mistral")
 
     # Token Limit
-    MAX_NEW_TOKENS: int = os.getenv("MAX_NEW_TOKENS", 3000)
+    MAX_NEW_TOKENS: int = os.getenv("MAX_NEW_TOKENS", 4000)
 
     # Huggingface
     HUGGINGFACEHUB_API_TOKEN: str = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")

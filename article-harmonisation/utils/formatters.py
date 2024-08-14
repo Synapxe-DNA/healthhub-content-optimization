@@ -87,55 +87,67 @@ def concat_headers_to_content(articles: list):
         # Stores headers based on their heading type, h1 - h6
         header_dictionary = {}
 
-        for header_details in article_headers:
-            header_title = header_details[0].as_py()
-            header_type = header_details[1].as_py()
-            # checks if the specific header type exists as a key in header_dictionary
-            header_list = header_dictionary.get(header_type, [])
-            header_list.append(header_title)
-            header_dictionary[header_type] = header_list
+        x = 0
+        
+        if len(article_headers) > 0:
+            for header_details in article_headers:
+                x +=1 
+                header_title = header_details[0].as_py()
+                # Some header_titles are just empty strings, which cannot run .split(). This if statement checks if the header_title is an empty string first.
+                if header_title not in TO_REMOVE:
+                    header_type = header_details[1].as_py()
 
-            match header_type:
-                case "h1":
-                    header = f"h1 Main Header: {header_title}"
-                case "h2":
-                    header = f"h2 Sub Header: {header_title}"
-                    if "h1" in header_dictionary.keys():
-                        header += f"\nSub Header to h1 Main Header: {header_dictionary['h1'][-1]}"
-                case "h3":
-                    header = f"h3 Sub Section: {header_title}"
-                    if "h2" in header_dictionary.keys():
-                        header += f"\nSub Section to h2 Sub Header: {header_dictionary['h2'][-1]}"
-                case "h4":
-                    header = f"h4 Sub Section: {header_title}"
-                    if "h3" in header_dictionary.keys():
-                        header += f"\nSub Section to h3 Sub Section: {header_dictionary['h3'][-1]}"
-                case "h5":
-                    header = f"h5 Sub Section: {header_title}"
-                    if "h4" in header_dictionary.keys():
-                        header += f"\nSub Section to h4 Sub Section: {header_dictionary['h4'][-1]}"
-                case "h6":
-                    header = f"h6 Sub Section: {header_title}"
-                    if "h5" in header_dictionary.keys():
-                        header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}"
-            if not split_content:
-                split_content.extend(article_content.split(header_title))
-            else:
-                last_content = split_content.pop()
-                split_content.extend(last_content.split(header_title))
+                    # checks if the specific header type exists as a key in header_dictionary
+                    header_list = header_dictionary.get(header_type, [])
 
-            split_content[-1] = header + "\n" + split_content[-1][1:]
+                    # adding the header to the respective item in header_dictionary
+                    header_list.append(header_title)
+                    header_dictionary[header_type] = header_list
 
+                    match header_type:
+                        case "h1":
+                            header = f"h1 Main Header: {header_title}"
+                        case "h2":
+                            header = f"h2 Sub Header: {header_title}"
+                            if "h1" in header_dictionary.keys():
+                                header += f"\nSub Header to h1 Main Header: {header_dictionary['h1'][-1]}"
+                        case "h3":
+                            header = f"h3 Sub Section: {header_title}"
+                            if "h2" in header_dictionary.keys():
+                                header += f"\nSub Section to h2 Sub Header: {header_dictionary['h2'][-1]}"
+                        case "h4":
+                            header = f"h4 Sub Section: {header_title}"
+                            if "h3" in header_dictionary.keys():
+                                header += f"\nSub Section to h3 Sub Section: {header_dictionary['h3'][-1]}"
+                        case "h5":
+                            header = f"h5 Sub Section: {header_title}"
+                            if "h4" in header_dictionary.keys():
+                                header += f"\nSub Section to h4 Sub Section: {header_dictionary['h4'][-1]}"
+                        case "h6":
+                            header = f"h6 Sub Section: {header_title}"
+                            if "h5" in header_dictionary.keys():
+                                header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}"
+                    if not split_content:
+                        split_content.extend(article_content.split(header_title))
+                    else:
+                        last_content = split_content.pop()
+                        split_content.extend(last_content.split(header_title))
+
+                    split_content[-1] = header + "\n" + split_content[-1][1:]
+
+                
+        else:
+            split_content.append(article_content)
+        
         # concatenate all into this string. The title is used as the main header.
         final_labelled_article = f"Article Header: {article_title}\n"
         for new_content in split_content:
             # checking if there are empty strings in split_content and empty headers
-            if new_content in TO_REMOVE:
-                split_content.pop(split_content.index(new_content))
-            else:
+            if new_content not in TO_REMOVE:
                 final_labelled_article += new_content + "\n"
 
         final_configured_articles.append(final_labelled_article)
+        
     return final_configured_articles
 
 
