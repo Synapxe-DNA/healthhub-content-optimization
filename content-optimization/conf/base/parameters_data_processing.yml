@@ -334,11 +334,11 @@ whitelist:
 blacklist:
   1443526: "Table of Contents"
   1443534: "Table of Contents"
-  1444997: "No relevant content and mainly link"
-  1445002: "No relevant content and mainly link"
-  1444991: "No relevant content and mainly link"
-  1444996: "No relevant content and mainly link"
-  1445000: "No relevant content and mainly link"
+  1444997: "No relevant content and mainly links"
+  1445002: "No relevant content and mainly links"
+  1444991: "No relevant content and mainly links"
+  1444996: "No relevant content and mainly links"
+  1445000: "No relevant content and mainly links"
 
 # Refer to https://docs.google.com/spreadsheets/d/1bcmD7GXILn4LqF0Bo9dcdCnRomwCVFQv (IA Mappings)
 l1_mappings:
