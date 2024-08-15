@@ -92,37 +92,42 @@ ground_truth_data:
   load_args:
     sheet_name: 2
 
-pred_cluster:
+first_level_pred_cluster:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/predicted_cluster.csv
+  filepath: data/07_model_output/first_level_predicted_cluster.csv
 
-metrics:
+first_level_metrics:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/metrics.csv
+  filepath: data/07_model_output/first_level_metrics.csv
 
-initial_cluster_size:
+first_level_cluster_size:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/initial_cluster_size.csv
+  filepath: data/07_model_output/first_level_cluster_size.csv
+
+clustered_nodes:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/first_level_clustered_nodes.csv
+
+unclustered_nodes:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/first_level_unclustered_nodes.csv
 
 final_cluster_size:
   type: pandas.CSVDataset
   filepath: data/07_model_output/final_cluster_size.csv
 
-updated_pred_cluster:
+final_predicted_cluster:
   type: pandas.CSVDataset
   filepath: data/07_model_output/final_predicted_clusters.csv
 
 final_clustered_nodes:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/neo_4j_clustered_data.csv
+  filepath: data/07_model_output/final_clustered_nodes.csv
 
 final_unclustered_nodes:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/neo_4j_unclustered_data.csv
+  filepath: data/07_model_output/final_unclustered_nodes.csv
 
-clustered_nodes:
+final_metrics:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/clustered_nodes_first_level.csv
-unclustered_nodes:
-  type: pandas.CSVDataset
-  filepath: data/07_model_output/unclustered_nodes_first_level.csv
+  filepath: data/07_model_output/final_metrics.csv

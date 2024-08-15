@@ -57,7 +57,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "params:embeddings_weightage.keywords",
                 ],
                 outputs="weighted_embeddings",
-                name="combine_embeddings_by_weightage",
+                name="combine_embeddings_by_weightage_node",
             ),
         ]
     )

@@ -146,7 +146,7 @@ def combine_similarities(
             }
             combined_similarities.append(combined_similarity)
 
-    df = pd.DataFrame(combined_similarities)
+    combined_similarities_df = pd.DataFrame(combined_similarities)
     columns_to_fill = [
         "similarities_title",
         "similarities_cat",
@@ -155,25 +155,30 @@ def combine_similarities(
         "similarities_combined",
         "similarities_kws",
     ]
-    df[columns_to_fill] = df[columns_to_fill].fillna(0)
-    df["weighted_similarity"] = (
-        weight_title * df["similarities_title"]
-        + weight_cat * df["similarities_cat"]
-        + weight_desc * df["similarities_desc"]
-        + weight_body * df["similarities_body"]
-        + weight_combined * df["similarities_combined"]
-        + weight_kws * df["similarities_kws"]
+    combined_similarities_df[columns_to_fill] = combined_similarities_df[
+        columns_to_fill
+    ].fillna(0)
+    combined_similarities_df["weighted_similarity"] = (
+        weight_title * combined_similarities_df["similarities_title"]
+        + weight_cat * combined_similarities_df["similarities_cat"]
+        + weight_desc * combined_similarities_df["similarities_desc"]
+        + weight_body * combined_similarities_df["similarities_body"]
+        + weight_combined * combined_similarities_df["similarities_combined"]
+        + weight_kws * combined_similarities_df["similarities_kws"]
     )
-    return df
+    return combined_similarities_df
 
 
-def median_threshold(combined_similarities):
+def median_threshold(combined_similarities_df):
     print("Calculating Median")
-    df = combined_similarities.dropna(
+    combined_similarities_df = combined_similarities_df.dropna(
         subset=["node_1_ground_truth", "node_2_ground_truth"]
     )
-    df_filtered = df[df["node_1_ground_truth"] == df["node_2_ground_truth"]]
-    threshold = df_filtered["weighted_similarity"].median()
+    combined_similarities_df_filtered = combined_similarities_df[
+        combined_similarities_df["node_1_ground_truth"]
+        == combined_similarities_df["node_2_ground_truth"]
+    ]
+    threshold = combined_similarities_df_filtered["weighted_similarity"].median()
     return threshold
 
 
@@ -251,31 +256,6 @@ def return_pred_cluster(tx):
     return df
 
 
-def get_cluster_size(pred_cluster, column_name="cluster"):
-    grouped_counts = pred_cluster.groupby(column_name).size()
-    filtered_grouped_counts = grouped_counts[grouped_counts != 1]
-    single_nodes = len(grouped_counts[grouped_counts == 1])
-    bins = range(1, filtered_grouped_counts.max() + 5, 5)
-    labels = [f"{i}-{i+4}" for i in bins[:-1]]
-    labels[0] = "2-5"
-    binned_counts = pd.cut(
-        filtered_grouped_counts, bins=bins, labels=labels, right=False
-    )
-    banded_counts = binned_counts.value_counts().sort_index()
-    cluster_size = (
-        pd.DataFrame(banded_counts)
-        .reset_index()
-        .rename(columns={"index": "Cluster size", "count": "Num of clusters"})
-    )
-    new_row = {
-        "Cluster size": "1",
-        "Num of clusters": single_nodes,
-    }  # Customize with your data
-    cluster_size.loc[-1] = new_row
-    cluster_size = cluster_size.sort_index().reset_index(drop=True)
-    return cluster_size
-
-
 def generate_cluster_keywords(pred_cluster):
     docs = pd.DataFrame(
         {"Document": pred_cluster.body_content, "Class": pred_cluster.new_cluster}
@@ -311,8 +291,6 @@ def get_clustered_nodes(tx):
             n.title AS node_1_title,
             m.title AS node_2_title,
             r.similarity AS edge_weight,
-            n.ground_truth AS node_1_ground_truth,
-            m.ground_truth AS node_2_ground_truth,
             n.community AS node_1_pred_cluster,
             m.community AS node_2_pred_cluster
         """
@@ -326,7 +304,6 @@ def get_unclustered_nodes(tx):
         MATCH (n)
         WHERE NOT EXISTS ((n)--())
         RETURN n.title AS node_title,
-            n.ground_truth AS node_ground_truth,
             n.community AS node_community,
             n.meta_desc AS node_meta_desc
         """
@@ -346,19 +323,29 @@ def count_articles(tx):
     return df
 
 
-def return_by_cluster(tx):
-    """Return only clusters with more than one article"""
-
-    query = """
-    MATCH (n)
-    WITH n.community AS cluster, collect(n.title) AS titles, count(n) AS count
-    WHERE count > 1
-    RETURN cluster, titles
-    ORDER BY cluster
-        """
-    result = tx.run(query)
-    df = pd.DataFrame(result.data())
-    return df
+def get_cluster_size(pred_cluster, column_name="cluster"):
+    grouped_counts = pred_cluster.groupby(column_name).size()
+    filtered_grouped_counts = grouped_counts[grouped_counts != 1]
+    single_nodes = len(grouped_counts[grouped_counts == 1])
+    bins = range(1, filtered_grouped_counts.max() + 5, 5)
+    labels = [f"{i}-{i+4}" for i in bins[:-1]]
+    labels[0] = "2-5"
+    binned_counts = pd.cut(
+        filtered_grouped_counts, bins=bins, labels=labels, right=False
+    )
+    banded_counts = binned_counts.value_counts().sort_index()
+    cluster_size = (
+        pd.DataFrame(banded_counts)
+        .reset_index()
+        .rename(columns={"index": "Cluster size", "count": "Num of clusters"})
+    )
+    new_row = {
+        "Cluster size": "1",
+        "Num of clusters": single_nodes,
+    }
+    cluster_size.loc[-1] = new_row
+    cluster_size = cluster_size.sort_index().reset_index(drop=True)
+    return cluster_size
 
 
 def get_embeddings(cluster_df, umap_parameters):
@@ -366,7 +353,6 @@ def get_embeddings(cluster_df, umap_parameters):
     doc_titles = cluster_df.title.to_list()
     docs = cluster_df.body_content.to_list()
     ids = cluster_df.id.to_list()
-    # umap_model = UMAP(n_neighbors=15, n_components=8, min_dist=0.0, metric='cosine', random_state=42)
     umap_model = UMAP(
         n_neighbors=umap_parameters["n_neighbors"],
         n_components=umap_parameters["n_components"],
@@ -404,9 +390,6 @@ def hyperparameter_tuning(embeddings):
                             "cluster_selection_method": cluster_selection_method,
                             "metric": metric,
                         }
-
-    print(f"Best DBCV score: {best_score:.3f}")
-    print(f"Best parameters: {best_parameters}")
     return best_parameters
 
 
@@ -472,24 +455,6 @@ def process_cluster(cluster_df, umap_parameters):
     topic_model = topic_modelling(hyperparameters)
     topics, _ = topic_model.fit_transform(docs, embeddings)
 
-    ###############
-    # Visualisation
-    ################
-
-    # Uncomment and adjust as needed for visualization purposes
-
-    # top_n = 50
-    # top_topics = topic_model.get_topic_freq().head(top_n)['Topic'].tolist()
-
-    # reduced_embeddings = topic_model.umap_model.embedding_
-    # hover_data = [f"{title} - Topic {topic}" for title, topic in zip(doc_titles, topics)]
-    # visualization = topic_model.visualize_documents(hover_data, reduced_embeddings=reduced_embeddings, topics=top_topics, title=f'Top {top_n} Topics')
-    # visualization.show()
-
-    # visualization_barchart = topic_model.visualize_barchart(top_n_topics=top_n)
-    # visualization_barchart.show()
-    #################
-
     # Step 4: Create a DataFrame with assigned topics, titles and ids.
     result_df = pd.DataFrame({"Assigned Topic": topics, "Title": doc_titles, "id": ids})
 
@@ -523,14 +488,13 @@ def process_cluster(cluster_df, umap_parameters):
     return result_df_kws
 
 
-def process_all_clusters(cluster_morethan10_embeddings, umap_parameters):
-    unique_clusters = cluster_morethan10_embeddings["cluster"].unique()
+def process_all_clusters(cluster_morethan_threshold, umap_parameters):
+    unique_clusters = cluster_morethan_threshold["cluster"].unique()
     all_results = []
 
     for cluster_id in unique_clusters:
-        print(f"cluster id: {cluster_id}")
-        cluster_df = cluster_morethan10_embeddings[
-            cluster_morethan10_embeddings["cluster"] == cluster_id
+        cluster_df = cluster_morethan_threshold[
+            cluster_morethan_threshold["cluster"] == cluster_id
         ]
         result_df_kws = process_cluster(cluster_df, umap_parameters)
         all_results.append(result_df_kws)
@@ -540,17 +504,6 @@ def process_all_clusters(cluster_morethan10_embeddings, umap_parameters):
 
 
 def assign_unique_numbers_to_topics(final_result_df, pred_cluster_df):
-    """
-    Assigns unique numbers to each unique 'Assigned Topic' in the final_result_df
-    based on the maximum cluster value from the pred_cluster_df.
-
-    Parameters:
-    final_result_df (pd.DataFrame): DataFrame containing the final results with an 'Assigned Topic' column.
-    pred_cluster_df (pd.DataFrame): DataFrame containing the predicted clusters with a 'cluster' column.
-
-    Returns:
-    pd.DataFrame: Updated final_result_df with an additional 'Assigned Topic Number' column.
-    """
     max_cluster_value = pred_cluster_df["cluster"].max()
     unique_assigned_topics = final_result_df["Assigned Topic"].unique()
     topic_number_mapping = {
