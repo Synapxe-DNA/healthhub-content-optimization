@@ -1,6 +1,7 @@
 # Changelog
 
 ## August 13, 2024 <a id="august-13-2024"></a>
+
 - Modified `flag_articles_to_remove_after_extraction` function to flag for recipe first before duplicated URL/content in `data_processing/utils.py`
 - Remove recipe from whitelist (except for article `1445704` and `1445707`)
 - Change `Irrelevant Content` flag to `No relevant content and mainly links`
