@@ -322,8 +322,8 @@ whitelist:
   - 1497409 # flagged as duplicated content but whitelisted
   - 1469472 # flagged as duplicated content but whitelisted
   - 1446081 # flagged as duplicated url but whitelisted
-  - 1445828 # flagged as duplicated url but whitelisted
-  - 1445798 # flagged as duplicated url but whitelisted
+  # - 1445828 # flagged as duplicated url but whitelisted, also a recipe
+  # - 1445798 # flagged as duplicated url but whitelisted, also a recipe
   - 1435335 # flagged as duplicated url but whitelisted
   - 1435183 # flagged as duplicated url but whitelisted
   - 1434614 # flagged as duplicated url but whitelisted
@@ -334,11 +334,11 @@ whitelist:
 blacklist:
   1443526: "Table of Contents"
   1443534: "Table of Contents"
-  1444997: "Irrelevant Content"
-  1445002: "Irrelevant Content"
-  1444991: "Irrelevant Content"
-  1444996: "Irrelevant Content"
-  1445000: "Irrelevant Content"
+  1444997: "No relevant content and mainly links"
+  1445002: "No relevant content and mainly links"
+  1444991: "No relevant content and mainly links"
+  1444996: "No relevant content and mainly links"
+  1445000: "No relevant content and mainly links"
 
 # Refer to https://docs.google.com/spreadsheets/d/1bcmD7GXILn4LqF0Bo9dcdCnRomwCVFQv (IA Mappings)
 l1_mappings:
