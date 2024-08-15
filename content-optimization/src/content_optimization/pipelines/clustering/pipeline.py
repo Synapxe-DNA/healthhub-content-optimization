@@ -56,7 +56,11 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "params:umap_parameters",
                     "params:size_threshold",
                 ],
-                outputs=["final_predicted_cluster", "final_cluster_size", "final_metrics"],
+                outputs=[
+                    "final_predicted_cluster",
+                    "final_cluster_size",
+                    "final_metrics",
+                ],
                 name="generate_subclusters_node",
             ),
             node(

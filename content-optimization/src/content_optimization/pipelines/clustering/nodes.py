@@ -161,19 +161,25 @@ def generate_clusters(
                 session.execute_write(detect_community)
                 first_level_pred_cluster = session.execute_read(return_pred_cluster)
                 first_level_clustered_nodes = session.execute_read(get_clustered_nodes)
-                first_level_unclustered_nodes = session.execute_read(get_unclustered_nodes)
+                first_level_unclustered_nodes = session.execute_read(
+                    get_unclustered_nodes
+                )
                 cluster_article_count = session.execute_read(count_articles)
     except (DriverError, Neo4jError) as e:
         logging.error(f"Neo4j error occurred: {e}")
         raise
 
-    first_level_cluster_size = get_cluster_size(first_level_pred_cluster, column_name="cluster")
+    first_level_cluster_size = get_cluster_size(
+        first_level_pred_cluster, column_name="cluster"
+    )
 
     min_count = cluster_article_count[cluster_article_count["article_count"] > 1][
         "article_count"
     ].min()
     max_count = cluster_article_count["article_count"].max()
-    num_clusters = len(cluster_article_count[cluster_article_count["article_count"] != 1])
+    num_clusters = len(
+        cluster_article_count[cluster_article_count["article_count"] != 1]
+    )
     unclustered_count = (cluster_article_count["article_count"] == 1).sum()
 
     first_level_metrics = pd.DataFrame(
@@ -205,7 +211,6 @@ def generate_subclusters(
     first_level_pred_cluster: pd.DataFrame,
     umap_parameters: Dict,
     size_threshold: float,
-
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Generate subclusters from the first level of clustering using BERTopic.
@@ -230,7 +235,9 @@ def generate_subclusters(
     """
     cluster_size_count = first_level_pred_cluster.cluster.value_counts()
     to_keep = cluster_size_count[cluster_size_count > size_threshold].index
-    cluster_morethan_threshold = first_level_pred_cluster[first_level_pred_cluster.cluster.isin(to_keep)]
+    cluster_morethan_threshold = first_level_pred_cluster[
+        first_level_pred_cluster.cluster.isin(to_keep)
+    ]
     cluster_morethan_threshold_embeddings = pd.merge(
         cluster_morethan_threshold,
         weighted_embeddings[["id", "extracted_content_body_embeddings"]],
@@ -272,10 +279,12 @@ def generate_subclusters(
     final_predicted_cluster["cluster_kws"] = final_predicted_cluster[
         "cluster_kws"
     ].fillna(final_predicted_cluster["new_cluster"].map(cluster_kws_dict))
-    final_cluster_size = get_cluster_size(final_predicted_cluster, column_name="new_cluster")
+    final_cluster_size = get_cluster_size(
+        final_predicted_cluster, column_name="new_cluster"
+    )
 
-    num_clusters = final_predicted_cluster['new_cluster'].nunique()
-    value_count_cluster_size = final_predicted_cluster['new_cluster'].value_counts()
+    num_clusters = final_predicted_cluster["new_cluster"].nunique()
+    value_count_cluster_size = final_predicted_cluster["new_cluster"].value_counts()
     min_count = value_count_cluster_size[value_count_cluster_size != 1].min()
     max_count = value_count_cluster_size.max()
     num_clusters = (value_count_cluster_size[value_count_cluster_size != 1] != 1).sum()
@@ -305,13 +314,13 @@ def update_edges_dataframe(
 
     Parameters:
     ----------
-    first_level_clustered_nodes (pd.DataFrame): 
+    first_level_clustered_nodes (pd.DataFrame):
         A DataFrame containing the original clustered nodes with columns:
         - node_1_id: ID of the first node
         - node_2_id: ID of the second node
         - other columns as needed
 
-    final_predicted_cluster (pd.DataFrame): 
+    final_predicted_cluster (pd.DataFrame):
         A DataFrame containing the updated prediction clusters with columns:
         - id: Node ID
         - title: Title of the node
@@ -323,13 +332,13 @@ def update_edges_dataframe(
 
     Returns:
     -------
-    final_unclustered_nodes (pd.DataFrame): 
+    final_unclustered_nodes (pd.DataFrame):
         A DataFrame containing the nodes that remain unclustered, with columns:
         - node_id: ID of the unclustered node
         - node_title: Title of the unclustered node
         - node_community: Community assignment of the unclustered node
 
-    final_clustered_nodes (pd.DataFrame): 
+    final_clustered_nodes (pd.DataFrame):
         A DataFrame containing the updated clustered nodes with new cluster assignments and keywords, filtered to remove rows with missing keywords. Columns include:
         - node_1_id: ID of the first node
         - node_2_id: ID of the second node
@@ -350,7 +359,9 @@ def update_edges_dataframe(
             "second_level_cluster": "node_community",
         }
     )
-    final_unclustered_nodes = unclustered_df.drop(columns=["url", "body_content","cluster_kws"])
+    final_unclustered_nodes = unclustered_df.drop(
+        columns=["url", "body_content", "cluster_kws"]
+    )
 
     clustered_df_new = (
         pd.merge(
@@ -401,7 +412,7 @@ def cluster_viz(
 
     Parameters:
     ----------
-    final_clustered_nodes (pd.DataFrame): 
+    final_clustered_nodes (pd.DataFrame):
         A DataFrame containing the clustered nodes with columns:
         - node_1_title: Title of the first node
         - node_2_title: Title of the second node
@@ -411,7 +422,7 @@ def cluster_viz(
         - cluster_kws_2: Keywords for the second node's cluster
         - edge_weight: Weight of the edge connecting the nodes
 
-    final_unclustered_nodes (pd.DataFrame): 
+    final_unclustered_nodes (pd.DataFrame):
         A DataFrame containing the unclustered nodes with columns:
         - node_title: Title of the unclustered node
 
