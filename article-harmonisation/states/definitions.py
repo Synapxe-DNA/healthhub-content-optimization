@@ -71,4 +71,3 @@ class OptimisationAgents(TypedDict):
     meta_desc_optimisation_agent: LLMInterface
     readability_optimisation_agent: LLMInterface
     personality_evaluation_agent: LLMInterface
-    writing_evaluation_agent: LLMInterface
