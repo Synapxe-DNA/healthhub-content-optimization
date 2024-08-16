@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 
 import tiktoken
@@ -263,7 +264,7 @@ class AzurePrompts(LLMPrompt):
                 -   Provide a detailed explanation of how well the title reflects the content.
                 -   Use specific examples or excerpts from the article to support your evaluation.
                 -   Highlight any discrepancies or misalignment between the title and the content.
-                
+
                 Your assessment should emphasize the relevance of the article and explain why the title is irrelevant as and when needed.
                 """,
             ),
@@ -322,7 +323,7 @@ class AzurePrompts(LLMPrompt):
                 -   Provide a detailed explanation of how well the meta description reflects the content.
                 -   Use specific examples or excerpts from the article to support your evaluation.
                 -   Highlight any discrepancies or misalignment between the meta description and the content.
-                
+
                 Your assessment should emphasize the relevance of the article and explain why the meta description is irrelevant as and when needed.
                 """,
             ),
@@ -2229,5 +2230,12 @@ def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> i
 
 if __name__ == "__main__":
     prompter = prompt_tool("azure")
-    prompt = prompter.return_researcher_prompt()
-    # print(num_tokens_from_string(prompt))
+
+    prompt_msgs = prompter.return_meta_desc_evaluation_prompt()
+    prompt = ""
+    for msg in prompt_msgs:
+        prompt += msg[1] + "\n"
+    print(prompt_msgs)
+    prompt = re.sub(r" +", " ", prompt)
+    with open("../docs/meta_desc_evaluation_prompt.txt", "w") as f:
+        f.write(prompt)
