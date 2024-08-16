@@ -1,5 +1,10 @@
 # Changelog
 
+## August 16, 2024 <a id="august-16-2024"></a>
+
+- Added `generate_embeddings_node` and `combine_embeddings_by_weightage_node` to [`feature_engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering) pipeline to generate feature embeddings
+- Added [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline for two-step clustering via community detection and BERTopic
+
 ## August 8, 2024 <a id="august-8-2024"></a>
 
 - Added `blacklist` dictionary in `parameters_data_processing.yml` with remove_type description
