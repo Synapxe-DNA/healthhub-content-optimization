@@ -31,6 +31,7 @@ def clear_db(tx):
 
 def create_graph_nodes(tx, doc):
     # logging.info("Create nodes")
+    print("Creating nodes")
     tx.run(
         """
     CREATE (d:Article {
@@ -63,7 +64,7 @@ def create_graph_nodes(tx, doc):
 
 
 def calculate_similarity(tx, vector_name):
-    print(f"Calculate Similarity For {vector_name}")
+    print(f"Calculating similarity For {vector_name}")
     query = f"""
     MATCH (a:Article), (b:Article)
     WHERE a.id < b.id
@@ -78,7 +79,6 @@ def calculate_similarity(tx, vector_name):
 
 
 def fetch_ground_truth(session):
-    print("Fetching Ground Truth")
     query = """
     MATCH (a:Article)
     RETURN a.id AS id, a.ground_truth AS ground_truth
@@ -97,7 +97,6 @@ def combine_similarities(
     weight_combined,
     weight_kws,
 ):
-    print("Combining Similarity")
     ground_truth = fetch_ground_truth(session)
 
     similarities_title = session.execute_write(
@@ -120,6 +119,7 @@ def combine_similarities(
     )
 
     combined_similarities = []
+    print("Combining similarity by weightage")
 
     for key in similarities_title.keys():
         if (
@@ -170,7 +170,7 @@ def combine_similarities(
 
 
 def median_threshold(combined_similarities_df):
-    print("Calculating Median")
+    print("Calculating median")
     combined_similarities_df = combined_similarities_df.dropna(
         subset=["node_1_ground_truth", "node_2_ground_truth"]
     )
@@ -183,7 +183,7 @@ def median_threshold(combined_similarities_df):
 
 
 def create_sim_edges(tx, similarities, threshold):
-    print("Creating Edges")
+    print("Creating edges")
     logging.info("Creating edges")
     for _, record in similarities.iterrows():
         if record["weighted_similarity"] > threshold:
@@ -229,6 +229,7 @@ def create_graph_proj(tx):
 
 def detect_community(tx):
     # logging.info("Detect community")
+    print("Running community detection")
     tx.run(
         """
         CALL gds.louvain.write(

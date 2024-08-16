@@ -91,7 +91,8 @@ def generate_clusters(
     Generates the first level of clustering using graph-based method
 
     This function takes in a Dataframe of documents (merged_df_with_groundtruth), connects to a Neo4j database,
-    creates graph nodes for each document, compute similarity scores between articles based on for each feature, combines similarities based on various weights, and detects communities via louvain community detection to form clusters.
+    creates graph nodes for each document, compute similarity scores between articles for each feature, combines similarities based on various weights,
+    and detects communities via louvain community detection to form clusters.
 
     It returns the predicted clusters, clustered nodes, unclustered nodes, clustering metrics and cluster size for first level clustering.
 
@@ -246,7 +247,7 @@ def generate_subclusters(
     )
 
     print(
-        "No. of cluster to do 2nd level clustering: ",
+        "No. of clusters to go through 2nd level clustering: ",
         cluster_morethan_threshold.cluster.nunique(),
     )
     final_result_df = process_all_clusters(
@@ -283,7 +284,6 @@ def generate_subclusters(
         final_predicted_cluster, column_name="new_cluster"
     )
 
-    num_clusters = final_predicted_cluster["new_cluster"].nunique()
     value_count_cluster_size = final_predicted_cluster["new_cluster"].value_counts()
     min_count = value_count_cluster_size[value_count_cluster_size != 1].min()
     max_count = value_count_cluster_size.max()
@@ -360,29 +360,25 @@ def update_edges_dataframe(
         }
     )
     final_unclustered_nodes = unclustered_df.drop(
-        columns=["url", "body_content", "cluster_kws"]
+        columns=["url", "cluster", "body_content", "cluster_kws"]
     )
 
-    clustered_df_new = (
-        pd.merge(
-            first_level_clustered_nodes,
-            final_predicted_cluster[["id", "new_cluster", "cluster_kws"]],
-            left_on="node_1_id",
-            right_on="id",
-            how="left",
-        )
-        .merge(
-            final_predicted_cluster[["id", "new_cluster", "cluster_kws"]],
-            left_on="node_2_id",
-            right_on="id",
-            how="left",
-            suffixes=("_1", "_2"),
-        )
-        .drop(columns=["id_1", "id_2"])
+    clustered_df_new = pd.merge(
+        first_level_clustered_nodes,
+        final_predicted_cluster[["id", "new_cluster", "cluster_kws"]],
+        left_on="node_1_id",
+        right_on="id",
+        how="left",
+    ).merge(
+        final_predicted_cluster[["id", "new_cluster", "cluster_kws"]],
+        left_on="node_2_id",
+        right_on="id",
+        how="left",
+        suffixes=("_1", "_2"),
     )
 
     final_clustered_nodes = clustered_df_new.drop(
-        columns=["node_1_pred_cluster", "node_2_pred_cluster"]
+        columns=["id_1", "id_2", "node_1_pred_cluster", "node_2_pred_cluster"]
     )
     final_clustered_nodes = final_clustered_nodes.rename(
         columns={
