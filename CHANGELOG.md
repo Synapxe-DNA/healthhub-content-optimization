@@ -11,7 +11,6 @@
 - Remove recipe from whitelist (except for article `1445704` and `1445707`)
 - Change `Irrelevant Content` flag to `No relevant content and mainly links`
 
-
 ## August 8, 2024 <a id="august-8-2024"></a>
 
 - Added `blacklist` dictionary in `parameters_data_processing.yml` with remove_type description
