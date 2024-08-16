@@ -31,7 +31,6 @@ def clear_db(tx):
 
 def create_graph_nodes(tx, doc):
     # logging.info("Create nodes")
-    print("Creating nodes")
     tx.run(
         """
     CREATE (d:Article {
