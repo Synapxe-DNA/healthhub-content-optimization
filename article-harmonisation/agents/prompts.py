@@ -309,7 +309,8 @@ class AzurePrompts(LLMPrompt):
             ("human", """ Title: "10 Tips for Effective Time Management" """),
             (
                 "assistant",
-                """ Content Summary:
+                """
+                Content Summary:
                 -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
 
                 Comparison and Evaluation:
