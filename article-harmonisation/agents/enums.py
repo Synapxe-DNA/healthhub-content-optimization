@@ -48,7 +48,7 @@ class ROLES(Enum):
           READABILITY_OPTIMISATION: Readability Evaluation LLM to optimise the readability of the generated article content
           PERSONALITY_EVALUATION: Personality Evaluation LLM to evaluate the writing style of the generated article content
     """
-    
+
     # Declaring node roles
     EVALUATOR = "Evaluator"
     EXPLAINER = "Explainer"
