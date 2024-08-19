@@ -3,6 +3,7 @@ import os
 ROOT = os.getcwd()
 print(ROOT)
 
+# TODO: Check if counter.py is a relevant file. Remove if unneeded.
 
 def add_count():
     file = open(
