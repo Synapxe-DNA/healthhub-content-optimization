@@ -29,9 +29,9 @@ def start_llm(model: str, role: str, temperature: int = 0):
     Starts up and returns an instance of a specific model type
 
     Args:
-        model: a String input stating the model used
-        role: a String input stating the role of the model. List of model roles can be found under NODE_ROLES in harmonisation.py
-
+        model (str): a String input stating the model used. List of models can be found in enums.py
+        role (str): a String input stating the role of the model. List of agentic roles can be found in enums.py
+        temperature (int): an Integer input stating the temperature of the model. It influences the probability distribution of the next word
     Returns:
         an object from the model class pertaining to the string input
 
@@ -42,32 +42,34 @@ def start_llm(model: str, role: str, temperature: int = 0):
 
     match model:
         case "llama3":
-            # creating an instance of a LLMPrompt object based on the model used
+            # Creating an instance of a LLMPrompt object based on the Llama 3 model
             model_prompter = prompt_tool(model)
-            # starting an instance of the model using HuggingFaceEndpoint
+            # Starting an instance of the model using HuggingFaceEndpoint
             llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS.llama3.value, max_new_tokens=MAX_NEW_TOKENS
+                endpoint_url=MODELS.LLAMA3.value, max_new_tokens=MAX_NEW_TOKENS, temperature=temperature
             )
             return HuggingFace(llm, model_prompter, role)
 
         case "mistral":
-            # creating an instance of a LLMPrompt object based on the model used
+            # Creating an instance of a LLMPrompt object based on the model used
             model_prompter = prompt_tool(model=model)
-            # starting an instance of the model using HuggingFaceEndpoint
+            # Starting an instance of the model using HuggingFaceEndpoint
             llm = HuggingFaceEndpoint(
-                endpoint_url=MODELS.mistral.value, max_new_tokens=MAX_NEW_TOKENS
+                endpoint_url=MODELS.MISTRAL.value, max_new_tokens=MAX_NEW_TOKENS, temperature=temperature
             )
             return HuggingFace(llm, model_prompter, role)
 
         case "azure":
+            # Creating an instance of a LLMPrompt object based on the model used
             model_prompter = prompt_tool(model=model)
+            # Starting an instance of the model using Azure OpenAI
             llm = AzureChatOpenAI(
                 azure_ad_token_provider=AZURE_AD_TOKEN_PROVIDER,
                 azure_endpoint=AZURE_OPENAI_ENDPOINT,
                 cache=None,
                 callbacks=None,
                 custom_get_token_ids=None,
-                azure_deployment=MODELS.azure.value,
+                azure_deployment=MODELS.AZURE.value,
                 frequency_penalty=0,
                 logprobs=None,
                 max_retries=2,
@@ -98,117 +100,101 @@ class LLMInterface(ABC):
     """
 
     @abstractmethod
-    def evaluate_content(self, content: str, choice: str) -> str:
+    def evaluate_content(self, content: str, choice: str):
         """
         Abstract method for generating the text of the LLM Model
 
         Args:
-            content: a String input stating the text
-            choice: a String input stating the choice
-
-        Returns:
-
+            content (str): a String input stating the text
+            choice (str): a String input stating the choice
         """
         pass
 
     @abstractmethod
-    def evaluate_title(self, title: str, content: str) -> str:
+    def evaluate_title(self, title: str, content: str):
         """
         Abstract method for generating the text of the LLM Model
 
         Args:
-            title: a String input stating the article title
-            content: a String input stating the article content
-
-        Returns:
-
+            title (str): a String input stating the article title
+            content (str): a String input stating the article content
         """
         pass
 
-    def evaluate_meta_description(self, meta_description: str, content: str) -> str:
+    def evaluate_meta_description(self, meta_description: str, content: str):
         """
         Abstract method for generating the text of the LLM Model
 
         Args:
-            meta_description: a String input stating the meta description
-            content: a String input stating the text
+            meta_description (str): a String input stating the meta description
+            content (str): a String input stating the text
         """
         pass
 
     @abstractmethod
-    def generate_keypoints(self, article: str) -> str:
+    def generate_keypoints(self, article: str):
         """
         Abstract method for generating and returning a summary of keypoints based on the article
 
         Args:
-            article: String input of the article to be summarised
-
-        Returns:
-
+            article (str): String input of the article to be summarised
         """
         pass
 
     @abstractmethod
-    def compile_points(self, keypoints: list[str]) -> str:
+    def compile_points(self, keypoints: list[str]):
         """
-        Abstract method for compiling and returing from a list of keypoints
+        Abstract method for compiling and returning from a list of keypoints
 
         Args:
-            keypoints: list input of the article keypoints to be compiled
-
-        Returns:
-
+            keypoints (list[str]): list input of the article keypoints to be compiled
         """
         pass
 
     @abstractmethod
-    def optimise_content(self, keypoints: list[str]) -> str:
+    def optimise_content(self, keypoints: list[str]):
         """
         Abstract method for generating the article content based on the article keypoints
 
         Args:
-            keypoints: list of compiled keypoints
-
-        Returns:
-
+            keypoints (list[str]): list of compiled keypoints
         """
         pass
 
     @abstractmethod
-    def optimise_writing(self, content: str) -> str:
+    def optimise_writing(self, content: str):
         """
         Abstract method for optimising the generated article content based on the writing guidelines
 
         Args:
-            content: generated article content
-
-        Returns:
-
+            content (str): generated article content
         """
         pass
 
     @abstractmethod
-    def optimise_title(self, content):
-        """Abstract method for optimising the article's title based on the article's keypoints or optimised writing
+    def optimise_title(self, content: str):
+        """
+        Abstract method for optimising the article's title based on the article's keypoints or optimised writing
 
         Args:
-            content: string input of article's optimised writing or extracted keypoints
+            content (str): optimised article content
         """
         pass
 
     @abstractmethod
-    def optimise_meta_desc(self, content):
-        """Abstract method for optimising the article's meta description based on the article's keypoints or optimised writing
+    def optimise_meta_desc(self, content: str):
+        """
+        Abstract method for optimising the article's meta description based on the article's keypoints or optimised writing
 
         Args:
-            content: string input of article's optimised writing or extracted keypoints
+            content (str): optimised article content
         """
         pass
 
 
 class HuggingFace(LLMInterface):
     """
-    This class contains the methods for the Llama3 class. It inherits from the LLMInterface abstract class.
+    This class contains the methods for the HuggingFace models. It inherits from the LLMInterface abstract class.
 
     Attributes:
         model: a HuggingFaceEndpoint object for the specific model
@@ -221,7 +207,7 @@ class HuggingFace(LLMInterface):
         Initializes the instance based on model, prompt_template and role input.
 
         Args:
-          model: determines the model, in this case it will be a Llama3 model.
+          model: determines the model, in this case it will be derived from the HuggingFaceEndpoint class.
           prompt_template: the specific prompt template for the model and its role.
           role: determines the role of the model in the article harmonisation process.
         """
@@ -230,7 +216,25 @@ class HuggingFace(LLMInterface):
         self.role = role
 
     def evaluate_content(self, content: str, choice: str = "readability") -> str:
+        """
+        Perform Article Content Evaluation either on readability or content structure (writing style)
 
+        This method analyzes the given content using one of two evaluation modes: 'readability' for assessing how easy
+        the content is to read, or 'structure' for evaluating the quality and organization of the content's writing style.
+
+        Args:
+            content (str): The article content to be evaluated.
+            choice (str): The evaluation mode. Should be either "readability" to assess readability or "structure"
+                to evaluate the writing style. Defaults to "readability".
+
+        Returns:
+            str: A response string containing the evaluation results for the provided content.
+
+        Raises:
+            ValueError: If the choice provided is not "readability" or "structure".
+        """
+
+        # Fetch prompt from prompts.py
         match choice.lower():
             case "readability":
                 template = self.prompt_template.return_readability_evaluation_prompt()
@@ -239,11 +243,13 @@ class HuggingFace(LLMInterface):
             case _:
                 raise ValueError(f"You entered {choice}, which is not a valid choice")
 
+        # Define the prompt template and inputs
         prompt_t = PromptTemplate(
             input_variables=["Article"],
             template=template,
         )
 
+        # Define the chain and execute it
         chain = prompt_t | self.model | StrOutputParser()
         res = chain.invoke(content)
         response = re.sub(" +", " ", res)
@@ -251,14 +257,27 @@ class HuggingFace(LLMInterface):
         return response
 
     def evaluate_title(self, title: str, content: str) -> str:
+        """
+        Perform Article Title Evaluation by determining the relevance of the article title with respect to its content
 
+        Args:
+            title (str): The article title to be evaluated.
+            content (str): The article content to be evaluated.
+
+        Returns:
+            str: A response string containing the evaluation results for the provided title.
+        """
+
+        # Fetch prompt from prompts.py
         template = self.prompt_template.return_title_evaluation_prompt()
 
+        # Define the prompt template and inputs
         prompt_t = PromptTemplate(
             input_variables=["Title", "Article"],
             template=template,
         )
 
+        # Define the chain and execute it
         chain = prompt_t | self.model | StrOutputParser()
         res = chain.invoke({"Title": title, "Article": content})
         response = re.sub(" +", " ", res)
@@ -266,44 +285,66 @@ class HuggingFace(LLMInterface):
         return response
 
     def evaluate_meta_description(self, meta_description: str, content: str) -> str:
+        """
+        Perform Article Meta Description Evaluation by determining the relevance of the article meta description with
+        respect to its content
 
+        Args:
+            meta_description (str): The article meta description to be evaluated.
+            content (str): The article content to be evaluated.
+
+        Returns:
+            str: A response string containing the evaluation results for the provided meta description.
+        """
+
+        # Fetch prompt from prompts.py
         template = self.prompt_template.return_meta_desc_evaluation_prompt()
 
+        # Define the prompt template and inputs
         prompt_t = PromptTemplate(
             input_variables=["Meta", "Article"],
             template=template,
         )
 
+        # Define the chain and execute it
         chain = prompt_t | self.model | StrOutputParser()
         res = chain.invoke({"Meta": meta_description, "Article": content})
         response = re.sub(" +", " ", res)
 
         return response
 
-    def generate_keypoints(self, article: str, num: int):
+    def generate_keypoints(self, article: str):
         """
-        Organises the sentences in an article into keypoints decided by the LLM. All meaningful sentences will be placed under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
+        Organises the sentences in an article into keypoints as decided by the LLM. All meaningful sentences will be placed
+        under a keypoint while meaningless sentences will be placed at the end under "Omitted sentences".
 
         Args:
-            article: a String input of the article content
+            article (str): a String input of the article content
 
         Returns:
-            answer: a String containing the keypoints determined by the LLM
+            str: A response string containing the keypoints as determined by the LLM
 
         Raises:
-            TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
+            TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts
+            for each node is specific its role.
         """
+
         # Raise an error if the role is not a researcher
         if self.role != ROLES.RESEARCHER:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run generate_keypoints()"
             )
 
+        # Fetch prompt from prompts.py
+        template = self.prompt_template.return_researcher_prompt()
+
+        # Define the prompt template and inputs
         prompt_t = PromptTemplate(
             input_variables=["Article"],
-            template=self.prompt_template.return_researcher_prompt(),
+            template=template,
         )
 
+        # Define the chain and execute it
         chain = prompt_t | self.model | StrOutputParser()
         res = chain.invoke(article)
         response = re.sub(" +", " ", res)
@@ -312,18 +353,20 @@ class HuggingFace(LLMInterface):
 
     def compile_points(self, keypoints: list = []):
         """
-        A list of keypoints from different articles are compiled using this method. This is the second step in the content harmonisation flow after generating the keypoints.
+        A list of keypoints from different articles are compiled using this method. This is the second step in the content
+        harmonisation flow after generating the keypoints.
 
         Args:
-            keypoints: a list input of the keypoints from the articles to be compiled
+            keypoints (list[str]): a list input of the keypoints from the articles to be compiled
 
         Returns:
-            answer: a String containing the keypoints compiled by the LLM
+            str: A response string containing the keypoints compiled by the LLM
 
         Raises:
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
             ValueError: If there is less than 2 keypoints for comparison. This means there are no keypoints between articles to compile.
         """
+
         # Raise an error if there is less than 2 keypoints
         if len(keypoints) < 2:
             raise ValueError(
@@ -336,10 +379,12 @@ class HuggingFace(LLMInterface):
                 f"This node is a {self.role} node and cannot run compile_points()"
             )
 
+        # Define the prompt template and inputs
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_compiler_prompt()
         )
 
+        # Concatenate list of keypoints into a single string
         input_keypoints = ""
         for article_index in range(len(keypoints)):
             article_kp = keypoints[article_index]
@@ -349,6 +394,7 @@ class HuggingFace(LLMInterface):
                 ### End of Article {article_index + 1} Keypoints ###
                 """
 
+        # Define the chain and execute it
         chain = prompt_t | self.model
         print("Compiling keypoints for article harmonisation")
         res = chain.invoke({"Keypoints": input_keypoints})
@@ -358,15 +404,31 @@ class HuggingFace(LLMInterface):
         return response
 
     def optimise_content(self, keypoints: list = []):
+        """
+        An article is generated based on the keypoints provided.
+
+        Args:
+            keypoints (list[str]): a list input of the keypoints from the articles to be optimized
+
+        Returns:
+            str: A response string containing the generated article content
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+
+        # Raise an error if the role is not "Content optimisation"
         if self.role != ROLES.CONTENT_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
 
+        # Define the prompt template and inputs
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_content_prompt()
         )
 
+        # Define the chain and execute it
         chain = prompt_t | self.model
         print("Optimising article content")
         res = chain.invoke({"Keypoints": keypoints})
@@ -376,15 +438,31 @@ class HuggingFace(LLMInterface):
         return response
 
     def optimise_writing(self, content):
+        """
+        The article is optimised as per the writing style guidelines
+
+        Args:
+            content (str): the article content
+
+        Returns:
+            str: A response string containing the optimised article content
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+
+        # Raises an error if the role is not "Writing optimisation"
         if self.role != ROLES.WRITING_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_writing()"
             )
 
+        # Define the prompt template and inputs
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_writing_prompt()
         )
 
+        # Define the chain and execute it
         chain = prompt_t | self.model
         print("Optimising article writing")
         response = chain.invoke({"Content": content})
@@ -393,37 +471,76 @@ class HuggingFace(LLMInterface):
         return response
 
     def optimise_title(self, content):
+        """
+        The article title is generated based on the optimised article content
+
+        Args:
+            content (str): the optimised article content
+
+        Returns:
+              str: A response string containing the optimised article title
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+
+        # Raises an error if the role is not "Title optimisation"
         if self.role != ROLES.TITLE:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_title()"
             )
+
+        # Define the prompt template and inputs
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_title_prompt()
         )
 
+        # Define the chain and execute it
         chain = prompt_t | self.model
         print("Optimising article title")
         response = chain.invoke({"Content": content})
         print("Article title optimised")
+
         return response
 
     def optimise_meta_desc(self, content):
+        """
+        The article meta description is generated based on the optimised article content
+
+        Args:
+            content (str): the optimised article content
+
+        Returns:
+            str: A response string containing the optimised article meta description
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+
+        # Raises an error if the role is not "Meta description optimisation"
         if self.role != ROLES.META_DESC:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_meta_desc()"
             )
+
+        # Define the prompt template and inputs
         prompt_t = PromptTemplate.from_template(
             self.prompt_template.return_meta_desc_prompt()
         )
 
+        # Define the chain and execute it
         chain = prompt_t | self.model
         print("Optimising article meta description")
         response = chain.invoke({"Content": content})
         print("Article meta description optimised")
+
         return response
 
 
 class Azure(LLMInterface):
+    """
+    
+    """
     def __init__(self, model, prompt_template, role):
         self.model = model
         self.prompt_template = prompt_template
@@ -610,6 +727,7 @@ class Azure(LLMInterface):
         Raises:
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
         """
+        
         if self.role != ROLES.RESEARCHER:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run generate_keypoints()"
@@ -639,6 +757,7 @@ class Azure(LLMInterface):
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
             ValueError: If there is less than 2 keypoints for comparison. This means there are no keypoints between articles to compile.
         """
+
         # Raise an error if there is less than 2 keypoints
         if len(keypoints) < 2:
             raise ValueError(
