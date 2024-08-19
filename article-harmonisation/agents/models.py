@@ -1027,7 +1027,7 @@ class Azure(LLMInterface):
             {"Readability_evaluation": readability_evaluation, "Content": content}
         )
         print("-- Article readability optimised --")
-        
+
         return response
 
     def optimise_title(self, content):
@@ -1060,7 +1060,7 @@ class Azure(LLMInterface):
         print("Optimising article title")
         response = chain.invoke({"Content": content})
         print("Article title optimised")
-        
+
         return response
 
     def optimise_meta_desc(self, content):
@@ -1093,5 +1093,5 @@ class Azure(LLMInterface):
         print("Optimising article meta description")
         response = chain.invoke({"Content": content})
         print("Article meta description optimised")
-        
+
         return response
