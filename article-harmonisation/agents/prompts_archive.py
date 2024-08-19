@@ -1,14 +1,21 @@
 class LlamaArchivedPrompts:
-    def return_researcher_prompt_ver(self, version):
-        """This function returns the previous] version of the researcher prompt
+    @staticmethod
+    def return_researcher_prompt_ver(version: int):
+        """
+        Returns a specific version of the researcher prompt.
 
-        Version 1: This researcher prompt which does not preserve the original headers, instead it instructs the llm to sort the sentences into keypoints determined by itself.
+        This function retrieves a previous version of the researcher prompt based on the provided version number. Currently, only version 1 is available.
+
+        Version 1: This prompt instructs the LLM to sort sentences into keypoints determined by itself, without preserving the original headers.
 
         Args:
-            version: an integer where the user will state the version to be retrieved
+            version (int): An integer specifying the version to be retrieved.
 
         Returns:
-            researcher_prompt: The desired version of the researcher prompt
+            str: The desired version of the researcher prompt as a string.
+
+        Raises:
+            ValueError: If an invalid version number is provided.
         """
         match version:
             case 1:
@@ -52,83 +59,127 @@ class LlamaArchivedPrompts:
                 """
                 return researcher_prompt
 
-    def return_content_prompt_ver(self, version, topic):
+            case _:
+                raise ValueError(f"Invalid version number: {version}")
+
+    @staticmethod
+    def return_content_prompt_ver(version: int, topic: str):
+        """
+        Returns a specific version of the content prompt for a given topic.
+
+        This method retrieves a content prompt based on the provided version number and topic. Currently, it only supports
+        the "health conditions" topic and version 1.
+
+        Args:
+            version (int): An integer specifying the version of the prompt to retrieve.
+            topic (str): A string specifying the topic for which to retrieve the prompt.
+
+        Returns:
+            str: The desired version of the content prompt as a string.
+
+        Raises:
+            ValueError: If an invalid topic or version number is provided.
+        """
         match topic.lower():
             case "health conditions":
                 match version:
                     case 1:
                         optimise_health_conditions_content_prompt = """
-                    <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-                    You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
+                        <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+                        You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
 
-                    Your task is to compare the given keypoints with the requirements below and write your own content to fill in missing sections if necessary.
+                        Your task is to compare the given keypoints with the requirements below and write your own content to fill in missing sections if necessary.
 
-                    Your final answer must include these sections: Overview of the condition, Causes and Risk Factors, Symptoms and Signs, Complications, Treatment and Prevention, When to see a doctor
+                        Your final answer must include these sections: Overview of the condition, Causes and Risk Factors, Symptoms and Signs, Complications, Treatment and Prevention, When to see a doctor
 
-                    You must use the given keypoints to FILL IN these sections.
-                    If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
-                    Each sentence should start in a new line, only sentences in bullet points are exempted.
-                    You should avoid conveying negative sentiments, communicating in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
-                    You should reassure readers when a situation is not a lost cause.
-                    Your answer for each section should be sufficiently elaborate.
-                    You should only use bullet points only if it improves the readability of the content, but have less than 2 sections with bullet points.
+                        You must use the given keypoints to FILL IN these sections.
+                        If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
+                        Each sentence should start in a new line, only sentences in bullet points are exempted.
+                        You should avoid conveying negative sentiments, communicating in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
+                        You should reassure readers when a situation is not a lost cause.
+                        Your answer for each section should be sufficiently elaborate.
+                        You should only use bullet points only if it improves the readability of the content, but have less than 2 sections with bullet points.
 
-                    Use the following example on Influenza to structure your answer. Your answer should contain more content and further elaboration on each points.
-                    Your answer must maintain the same structure given in the example.
+                        Use the following example on Influenza to structure your answer. Your answer should contain more content and further elaboration on each points.
+                        Your answer must maintain the same structure given in the example.
 
-                    ### Start of example
-                    1. Overview of Influenza
-                    Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks.
-                    The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life.
-                    It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
+                        ### Start of example
+                        1. Overview of Influenza
+                        Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks.
+                        The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life.
+                        It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
 
-                    2. Causes and Risk Factors
-                    Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics.
-                    The flu virus is classified into three main types: A, B, and C.
-                    Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness.
-                    Factors that increase the risk of contracting influenza include close contact with infected individuals, weakened immune system, and lack of vaccination.
-                    Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
+                        2. Causes and Risk Factors
+                        Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics.
+                        The flu virus is classified into three main types: A, B, and C.
+                        Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness.
+                        Factors that increase the risk of contracting influenza include close contact with infected individuals, weakened immune system, and lack of vaccination.
+                        Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
 
-                    3. Symptoms and Signs
-                    Some symptoms include: High fever, cough, headache, and muscle aches.
-                    Other symptoms include sneezing, nasal discharge, and loss of appetite.
-                    Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat.
-                    Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhea, although these are more common in children.
+                        3. Symptoms and Signs
+                        Some symptoms include: High fever, cough, headache, and muscle aches.
+                        Other symptoms include sneezing, nasal discharge, and loss of appetite.
+                        Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat.
+                        Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhea, although these are more common in children.
 
-                    4. Complications of Influenza
-                    The following people are at greater risk of influenza-related complications:
-                    - Persons aged 65 years old and above.
-                    - Children aged between 6 months old to 5 years old.
-                    - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
-                    - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalization or even death, particularly in vulnerable populations.
+                        4. Complications of Influenza
+                        The following people are at greater risk of influenza-related complications:
+                        - Persons aged 65 years old and above.
+                        - Children aged between 6 months old to 5 years old.
+                        - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
+                        - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalization or even death, particularly in vulnerable populations.
 
-                    5. Treatment and Prevention
-                    Here are some ways to battle influenza and to avoid it:
-                    Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
-                    Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
-                    Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
+                        5. Treatment and Prevention
+                        Here are some ways to battle influenza and to avoid it:
+                        Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
+                        Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
+                        Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
 
-                    6. When to See a Doctor
-                    You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit.
-                    Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication.
-                    Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
-                    ### End of example
+                        6. When to See a Doctor
+                        You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit.
+                        Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication.
+                        Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
+                        ### End of example
 
-                    <|eot_id|>
-                    <|start_header_id|>user<|end_header_id|>
-                    Keypoints:
-                    {Keypoints}
-                    <|eot_id|>
-                    <|start_header_id|>assistant<|end_header_id|>
-                    Answer:
-                    """
+                        <|eot_id|>
+                        <|start_header_id|>user<|end_header_id|>
+                        Keypoints:
+                        {Keypoints}
+                        <|eot_id|>
+                        <|start_header_id|>assistant<|end_header_id|>
+                        Answer:
+                        """
+                        return optimise_health_conditions_content_prompt
 
-                return optimise_health_conditions_content_prompt
+                    case _:
+                        raise ValueError(
+                            f"Invalid version number for health conditions: {version}"
+                        )
+            case _:
+                raise ValueError(f"Invalid topic: {topic}")
 
 
 class AzureArchivedPrompts:
 
-    def return_summarization_prompt_ver(self, version) -> list:
+    @staticmethod
+    def return_summarization_prompt_ver(version: int) -> list[tuple[str, str]]:
+        """
+        Returns a specific version of the summarization prompt.
+
+        This method retrieves a summarization prompt based on the provided version number.
+        Currently, only version 1 is available.
+
+        Args:
+            version (int): An integer specifying the version of the prompt to retrieve.
+
+        Returns:
+            A list of tuples containing the summarization prompt instructions.
+            Each tuple contains two strings: the role ("system" or "human") and the prompt text.
+
+        Raises:
+            ValueError: If an invalid version number is provided.
+        """
+
         match version:
             case 1:
                 evaluation_summary_prompt = [
@@ -141,10 +192,30 @@ class AzureArchivedPrompts:
                     ),
                     ("human", "Evaluate the following text:\n{text}"),
                 ]
+                return evaluation_summary_prompt
 
-        return evaluation_summary_prompt
+            case _:
+                raise ValueError(f"Invalid version number: {version}")
 
-    def return_readability_evaluation_prompt_ver(self, version) -> list:
+    @staticmethod
+    def return_readability_evaluation_prompt_ver(version: int) -> list[tuple[str, str]]:
+        """
+        Returns a specific version of the readability evaluation prompt.
+
+        This method retrieves a readability evaluation prompt based on the provided version number.
+        Currently, only version 1 is available.
+
+        Args:
+            version: An integer specifying the version of the prompt to retrieve.
+
+        Returns:
+            A list of tuples containing the readability evaluation prompt instructions.
+            Each tuple contains two strings: the role ("system" or "human") and the prompt text.
+
+        Raises:
+            ValueError: If an invalid version number is provided.
+        """
+
         match version:
             case 1:
                 readability_evaluation_prompt = [
@@ -163,10 +234,30 @@ class AzureArchivedPrompts:
                     ),
                     ("human", "Evaluate the following article:\n {article}"),
                 ]
+                return readability_evaluation_prompt
 
-        return readability_evaluation_prompt
+            case _:
+                raise ValueError(f"Invalid version number: {version}")
 
-    def return_structure_evaluation_prompt_ver(self, version) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_structure_evaluation_prompt_ver(version: int) -> list[tuple[str, str]]:
+        """
+        Returns a specific version of the structure evaluation prompt.
+
+        This method retrieves a structure evaluation prompt based on the provided version number.
+        Currently, only version 1 is available.
+
+        Args:
+            version: An integer specifying the version of the prompt to retrieve.
+
+        Returns:
+            A list of tuples containing the structure evaluation prompt instructions.
+            Each tuple contains two strings: the role ("system" or "human") and the prompt text.
+
+        Raises:
+            ValueError: If an invalid version number is provided.
+        """
+
         match version:
             case 1:
                 structure_evaluation_prompt = [
@@ -235,10 +326,30 @@ class AzureArchivedPrompts:
                     ),
                     ("human", "Evaluate the following article:\n{article}"),
                 ]
+                return structure_evaluation_prompt
 
-        return structure_evaluation_prompt
+            case _:
+                raise ValueError(f"Invalid version number: {version}")
 
-    def return_title_evaluation_prompt_ver(self, version) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_title_evaluation_prompt_ver(version: int) -> list[tuple[str, str]]:
+        """
+        Returns a specific version of the title evaluation prompt.
+
+        This method retrieves a title evaluation prompt based on the provided version number.
+        Currently, only version 1 is available.
+
+        Args:
+            version: An integer specifying the version of the prompt to retrieve.
+
+        Returns:
+            A list of tuples containing the title evaluation prompt instructions.
+            Each tuple contains two strings: the role ("system" or "human") and the prompt text.
+
+        Raises:
+            ValueError: If an invalid version number is provided.
+        """
+
         match version:
             case 1:
                 title_evaluation_prompt = [
@@ -301,10 +412,30 @@ class AzureArchivedPrompts:
                         "Evaluate the following title:\n{title} \nUsing the following article:\n{article}",
                     ),
                 ]
+                return title_evaluation_prompt
 
-        return title_evaluation_prompt
+            case _:
+                raise ValueError(f"Invalid version number: {version}")
 
-    def return_meta_desc_evaluation_prompt_ver(self, version) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_meta_desc_evaluation_prompt_ver(version) -> list[tuple[str, str]]:
+        """
+        Returns a specific version of the meta description evaluation prompt.
+
+        This method retrieves a meta description evaluation prompt based on the provided version number.
+        Currently, only version 1 is available.
+
+        Args:
+            version: An integer specifying the version of the prompt to retrieve.
+
+        Returns:
+            A list of tuples containing the meta description evaluation prompt instructions.
+            Each tuple contains two strings: the role ("system", "human" or "assistant") and the prompt text.
+
+        Raises:
+            ValueError: If an invalid version number is provided.
+        """
+
         match version:
             case 1:
                 meta_desc_evaluation_prompt = [
@@ -347,39 +478,62 @@ class AzureArchivedPrompts:
                     ),
                     (
                         "assistant",
-                        """ Content Summary:
-                    -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
+                        """
+                        Content Summary:
+                        -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
 
-                    Comparison and Evaluation:
-                    -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
-                    -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
-                    -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
-                    -   The relevance score is high due to the direct alignment of content with the meta description.
+                        Comparison and Evaluation:
+                        -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
+                        -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
+                        -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
+                        -   The relevance score is high due to the direct alignment of content with the meta description.
 
-                    Suggested Meta Description (if needed):
-                    -   "Discover 10 essential time management strategies to enhance productivity and reach your goals." """,
+                        Suggested Meta Description (if needed):
+                        -   "Discover 10 essential time management strategies to enhance productivity and reach your goals."
+                        """,
                     ),
                     (
                         "system",
                         """ Instructions:
-                    -   Use the steps provided to evaluate the relevance of the article's meta description.
-                    -   Write a brief report based on your findings, including specific examples and any suggested improvements. """,
+                        -   Use the steps provided to evaluate the relevance of the article's meta description.
+                        -   Write a brief report based on your findings, including specific examples and any suggested improvements.
+                        """,
                     ),
                     (
                         "human",
                         """
-                    Evaluate the following Meta Description:
-                    {meta}
+                        Evaluate the following Meta Description:
+                        {meta}
 
-                    Use the following article:
-                    {article}
-                    """,
+                        Use the following article:
+                        {article}
+                        """,
                     ),
                 ]
+                return meta_desc_evaluation_prompt
 
-        return meta_desc_evaluation_prompt
+            case _:
+                raise ValueError(f"Invalid version number: {version}")
 
-    def return_researcher_prompt_ver(self, version) -> list:
+    @staticmethod
+    def return_researcher_prompt_ver(version) -> list[tuple[str, str]]:
+        """
+        Returns a specific version of the researcher prompt.
+
+        This method retrieves a researcher prompt based on the provided version number.
+        Currently, only version 1 is available.
+
+        Args:
+            version: An integer specifying the version of the prompt to retrieve.
+
+        Returns:
+            A list of tuples containing the researcher prompt instructions.
+            Each tuple contains two strings: the role ("system", "human" or "assistant") and the prompt text.
+
+        Raises:
+            ValueError: If an invalid version number is provided.
+        """
+
         match version:
             case 1:
                 researcher_prompt = [
@@ -435,5 +589,7 @@ class AzureArchivedPrompts:
                         "Sort the keypoints below based on the instructions and examples you have received:\n{Article}",
                     ),
                 ]
-
                 return researcher_prompt
+
+            case _:
+                raise ValueError(f"Invalid version number: {version}")
