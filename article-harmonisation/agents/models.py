@@ -16,6 +16,7 @@ AZURE_OPENAI_ENDPOINT = settings.AZURE_OPENAI_ENDPOINT
 AZURE_OPENAI_API_VERSION = settings.AZURE_OPENAI_API_VERSION
 AZURE_AD_TOKEN_PROVIDER = settings.AZURE_AD_TOKEN_PROVIDER
 
+
 def start_llm(model: str, role: str, temperature: int = 0):
     """
     Starts up and returns an instance of a specific model type
@@ -467,7 +468,7 @@ class Azure(LLMInterface):
         template = self.prompt_template.return_personality_evaluation_prompt()
 
         prompt_t = ChatPromptTemplate.from_messages(template)
-        
+
         chain = prompt_t | self.model | StrOutputParser()
         print("Evaluating personality of article")
         res = chain.invoke({"Content": content})
@@ -571,9 +572,10 @@ class Azure(LLMInterface):
         chain = prompt_t | self.model | StrOutputParser()
         print("Optimising article content based on content guidelines...")
         res = chain.invoke(
-            {"Keypoints": keypoints, 
-            #  "Structure_evaluation": structure_evaluation
-             }
+            {
+                "Keypoints": keypoints,
+                #  "Structure_evaluation": structure_evaluation
+            }
         )
         print("Article content optimised")
         response = re.sub(" +", " ", res)
@@ -612,7 +614,7 @@ class Azure(LLMInterface):
         print(f"-- {step} --")
         response = chain.invoke(
             {
-                # "Readability_evaluation": readability_evaluation, 
+                # "Readability_evaluation": readability_evaluation,
                 "content": content
             }
         )
