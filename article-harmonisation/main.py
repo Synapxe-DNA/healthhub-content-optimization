@@ -2,16 +2,7 @@ from typing import TypedDict
 
 from agents.enums import MODELS, ROLES
 from agents.models import start_llm
-from checks import (
-    ChecksState,
-    content_evaluation_llm_node,
-    content_evaluation_rules_node,
-    content_explanation_node,
-    meta_desc_evaluation_llm_node,
-    meta_desc_evaluation_rules_node,
-    title_evaluation_llm_node,
-    title_evaluation_rules_node,
-)
+from checks import ChecksState, create_checks_graph
 from harmonisation import (
     RewritingState,
     check_for_compiler,
@@ -39,38 +30,14 @@ ROOT_DIR = get_root_dir()
 
 
 def start_article_evaluation(articles: list, setting: str = "title"):
-    nodes = {
-        "content_evaluation_rules_node": content_evaluation_rules_node,
-        "content_explanation_node": content_explanation_node,
-        "content_evaluation_llm_node": content_evaluation_llm_node,
-        "title_evaluation_rules_node": title_evaluation_rules_node,
-        "title_evaluation_llm_node": title_evaluation_llm_node,
-        "meta_desc_evaluation_rules_node": meta_desc_evaluation_rules_node,
-        "meta_desc_evaluation_llm_node": meta_desc_evaluation_llm_node,
-    }
 
-    edges = {
-        START: [
-            "content_evaluation_rules_node",
-            "title_evaluation_rules_node",
-            "meta_desc_evaluation_rules_node",
-        ],
-        "content_evaluation_rules_node": ["content_explanation_node"],
-        "content_explanation_node": ["content_evaluation_llm_node"],
-        "content_evaluation_llm_node": [END],
-        "title_evaluation_rules_node": ["title_evaluation_llm_node"],
-        "title_evaluation_llm_node": [END],
-        "meta_desc_evaluation_rules_node": ["meta_desc_evaluation_llm_node"],
-        "meta_desc_evaluation_llm_node": [END],
-    }
+    app = create_checks_graph(ChecksState)
 
-    app = create_graph(ChecksState, nodes, edges)
-
-    # Save Graph
-    draw_graph(
-        app,
-        f"{ROOT_DIR}/article-harmonisation/docs/images/optimisation_checks_flow.png",
-    )
+    # # Save Graph
+    # draw_graph(
+    #     app,
+    #     f"{ROOT_DIR}/article-harmonisation/docs/images/optimisation_checks_flow.png",
+    # )
 
     # Start LLM
     evaluation_agent = start_llm(MODEL, ROLES.EVALUATOR)
@@ -81,19 +48,28 @@ def start_article_evaluation(articles: list, setting: str = "title"):
 
     for i in range(len(article_details)):
         # Set up
+        article_id = article_details[i]["id"]
         article_content = article_details[i]["extracted_content_body"]
         article_title = article_details[i]["title"]
         meta_desc = article_details[i]["category_description"]  # meta_desc can be null
+        meta_desc = meta_desc if meta_desc is not None else "No meta description"
+        article_url = article_details[i]["full_url"]
         content_category = article_details[i]["content_category"]
+        article_category_names = article_details[i]["article_category_names"]
+        page_views = article_details[i]["page_views"]
 
         print(f"Checking {article_title} now...")
         # Set up Inputs
         inputs = {
             "article_inputs": {
-                "article_content": article_content,
+                "article_id": article_id,
                 "article_title": article_title,
-                "meta_desc": meta_desc,
+                "article_url": article_url,
                 "content_category": content_category,
+                "article_category_names": article_category_names,
+                "page_views": page_views,
+                "article_content": article_content,
+                "meta_desc": meta_desc,
             },
             "content_flags": {},
             "title_flags": {},
@@ -183,6 +159,13 @@ def start_article_harmonisation(stategraph: ChecksState):
     title_optimisation_agent = start_llm(MODEL, ROLES.TITLE)
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(MODEL, ROLES.WRITING_OPTIMISATION)
+    readability_evaluation_agent = start_llm(
+        MODEL, ROLES.READABILITY_OPTIMISATION, temperature=0.3
+    )
+    personality_evaluation_agent = start_llm(MODEL, ROLES.PERSONALITY_EVALUATION)
+    readability_optimisation_agent = start_llm(
+        MODEL, ROLES.READABILITY_OPTIMISATION, temperature=0.5
+    )
 
     if isinstance(stategraph.get("article_inputs")["article_title"], list):
         processed_input_articles = concat_headers_to_content(
@@ -198,13 +181,16 @@ def start_article_harmonisation(stategraph: ChecksState):
 
     # Dictionary with the variouse input keys and items
     inputs = {
+        "article_rewriting_tries": 0,
         "article_evaluation": stategraph,
         "original_article_inputs": {"article_content": processed_input_articles},
         "optimised_article_output": {
             "researcher_keypoints": [],
+            "article_researcher_counter": 0,
         },
         "user_flags": {
             "flag_for_content_optimisation": True,
+            "flag_for_writing_optimisation": True,
             "flag_for_title_optimisation": True,
             "flag_for_meta_desc_optimisation": True,
         },
@@ -215,6 +201,9 @@ def start_article_harmonisation(stategraph: ChecksState):
             "writing_optimisation_agent": writing_optimisation_agent,
             "title_optimisation_agent": title_optimisation_agent,
             "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
+            "readability_optimisation_agent": readability_optimisation_agent,
+            "readability_evaluation_agent": readability_evaluation_agent,
+            "personality_evaluation_agent": personality_evaluation_agent,
         },
     }
 
