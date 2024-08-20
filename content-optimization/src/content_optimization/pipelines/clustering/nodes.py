@@ -327,7 +327,7 @@ def update_edges_dataframe(
         - new_cluster: New cluster assignment
         - cluster_kws: Keywords associated with the cluster
         - url: URL of the node (optional, will be dropped)
-        - cluster: First level cluster assignment (optional, will be dropped) 
+        - cluster: First level cluster assignment (optional, will be dropped)
         - body_content: Content of the node (optional, will be dropped)
 
     Returns:
