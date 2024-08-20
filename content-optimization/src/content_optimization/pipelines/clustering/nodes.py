@@ -327,8 +327,8 @@ def update_edges_dataframe(
         - new_cluster: New cluster assignment
         - cluster_kws: Keywords associated with the cluster
         - url: URL of the node (optional, will be dropped)
+        - cluster: First level cluster assignment (optional, will be dropped) 
         - body_content: Content of the node (optional, will be dropped)
-        - second_level_cluster: Second level cluster assignment (renamed to node_community)
 
     Returns:
     -------
@@ -356,7 +356,7 @@ def update_edges_dataframe(
         columns={
             "id": "node_id",
             "title": "node_title",
-            "second_level_cluster": "node_community",
+            "new_cluster": "node_community",
         }
     )
     final_unclustered_nodes = unclustered_df.drop(
