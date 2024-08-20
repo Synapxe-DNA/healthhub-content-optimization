@@ -97,7 +97,7 @@ def execute_graph(graph: CompiledGraph, input: dict[str, Any]) -> dict[str, Any]
     Example:
         result = execute_graph(graph, {"input_key": "input_value"})
     """
-    
+
     # Set up LangChain tracing session for instrumentation
     LangChainInstrumentor().instrument()
 

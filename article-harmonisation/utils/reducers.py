@@ -19,7 +19,7 @@ def merge_dict(dict1: dict, dict2: dict) -> dict:
     Note:
         This function modifies `dict1` in place.
     """
-    
+
     # Iterate through the items in dict1
     for key, val in dict1.items():
         # Check if the value is a dictionary
