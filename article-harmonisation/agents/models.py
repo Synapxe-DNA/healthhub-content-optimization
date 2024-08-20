@@ -476,8 +476,10 @@ class Azure(LLMInterface):
         response = re.sub(" +", " ", res)
 
         if "True" in response:
+            print("Article writing meets personality guidelines")
             return True
         else:
+            print("Article writing does not meet personality guidelines")
             return False
 
     def generate_keypoints(self, article: str):
@@ -556,7 +558,7 @@ class Azure(LLMInterface):
 
         return response
 
-    def optimise_content(self, keypoints, structure_evaluation: str):
+    def optimise_content(self, keypoints, structure_evaluation: str = ""):
         if self.role != ROLES.CONTENT_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
@@ -595,7 +597,7 @@ class Azure(LLMInterface):
 
         return response
 
-    def optimise_readability(self, content: str, step: str, readability_evaluation):
+    def optimise_readability(self, content: str, step: str):
         """Rewrites the content based on the fiven feedback"""
         if self.role != ROLES.READABILITY_OPTIMISATION:
             raise TypeError(

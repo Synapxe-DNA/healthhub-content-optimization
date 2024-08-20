@@ -1,11 +1,12 @@
 from typing import TypedDict
+import pandas as pd
 
 from agents.enums import ROLES
 from agents.models import start_llm
-from checks import ChecksState
 from config import settings
 from langgraph.graph import END, START
 from states.definitions import (
+    ArticleEvaluation,
     ArticleInputs,
     OptimisationAgents,
     OptimisationFlags,
@@ -15,6 +16,7 @@ from utils.evaluations import calculate_readability
 from utils.formatters import concat_headers_to_content, print_checks, split_into_list
 from utils.graphs import create_graph, draw_graph, execute_graph
 from utils.paths import get_root_dir
+from utils.excel_extractor import return_optimisation_flags
 
 # Declaring maximum new tokens
 MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
@@ -40,7 +42,7 @@ class RewritingState(TypedDict):
     """
 
     article_rewriting_tries: int
-    article_evaluation: ChecksState
+    article_evaluation: ArticleEvaluation
     original_article_inputs: ArticleInputs
     optimised_article_output: OptimisedArticle
     user_flags: OptimisationFlags
@@ -63,7 +65,7 @@ def researcher_node(state):
     keypoints = state.get("optimised_article_output")["researcher_keypoints"]
     researcher_agent = state.get("llm_agents")["researcher_agent"]
 
-    article_titles = state.get("article_evaluation")["article_title"]
+    article_titles = state.get("original_article_inputs")["article_title"]
     # For loop iterating through each article
 
     for idx in range(len(article_list)):
@@ -125,7 +127,10 @@ def meta_description_optimisation_node(state):
     ]
     optimised_meta_desc = meta_desc_optimisation_agent.optimise_meta_desc(content)
 
-    optimised_article_output["optimised_meta_desc"] = optimised_meta_desc
+    # Splitting the string of optimised article meta desc into a list where each meta desc is an individual item
+    optimised_article_meta_desc = split_into_list(optimised_meta_desc, NUM_OF_OPTIMISED_META_DESC)
+
+    optimised_article_output["optimised_meta_desc"] = optimised_article_meta_desc
 
     user_flags = state.get("user_flags")
     user_flags["flag_for_meta_desc_optimisation"] = False
@@ -156,7 +161,10 @@ def title_optimisation_node(state):
     title_optimisation_agent = state.get("llm_agents")["title_optimisation_agent"]
     optimised_article_title = title_optimisation_agent.optimise_title(content)
 
-    optimised_article_output["optimised_article_title"] = optimised_article_title
+    # Splitting the string of optimised article titles into a list where each title is an individual item
+    optimised_article_titles = split_into_list(optimised_article_title, NUM_OF_OPTIMISED_TITLES)
+
+    optimised_article_output["optimised_article_title"] = optimised_article_titles
 
     user_flags = state.get("user_flags")
     user_flags["flag_for_title_optimisation"] = False
@@ -185,15 +193,11 @@ def content_guidelines_optimisation_node(state):
     if "compiled_keypoints" in optimised_article_output.keys():
         keypoints = optimised_article_output["compiled_keypoints"]
 
-    content_evaluation = (
-        state.get("article_evaluation").get("content_judge", {}).get("structure", "")
-    )
-
     # Runs the compiler LLM to compile the keypoints
     content_optimisation_agent = state.get("llm_agents")["content_optimisation_agent"]
 
     optimised_content = content_optimisation_agent.optimise_content(
-        keypoints, content_evaluation
+        keypoints
     )
 
     optimised_article_output["optimised_content"] = optimised_content
@@ -269,10 +273,6 @@ def readability_optimisation_node(state):
             4: "simplifying complex terms",
         }
 
-        readability_evaluation = (
-            state.get("article_evaluation").get("content_judge", {}).get("readability", "")
-        )
-
         readability_optimisation_agent = state.get("llm_agents")[
             "readability_optimisation_agent"
         ]
@@ -286,7 +286,7 @@ def readability_optimisation_node(state):
             step=readability_optimisation_steps[step_num]
 
             optimised_readability_article = readability_optimisation_agent.optimise_readability(
-                content=optimised_writing, step=step, readability_evaluation = readability_evaluation
+                content=optimised_writing, step=step
             )
 
             # Updating state with the newly readability optimised article
@@ -331,12 +331,10 @@ def personality_guidelines_evaluation_node(state):
     )
 
     # Obtaining article_flags dict
-    article_evaluation = state.get("article_evaluation")
-    content_flags = article_evaluation.get("content_flags", {})
+    article_evaluation = state.get("article_evaluation", {})
 
     # Updating article_evaluation with the updated personality_evaluation flags
-    content_flags["has_personality"] = personality_evaluation
-    article_evaluation["content_flags"] = content_flags
+    article_evaluation["writing_has_personality"] = personality_evaluation
 
     return {
         "article_evaluation": article_evaluation,
@@ -413,8 +411,8 @@ def check_personality_after_readability_optimisation(state):
     """Checks for the personality evaluation from the personality_evaluation_node and determine if a subsequent round of writing optimisation is required."""
 
     # Extracting has_personality from state
-    content_flags = state.get("article_evaluation").get("content_flags")
-    has_personality = content_flags["has_personality"]
+    content_flags = state["article_evaluation"]
+    has_personality = content_flags["writing_has_personality"]
 
     if has_personality:
         # Extracts user flags for title and meta desc optimisation
@@ -494,9 +492,6 @@ def check_optimised_titles_length(state):
     optimised_article_output = state.get("optimised_article_output")
     optimised_article_titles = optimised_article_output.get("optimised_article_title")
 
-    # Splitting the string of optimised article titles into a list where each title is an individual item
-    optimised_article_titles = split_into_list(optimised_article_titles, NUM_OF_OPTIMISED_TITLES)
-
     # For loop iterating thought all article titles to check if all titles have < 71 char
     for title in optimised_article_titles:
         num_of_char = len(title)
@@ -531,9 +526,6 @@ def check_optimised_meta_descs_length(state):
     # Extracting the optimised meta desc from state
     optimised_article_output = state.get("optimised_article_output")
     optimised_article_meta_desc = optimised_article_output.get("optimised_meta_desc")
-
-    # Splitting the string of optimised article meta desc into a list where each meta desc is an individual item
-    optimised_article_meta_desc = split_into_list(optimised_article_meta_desc, NUM_OF_OPTIMISED_META_DESC)
 
     # For loop iterating thought all article meta desc to check if all meta desc have more than 70 characters and has less than 160 characters.
     for meta_desc in optimised_article_meta_desc:
@@ -573,7 +565,7 @@ def check_readability_after_writing_optimisation(state):
         # Send article for readability optimisation as it's readability score is >= 10
         return "readability_optimisation_node"
 
-if __name__ == "__main__":
+def build_graph():
     # Gets root directory
     ROOT_DIR = get_root_dir()
 
@@ -680,6 +672,10 @@ if __name__ == "__main__":
         app, f"{ROOT_DIR}/article-harmonisation/docs/images/article_rewriting_flow.png"
     )
 
+    return app
+
+if __name__ == "__main__":
+
     # starting up the respective llm agents
     researcher_agent = start_llm(MODEL, ROLES.RESEARCHER)
     compiler_agent = start_llm(MODEL, ROLES.COMPILER)
@@ -724,36 +720,48 @@ if __name__ == "__main__":
 
     processed_input_articles = concat_headers_to_content(article_list)
 
-    # Dictionary with the various input keys and items
-    inputs = {
-        "article_rewriting_tries": 0,
-        "original_article_inputs": {"article_content": processed_input_articles},
-        "article_evaluation": {"article_title": article_list},
-        "optimised_article_output": {
-            "researcher_keypoints": [],
-            "article_researcher_counter": 0,
-        },
-        "user_flags": {
-            "flag_for_content_optimisation": False,
-            "flag_for_writing_optimisation": True,
-            "flag_for_title_optimisation": True,
-            "flag_for_meta_desc_optimisation": True,
-        },
-        "llm_agents": {
-            "researcher_agent": researcher_agent,
-            "compiler_agent": compiler_agent,
-            "content_optimisation_agent": content_optimisation_agent,
-            "writing_optimisation_agent": writing_optimisation_agent,
-            "title_optimisation_agent": title_optimisation_agent,
-            "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
-            "readability_optimisation_agent": readability_optimisation_agent,
-            "personality_evaluation_agent": personality_evaluation_agent,
-        },
-    }
+    # Opening the excel contents
+    optimization_check = pd.ExcelFile("article-harmonisation/data/optimization_checks/Stage 1 user annotation for HPB (Updated).xlsx")
+    df = optimization_check.parse('User Annotation (to optimise)')
 
-    result = execute_graph(app, inputs)
+    num_of_articles_in_excel = len(df)
+    
+    for article_idx in range(num_of_articles_in_excel):
+        # Extracting article contents
+        article = df.iloc[article_idx]
 
-    # Prints the various checks
-    print_checks(result, MODEL)
+        article_title = article["title"]
 
-    print(result)
+        processed_input_articles = concat_headers_to_content(article_title)
+
+        print(return_optimisation_flags(article))
+
+        # Dictionary with the various input keys and items
+        inputs = {
+            "article_rewriting_tries": 0,
+            "original_article_inputs": {"article_content": processed_input_articles,
+                                        "article_title": article_list},
+            "optimised_article_output": {
+                "researcher_keypoints": [],
+                "article_researcher_counter": 0,
+            },
+            "user_flags": return_optimisation_flags(article),
+
+            "llm_agents": {
+                "researcher_agent": researcher_agent,
+                "compiler_agent": compiler_agent,
+                "content_optimisation_agent": content_optimisation_agent,
+                "writing_optimisation_agent": writing_optimisation_agent,
+                "title_optimisation_agent": title_optimisation_agent,
+                "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
+                "readability_optimisation_agent": readability_optimisation_agent,
+                "personality_evaluation_agent": personality_evaluation_agent,
+            },
+        }
+
+        result = execute_graph(app, inputs)
+
+        # Prints the various checks
+        print_checks(result, MODEL)
+
+        print(result)

@@ -22,17 +22,17 @@ TO_REMOVE = ["", " "]
 MERGED_DF = pq.read_table(MERGED_DATA_DIRECTORY)
 
 
-def get_article_list_indexes(articles: list, setting: str = "title") -> list:
+def get_article_list_indexes(article_ids: list, setting: str = "title") -> list:
     article_list_idx = []
     if setting == "title":
-        extracted_titles = list(MERGED_DF[ARTICLE_TITLE])
-        for article_title in extracted_titles:
-            if article_title.as_py() in articles:
-                idx = extracted_titles.index(article_title)
+        extracted_ids = list(MERGED_DF[ARTICLE_ID])
+        for article_id in extracted_ids:
+            if article_id.as_py() in article_ids:
+                idx = extracted_ids.index(article_id)
                 article_list_idx.append(idx)
     elif setting == "filename":
-        extracted_ids = list(MERGED_DF["id"])
-        for article in articles:
+        extracted_ids = list(MERGED_DF[ARTICLE_ID])
+        for article in article_ids:
             article_id = int(article.split("/")[-1].split(".")[0].split("_")[-1])
             for row_id in extracted_ids:
                 if row_id.as_py() == article_id:
@@ -71,19 +71,17 @@ def extract_content_for_evaluation(articles: list, setting: str = "title") -> li
     return article_details
 
 
-def concat_headers_to_content(articles: list):
+def concat_headers_to_content(article_id: list):
     final_configured_articles = []
-    article_list_idx = get_article_list_indexes(articles)
-    for num in range(len(articles)):
+    article_list_idx = get_article_list_indexes(article_id)
+    for num in range(len(article_id)):
         idx = article_list_idx[num]
         article_headers = list(MERGED_DF[EXTRACTED_HEADERS][idx])
         article_content = str(MERGED_DF[CONTENT_BODY][idx])
+        article_title = str(MERGED_DF[ARTICLE_TITLE][idx])
 
         # this list will store all the headers + content as elements
         split_content = []
-
-        # this is the title of the article
-        article_title = articles[num]
 
         # Stores headers based on their heading type, h1 - h6
         header_dictionary = {}
@@ -216,6 +214,8 @@ def split_into_list(optimised_items: str, num_of_items: int):
     
     # returning the item_list with the processed titles
     return item_list    
+
+
 
 
 def print_checks(result, model):
