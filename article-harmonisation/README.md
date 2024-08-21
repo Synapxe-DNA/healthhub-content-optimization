@@ -5,18 +5,19 @@
 This project will be utilizing Large Language Model (LLM) graphs to harmonise similar articles, followed article optimisation based on HealthHub content playbook guidelines.
 The models are deployed through Azure OpenAI Endpoints. Currently, this project uses [GPT-4o-mini](https://azure.microsoft.com/en-us/blog/openais-fastest-model-gpt-4o-mini-is-now-available-on-azure-ai/) from Microsoft Azure.
 
-> [!WARNING] 
+> [!WARNING]
 > The prompts for the HuggingFace models are not updated as we no longer use them. You will need to update the prompts and LLM Chains to mimic the implementation for Azure OpenAI Chat models.
 
 The article harmonisation process is broken up into 2 stages -
 
 1. Article Optimisation Checks
+
   <p align="center">
-      <img src="docs/images/Optimisation%20Checks%20Flow.jpg" height="400", alt="Article Optimisation Checks">
+      <img src="docs/images/Optimisation%20Checks%20Flow.jpg" width="400", alt="Article Optimisation Checks">
   </p>
 2. Article Rewriting
   <p align="center">
-      <img src="docs/images/Article%20Rewriting%20Flow.jpg" height="400", alt="Article Rewriting">
+      <img src="docs/images/Article%20Rewriting%20Flow.jpg" width="400", alt="Article Rewriting">
   </p>
 
 This is the current article harmonisation flow. This diagram will be continually updated as more nodes are added in.
@@ -61,6 +62,7 @@ Copy your new token and paste it under your `.env` file.
 Finally, head to [`quickstart.py`](examples/quickstart.py) and run the file to check if your packages are working.
 
 ### Setting up LLM Observability via arize-phoenix
+
 To set up the `arize-phoenix` LLM observability server -
 
 ```python
@@ -73,6 +75,7 @@ If you are unable to run the server, perform the following command - `pip instal
 ## Instruction to run the project
 
 ### Running the Optimisation Checks Workflow
+
 To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `harmonisation.py` and run the file to start the article harmonisation process.
 
 Currently, the article harmonisation and optimisation is a single process but it might be bound to change in future developments.
@@ -90,8 +93,8 @@ To run the agentic framework on CLI -
 
 ### Running the Article Rewriting Workflow
 
-
 ### Running the streamlit application
+
 > [!WARNING]
 > The streamlit application is merely for prototyping purposes. It is not actively maintained due to the change in direction (i.e. generating Excel files instead).
 
@@ -107,18 +110,18 @@ To run the `streamlit` application -
 ## File Structure
 
 - [`agents`](agents): contains all the classes and functions to initialise the models, roles and prompts
-  - [`enums.py`](agents/enums.py):
+  - [`enums.py`](agents/enums.py): python file containing classes to initialise the models from HuggingFace/Azure OpenAI and the roles involved in the Agentic Workflow
   - [`models.py`](agents/models.py): python file containing classes to instantiate each LLM used in the project
   - [`prompts.py`](agents/prompts.py): python file containing classes to instantiate prompts unique to each LLM type. Do note that different LLM will have different prompts that can be retrieved under their respective classes
   - [`prompts_archive.py`](agents/prompts_archive.py): python file containing classes to instantiate older prompts for each LLM type. Used to archive old prompts.
 - [`data`](data): contains all the datasets pertaining to this project
-  - [`final_articles`](data/final_articles):
+  - [`final_articles`](data/marked_articles):
   - [`optimization_checks`](data/optimization_checks):
 - [`docs`](docs): contains all miscellaneous documents pertaining to this project
   - [`images/`](docs/images): contains all images pertaining to this project
   - [`txt_outputs/`](docs/txt_outputs): contains all generated outputs from the chosen model when harmonisation.py is executed (stored as .txt file)
-- [`examples`](examples):
-  - [`quickstart.py`](examples/quickstart.py):
+- [`examples`](examples): contains all the examples to test the execution of the LLM model
+  - [`quickstart.py`](examples/quickstart.py): python file containing the script to test whether the Azure OpenAI model is working. Run this file to test if the azure resources and identity is functional.
 - [`notebooks`](notebooks): contains all the Jupyter Notebooks to evaluate the project
   - [`calculate_tokens.ipynb`](notebooks/calculate_tokens.ipynb): Jupyter Notebook to calculate the tokens consumed by running the project for all articles
   - [`compare.ipynb`](notebooks/compare.ipynb):
@@ -131,14 +134,14 @@ To run the `streamlit` application -
   - [`arize-phoenix.py`](utils/arize-phoenix.py): python file containing the functions related to `arize-phoenix` LLM Observability package
   - [`counter.py`](utils/counter.py):
   - [`evaluations.py`](utils/evaluations.py): python file containing the metrics to evaluate the articles
-  - [`formatters.py](utils/formatters.py):
+  - [`formatters.py`](utils/formatters.py):
   - [`graphs.py`](utils/graphs.py):
   - [`paths.py`](utils/paths.py):
   - [`reducers.py`](utils/reducers.py):
 - [`.env.example`](.env.example):
-- [`app.py`](app.py):
-- [`checks.py`](checks.py):
+- [`app.py`](app.py): python file containing the streamlit application
+- [`checks.py`](checks.py): python file containing the Article Optimisation Checks workflow. Run this file to execute the optimisation checks process
 - [`config.py`](config.py):
-- [`harmonisation.py`](harmonisation.py): python file containing the graph. Run this file to run the article harmonisation process
+- [`harmonisation.py`](harmonisation.py): python file containing the Article Rewriting workflow. Run this file to execute the rewriting process
 - [`main.py`](main.py):
 - [`requirements.txt`](requirements.txt): txt file containing all the packages need to run the project
