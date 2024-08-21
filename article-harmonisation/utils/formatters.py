@@ -22,7 +22,7 @@ MERGED_DF = pq.read_table(MERGED_DATA_DIRECTORY)
 # TODO: Clean up formatters.py to be more presentable and structured
 
 
-def get_article_list_indexes(article_ids: list, setting: str = "ids") -> list[int]:
+def get_article_list_indexes(article_ids: list, setting: str = "title") -> list:
     """
     Get indexes of articles in the MERGED_DF based on title or filename.
 
@@ -37,8 +37,6 @@ def get_article_list_indexes(article_ids: list, setting: str = "ids") -> list[in
     Raises:
         ValueError: If setting is not "title" or "filename".
     """
-
-def get_article_list_indexes(article_ids: list, setting: str = "title") -> list:
     article_list_idx = []
     if setting == "ids":
         # Extract article indexes based on "ids" column from MERGED_DF
@@ -130,6 +128,7 @@ def extract_content_for_evaluation(
 
     return article_details
 
+
 def concat_headers_to_content(article_id: list) -> list[str]:
     """
     Concatenate headers to content for given articles.
@@ -167,7 +166,7 @@ def concat_headers_to_content(article_id: list) -> list[str]:
                 x += 1
                 header_title = header_details[0].as_py()
                 # Some header_titles are just empty strings, which cannot run .split(). This if statement checks if the header_title is an empty string first.
-                if header_title not in TO_REMOVE:
+                if len(header_title.strip()) == 0:
                     header_type = header_details[1].as_py()
 
                     # checks if the specific header type exists as a key in header_dictionary
@@ -177,7 +176,6 @@ def concat_headers_to_content(article_id: list) -> list[str]:
                     header_list.append(header_title)
                     header_dictionary[header_type] = header_list
 
-                    
                     match header_type:
                         case "h1":
                             header = f"h1 Main Header: {header_title}"
@@ -217,7 +215,7 @@ def concat_headers_to_content(article_id: list) -> list[str]:
 
         for new_content in split_content:
             # checking if there are empty strings in split_content and empty headers
-            if new_content not in TO_REMOVE:
+            if len(new_content.strip()) > 0:
                 final_labelled_article += new_content + "\n"
 
         final_configured_articles.append(final_labelled_article)
@@ -254,6 +252,7 @@ def extract_article_details(articles: list) -> tuple[list[int], list[str]]:
 
     return article_ids, urls
 
+
 def split_into_list(optimised_items: str, num_of_items: int):
     """This function takes an input where
 
@@ -288,7 +287,7 @@ def split_into_list(optimised_items: str, num_of_items: int):
         item = item_list[item_idx]
 
         # checks if the item is an empty string
-        if item in TO_REMOVE:
+        if len(item.strip()) == 0:
             idx_to_remove.append(item_idx)
 
         # regex to remove ", \\n, \\ from each item
@@ -310,24 +309,24 @@ def split_into_list(optimised_items: str, num_of_items: int):
 
 def print_checks(result: dict, model: str) -> None:
     """
-    Prints and saves the key outputs from the harmonisation process for various stages of article optimization.
+        Prints and saves the key outputs from the harmonisation process for various stages of article optimization.
 
-    This function generates a report containing the following information:
-    1. Researcher LLM outputs: Prints out the sentences in their respective categories, including sentences omitted by the LLM.
-    2. Compiler LLM outputs: Prints out the compiled keypoints.
-    3. Content optimization LLM outputs: Prints out the optimized article content.
-    4. Title optimization LLM outputs: Prints out the optimized title.
-    5. Meta description optimization LLM outputs: Prints out the optimized meta description.
+        This function generates a report containing the following information:
+        1. Researcher LLM outputs: Prints out the sentences in their respective categories, including sentences omitted by the LLM.
+        2. Compiler LLM outputs: Prints out the compiled keypoints.
+        3. Content optimization LLM outputs: Prints out the optimized article content.
+        4. Title optimization LLM outputs: Prints out the optimized title.
+        5. Meta description optimization LLM outputs: Prints out the optimized meta description.
 
-    The results are saved to a text file specific to the provided model.
->>>>>>> article-harmonisation
+        The results are saved to a text file specific to the provided model.
+    >>>>>>> article-harmonisation
 
-    Args:
-        result (dict): A dictionary containing the final outputs from the graph.
-        model (str): The name of the model, used for naming the output file.
+        Args:
+            result (dict): A dictionary containing the final outputs from the graph.
+            model (str): The name of the model, used for naming the output file.
 
-    Note:
-        The function writes the output to a text file in the 'article-harmonisation/docs/txt_outputs' directory.
+        Note:
+            The function writes the output to a text file in the 'article-harmonisation/docs/txt_outputs' directory.
     """
 
     # Determine the number of articles undergoing the harmonisation process

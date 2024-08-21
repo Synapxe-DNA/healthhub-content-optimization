@@ -687,7 +687,7 @@ class AzurePrompts(LLMPrompt):
         compiler_prompt = [
             (
                 "system",
-                """ 
+                """
                 Your task is to compare and merge the keypoints and their content given to you.
                 Your final answer be a final compilation of all the keypoints from the two articles, with no loss in information and no duplicated sentences.
                 You are NOT supposed to summarise the content.
@@ -1214,7 +1214,7 @@ class AzurePrompts(LLMPrompt):
 
         Returns:
             list[tuple[str, str]]: a list containing the title optimisation prompt. {Content} is the only input required to invoke the prompt.
-        """        
+        """
         match step:
             case "optimise title":
                 optimise_title_prompt = [
@@ -1339,6 +1339,7 @@ class AzurePrompts(LLMPrompt):
                 ]
 
                 return shorten_title
+
     @staticmethod
     def return_meta_desc_prompt(step: str) -> list[tuple[str, str]]:
         """
@@ -1373,7 +1374,7 @@ class AzurePrompts(LLMPrompt):
                         ### End of guidelines
 
                         Check through your writing carefully.
-                        
+
                 """,
                     ),
                     (
