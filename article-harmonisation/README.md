@@ -1,23 +1,35 @@
-## Article harmonisation
+# Article harmonisation
 
-This project will be utilizing Large Language Model (LLM) graphs to harmominise similar articles, followed article optimisation based on HealthHub content playbook guidelines.
+## Introduction
 
-The models are deployed through HuggingFace Endpoints. Currnetly, this project uses [mistralai/Mistral-7B-Instruct-v0.3](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3) from HuggingFace.
+This project will be utilizing Large Language Model (LLM) graphs to harmonise similar articles, followed article optimisation based on HealthHub content playbook guidelines.
+The models are deployed through Azure OpenAI Endpoints. Currently, this project uses [GPT-4o-mini](https://azure.microsoft.com/en-us/blog/openais-fastest-model-gpt-4o-mini-is-now-available-on-azure-ai/) from Microsoft Azure.
+
+> [!WARNING] 
+> The prompts for the HuggingFace models are not updated as we no longer use them. You will need to update the prompts and LLM Chains to mimic the implementation for Azure OpenAI Chat models.
+
+The article harmonisation process is broken up into 2 stages -
+
+1. Article Optimisation Checks
+  <p align="center">
+      <img src="docs/images/Optimisation%20Checks%20Flow.jpg" height="400", alt="Article Optimisation Checks">
+  </p>
+2. Article Rewriting
+  <p align="center">
+      <img src="docs/images/Article%20Rewriting%20Flow.jpg" height="400", alt="Article Rewriting">
+  </p>
 
 This is the current article harmonisation flow. This diagram will be continually updated as more nodes are added in.
-
-<p align="center">
-    <img src="docs/images/Article harmonisation flow 1.png" height="500", alt="Article Harmonisation Flow">
-</p>
 
 ## Rules and Guidelines
 
 - Don't remove any lines from the `.gitignore` file provided (although you may modify or add to it)
-- Do not add any prompts into the repo due to potential leak of personal information
 - Don't commit data to the repository
 - Don't commit any credentials or local configuration to the repository. Remember to add `.env` to `.gitignore`
 
 ## Installation guide
+
+### Installing Relevant Packages
 
 Start by installing all the packages required to run the project.
 
@@ -25,18 +37,42 @@ Start by installing all the packages required to run the project.
 pip install -r requirements.txt
 ```
 
-Next, head to the [HuggingFace website](https://huggingface.co/) and create a new access token under `settings`.
+### Setting up Microsoft Azure OpenAI
 
-Copy your new token and paste it under your `.env` file. The token should be able to `write`. Be sure to save it under `.env` like so:
+First, install the Azure Command-Line Interface (CLI) to access the Azure resources. Refer to this [guide](https://learn.microsoft.com/en-us/cli/azure/) for the installation procedures.
 
-```env
-HUGGINGFACEHUB_API_TOKEN = "YOUR_TOKEN_HERE"
+Sign in to your Azure account via the CLI. Refer to this [guide](https://learn.microsoft.com/en-us/cli/azure/authenticate-azure-cli-managed-identity).
+
+After a successful login, run the following command to check that your credentials are saved -
+
+```bash
+  az account show
 ```
 
-Finally, head to [`harmonisation.py`](harmonisation.py) and run the file to check if your packages are working.
+Next, head to the [Microsoft Azure](https://www.portal.azure.com/#home) and set up the Azure OpenAI Chat Model Deployment.
+
+Copy your new token and paste it under your `.env` file.
+
+- Set the Resource Name as `AZURE_OPENAI_API_SERVICE`
+- Set the Deployment Name as `AZURE_DEPLOYMENT_NAME`.
+- Set the Endpoint URL (`AZURE_OPENAI_ENDPOINT`) as `f"https://{AZURE_OPENAI_API_SERVICE}.openai.azure.com/"`. Replace `{AZURE_OPENAI_API_SERVICE}` in the URL.
+- Set the `AZURE_OPENAI_API_VERSION` to the latest version mentioned [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/api-version-deprecation)
+
+Finally, head to [`quickstart.py`](examples/quickstart.py) and run the file to check if your packages are working.
+
+### Setting up LLM Observability via arize-phoenix
+To set up the `arize-phoenix` LLM observability server -
+
+```python
+    # Launches the web server at http://127.0.0.1:6006
+    python3 -m phoenix.server.main serve
+```
+
+If you are unable to run the server, perform the following command - `pip install 'arize-phoenix[evals]'`. For more information, refer to [`Phoenix Setup Environment`](https://docs.arize.com/phoenix/setup/environments).
 
 ## Instruction to run the project
 
+### Running the Optimisation Checks Workflow
 To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `harmonisation.py` and run the file to start the article harmonisation process.
 
 Currently, the article harmonisation and optimisation is a single process but it might be bound to change in future developments.
@@ -52,6 +88,13 @@ To run the agentic framework on CLI -
     python3 ./article-harmonisation/harmonisation.py
 ```
 
+### Running the Article Rewriting Workflow
+
+
+### Running the streamlit application
+> [!WARNING]
+> The streamlit application is merely for prototyping purposes. It is not actively maintained due to the change in direction (i.e. generating Excel files instead).
+
 To run the `streamlit` application -
 
 ```python
@@ -61,22 +104,13 @@ To run the `streamlit` application -
     streamlit run ./app.py
 ```
 
-To set up the `arize-phoenix` LLM observability server -
-
-```python
-    # Launches the web server at http://127.0.0.1:6006
-    python3 -m phoenix.server.main serve
-```
-
-If you are unable to run the server, perform the following command - `pip install 'arize-phoenix[evals]'`. For more information, refer to [`Phoenix Setup Environment`](https://docs.arize.com/phoenix/setup/environments).
-
 ## File Structure
 
 - [`agents`](agents): contains all the classes and functions to initialise the models, roles and prompts
   - [`enums.py`](agents/enums.py):
   - [`models.py`](agents/models.py): python file containing classes to instantiate each LLM used in the project
   - [`prompts.py`](agents/prompts.py): python file containing classes to instantiate prompts unique to each LLM type. Do note that different LLM will have different prompts that can be retrieved under their respective classes
-  - [`prompts_archive.py`](agents/prompts_archive.py):
+  - [`prompts_archive.py`](agents/prompts_archive.py): python file containing classes to instantiate older prompts for each LLM type. Used to archive old prompts.
 - [`data`](data): contains all the datasets pertaining to this project
   - [`final_articles`](data/final_articles):
   - [`optimization_checks`](data/optimization_checks):
