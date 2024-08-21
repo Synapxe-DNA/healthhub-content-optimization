@@ -22,20 +22,20 @@ MERGED_DF = pq.read_table(MERGED_DATA_DIRECTORY)
 # TODO: Clean up formatters.py to be more presentable and structured
 
 
-def get_article_list_indexes(article_ids: list, setting: str = "title") -> list:
+def get_article_list_indexes(article_ids: list, setting: str = "ids") -> list:
     """
-    Get indexes of articles in the MERGED_DF based on title or filename.
+    Get indexes of articles in the MERGED_DF based on ids or filename.
 
     Args:
         article_ids (list): List of article ids to search for.
         setting (str, optional): Setting to determine search method.
-            Can be "title" or "filename". Defaults to "title".
+            Can be "ids" or "filename". Defaults to "ids".
 
     Returns:
         list: List of indexes in MERGED_DF where the articles were found.
 
     Raises:
-        ValueError: If setting is not "title" or "filename".
+        ValueError: If setting is not "ids" or "filename".
     """
     article_list_idx = []
     if setting == "ids":
