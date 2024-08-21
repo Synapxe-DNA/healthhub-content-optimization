@@ -592,6 +592,7 @@ def check_optimised_meta_descs_length(state):
     # For loop iterating thought all article meta desc to check if all meta desc have more than 70 characters and has less than 160 characters.
     for meta_desc in optimised_article_meta_desc:
         num_of_char = len(meta_desc)
+        print(meta_desc, num_of_char)
         if num_of_char <= 70 or num_of_char >= 160:
             print("Optimised meta descriptions do not meet the length requirements.")
             return "meta_description_optimisation_node"

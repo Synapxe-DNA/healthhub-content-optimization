@@ -1,9 +1,11 @@
 import re
 from abc import ABC, abstractmethod
+from operator import itemgetter
 
 from config import settings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_openai import AzureChatOpenAI
 
@@ -663,14 +665,33 @@ class Azure(LLMInterface):
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_title()"
             )
-        prompt_t = ChatPromptTemplate.from_messages(
-            self.prompt_template.return_title_prompt()
+        optimise_title_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_title_prompt("optimise title")
         )
 
-        chain = prompt_t | self.model | StrOutputParser()
+        shorten_title_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_title_prompt("shorten title")
+        )
+
+        optimise_title_chain = (
+            optimise_title_prompt
+            | self.model
+            | StrOutputParser()
+            | {"title": RunnablePassthrough()}
+        )
+        shorten_title_chain = shorten_title_prompt | self.model | StrOutputParser()
+        chain = (
+            optimise_title_chain
+            | {"content": itemgetter("title")}
+            | RunnableParallel(title=shorten_title_chain)
+        )
+
         print("Optimising article title...")
         response = chain.invoke({"content": content, "feedback": feedback})
         print("Article title optimised")
+
+        response = response["title"]
+
         return response
 
     def optimise_meta_desc(self, content, feedback):
@@ -678,14 +699,32 @@ class Azure(LLMInterface):
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_meta_desc()"
             )
-        prompt_t = ChatPromptTemplate.from_messages(
-            self.prompt_template.return_meta_desc_prompt()
+        optimise_meta_desc_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_meta_desc_prompt("optimise meta desc")
         )
 
-        chain = prompt_t | self.model | StrOutputParser()
+        shorten_meta_desc_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_meta_desc_prompt("shorten meta desc")
+        )
+
+        optimise_meta_desc_chain = (
+            optimise_meta_desc_prompt
+            | self.model
+            | StrOutputParser()
+            | {"meta_desc": RunnablePassthrough()}
+        )
+        shorten_meta_desc_chain = (
+            shorten_meta_desc_prompt | self.model | StrOutputParser()
+        )
+        chain = (
+            optimise_meta_desc_chain
+            | {"content": itemgetter("meta_desc")}
+            | RunnableParallel(meta_desc=shorten_meta_desc_chain)
+        )
         print("Optimising article meta description...")
         response = chain.invoke({"content": content, "feedback": feedback})
         print("Article meta description optimised")
+        response = response["meta_desc"]
         return response
 
 

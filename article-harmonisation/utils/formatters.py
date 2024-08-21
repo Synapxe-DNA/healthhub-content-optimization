@@ -127,10 +127,10 @@ def concat_headers_to_content(article_id: list):
                             if "h5" in header_dictionary.keys():
                                 header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}"
                     if not split_content:
-                        split_content.extend(article_content.split(header_title))
+                        split_content.extend(article_content.split(header_title, 1))
                     else:
                         last_content = split_content.pop()
-                        split_content.extend(last_content.split(header_title))
+                        split_content.extend(last_content.split(header_title, 1))
 
                     split_content[-1] = header + "\n" + split_content[-1][1:]
 

@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from agents.enums import ROLES
 from agents.models import start_llm
 from config import settings
@@ -16,6 +16,7 @@ USER_ANNOTATION = "article-harmonisation/data/optimization_checks/Stage 1 user a
 
 OPTIMISATION_SHEET_NAME = "Article Optimisation Output"
 HARMONISATION_SHEET_NAME = "Article Harmonisation Output"
+
 
 def optimise_articles(app):
     # Opening the excel contents
@@ -188,7 +189,6 @@ def harmonise_articles(app):
         # Determining if number of unique sub-groups
         sub_group_numbers = grouped_articles_to_harmonise["Subgroup"].unique()
         sub_group_numbers = sub_group_numbers[~np.isnan(sub_group_numbers)]
-        num_of_sub_groups = len(sub_group_numbers)
         print(f"Sub groups in group {group_num}: {sub_group_numbers}")
 
         # For loop iterating through each sub group in a specific group flagged for harmonisation
@@ -230,10 +230,14 @@ def harmonise_articles(app):
                 article_url = article["url"]
                 article_page_views = article["page_views"]
                 # If additional input cell in the Excel sheet is empty, it returns nan, which is of float type. Hence, if it's a float type, we set it to "".
-                if isinstance(article["User: additional content to add for harmonisation"], float):
+                if isinstance(
+                    article["User: additional content to add for harmonisation"], float
+                ):
                     article_additional_inputs = ""
                 else:
-                    article_additional_inputs = article["User: additional content to add for harmonisation"]
+                    article_additional_inputs = article[
+                        "User: additional content to add for harmonisation"
+                    ]
                 article_title = article["title"]
 
                 # Appending article id to article_sub_group_ids
@@ -347,5 +351,5 @@ if __name__ == "__main__":
 
     app = build_graph()
 
-    harmonise_articles(app)
-    # optimise_articles(app)
+    # harmonise_articles(app)
+    optimise_articles(app)
