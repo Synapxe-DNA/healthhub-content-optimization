@@ -197,7 +197,7 @@ def concat_headers_to_content(article_id: list) -> list[str]:
                             header = f"h6 Sub Section: {header_title}"
                             if "h5" in header_dictionary.keys():
                                 header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}"
-                    
+
                     # Split content and add formatted header
                     if not split_content:
                         split_content.extend(article_content.split(header_title, 1))
@@ -309,23 +309,23 @@ def split_into_list(optimised_items: str, num_of_items: int):
 
 def print_checks(result: dict, model: str) -> None:
     """
-        Prints and saves the key outputs from the harmonisation process for various stages of article optimization.
+    Prints and saves the key outputs from the harmonisation process for various stages of article optimization.
 
-        This function generates a report containing the following information:
-        1. Researcher LLM outputs: Prints out the sentences in their respective categories, including sentences omitted by the LLM.
-        2. Compiler LLM outputs: Prints out the compiled keypoints.
-        3. Content optimization LLM outputs: Prints out the optimized article content.
-        4. Title optimization LLM outputs: Prints out the optimized title.
-        5. Meta description optimization LLM outputs: Prints out the optimized meta description.
+    This function generates a report containing the following information:
+    1. Researcher LLM outputs: Prints out the sentences in their respective categories, including sentences omitted by the LLM.
+    2. Compiler LLM outputs: Prints out the compiled keypoints.
+    3. Content optimization LLM outputs: Prints out the optimized article content.
+    4. Title optimization LLM outputs: Prints out the optimized title.
+    5. Meta description optimization LLM outputs: Prints out the optimized meta description.
 
-        The results are saved to a text file specific to the provided model.
+    The results are saved to a text file specific to the provided model.
 
-        Args:
-            result (dict): A dictionary containing the final outputs from the graph.
-            model (str): The name of the model, used for naming the output file.
+    Args:
+        result (dict): A dictionary containing the final outputs from the graph.
+        model (str): The name of the model, used for naming the output file.
 
-        Note:
-            The function writes the output to a text file in the 'article-harmonisation/docs/txt_outputs' directory.
+    Note:
+        The function writes the output to a text file in the 'article-harmonisation/docs/txt_outputs' directory.
     """
 
     # Determine the number of articles undergoing the harmonisation process
