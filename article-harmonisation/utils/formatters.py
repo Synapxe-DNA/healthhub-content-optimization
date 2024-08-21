@@ -159,11 +159,8 @@ def concat_headers_to_content(article_id: list) -> list[str]:
         # Stores headers based on their heading type, h1 - h6
         header_dictionary = {}
 
-        x = 0
-
         if len(article_headers) > 0:
             for header_details in article_headers:
-                x += 1
                 header_title = header_details[0].as_py()
                 # Some header_titles are just empty strings, which cannot run .split(). This if statement checks if the header_title is an empty string first.
                 if len(header_title.strip()) == 0:
