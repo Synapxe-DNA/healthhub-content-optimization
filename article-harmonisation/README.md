@@ -13,11 +13,11 @@ The article harmonisation process is broken up into 2 stages -
 1. Article Optimisation Checks
 
   <p align="center">
-      <img src="docs/images/Optimisation%20Checks%20Flow.jpg" width="400", alt="Article Optimisation Checks">
+      <img src="docs/images/Optimisation%20Checks%20Flow.jpg" width="600", alt="Article Optimisation Checks">
   </p>
 2. Article Rewriting
   <p align="center">
-      <img src="docs/images/Article%20Rewriting%20Flow.jpg" width="400", alt="Article Rewriting">
+      <img src="docs/images/Article%20Rewriting%20Flow.jpg" width="600", alt="Article Rewriting">
   </p>
 
 This is the current article harmonisation flow. This diagram will be continually updated as more nodes are added in.
@@ -76,6 +76,23 @@ If you are unable to run the server, perform the following command - `pip instal
 
 ### Running the Optimisation Checks Workflow
 
+To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to [`checks.py`](checks.py) and run the file to start the article optimization checks workflow.
+
+Currently, the article optimization checks is ran concurrently within the workflow. This may result in deadlocks.
+
+To run the agentic framework on CLI -
+
+```python
+    # Install the requirements within `article-harmonisation` directory
+    pip install -r requirements.txt
+    # Change directory to ROOT
+    cd ..
+    # Run the python script
+    python3 ./article-harmonisation/checks.py
+```
+
+### Running the Article Rewriting Workflow
+
 To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `harmonisation.py` and run the file to start the article harmonisation process.
 
 Currently, the article harmonisation and optimisation is a single process but it might be bound to change in future developments.
@@ -90,8 +107,6 @@ To run the agentic framework on CLI -
     # Run the python script
     python3 ./article-harmonisation/harmonisation.py
 ```
-
-### Running the Article Rewriting Workflow
 
 ### Running the streamlit application
 
@@ -115,8 +130,8 @@ To run the `streamlit` application -
   - [`prompts.py`](agents/prompts.py): python file containing classes to instantiate prompts unique to each LLM type. Do note that different LLM will have different prompts that can be retrieved under their respective classes
   - [`prompts_archive.py`](agents/prompts_archive.py): python file containing classes to instantiate older prompts for each LLM type. Used to archive old prompts.
 - [`data`](data): contains all the datasets pertaining to this project
-  - [`final_articles`](data/marked_articles):
-  - [`optimization_checks`](data/optimization_checks):
+  - [`final_articles`](data/marked_articles): contains the dataframes that are marked for article optimisation checks
+  - [`optimization_checks`](data/optimization_checks): contains all the dataframes generated from the execution of `checks.py`
 - [`docs`](docs): contains all miscellaneous documents pertaining to this project
   - [`images/`](docs/images): contains all images pertaining to this project
   - [`txt_outputs/`](docs/txt_outputs): contains all generated outputs from the chosen model when harmonisation.py is executed (stored as .txt file)
@@ -124,24 +139,22 @@ To run the `streamlit` application -
   - [`quickstart.py`](examples/quickstart.py): python file containing the script to test whether the Azure OpenAI model is working. Run this file to test if the azure resources and identity is functional.
 - [`notebooks`](notebooks): contains all the Jupyter Notebooks to evaluate the project
   - [`calculate_tokens.ipynb`](notebooks/calculate_tokens.ipynb): Jupyter Notebook to calculate the tokens consumed by running the project for all articles
-  - [`compare.ipynb`](notebooks/compare.ipynb):
-  - [`evalauate_word_count.ipynb`](notebooks/evaluate_word_count.ipynb):
-  - [`generate_annotation_excel.ipynb`](notebooks/generate_annotation_excel.ipynb):
+  - [`evalauate_word_count.ipynb`](notebooks/evaluate_word_count.ipynb): Jupyter Notebook to find a suitable threshold to perform `flag_below_word_count` for each content category
+  - [`generate_annotation_excel.ipynb`](notebooks/generate_annotation_excel.ipynb): Jupyter Notebook to generate the Excel file from the Optimisation Checks output
   - [`readability_scores.ipynb`](notebooks/readability_scores.ipynb): Jupyter Notebook to calculate the readability scores for all articles
-- [`states`](states):
-  - [`definitions.py`](states/definitions.py):
+- [`states`](states): contains all the states used for the LangGraph workflow
+  - [`definitions.py`](states/definitions.py): python file containing the TypedDict definitions used in the Optimisation Checks and Article Rewriting workflow
 - [`utils`](utils): contains all the utility functions pertaining to this project
   - [`arize-phoenix.py`](utils/arize-phoenix.py): python file containing the functions related to `arize-phoenix` LLM Observability package
-  - [`counter.py`](utils/counter.py):
   - [`evaluations.py`](utils/evaluations.py): python file containing the metrics to evaluate the articles
-  - [`formatters.py`](utils/formatters.py):
-  - [`graphs.py`](utils/graphs.py):
-  - [`paths.py`](utils/paths.py):
-  - [`reducers.py`](utils/reducers.py):
-- [`.env.example`](.env.example):
+  - [`formatters.py`](utils/formatters.py): python file containing functions to format inputs and outputs for ingestion and presentation purposes
+  - [`graphs.py`](utils/graphs.py): python file containing functions to create, execute and draw LangGraph objects
+  - [`paths.py`](utils/paths.py): python file to set the ROOT directory of the project (set at `healthhub-content-optimization`)
+  - [`reducers.py`](utils/reducers.py): python file to support the merging of dictionaries when Optimisation Checks workflow is executed.
+- [`.env.example`](.env.example): a template file for `.env` to contain the environment variables for the project.
 - [`app.py`](app.py): python file containing the streamlit application
 - [`checks.py`](checks.py): python file containing the Article Optimisation Checks workflow. Run this file to execute the optimisation checks process
-- [`config.py`](config.py):
+- [`config.py`](config.py): python file containing the initialisation of environment variables for use within the project
 - [`harmonisation.py`](harmonisation.py): python file containing the Article Rewriting workflow. Run this file to execute the rewriting process
-- [`main.py`](main.py):
-- [`requirements.txt`](requirements.txt): txt file containing all the packages need to run the project
+- [`main.py`](main.py): python file to run the project
+- [`requirements.txt`](requirements.txt): txt file containing all the packages needed to run the project
