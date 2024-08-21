@@ -61,21 +61,49 @@ def researcher_node(state):
             - keypoints: an updated list storing keypoints from all articles output from the researcher node
             - article_researcher_counter: an integer serving as a counter for number of articles processed by the researcher node
     """
-    article_list = state.get("original_article_inputs")["article_content"]
-    keypoints = state.get("optimised_article_output")["researcher_keypoints"]
+
+    # Extracting all article titles from state.
+    original_article_inputs = state.get("original_article_inputs")
+    article_titles = original_article_inputs["article_title"]
+
+    # Extracting all original article content
+    article_list = original_article_inputs["article_content"]
+
+    # Extracting researcher keypoints. All outputs from the researcher agent will be appended to this list which will be returned at the end of this node.
+    keypoints = state.get("optimised_article_output", [])["researcher_keypoints"]
+
+    # Extracting researcher agent from state.
     researcher_agent = state.get("llm_agents")["researcher_agent"]
 
-    article_titles = state.get("original_article_inputs")["article_title"]
-    # For loop iterating through each article
-
+    # For loop iterating through each article.
     for idx in range(len(article_list)):
+        # Extracting the article title
         article_title = article_titles[idx]
+
+        # Extracting the article content
+        article = article_list[idx]
+
+        # Extracting additional content to add to the article from state
+        additional_content = original_article_inputs.get("additional_input")
+
+        # Print statement indicating the start of the research process for the particular article
         print(
             f"Processing keypoints for article {idx + 1} of {len(article_list)}: {article_title}"
         )
-        article = article_list[idx]
+
+        # Generating the keypoints using the researcher agent
         article_keypoints = researcher_agent.generate_keypoints(article)
+
+        # If statement for running additional_keypoints_agent
+        if not isinstance(additional_content, float):
+            article_keypoints = researcher_agent.add_additional_content(
+                keypoints=article_keypoints, additional_content=additional_content
+            )
+
+        # Add the generated keypoints to the keypoints list
         keypoints.append(article_keypoints)
+
+        # Print statement indicating the end of the research process for the particular article
         print(f"Finished processing keypoints for {article_title}")
 
     return {
@@ -118,16 +146,31 @@ def meta_description_optimisation_node(state):
             - meta_desc: a String containing the optimised meta description from the meta description optimisation LLM
             - flag_for_meta_desc_optimisation: a False boolean value to indicate that the meta description optimisation step has been completed
     """
+    # Extracting optimised_article_output dictionary from the state
     optimised_article_output = state.get("optimised_article_output")
 
+    # Extracting researcher points. Researcher keypoints are used for meta desc optimisation IF the article has not been flagged for article optimisation i.e. there will be no input for the optimise_writing key
     content = optimised_article_output["researcher_keypoints"]
+
+    # Sets content as optimised writing, if it exists
     if "optimised_writing" in optimised_article_output.keys():
         content = optimised_article_output["optimised_writing"]
 
+    # Extracting meta desc feedback from the state
+    article_evaluation = state.get("article_evaluation")
+    if article_evaluation is None:
+        article_evaluation = {}
+    meta_desc_feedback = article_evaluation.get("reasons_for_irrelevant_meta_desc", "")
+
+    # Extracting the meta desc optimisation agent from state
     meta_desc_optimisation_agent = state.get("llm_agents")[
         "meta_desc_optimisation_agent"
     ]
-    optimised_meta_desc = meta_desc_optimisation_agent.optimise_meta_desc(content)
+
+    # Obtaining the optimised meta desc from the agent
+    optimised_meta_desc = meta_desc_optimisation_agent.optimise_meta_desc(
+        content=content, feedback=meta_desc_feedback
+    )
 
     # Splitting the string of optimised article meta desc into a list where each meta desc is an individual item
     optimised_article_meta_desc = split_into_list(
@@ -156,14 +199,28 @@ def title_optimisation_node(state):
             - article_title: a String containing the optimised title from the title optimisation LLM
             - flag_for_title_optimisation: a False boolean value to indicate that the title optimisation step has been completed
     """
+    # Extracting optimised_article_output dictionary from the state
     optimised_article_output = state.get("optimised_article_output")
 
+    # Extracting researcher points. Researcher keypoints are used for title optimisation IF the article has not been flagged for article optimisation i.e. there will be no input for the optimise_writing key
     content = optimised_article_output["researcher_keypoints"]
+
+    # Sets content as optimised writing, if it exists
     if "optimised_writing" in optimised_article_output.keys():
         content = optimised_article_output["optimised_writing"]
 
+    # Extracting title feedback from the state
+    article_evaluation = state.get("article_evaluation")
+    if article_evaluation is None:
+        article_evaluation = {}
+    title_feedback = article_evaluation.get("reasons_for_irrelevant_title", "")
+
+    # Extracting the title optimisation agent from state
     title_optimisation_agent = state.get("llm_agents")["title_optimisation_agent"]
-    optimised_article_title = title_optimisation_agent.optimise_title(content)
+
+    optimised_article_title = title_optimisation_agent.optimise_title(
+        content=content, feedback=title_feedback
+    )
 
     # Splitting the string of optimised article titles into a list where each title is an individual item
     optimised_article_titles = split_into_list(
@@ -466,24 +523,7 @@ def check_num_of_tries_after_readability_optimisation(state):
     # Checks if number of rewriting tries > limit. If so, the state stops readability optimisation and moves on to subsequent optimisation nodes.
     if rewriting_tries > REWRITING_TRIES:
         print("Number of writing retries exceeded limit hit")
-
-        # Extracts user flags for title and meta desc optimisation
-        title_optimisation_flags = state.get("user_flags")[
-            "flag_for_title_optimisation"
-        ]
-        meta_desc_optimisation_flags = state.get("user_flags")[
-            "flag_for_meta_desc_optimisation"
-        ]
-
-        if title_optimisation_flags:
-            # Moves state to title optimisation node if article has been flagged for title optimisation
-            return "title_optimisation_node"
-        elif meta_desc_optimisation_flags:
-            # Moves state to meta desc optimisation node if article has been flagged for meta desc optimisation
-            return "meta_description_optimisation_node"
-        else:
-            # If not other optimisation steps are needed, article optimisation ends.
-            return END
+        return "personality_guidelines_evaluation_node"
 
     elif new_readability_score < 10:
         # If readability score < 10, send for personality evaluation
@@ -565,10 +605,17 @@ def check_readability_after_writing_optimisation(state):
     optimised_article_output = state.get("optimised_article_output")
     new_readability_score = optimised_article_output["readability_score"]
 
-    if new_readability_score < 10:
-        print(
-            f"Readability score is now {new_readability_score} and considered readable"
-        )
+    # Extracting the number of article rewriting tries
+    rewriting_tries = state.get("article_rewriting_tries")
+
+    if new_readability_score < 10 or rewriting_tries >= REWRITING_TRIES:
+        if new_readability_score < 10:
+            print(
+                f"Readability score is now {new_readability_score} and considered readable."
+            )
+
+        else:
+            print("Number of writing retries exceeded limit hit.")
         # Checks if article is flagged for title and meta_desc optimisation
         title_optimisation_flags = state.get("user_flags")[
             "flag_for_title_optimisation"
@@ -658,9 +705,6 @@ def build_graph():
             {
                 "readability_optimisation_node": "readability_optimisation_node",
                 "personality_guidelines_evaluation_node": "personality_guidelines_evaluation_node",
-                "title_optimisation_node": "title_optimisation_node",
-                "meta_description_optimisation_node": "meta_description_optimisation_node",
-                END: END,
             },
         ),
         "personality_guidelines_evaluation_node": (

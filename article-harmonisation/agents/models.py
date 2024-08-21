@@ -502,13 +502,52 @@ class Azure(LLMInterface):
             )
 
         prompt_t = ChatPromptTemplate.from_messages(
-            self.prompt_template.return_researcher_prompt(),
+            self.prompt_template.return_researcher_prompt("generate keypoints"),
         )
 
         chain = prompt_t | self.model | StrOutputParser()
         res = chain.invoke({"Article": article})
         response = re.sub(" +", " ", res)
 
+        return response
+
+    def add_additional_content(self, keypoints: str, additional_content: str):
+        """
+        Adds additional content form the user.
+
+        Args:
+            keypoints: a string input of the keypoints from the researcher node
+            additional_content: a string input of the additional content ot be added to the article
+
+        Returns:
+            answer: a string containing the keypoints and additional content
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
+        """
+        # Raise an error if the role is not a compiler
+        if self.role != ROLES.RESEARCHER:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run add_additional_content()"
+            )
+
+        # Extracting the additional content prompt
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_researcher_prompt("add additional input")
+        )
+
+        # Declaring the chain
+        chain = prompt_t | self.model | StrOutputParser()
+
+        # Invoking the chain with the required inputs
+        res = chain.invoke(
+            {"additional_content": additional_content, "content": keypoints}
+        )
+
+        # Regex to remove white spaces
+        response = re.sub(" +", " ", res)
+
+        # Returning the response from the llm after regex
         return response
 
     def compile_points(self, keypoints: list = []):
@@ -559,7 +598,7 @@ class Azure(LLMInterface):
 
         return response
 
-    def optimise_content(self, keypoints, structure_evaluation: str = ""):
+    def optimise_content(self, keypoints):
         if self.role != ROLES.CONTENT_OPTIMISATION:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_content()"
@@ -574,7 +613,6 @@ class Azure(LLMInterface):
         res = chain.invoke(
             {
                 "Keypoints": keypoints,
-                #  "Structure_evaluation": structure_evaluation
             }
         )
         print("Article content optimised")
@@ -620,7 +658,7 @@ class Azure(LLMInterface):
         )
         return response
 
-    def optimise_title(self, content):
+    def optimise_title(self, content, feedback):
         if self.role != ROLES.TITLE:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_title()"
@@ -631,11 +669,11 @@ class Azure(LLMInterface):
 
         chain = prompt_t | self.model | StrOutputParser()
         print("Optimising article title...")
-        response = chain.invoke({"Content": content})
+        response = chain.invoke({"content": content, "feedback": feedback})
         print("Article title optimised")
         return response
 
-    def optimise_meta_desc(self, content):
+    def optimise_meta_desc(self, content, feedback):
         if self.role != ROLES.META_DESC:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_meta_desc()"
@@ -646,7 +684,7 @@ class Azure(LLMInterface):
 
         chain = prompt_t | self.model | StrOutputParser()
         print("Optimising article meta description...")
-        response = chain.invoke({"Content": content})
+        response = chain.invoke({"content": content, "feedback": feedback})
         print("Article meta description optimised")
         return response
 

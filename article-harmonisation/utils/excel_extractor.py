@@ -24,6 +24,7 @@ def return_optimisation_flags(article):
             flags["flag_for_meta_desc_optimisation"] = False
         if not article["overall content flags"]:
             flags["flag_for_writing_optimisation"] = False
+        return flags
     except KeyError:
         # Returning the other flags as true as this is a harmonisation flow
         return flags
