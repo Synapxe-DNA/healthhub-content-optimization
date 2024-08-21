@@ -26,6 +26,7 @@ class ArticleInputs(TypedDict):
     content_category: Union[str, Optional[list[str]]]
     article_category_names: Union[str, Optional[list[str]]]
     page_views: Union[int, Optional[list[int]]]
+    additional_input: Optional[str]
 
 
 class ContentFlags(TypedDict):
@@ -117,6 +118,14 @@ class ChecksAgents(TypedDict):
     explanation_agent: LLMInterface
 
 
+class ArticleEvaluation(TypedDict):
+    reasons_for_irrelevant_title: Optional[str]
+    reasons_for_irrelevant_meta_desc: Optional[str]
+    reasons_for_poor_readability: Optional[str]
+    reasons_for_improving_writing_style: Optional[str]
+    writing_has_personality: Optional[bool]
+
+
 class OptimisedArticle(TypedDict):
     """
     A dictionary type definition for storing data related to an optimised article.
@@ -140,8 +149,8 @@ class OptimisedArticle(TypedDict):
     compiled_keypoints: Optional[str]
     optimised_content: Optional[str]
     optimised_writing: Optional[str]
-    optimised_article_title: Optional[str]
-    optimised_meta_desc: Optional[str]
+    optimised_article_title: Optional[list]
+    optimised_meta_desc: Optional[list]
 
 
 class OptimisationFlags(TypedDict):
@@ -185,4 +194,3 @@ class OptimisationAgents(TypedDict):
     meta_desc_optimisation_agent: LLMInterface
     readability_optimisation_agent: LLMInterface
     personality_evaluation_agent: LLMInterface
-    writing_evaluation_agent: LLMInterface

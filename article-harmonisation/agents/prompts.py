@@ -203,7 +203,70 @@ class AzurePrompts(LLMPrompt):
             ),
             ("human", "Evaluate the following article:\n{article}"),
         ]
+        readability_evaluation_prompt = [
+            (
+                "system",
+                """
+                Your task is to break up long sentences with multiple commas into bullet points. Follow the guide below on how you should approach the content.
 
+                Let's think step by step.
+
+                Example 1:
+
+                1. Rewrite the long sentences in this content.
+                    "Taking care of your body and mind is crucial for a long and healthy life. To maintain good health, it's important to eat a balanced diet rich in fruits and vegetables, drink plenty of water, get at least 8 hours of sleep each night, exercise regularly, and avoid harmful habits like smoking and excessive alcohol consumption. Regular check-ups with your doctor are also essential. Don't forget to manage stress effectively."
+
+                2. Start by analyzing each sentences indvidually. This is a long sentence with multiple commas:
+
+                    "To maintain good health,
+                    it's important to eat a balanced diet rich in fruits and vegetables,
+                    drink plenty of water,
+                    get at least 8 hours of sleep each night,
+                    exercise regularly,
+                    and avoid harmful habits like smoking and excessive alcohol consumption."
+
+                3. We will now break this sentence into bullet points, with each item being a separate bullet point.
+                Your final answer:
+                    "Taking care of your body and mind is crucial for a long and healthy life.
+
+                    To maintain good health, it's important to:
+                        - eat a balanced diet rich in fruits and vegetables,
+                        - drink plenty of water,
+                        - get at least 8 hours of sleep each night,
+                        - exercise regularly,
+                        - avoid harmful habits like smoking and excessive alcohol consumption
+
+                    Regular check-ups with your doctor are also essential. Don't forget to manage stress effectively."
+
+                Example 2:
+
+                1. Rewrite the long sentences in this content.
+                    "Achieving high productivity requires deliberate effort and effective strategies. To boost your productivity, it's essential to plan your day ahead, prioritize your tasks, take regular breaks to avoid burnout, stay organized with to-do lists, and minimize distractions like social media and unnecessary meetings. Keep a positive mindset throughout the day. Celebrate small wins to stay motivated."
+
+                2. Start by analyzing each sentences indvidually. This is a long sentence with multiple commas:
+
+                    "To boost your productivity,
+                    it's essential to plan your day ahead,
+                    prioritize your tasks,
+                    take regular breaks to avoid burnout,
+                    stay organized with to-do lists,
+                    and minimize distractions like social media and unnecessary meetings."
+
+                3. We will now break this sentence into bullet points, with each item being a separate bullet point.
+                Your final answer:
+                    "Achieving high productivity requires deliberate effort and effective strategies.
+                    To boost your productivity, you can:
+                        - plan your day ahead,
+                        - prioritize your tasks,
+                        - take regular breaks to avoid burnout,
+                        - stay organized with to-do lists,
+                        - minimize distractions like social media and unnecessary meetings
+
+                    Keep a positive mindset throughout the day. Celebrate small wins to stay motivated."
+                    """,
+            ),
+            ("human", """Rewrite the long sentences in this content.\n {article}"""),
+        ]
         return readability_evaluation_prompt
 
     @staticmethod
@@ -414,7 +477,7 @@ class AzurePrompts(LLMPrompt):
         return meta_desc_evaluation_prompt
 
     @staticmethod
-    def return_researcher_prompt() -> list[tuple[str, str]]:
+    def return_researcher_prompt(step) -> list[tuple[str, str]]:
         """
         Returns the researcher prompt
 
@@ -422,80 +485,137 @@ class AzurePrompts(LLMPrompt):
             list[tuple[str, str]]: a list containing the researcher prompt. {Article} is the only input required to invoke the prompt.
         """
 
-        researcher_prompt = [
-            (
-                "system",
-                """
-                You are part of a article combination process. Your main task is to analyze the headers in the article to identify and omit any unnecessary sentences under the header.
-                You will be given a context guideline as well as a set of instructions.
-                You MUST use the Context guidelines given.
-                You MUST strictly follow the instructions given.
+        match step:
+            case "generate keypoints":
+                researcher_prompt = [
+                    (
+                        "system",
+                        """You are part of a article combination process. Your main task is to analyze the headers in the article to identify and omit any unnecessary sentences under the header.
+                        You will be given a context guideline as well as a set of instructions.
+                        You MUST use the Context guidelines given.
+                        You MUST strictly follow the instructions given.
 
-                ### Start of Context guidelines
-                    You will be given an article with labelled headers.
-                    Each header will have their header type specified at the front of the header title as html tags.
-                    If a header is a sub header or sub section to another header, it will be specified in the following sentence along with the header title that it is a sub section to.
-                    If a header is a sub header or sub section to another header, you MUST use the title of the parent header along with the title of the sub header to determine if the sentences under the sub section is relevant.
-                    Sentences leading to an external link or article SHOULD be omitted.
+                        ### Start of Context guidelines
+                            You will be given an article with labelled headers.
+                            Each header will have their header type specified at the front of the header title as html tags.
+                            If a header is a sub header or sub section to another header, it will be specified in the following sentence along with the header title that it is a sub section to.
+                            If a header is a sub header or sub section to another header, you MUST use the title of the parent header along with the title of the sub header to determine if the sentences under the sub section is relevant.
+                            Sentences leading to an external link or article SHOULD be omitted.
 
-                    Refer to this example and its explanation:
-                        ### Start of header example
-                            h2 Sub Header: Exercises you can do at home  // This is a h2 Sub Header
+                            Refer to this example and its explanation:
+                                ### Start of header example
+                                    h2 Sub Header: Exercises you can do at home  // This is a h2 Sub Header
 
-                            h3 Sub Section: Wall planks // This is a h3 sub section
-                            Sub section to h2 Sub Header: Exercises you can do at home // This h3 subsection is under the h2 sub header "Exercises you can do at home"
-                            # Rest of content
-                        ### End of header example
+                                    h3 Sub Section: Wall planks // This is a h3 sub section
+                                    Sub section to h2 Sub Header: Exercises you can do at home // This h3 subection is under the h2 sub header "Exercises you can do at home"
+                                    # Rest of content
+                                ### End of header example
 
-                    Check through each headline with this context step by step.
-                ### End of Context guidelines
+                            Check through each headline with this context step by step.
+                        ### End of Context guidelines
 
-                ### Start of Instructions
-                Do NOT paraphrase sentences from the given article when assigning the sentence, you must use each sentence directly from the given content.
-                Do NOT modify the headers.
-                ALL sentences in the same header must be joined in a single paragraph.
-                Each sentence must appear only ONCE under the header.
-                Do not rename "Article Header" label.
-                Rename all other article header labels to either "Main keypoint" or "Sub keypoint".
-                If a header has no child headers, the header will be labelled as "Main keypoint".
-                If a header has a parent header, the header will be labelled as "Sub keypoint".
-                Not all sentences are relevant to its header. If a sentence is irrelevant to all headers, you can place it under the last header "Omitted sentences" at the end of the article.
-                Check through each instruction step by step.
-                ### End of Instructions
+                        ### Start of Instructions
+                        Do NOT paraphrase sentences from the given article when assigning the sentence, you must use each sentence directly from the given content.
+                        Each sentence must appear only ONCE under the header.
 
-                Refer to the example below to format your answer accordingly:
+                        Do not rename "Article Header" label.
+                        Rename all other article header labels to either "Main keypoint" or "Sub keypoint".
+                        If a header has no child headers, the header will be labelled as "Main keypoint".
+                        If a header has a parent header, the header will be labelled as "Sub keypoint".
+                        You may come up with a relevant header for additional content and label it as a "Main keypoint".
+                        Not all sentences are relevant to its header. If a sentence is irrelevant to all headers, you can place it under the last header "Omitted sentences" at the end of the article.
+                        You should include citations or references under "Omitted sentences".
+                        Check through each instruction step by step.
+                        ### End of Instructions
+
+                        Refer to the example below to format your answer accordingly:
+                        """,
+                    ),
+                    (
+                        "human",
+                        """
+                        Article Header: Introduction to Parkinson's disease
+                        Content: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
+
+                        Buy these essential oils to recover from Parkinson's Disease!
+
+                        h2 Sub Header: Symptoms of Parkinson's disease
+
+                        h3 Sub Header: Tremor in hands, arms, legs, jaw, or head
+                        Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
+                        Content: Patient's of PD may suffer from tremors in their limbs that may worsen over time. For example, people may feel mild tremors or have difficulty getting out of a chair. They may also notice that they speak too softly, or that their handwriting is slow and looks cramped or small.
+
+                        h3 Sub Header: Muscle stiffness
+                        Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
+                        Content: Patient's of PD may also suffer from muscle stiffness and lose their mobility as their conditions worsen over time. During early stages of Parkinson's, family members and close friends will begin to notice that the person may lack facial expression and animation as well.
+
+                        h3 Sub Header: Impaired balance and coordination
+                        Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
+                        Content: Individuals with Parkinson's disease often experience significant challenges with balance and coordination. These impairments can lead to an increased risk of falls and a decreased ability to perform everyday activities.
+
+                        Read more: Western medicine vs Alternative healing
+
+                        Related: Newest breakthroughs in the field of neuroscience
+
+                        h2 Sub Header: Additional content to add
+                        Content: Joining a Parkinson's support group can provide emotional support and valuable insights from others who are experiencing similar challenges. These groups offer a sense of community and shared understanding.
+
+                        """,
+                    ),
+                    (
+                        "assistant",
+                        """
+                        Main keypoint: Introduction to Parkinson's disease
+                        Content: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
+
+                        Main keypoint: Symptoms of Parkinson's disease
+
+                        Sub keypoint: Tremor in hands, arms, legs, jaw, or head
+                        Content: Patient's of PD may suffer from tremors in their limbs that may worsen over time. For example, people may feel mild tremors or have difficulty getting out of a chair. They may also notice that they speak too softly, or that their handwriting is slow and looks cramped or small.
+
+                        Sub keypoint: Muscle stiffness
+                        Content: Patient's of PD may also suffer from muscle stiffness and lose their mobility as their conditions worsen over time. During early stages of Parkinson's, family members and close friends will begin to notice that the person may lack facial expression and animation as well.
+
+                        Sub keypoint: Impaired balance and coordination
+                        Content: Individuals with Parkinson's disease often experience significant challenges with balance and coordination. These impairments can lead to an increased risk of falls and a decreased ability to perform everyday activities.
+
+                        Main keypoint: Joining a support group
+                        Content: Joining a Parkinson's support group can provide emotional support and valuable insights from others who are experiencing similar challenges. These groups offer a sense of community and shared understanding.
+
+                        Omitted Sentences:
+                        Buy these essential oils to recover from Parkinson's Disease!
+                        Read more: Western medicine vs Alternative healing
+                        Related: Newest breakthroughs in the field of neuroscience
+
+                        """,
+                    ),
+                    (
+                        "human",
+                        "Sort the key points below based on the instructions and examples you have received:\n{Article}",
+                    ),
+                ]
+                return researcher_prompt
+
+            case "add additional input":
+                additional_content_prompt = [
+                    (
+                        "system",
+                        """ Your task is to seamlessly add in additional keypoints into content given to you.
+
+                You will be given a series of processed keypoints and additional content to add in. You are to add in the additional content as a new keypoint.
+
+                You can write a relevant header for the additional content if no header is given.
+                Add a "Main keypoint" in front of the header for additional content.
                 """,
-            ),
-            (
-                "human",
-                """
-                Article Header: Introduction to Parkinson's disease
-                Content: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
+                    ),
+                    (
+                        "human",
+                        """
+                Add this additional content to the given keypoints:
+                Additional content to add
+                Content: Joining a Parkinson's support group can provide emotional support and valuable insights from others who are experiencing similar challenges. These groups offer a sense of community and shared understanding.
 
-                Buy these essential oils to recover from Parkinson's Disease!
-
-                h2 Sub Header: Symptoms of Parkinson's disease
-
-                h3 Sub Header: Tremor in hands, arms, legs, jaw, or head
-                Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
-                Content: Patient's of PD may suffer from tremors in their limbs that may worsen over time. For example, people may feel mild tremors or have difficulty getting out of a chair. They may also notice that they speak too softly, or that their handwriting is slow and looks cramped or small.
-
-                h3 Sub Header: Muscle stiffness
-                Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
-                Content: Patient's of PD may also suffer from muscle stiffness and lose their mobility as their conditions worsen over time. During early stages of Parkinson's, family members and close friends will begin to notice that the person may lack facial expression and animation as well.
-
-                h3 Sub Header: Impaired balance and coordination
-                Sub Section to h2 Sub Header: Symptoms of Parkinson's disease
-                Content: Individuals with Parkinson's disease often experience significant challenges with balance and coordination. These impairments can lead to an increased risk of falls and a decreased ability to perform everyday activities.
-
-                Read more: Western medicine vs Alternative healing
-
-                Related: Newest breakthroughs in the field of neuroscience
-                """,
-            ),
-            (
-                "assistant",
-                """
+                Keypoints:
                 Main keypoint: Introduction to Parkinson's disease
                 Content: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
 
@@ -514,19 +634,49 @@ class AzurePrompts(LLMPrompt):
                 Buy these essential oils to recover from Parkinson's Disease!
                 Read more: Western medicine vs Alternative healing
                 Related: Newest breakthroughs in the field of neuroscience
+                """,
+                    ),
+                    (
+                        "assistant",
+                        """
+                Main keypoint: Introduction to Parkinson's disease
+                Content: Parkinson's is a neurodegenerative disease. It is a progressive disorder that affects the nervous system and other parts of the body. There are approximately 90,000 new patients diagnosed with PD annually in the US.
+
+                Main keypoint: Symptoms of Parkinson's disease
+
+                Sub keypoint: Tremor in hands, arms, legs, jaw, or head
+                Content: Patient's of PD may suffer from tremors in their limbs that may worsen over time. For example, people may feel mild tremors or have difficulty getting out of a chair. They may also notice that they speak too softly, or that their handwriting is slow and looks cramped or small.
+
+                Sub keypoint: Muscle stiffness
+                Content: Patient's of PD may also suffer from muscle stiffness and lose their mobility as their conditions worsen over time. During early stages of Parkinson's, family members and close friends will begin to notice that the person may lack facial expression and animation as well.
+
+                Sub keypoint: Impaired balance and coordination
+                Content: Individuals with Parkinson's disease often experience significant challenges with balance and coordination. These impairments can lead to an increased risk of falls and a decreased ability to perform everyday activities.
+
+                Main keypoint: Joining a support group // A header was written for the additional content
+                Content: Joining a Parkinson's support group can provide emotional support and valuable insights from others who are experiencing similar challenges. These groups offer a sense of community and shared understanding.
+
+                Omitted Sentences:
+                Buy these essential oils to recover from Parkinson's Disease!
+                Read more: Western medicine vs Alternative healing
+                Related: Newest breakthroughs in the field of neuroscience
 
                 """,
-            ),
-            (
-                "human",
-                "Sort the key points below based on the instructions and examples you have received:\n{Article}",
-            ),
-        ]
+                    ),
+                    (
+                        "human",
+                        """Add this additional content to the given keypoints:
+                {additional_content}
 
-        return researcher_prompt
+                Keypoints:
+                {content}
+                """,
+                    ),
+                ]
+        return additional_content_prompt
 
     @staticmethod
-    def return_compiler_prompt() -> list[tuple[str, str]]:
+    def return_compiler_prompt(self) -> list[tuple[str, str]]:
         """
         Returns the compiler prompt
 
@@ -538,7 +688,7 @@ class AzurePrompts(LLMPrompt):
             (
                 "system",
                 """
-                You are part of a article combination process. Your task is to compare and merge the keypoints and their content given to you.
+                Your task is to compare and merge the keypoints and their content given to you.
                 Your final answer be a final compilation of all the keypoints from the two articles, with no loss in information and no duplicated sentences.
                 You are NOT supposed to summarise the content.
                 You will be given a context guideline as well as a set of instructions.
@@ -634,133 +784,85 @@ class AzurePrompts(LLMPrompt):
             The prompt is solely applicable for Health and Conditions
         """
 
-        # general_content_prompt = [
-        #     (
-        #         "system",
-        #         """
-        #         You are part of an article re-writing process. The article is aimed at enhancing the reader's well-being and lifestyle.
-        #
-        #         Your task is to utilize content from the given keypoints to fill in for the required sections stated below.
-        #         You will also be given a set of instructions that you MUST follow.
-        #
-        #         ### Start of content requirements
-        #
-        #             1. Your writing must carry a natural flow.
-        #                 It is important to have a natural flow in your writing to prevent confusing the readers.
-        #                 Each article should follow a general flow like so:
-        #                     1. Overview of the topic
-        #                     2. Benefits (if applicable to topic)
-        #                     3. Thing to note, remember or consider
-        #                     4. Summary or concluding point
-        #                 You DO NOT need to rename the article headers like so, this is simply an article flow to guide you.
-        #                 You may combine the content under each keypoint if it improves the article flow, or contain similar information.
-        #                 If the article is missing any of these sections and they are applicable to the topic, you should use the content in the keypoints to fill in the missing sections.
-        #
-        #             2. You MUST retain names and the relevant information specified in the content.
-        #                 If a sentence contains specific names, you can rewrite the sentence, but you MUST retain these names and their relevant information.
-        #                 ## Example 1:  "Hike your way up to Fort Canning Park which is perched on a hill."
-        #                 Answer: "Make your way up the hill to visit the historic Fort Canning Park."
-        #                 ## Example 2: "Head to City Hall for these tasty treats."
-        #                 Answer: "Fill up your tummy with these tasty meals from City Hall!"
-        #
-        #             3. Your writing should carry a conversational and encouraging tone.
-        #                 You should adopt a more casual tone in your writing as it will spark reader interest.
-        #                 ## Example: "When we think of exercise, what often comes to mind is sweating it out in the blazing sun, panting for a long time afterwards, then aching all over. But that’s not always necessary!"
-        #
-        #                 Your writing should strike up a more conversational and encouraging tone.
-        #
-        #                 Do not hesitate to sound more casual when writing lifestyle-related content, such as using “no worries” like in the example below.
-        #                 ## Example: "If the recommended 150 to 300 minutes of exercise such as jogging, brisk walking, swimming or cycling, and 2 days of muscle and bone-strengthening a week is too much for you, no worries! You can still start at your own pace and intensify your workout as you get used to working out."
-        #
-        #             4. Your writing should address the reader’s concerns and assure them that a situation it’s not as bad as they think.
-        #
-        #             5. Your article headers should be relevant to it's content while being short and interesting.
-        #                 Here are some guidelines for writing out your article headers:
-        #
-        #                 You can use subheaders if it improves the flow of the article.
-        #         """,
-        #     ),
-        #     ("human", "Rewrite the following keypoints: \n{Keypoints}"),
-        # ]
-
         optimise_health_conditions_content_prompt = [
             (
                 "system",
                 """
                 You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
 
-                Your task is to utilize content from the given key points to fill in for the required sections stated below.
-                You will also be given a set of instructions that you MUST follow.
+                    Your task is to utilise content from the given key points to fill in for the required sections stated below.
+                    You will also be given a set of instructions that you MUST follow.
 
-                ### Start of content requirements
-                    When rewriting the content, your writing MUST meet the requirements stated here.
-                    If the keypoints do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
+                    ### Start of content requirements
+                        When rewriting the content, your writing MUST meet the requirements stated here.
+                        If the key points do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
 
-                    Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
-                        1. Overview of the condition
-                            - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
-                        2. Causes and Risk Factors
-                        3. Symptoms and Signs
-                        4. Complications
-                        5. Treatment and Prevention
-                        6. When to see a doctor
-
-                    You must also use the following guidelines and examples to phrase your writing.
-
-                    1. Elaborate and Insightful
-                        Your writing should be expand upon the given key points and write new content aimed at educating readers on the condition.
-                        Your MUST the primary intent, goals and glimpse of information in the first paragraph.
-
-                    2. Carry a positive tone
-                        Do NOT convey negative sentiments in your writing.
-                        You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
-                        Example: We recommend taking the diabetes medicine as prescribed by your doctor or pharmacist. This will help in the medicine’s effectiveness and reduce the risk of side effects.
-
-                    3. Provide reassurance
-                        Your writing should reassure readers that the situation is not a lost cause
-                        Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
-
-                    You should out your content based on the required sections step by step.
-                    After each section has been rewritten, you must check your writing with each guideline step by step.
-
-                    Here is an example you should use to structure your writing:
-                        ### Start of example
-                            1. Overview of Influenza
-                            Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
-
+                        Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
+                            1. Overview of the condition
+                                - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
                             2. Causes and Risk Factors
-                            Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. The flu virus is classified into three main types: A, B, and C. Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. Factors that increase the risk of contracting influenza include close contact with infected individuals, weakened immune system, and lack of vaccination. Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
-
                             3. Symptoms and Signs
-                            Some symptoms include: High fever, cough, headache, and muscle aches. Other symptoms include sneezing, nasal discharge, and loss of appetite. Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhea, although these are more common in children.
-
-                            4. Complications of Influenza
-                            The following people are at greater risk of influenza-related complications:
-                            - Persons aged 65 years old and above.
-                            - Children aged between 6 months old to 5 years old.
-                            - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
-                            - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalization or even death, particularly in vulnerable populations.
-
+                            4. Complications
                             5. Treatment and Prevention
-                            Here are some ways to battle influenza and to avoid it:
-                            Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
-                            Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
-                            Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
+                            6. When to see a doctor
 
-                            6. When to See a Doctor
-                            You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
-                        ### End of example
+                        You must also use the following guidelines and examples to phrase your writing.
 
-                ### End of content requirements
+                        1. Elaborate and Insightful
+                            Your writing should expand upon the given key points and write new content aimed at educating readers on the condition.
+                            You MUST state the primary intent, goals, and a glimpse of information in the first paragraph.
 
-                ### Start of instructions
-                    You MUST follow these instructions when writing out your content.
+                        2. Carry a positive tone
+                            Do NOT convey negative sentiments in your writing.
+                            You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
+                            Example: We recommend taking the diabetes medicine as prescribed by your doctor or pharmacist. This will help in the medicine’s effectiveness and reduce the risk of side effects.
 
-                    You MUST always ensure that all the key information you have been given is reflected in your final answer. There must be NO information loss.
-                    You MUST follow the content requirements.
-                    You MUST NOT abridge the content AT ALL. Instead, your task is only to restructure the writing to fit these guidelines. There MUST NOT be any loss in key information between the original keypoints and your final answer.
-                    You must use the given key points to FILL IN the required sections.
-                    Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts.
+                        3. Provide reassurance
+                            Your writing should reassure readers that the situation is not a lost cause.
+                            Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
+
+                        You should write your content based on the required sections step by step.
+                        After each section has been rewritten, you must check your writing with each guideline step by step.
+
+                        Here is an example you should use to structure your writing:
+                            ### Start of example
+                                1. Overview of Influenza
+                                Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
+
+                                2. Causes and Risk Factors
+                                Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. The flu virus is classified into three main types: A, B, and C. Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. Factors that increase the risk of contracting influenza include close contact with infected individuals, a weakened immune system, and lack of vaccination. Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
+
+                                3. Symptoms and Signs
+                                Some symptoms include: High fever, cough, headache, and muscle aches. Other symptoms include sneezing, nasal discharge, and loss of appetite. Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhoea, although these are more common in children.
+
+                                4. Complications of Influenza
+                                The following people are at greater risk of influenza-related complications:
+                                - Persons aged 65 years old and above.
+                                - Children aged between 6 months old to 5 years old.
+                                - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
+                                - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalisation or even death, particularly in vulnerable populations.
+
+                                5. Treatment and Prevention
+                                Here are some ways to battle influenza and to avoid it:
+                                Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
+                                Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
+                                Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
+
+                                6. When to See a Doctor
+                                You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
+                            ### End of example
+
+                    ### End of content requirements
+
+                    ### Start of instructions
+                        You MUST follow these instructions when writing out your content.
+
+                        You MUST always ensure that all the key information you have been given is reflected in your final answer. There must be NO information loss.
+                        Your answer should also contain a close word count to the original content.
+                        You MUST follow the content requirements.
+                        You MUST NOT abridge the content AT ALL. Instead, your task is only to restructure the writing to fit these guidelines. There MUST NOT be any loss in key information between the original keypoints and your final answer.
+                        You must use the given key points to FILL IN the required sections.
+                        Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts.
 
                     Follow these instructions step by step carefully
                 ### End of instructions
@@ -769,10 +871,7 @@ class AzurePrompts(LLMPrompt):
             (
                 "human",
                 """
-                Structure feedback on the following article:
-                {Structure_evaluation}
-
-                Rewrite the following keypoints:
+                Sort the following keypoints:
                 {Keypoints}
                 """,
             ),
@@ -792,47 +891,55 @@ class AzurePrompts(LLMPrompt):
             The prompt is solely applicable for Health and Conditions
         """
 
-        optimise_health_conditions_writing_prompt = [
+        optimise_writing_prompt = [
             (
                 "system",
-                """
-                You are part of a article rewriting process.
-                Your objective is to rewrite the given article to based on the given guidelines and instructions. Follow the personality and voice guidelines below and adhere to the specific instructions provided.
+                """ You are part of an article re-writing process. The article content is aimed to educate readers about a health-related topic and motivate them to take charge of their health.
+
+                Your objective is to rewrite the given article to based on the given guidelines and instructions.
+                Your writing should carry a casual, friendly and engaging tone. Do NOT write in a professional and formal tone. Do NOT write in a conversational style as well.
+
+                Follow the personality and voice guidelines below and adhere to the specific instructions provided.
+                You should use the given examples to form your final answer.
 
                 Guidelines:
-                    - Be approachable
-                    Guidelines: Welcome your readers warmly, understand their needs, and accommodate them. Account for diverse needs and health conditions.
+                    1. Welcome your readers warmly, understand their needs, and accommodate them. You should also account for diverse needs and health conditions if applicable.
                     Example: “Living with diabetes doesn't mean you can’t travel. With proper planning, you can still make travel plans safely.”
 
-                    - Be progressive
-                    Guidelines: Ensure your writing is relevant to the visitor's needs and expectations.
+                    2. Ensure your writing is relevant to the visitor's needs and expectations.
                     Example: “Worried about new COVID-19 variants? Hear from our experts on infectious diseases and learn how you can stay safe!”
 
-                    - Crafted
-                    Guidelines: Personalize the experience for visitors with relevant content.
+                    3. Personalize the experience for visitors with relevant content.
                     Example: “Are you a new mum returning to work soon? Here are some tips to help you maintain your milk supply while you work from the office.”
 
-                    - Carry an Optimistic tone
-                    Guidelines: Use a positive tone to motivate readers to lead a healthier lifestyle and empathize with their struggles.
+                    4. Use a positive tone to motivate readers to lead a healthier lifestyle and empathize with their struggles.
                     Example: “It’s normal to feel stressed, worried or even sad with the daily demands of daily life. And it’s okay to reach out for help and support when you need it.”
 
-                    - Connect at a personal level
-                    Guidelines: Convey a tone that is caring, sensitive, warm, and tactful.
-                    Example: “Breast cancer is known to be asymptomatic in the early stages. That’s why regular screenings can provide early detection and timely intervention.”
+                    5. Your writing should carry a casual and warm tone that is caring, sensitive, warm, and tactful.
+                    Example: “It’s never fun to see your little one unwell". Look out for symptoms like diarrhea, throwing up, tummy aches, and possibly a fever.”
 
-                    - Human-centric writing
-                    Guidelines: Show concern for the reader’s current health state without judgment.
+                    6. Show concern for the reader’s current health state without judgment.
                     Example: "We admire you for taking care of your loved ones. But have you taken some time for yourself lately? Here are some ways you can practice self-care."
 
-                    - Be respectful
-                    Guidelines: Be respectful to all visitors, regardless of medical condition, race, religion, gender, age, etc.
+                    7. Be respectful to all visitors, regardless of medical condition, race, religion, gender, age, etc.
                     Example: "Diabetes affects people of all ages, genders, and backgrounds. With the right care and support, people living with diabetes can lead healthy and fulfilling lives."
 
+                    8. Use relatable scenarios related to everyday items and activities.
+                    Example: "Encourage plenty of rest. Sometimes a cozy blanket and a favorite movie can do wonders!"
+
+                    9. Your answer should have a catchy introduction written in a warm and engaging tone, aimed at grabbing the reader's attention while outlining the content clearly.
+
+                    10. Your conclusion should outline clearly subsequent steps and call-to-actions for the readers. Use a warm and engaging tone.
+
+                Check through each guideline carefully.
 
                 ### Start of instructions
-                    You MUST break up longer sentences into multiple short ones.
-                    You MUST explain complex medical terms using simple phrases or sentences.
-                    You MUST NOT summarise the content AT ALL. Instead, your task is only to rephrase the writing to fit these guidelines.
+                    Do not summarise the content and your final answer should have minimal loss in information when compared to the original content.
+                    Your answer should still flow like a regular article with appropriate spacing and paragraph structure.
+
+                    Your answer MUST be in British English.
+                    Your answer MUST be between 300 to 1500 words.
+                    Your answer should also contain a close word count to the original content.
                     You MUST remove ALL instances of "Main keypoint" and "Sub keypoint" from the headers. Your answer must be a final readable article with appropriate headers. Otherwise, keep the original headers.
 
                     Mandatory Use of Guidelines: Use the writing guidelines above to rewrite the content.
@@ -843,11 +950,10 @@ class AzurePrompts(LLMPrompt):
             ),
             ("human", "Rewrite the following content:\n{Content}"),
         ]
-
-        return optimise_health_conditions_writing_prompt
+        return optimise_writing_prompt
 
     @staticmethod
-    def return_readability_optimisation_prompt() -> list[tuple[str, str]]:
+    def return_hemingway_readability_optimisation_prompt(step) -> list[tuple[str, str]]:
         """
         Returns the readability optimisation prompt
 
@@ -857,51 +963,199 @@ class AzurePrompts(LLMPrompt):
         Note:
             The prompt is solely applicable for Health and Conditions
         """
+        match step:
+            case "shortening sentences":
+                hemingway_readability_optimisation_prompt = [
+                    (
+                        "system",
+                        """You are part of an article rewriting process. Your task is to shorten long sentences by breaking them up into multiple sentences.
 
-        readability_optimisation_prompt = [
-            (
-                "system",
-                """
-                You are an article rewriter. You will be given an article and a readability evaluation on that article.
-                Your task is to address ALL the feedback pointers given to you.
+                        There should not be any loss of key information when breaking down the long sentences into their shorter counterparts.
 
-                You should use these tips to address the feedback pointers given.
+                        Your writing should carry a friendly and engaging tone. Do NOT write in a professional and formal tone.
 
-                    1. ALWAYS deliver your content in short sentences:
-                    You MUST aim to simplify long sentences by breaking them into numerous shorter sentences. Your answer should NOT have long sentences. Your answer must NOT have any run-on sentences as well.
+                        Do not change the article structure such as the headers.
+                        Do not alter any bullet points.
 
-                    2. You MUST ALWAYS use simpler synonyms:
-                    You MUST aim to utilize simple words to replace uncommon or long words. For example, use "red eyes" instead of "inflamed eyes" or "tiredness" instead of "malaise".
+                        Let's think this step by step
 
-                    3. Clarify complex medical terms:
-                    You MUST explain complex medical terms using simple phrases with commonly understood words to improve readability. For example, you can clarify terms like "small head size" instead of "microcephaly," which might be less familiar to some readers.
+                        Example 1
+                        1. Rewrite the following content:
+                            "Regular exercise is crucial for maintaining good health. Start with a warm-up to prepare your muscles, and it’s important to stretch properly before any workout, this helps prevent injuries and improves flexibility. Incorporating both cardio and strength training into your routine can help you build endurance and muscle. Don’t forget to cool down afterward to allow your body to recover."
 
-                    4. Remove Redundant phrasing:
-                    You should eliminate unnecessary words and phrases to make the text more concise. For example, you should remove some word instances like "especially" where it was redundant.
+                        2. Start by identifying long sentences. This is a long sentence in the content:
 
-                    5. Active Voice:
-                    You should aim for a more direct and active tone throughout the text, which is characteristic of Hemingway’s style. This involved using more straightforward statements and avoiding passive voice where possible.
+                            "Start with a warm-up to prepare your muscles, and it’s important to stretch properly before any workout, this helps prevent injuries and improves flexibility."
 
-                    6. Improve Flow:
-                    Ensure smooth flow and coherence throughout the text. You should aim to have consistent formatting to enhance the readability of the text.
+                        3. Break the long sentence into shorter sentences with the same meaning. The other sentences are not long, hence they will not be rewritten.
 
+                        Your final answer:
+                            "Regular exercise is crucial for maintaining good health. Start with a warm-up to prepare your muscles. It’s important to stretch properly before any workout as it helps prevent injuries and improves flexibility. Incorporating both cardio and strength training into your routine can help you build endurance and muscle. Don’t forget to cool down afterward to allow your body to recover."
 
-                Check through each tip carefully. The tips are arranged in terms of their importance, with the most important tip in front. Hence, you should check your writing with each tip from the first to last.
-                """,
-            ),
-            (
-                "human",
-                """
-                Address the following evaluation when rewriting the content:
-                {Readability_evaluation}
+                        """,
+                    ),
+                    ("human", "Rewrite the following content: \n {content}"),
+                ]
+                return hemingway_readability_optimisation_prompt
 
-                Rewrite the following content:
-                {Content}
-                """,
-            ),
-        ]
+            case "simplifying complex terms":
+                hemingway_readability_optimisation_prompt = [
+                    (
+                        "system",
+                        """You are part of an article rewriting process. Your task is to replace complex terms and phrases with simpler synonyms or with a simpler phrase.
 
-        return readability_optimisation_prompt
+                        There should not be any loss of key information when explaining the complex terms simply. The simple phrasing should also be understandable by a grade 9 student.
+
+                        Your writing should carry a friendly and engaging tone. Do NOT write in a professional and formal tone.
+
+                        Do not change the article structure such as use of headers and bullet points structure.
+
+                        Let's think this through step by step.
+
+                        Example 1
+                        1. Rewrite the following content:
+                            "Before arriving at the hospital, the patient was feeling unwell. The patient exhibited symptoms of dyspnea and tachycardia, necessitating an immediate intervention to stabilize his condition. Thankfully, after treatment, his condition began to improve."
+
+                        2. Start by identifying complex words and phrases. Here are some complex terms not easily understood:
+
+                            "dyspnea", "tachycardia", "necessitating an immediate intervention"
+
+                        3. Replace these words and phrases with synonymous words and phrases that are easily understood by a 9th grade student:
+
+                        Your final answer:
+                            "Before arriving at the hospital, the patient was feeling unwell. The patient had trouble breathing and a fast heartbeat, so doctors acted quickly to stabilize him. Thankfully, after treatment, his condition began to improve."
+
+                        Example 2
+                        1. Rewrite the following content:
+                        "The patient complained of a severe headache. She was also feeling nauseous and dizzy. An MRI was ordered to rule out any intracranial pathology, including a potential subarachnoid hemorrhage."
+
+                        2. Start by identifying complex words and phrases. Here are some complex terms not easily understood:
+
+                            "intracranial pathology", "potential subarachnoid hemorrhage"
+
+                        3. Replace these words and phrases with synonymous words and phrases that are easily understood by a 9th grade student:
+
+                        Your final answer:
+                            "The doctor ordered an MRI to check for any problems in the brain, including a possible brain bleed."
+
+                        Example 3
+                        1. Rewrite the following content:
+                            "The patient was diagnosed with myocardial infarction and was immediately administered thrombolytic therapy."
+
+                        2. Start by identifying complex words and phrases. Here are some complex terms not easily understood:
+
+                            "myocardial infarction", "thrombolytic therapy"
+
+                        3. Replace these words and phrases with synonymous words and phrases that are easily understood by a 9th grade student:
+
+                        Your final answer:
+                            "The patient had a heart attack and was quickly given medicine to dissolve the blood clot
+                        """,
+                    ),
+                    ("human", "Rewrite the following content: \n {content}"),
+                ]
+                return hemingway_readability_optimisation_prompt
+
+            case "breaking into bullet points":
+                hemingway_readability_optimisation_prompt = [
+                    (
+                        "system",
+                        """You are part of an article rewriting process. Your task is to break up long sentences with more than 3 commas and items into bullet points. Follow the guide below on how you should approach the content.
+
+                        Let's think step by step.
+
+                        Example 1:
+
+                        1. Rewrite the long sentences in this content.
+                            "Taking care of your body and mind is crucial for a long and healthy life. To maintain good health, it's important to eat a balanced diet rich in fruits and vegetables, drink plenty of water, get at least 8 hours of sleep each night, exercise regularly, and avoid harmful habits like smoking and excessive alcohol consumption. Regular check-ups with your doctor are also essential. Don't forget to manage stress effectively, else you risk falling sick frequently."
+
+                        2. Start by analyzing each sentences indvidually. This is a long sentence with more than 3 commas and listing out multiple items:
+
+                            "To maintain good health,
+                            it's important to eat a balanced diet rich in fruits and vegetables,
+                            drink plenty of water,
+                            get at least 8 hours of sleep each night,
+                            exercise regularly,
+                            and avoid harmful habits like smoking and excessive alcohol consumption."
+
+                        3. We will now break this sentence into bullet points, with each item being a separate bullet point. The rest of the sentences maintains their original structure as they have do not have more than 3 commas and are not identified as long sentences.
+
+                        Your final answer:
+                            "Taking care of your body and mind is crucial for a long and healthy life.
+
+                            To maintain good health, it's important to:
+                                - eat a balanced diet rich in fruits and vegetables,
+                                - drink plenty of water,
+                                - get at least 8 hours of sleep each night,
+                                - exercise regularly,
+                                - avoid harmful habits like smoking and excessive alcohol consumption
+
+                            Regular check-ups with your doctor are also essential. Don't forget to manage stress effectively, else you risk falling sick frequently."
+
+                        Example 2:
+
+                        1. Rewrite the long sentences in this content.
+                            "Achieving high productivity requires deliberate effort and effective strategies, you can't be highly productive without a conscious effort. To boost your productivity, it's essential to plan your day ahead, prioritize your tasks, take regular breaks to avoid burnout, stay organized with to-do lists, and minimize distractions like social media and unnecessary meetings. Keep a positive mindset throughout the day. Celebrate small wins to stay motivated."
+
+                        2. Start by analyzing each sentences indvidually. This is a long sentence with more than 3 commas and listing out multiple items:
+
+                            "To boost your productivity,
+                            it's essential to plan your day ahead,
+                            prioritize your tasks,
+                            take regular breaks to avoid burnout,
+                            stay organized with to-do lists,
+                            and minimize distractions like social media and unnecessary meetings."
+
+                        3. We will now break this sentence into bullet points, with each item being a separate bullet point. The rest of the sentences maintains their original structure as they have do not have more than 3 commas and are not identified as long sentences.
+
+                        Your final answer:
+                            "Achieving high productivity requires deliberate effort and effective strategies, you can't be highly productive without a conscious effort.
+
+                            To boost your productivity, you can:
+                                - plan your day ahead,
+                                - prioritize your tasks,
+                                - take regular breaks to avoid burnout,
+                                - stay organized with to-do lists,
+                                - minimize distractions like social media and unnecessary meetings
+
+                            Keep a positive mindset throughout the day. Celebrate small wins to stay motivated."
+
+                        Evaluate each sentence carefully and only return the rewritten article in your answer.
+                            """,
+                    ),
+                    (
+                        "human",
+                        """Rewrite the long sentences in this content.\n {content}""",
+                    ),
+                ]
+                return hemingway_readability_optimisation_prompt
+
+            case "cutting out redundant areas":
+                hemingway_readability_optimisation_prompt = [
+                    (
+                        "system",
+                        """ You are part of an article rewriting process. Your task is to identify remove redundant writing in the given context.
+
+                        There should not be any loss of key information when removing these redundant information.
+
+                        Your writing should carry a friendly and engaging tone. Do NOT write in a professional and formal tone.
+
+                        Do not change the article structure such as use of headers.
+                        Do not alter any bullet points.
+
+                        You can use this example to help you identify redundant phrasing and to structure your answer.
+
+                        ### Start of example
+                        Original content: "In order to ensure that the project is completed on time, it is absolutely essential that all team members work together in a collaborative manner."
+
+                        Your answer: "To finish the project on time, all team members must work together."
+                        ### End of example
+                        """,
+                    ),
+                    ("human", "Rewrite the following content {content}"),
+                ]
+
+                return hemingway_readability_optimisation_prompt
 
     @staticmethod
     def return_personality_evaluation_prompt() -> list[tuple[str, str]]:
@@ -923,36 +1177,29 @@ class AzurePrompts(LLMPrompt):
 
                     1. Approachable
                         Guidelines: You should welcome your reader warmly, understand their needs and accommodate to them wherever possible. You should also account for diverse needs and differing health conditions of all visitors
-                        Example: “Living with diabetes doesn't mean you can’t travel. With proper planning, you can still make travel plans safely.”
 
                     2. Progressive
                         Guidelines: Your writing should be relevant to the visitor's needs and expectations.
-                        Example: “Worried about new COVID-19 variants? Hear from our experts on infectious diseases and learn how you can stay safe!”
 
                     3. Crafted
                         Guidelines: You should personalize experiences for visitors with relevant content in the article.
-                        Example: “Are you a new mum returning to work soon? Here are some tips to help you maintain your milk supply while you work from the office.”
 
                     4. Optimistic
                         Guidelines: Your writing should carry a positive tone to motivate visitors to lead a healthier lifestyle. You should also empathise with the struggles of the readers.
-                        Example: “It’s normal to feel stressed, worried or even sad with the daily demands of daily life. And it’s okay to reach out for help and support when you need it.”
 
                     5. Personal
                         Guidelines: Your writing should carry a tone that is caring, sensitive, warm and tactful
-                        Example: “Breast cancer is known to be asymptomatic in the early stages. That’s why regular screenings can provide early detection and timely intervention.”
 
                     6. Human-centric
                         Guidelines: Your writing should concern for visitors’ current health state, without judgment or prescriptive
-                        Example: "We admire you for taking care of your loved ones. But have you taken some time for yourself lately? Here are some ways you can practice self-care."
 
                     7. Respectful
                         Guidelines: You should craft your writing to be respectful to visitors regardless of medical condition, race, religion, gender, age, etc.
-                        Example: "Diabetes affects people of all ages, genders and backgrounds. With the right care and support, people living with diabetes can lead healthy and fulfilling lives."
                 ### End of guidelines
 
                 Your final answer MUST either be "True" or "False".
                 If the given content does not fit the writing guidelines, your final answer will be "False".
-                Otherwise, if you determined that the given content adheres to the writing guidelines, your final answer will be "True".
+                Otherwise, if you determine that the given content adheres to the writing guidelines, your final answer will be "True".
                 """,
             ),
             ("human", "Evaluate the following content:\n{Content}"),
@@ -961,140 +1208,234 @@ class AzurePrompts(LLMPrompt):
         return personality_evaluation_prompt
 
     @staticmethod
-    def return_title_prompt() -> list[tuple[str, str]]:
+    def return_title_prompt(step: str) -> list[tuple[str, str]]:
         """
         Returns the title optimisation prompt
 
         Returns:
             list[tuple[str, str]]: a list containing the title optimisation prompt. {Content} is the only input required to invoke the prompt.
         """
+        match step:
+            case "optimise title":
+                optimise_title_prompt = [
+                    (
+                        "system",
+                        """You are part of an article re-writing process. Your task is to write out 3 new and improved article title using the content given below and the given feedback.
 
-        optimise_title_prompt = [
-            (
-                "system",
-                """
-                You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
+                        Each title MUST be less than 65 characters including spaces.
+                        You do not need to justify how your titles addresses the given feedback.
+                        You will also be given a set of instructions and a set of guidelines below.
+                        You MUST follow the given instructions.
+                        You MUST consider the given guidelines and you should use the given examples to create your title.
 
-                Your task is to write a new and improved article title using the content given below.
-                You will also be given a set of instructions and a set of guidelines below.
-                You MUST follow the given instructions.
-                You MUST consider the given guidelines and you should use the given examples to create your title.
+                        ### Start of guidelines
+                            These guidelines are qualities that your title should have and you must consider ALL of the given guidelines.
+                            You should check these guidelines carefully step by step.
+                            You should use the given examples to craft your title.
 
-                ### Start of guidelines
-                    These guidelines are qualities that your title should have and you must consider ALL of the given guidelines.
-                    You should check these guidelines carefully step by step.
-                    You should use the given examples to craft your title.
+                            1. Clear and informative
+                                Guideline: Your title should reflect the content while being brief and direct.
+                                Example: "Strategies You can Employ for a Healthy Heart"
 
-                    1. Clear and informative
-                        Guideline: Your title should reflect the content while being brief and direct.
-                        Example: "Strategies You can Employ for a Healthy Heart"
+                            2. Tailored to the audience
+                                Guideline: Your title should consider the demographics, interest and audience needs.
+                                Example: "How to Balance Work and Caring for a Loved One"
 
-                    2. Tailored to the audience
-                        Guideline: Your title should consider the demographics, interest and audience needs.
-                        Example: "How to Balance Work and Caring for a Loved One"
+                            3. Highlights the benefit
+                                Guideline: Your title should communicate the value or benefit to readers clearly
+                                Example: "Energy-boosting Recipes to Fuel Your Every Day"
 
-                    3. Highlights the benefit
-                        Guideline: Your title should communicate the value or benefit to readers clearly
-                        Example: "Energy-boosting Recipes to Fuel Your Every Day"
+                            4. Appeals to the reader's emotions
+                                Guideline: You should utilize powerful and evocative words to create a stronger connection with your audience
+                                Example: "Embracing Inner Healing: Overcoming Anxiety and Cultivating Emotional Resilience"
 
-                    4. Appeals to the reader's emotions
-                        Guideline: You should utilize powerful and evocative words to create a stronger connection with your audience
-                        Example: "Embracing Inner Healing: Overcoming Anxiety and Cultivating Emotional Resilience"
+                            5. Attention grabbing
+                                Guideline: Your title should be captivating, using compelling language or call to action to entice readers to click and read. However, you MUST avoid a clickbait title.
+                                Example: "Unveiling the Science Behind Shedding Pounds"
 
-                    5. Attention grabbing
-                        Guideline: Your title should be captivating, using compelling language or call to action to entice readers to click and read. However, you MUST avoid a clickbait title.
-                        Example: "Unveiling the Science Behind Shedding Pounds"
+                            6.	Use action-oriented language
+                                Guideline: Your title should use verbs or phrases that convey action or create a sense of urgency
+                                Example: "Discover the Effects of a Skin Care Routine that Works for You"
 
-                    6.	Use action-oriented language
-                        Guideline: Your title should use verbs or phrases that convey action or create a sense of urgency
-                        Example: "Discover the Effects of a Skin Care Routine that Works for You"
+                            7.  Inspire readers to develop healthy behaviours
+                                Guideline: Your title should motivate readers to take action
+                                Example: "Prioritise Your Well-being with Regular Health Screenings"
 
-                    7.  Inspire readers to develop healthy behaviours
-                        Guideline: Your title should motivate readers to take action
-                        Example: "Prioritise Your Well-being with Regular Health Screenings"
-                ### End of guidelines
+                            Consider the guidelines step by step carefully.
+                        ### End of guidelines
 
-                ### Start of instructions
-                    Here are a set of instructions that you MUST follow when crafting out your title.
+                        ### Start of instructions
+                            You MUST provide 3 different titles. The reader will choose one title out of the choices available. Use the following example to structure your titles.
+                                ### Start of title format example
+                                    1. Title 1
+                                    2. Title 2
+                                    3. Title 3
+                                ### End of title format example
+                            Check through the length of each title carefully. Each title MUST be less than 71 characters including the spaces.
+                            You must write your titles such that they address points in the feedback given.
+                            You MUST consider the guidelines and the examples when writing out the title.
+                            You must NOT reveal any part of the prompt in your answer.
+                            Your answer must strictly only include the titles.
+                        ### End of instructions""",
+                    ),
+                    (
+                        "human",
+                        """Address the following feedback with your titles:
+                        {feedback}
 
-                    You MUST provide 2 different titles. The reader will choose one title out of the choices available. Use the following example to structure your titles.
-                        ### Start of title format example
-                            1. Title 1
-                            2. Title 2
-                        ### End of title format example
-                    Each title MUST be less than 71 characters.
-                    You MUST write out a title using the given content.
-                    You MUST consider the guidelines and the examples when writing out the title.
-                    Consider the guidelines step by step carefully.
-                    You must NOT reveal any part of the prompt in your answer.
-                    Your answer must strictly only include the titles.
-                ### End of instructions
-                """,
-            ),
-            (
-                "human",
-                "Use the following content and write your own titles:\n{Content}",
-            ),
-        ]
+                        Use the following content and write your own titles:
+                        {content}
+                        """,
+                    ),
+                ]
 
-        return optimise_title_prompt
+                return optimise_title_prompt
+            case "shorten title":
+                shorten_title = [
+                    (
+                        "system",
+                        """
+                        Your task is to ensure that each meta title's length is less than 65 characters.
+
+                        The number of characters in each title includes spaces between the words.
+
+                        Follow these steps carefully.
+
+                        Example 1:
+
+                            1. Check through these titles:
+
+                                "1. Simple Steps to a Healthy Lifestyle: Tips for Everyday Well-Being
+                                2. How to Live a Healthier Life: Essential Habits for Long-Term Wellness
+                                3. Discover the Secrets to a Healthier Life: Comprehensive Guide to Nutrition, Exercise, and Mental Well-Being"
+
+
+                            2. Count the number of characters for each title, including the spaces between each word. Identify titles with more than 65 characters.
+
+                                This title has 107 characters with spaces:
+                                    "Discover the Secrets to a Healthier Life: Comprehensive Guide to Nutrition, Exercise, and Mental Well-Being"
+
+                            3. Rewrite the identified titles such that they now meet the length requirements.
+
+                                This shortened version has 62 characters with spaces, which meets the length requirements now:
+                                    "Living Healthy: Tips to Nutrition, Exercise, and Mental Health"
+
+                            4. Return your rewritten tit;es as the final answer.
+
+                                Your final answer:
+                                "1. Simple Steps to a Healthy Lifestyle: Tips for Everyday Well-Being
+                                2. How to Live a Healthier Life: Essential Habits for Long-Term Wellness
+                                3. Living Healthy: Tips to Nutrition, Exercise, and Mental Health"
+
+                        Your answer should ONLY include the new titles.
+                    """,
+                    ),
+                    (
+                        "human",
+                        """Check through these titles:
+                        {content}
+                        """,
+                    ),
+                ]
+
+                return shorten_title
 
     @staticmethod
-    def return_meta_desc_prompt() -> list[tuple[str, str]]:
+    def return_meta_desc_prompt(step: str) -> list[tuple[str, str]]:
         """
         Returns the meta description optimisation prompt
 
         Returns:
             list[tuple[str, str]]: a list containing the meta description optimisation prompt. {Content} is the only input required to invoke the prompt.
         """
+        match step:
+            case "optimise meta desc":
+                optimise_meta_desc_prompt = [
+                    (
+                        "system",
+                        """ You are part of anarticle re-writing process. Your task is to write new and improved meta descriptions using the content given below and the given feedback.
 
-        optimise_meta_desc_prompt = [
-            (
-                "system",
-                """
-                You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
-
-                Your task is to write new and improved meta descriptions using the content given below.
-                You will also be given a set of instructions and a set of guidelines below.
-                You MUST follow the given instructions.
-                You MUST consider the given guidelines to craft your meta descriptions.
-
-                ### Start of guidelines
-                Meta descriptions are short, relevant and specific description of topic/contents in the article.
-                The meta description you write is used by Search Engines to create interesting snippet to attract readers.
-                You should check these guidelines carefully step by step.
-
-                1. Use an active voice and make it actionable
-                2. Include a call to action
-                3. Show specifications when needed
-                4. Make sure it matches the content of the page
-                5. Make it unique
-                ### End of guidelines
-
-                ### Start of instructions
-                These are the set of instructions that you MUST follow in your writing.
-                Check your writing with these instructions step by step carefully.
-
-                You MUST come up with 2 different meta descriptions based on the given content. Use the following example to structure your answer.
-                    ### Start of meta description format example
+                        Your answer should be formatted as such:
                             1. Meta description 1
                             2. Meta description 2
-                    ### End of meta description format example
-                Each meta description you write MUST be MORE than 70 characters and LESS than 160 characters.
-                Each meta description you provide MUST accurately summarise the content given below.
-                You must NOT reveal any part of the prompt in your answer.
-                You must consider the guidelines given and write your meta description based on it.
-                Your answer must strictly only include the meta descriptions.
-                ### End of instructions
-                """,
-            ),
-            (
-                "human",
-                "Use the following content to write your meta descriptions:\n{Content}",
-            ),
-        ]
+                            3. Meta description 3
 
-        return optimise_meta_desc_prompt
+                        Each meta description you write MUST be MORE than 100 characters and LESS than 130 characters including spaces between words.
+                        You do not need to justify how your meta descriptions addresses the given feedback.
+
+                        ### Start of guidelines
+                        Meta descriptions are short, relevant and specific description of topic/contents in the article.
+                        The meta description you write is used by Search Engines to create interesting snippet to attract readers.
+                        You should check these guidelines carefully step by step.
+
+                        1. Use an active voice and make it actionable
+                        2. Make sure it matches the content of the page
+                        3. Make it unique
+                        ### End of guidelines
+
+                        Check through your writing carefully.
+
+                """,
+                    ),
+                    (
+                        "human",
+                        """Address the following feedback with your meta descriptions:
+                        {feedback}
+
+                        Use the following content to write your meta descriptions:
+                        {content}""",
+                    ),
+                ]
+
+                return optimise_meta_desc_prompt
+            case "shorten meta desc":
+                shorten_meta_desc_prompt = [
+                    (
+                        "system",
+                        """
+                        Your task is to ensure that each meta description's length is between 100 characters and 130 characters, inclusive of both numbers.
+
+                        The number of characters in each meta description includes spaces between the words.
+
+                        Follow these steps carefully
+
+                        Example 1:
+
+                            1. Check through these meta descriptions:
+
+                                "1. Discover how the Healthy Eating Campaign 2023 empowered individuals to embrace nutritious diets with easy, tasty recipes.
+                                2. Explore the impact of the Healthy Eating Campaign, where Nestle and Whole Foods encouraged employeeseat health meals daily.
+                                3. Learn about the Healthy Eating Campaign 2023, a nationwide initiative that motivated thousands to adopt better eating habits through accessible education, community support, and creative challenges, driving significant improvements in public health."
+"
+                            2. Check the number of characters for each meta description, including the spaces between each word. Identify meta descriptions with less than 100 characters or more than 130 characters.
+
+                                This meta description has 249 characters with spaces:
+                                    "3. Learn about the Healthy Eating Campaign 2023, a nationwide initiative that motivated thousands to adopt better eating habits through accessible education, community support, and creative challenges, driving significant improvements in public health."
+
+                            3. Rewrite the identified meta descriptions such that they now meet the length requirements.
+
+                                This shortened version has 123 characters with spaces, which meets the length requirements now:
+                                    "3. Learn how the Healthy Eating Campaign 2023 inspired healthier eating with education, community support, and fun challenges."
+
+                            4. Return your rewritten meta descriptions as the final answer.
+
+                                Your final answer:
+                                    "1. Discover how the Healthy Eating Campaign 2023 empowered individuals to embrace nutritious diets with easy, tasty recipes.
+                                    2. Explore the impact of the Healthy Eating Campaign, where Nestle and Whole Foods encouraged employeeseat health meals daily.
+                                    3. Learn how the Healthy Eating Campaign 2023 inspired healthier eating with education, community support, and fun challenges."
+
+                        Your answer should ONLY include the new meta descriptions.
+                    """,
+                    ),
+                    (
+                        "human",
+                        """Check through these meta descriptions:
+                        {content}
+                        """,
+                    ),
+                ]
+
+                return shorten_meta_desc_prompt
 
 
 class LlamaPrompts(LLMPrompt):
@@ -2236,7 +2577,6 @@ class MistralPrompts(LLMPrompt):
 
             3. Break up lengthy sentences
                 You should break up long paragraphs into concise sections.
-                You should also avoid lengthy, wordy bullet points.
                 Example: Mothers may unintentionally pass infectious diseases to their babies:
                     • The placenta during pregnancy
                     • Germs in the vagina during birth

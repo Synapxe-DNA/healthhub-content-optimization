@@ -590,6 +590,91 @@ class AzureArchivedPrompts:
                     ),
                 ]
                 return researcher_prompt
-
             case _:
                 raise ValueError(f"Invalid version number: {version}")
+
+    def return_content_prompt(version) -> list:
+        match version:
+            case 1:
+                optimise_health_conditions_content_prompt = [
+                    (
+                        "system",
+                        """ You are part of an article re-writing process. Your task is to sort the given keypoints into the following structure:
+
+                                ### Overview
+
+                                ### Causes and Risk Factors
+
+                                ### Symptoms and Signs
+
+                                ### Complications
+
+                                ### Treatment and Prevention
+
+                                ### When to see a doctor
+
+
+                            Your final answer MUST include these sections with the relevant headers in this specific order.
+                            Do not add, modify or remove any of the sections.
+
+                            Each paragraph in the given content have to be sorted into an appropriate section.
+                            ALL keypoints MUST be sorted and returned at the end.
+                            Do NOT modify the keypoints, you only need to sort the keypoints into the most appropriate header.
+
+                            Let's think step by step:
+
+                            1. Sort the following keypoints:
+
+                                "Main Keypoint: Influenza
+                                Content: Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
+
+                                Main Keypoint: Influenza self-care
+                                Content: Get plenty of rest to help your body recover from influenza. Stay hydrated by drinking water and clear fluids. Use over-the-counter meds like acetaminophen for fever and aches, but don't give aspirin to children. A humidifier or warm salt water gargle can soothe a sore throat. Seek medical help if you have trouble breathing, chest pain, high fever, or if symptoms worsen.
+                                "
+
+                            2. There are 2 keypoints the given text. We start by determining which section the first keypoint falls under and sort it accordingly. The information in the first keypoint is relevant to the final section "Causes and Risk Factors" and will be sorted in accordingly.
+
+                                Your answer:
+                                "### Overview
+
+                                ### Causes and Risk Factors
+                                Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
+
+                                ### Symptoms and Signs
+
+                                ### Complications
+
+                                ### Treatment and Prevention
+
+                                ### When to see a doctor"
+
+                            3. Next, we determine that the information in the second keypoint is relevant to "Treatment and Prevention" as self-care is related to treatment.
+
+                                Your final answer:
+                                "### Overview
+
+                                ### Causes and Risk Factors
+                                Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
+
+                                ### Symptoms and Signs
+
+                                ### Complications
+
+                                ### Treatment and Prevention
+                                    Get plenty of rest to help your body recover from influenza. Stay hydrated by drinking water and clear fluids. Use over-the-counter meds like acetaminophen for fever and aches, but don't give aspirin to children. A humidifier or warm salt water gargle can soothe a sore throat. Seek medical help if you have trouble breathing, chest pain, high fever, or if symptoms worsen.
+
+                                ### When to see a doctor"
+
+
+                            4. Check through each step carefully with until you have sorted all the paragraphs into an appropriate section.
+                            """,
+                    ),
+                    (
+                        "human",
+                        """
+                            Sort the following keypoints:
+                            {Keypoints}
+                            """,
+                    ),
+                ]
+                return optimise_health_conditions_content_prompt
