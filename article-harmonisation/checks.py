@@ -367,7 +367,7 @@ def load_evaluation_dataframe(filepath: str) -> tuple[pd.DataFrame]:
 
     # Get the final predicted clusters dataframe (user annotation)
     df_final_clusters = pd.read_excel(
-        f"{ROOT_DIR}/article-harmonisation/data/final_articles/final_predicted_clusters.xlsx"
+        f"{ROOT_DIR}/article-harmonisation/data/marked_articles/final_predicted_clusters.xlsx"
     )
     individual_articles_ids = list(
         df_final_clusters[df_final_clusters["group_keywords"].isna()].id
@@ -375,7 +375,7 @@ def load_evaluation_dataframe(filepath: str) -> tuple[pd.DataFrame]:
 
     # Get the dataframe of articles that HealthHub has requested for optimisation check (user annotation)
     df_post_annotation = pd.read_excel(
-        f"{ROOT_DIR}/article-harmonisation/data/final_articles/post-HH annotation (articles marked individual for optimisation check).xlsx"
+        f"{ROOT_DIR}/article-harmonisation/data/marked_articles/post-HH annotation (articles marked individual for optimisation check).xlsx"
     )
     ids_to_optimise = individual_articles_ids + list(df_post_annotation.article_id)
 
