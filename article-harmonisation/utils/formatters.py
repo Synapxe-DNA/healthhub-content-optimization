@@ -173,6 +173,7 @@ def concat_headers_to_content(article_id: list) -> list[str]:
                     header_list.append(header_title)
                     header_dictionary[header_type] = header_list
 
+                    # TODO: Explain what exactly is going on here. Otherwise, abstract it as a separate function for better clarity
                     match header_type:
                         case "h1":
                             header = f"h1 Main Header: {header_title}"
@@ -196,6 +197,8 @@ def concat_headers_to_content(article_id: list) -> list[str]:
                             header = f"h6 Sub Section: {header_title}"
                             if "h5" in header_dictionary.keys():
                                 header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}"
+                    
+                    # Split content and add formatted header
                     if not split_content:
                         split_content.extend(article_content.split(header_title, 1))
                     else:
@@ -316,7 +319,6 @@ def print_checks(result: dict, model: str) -> None:
         5. Meta description optimization LLM outputs: Prints out the optimized meta description.
 
         The results are saved to a text file specific to the provided model.
-    >>>>>>> article-harmonisation
 
         Args:
             result (dict): A dictionary containing the final outputs from the graph.
