@@ -1,5 +1,22 @@
 # Changelog
 
+## August 16, 2024 <a id="august-16-2024"></a>
+
+- Added `generate_embeddings_node` and `combine_embeddings_by_weightage_node` to [`feature_engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering) pipeline to generate feature embeddings
+- Added [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline for two-step clustering via community detection and BERTopic
+
+## August 13, 2024 <a id="august-13-2024"></a>
+
+- Modified `flag_articles_to_remove_after_extraction` function to flag for recipe first before duplicated URL/content in `data_processing/utils.py`
+- Remove recipe from whitelist (except for article `1445704` and `1445707`)
+- Change `Irrelevant Content` flag to `No relevant content and mainly links`
+
+## August 8, 2024 <a id="august-8-2024"></a>
+
+- Added `blacklist` dictionary in `parameters_data_processing.yml` with remove_type description
+- Added `flag_articles_via_blacklist` to flag articles stated as blacklisted in `parameters_data_processing.yml`
+- Updated `data_processing` pipeline to include `blacklist` parameter for flagging
+
 ## August 2, 2024 <a id="august-2-2024"></a>
 
 - Added IA Mappings (L1 and L2) into the dataset as `l1_mappings` and `l2_mappings` column
