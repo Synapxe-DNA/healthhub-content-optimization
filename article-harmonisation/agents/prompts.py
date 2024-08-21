@@ -1,19 +1,21 @@
+import re
 from abc import ABC, abstractmethod
 
 import tiktoken
 
 
 def prompt_tool(model: str):
-    """Returns a LLMPrompt object based on the string input
+    """
+    Returns a LLMPrompt object based on the string input
 
     Args:
-        model: a String input stating the model used
+        model (str): a String input stating the model used
 
     Returns:
-        a LLMPrompt object for the respective model type
+        LLMPrompt: a LLMPrompt object for the respective model type
 
     Raises:
-        ValueError: if the input model is not supported, yet
+        ValueError: if the input model is not supported
     """
     match model.lower():
         case "mistral":
@@ -127,23 +129,79 @@ class AzurePrompts(LLMPrompt):
     Refer to https://platform.openai.com/docs/guides/prompt-engineering/strategy-write-clear-instructions for more information.
     """
 
-    def return_readability_evaluation_prompt(self) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_decision_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the decision prompt where the chain output will be a boolean (True/False)
+
+        Returns:
+            list[tuple[str, str]]: a list containing the decision prompt. {text} is the only input required to invoke the prompt.
+        """
+
+        decision_prompt = [
+            (
+                "system",
+                """
+                You are to evaluate whether an article should be optimised given the critique provided.
+                Return a boolean (True/False) indicating whether the article should be optimised given the critique provided.
+                """,
+            ),
+            ("human", "Evaluate the following text:\n{text}"),
+        ]
+
+        return decision_prompt
+
+    @staticmethod
+    def return_summarization_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the summarization prompt where the chain output will be a string
+
+        Returns:
+            list[tuple[str, str]]: a list containing the summarization prompt. {text} is the only input required to invoke the prompt.
+        """
+
+        evaluation_summary_prompt = [
+            (
+                "system",
+                """
+                Summarize the following text into 3 to 5 sentences. Ensure the summary is concise, succinct, and direct, focusing only on the most essential points.
+                You must maintain the goal and context of providing the critique and recommendation to the individual. There should be greater focus on the areas of improvement.
+                """,
+            ),
+            ("human", "Evaluate the following text:\n{text}"),
+        ]
+
+        return evaluation_summary_prompt
+
+    @staticmethod
+    def return_readability_evaluation_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the readability evaluation prompt where the chain output will be a string
+
+        Returns:
+            list[tuple[str, str]]: a list containing the readability evaluation prompt. {article} is the only input required to invoke the prompt.
+        """
 
         readability_evaluation_prompt = [
             (
                 "system",
-                """ I want you to act as an expert in readability analysis.
+                """
+                I want you to act as an expert in readability analysis.
                 Your task is to evaluate and critique the readability of the provided article. Your analysis should cover the following aspects:
 
-                1. **Sentence Structure**: Assess the complexity of sentences. Identify and list out ALL long, convoluted sentences and suggest ways to simplify them.
-                2. **Vocabulary**: Evaluate the complexity of the vocabulary used. List out ALL overly complex words and suggest a simple alternative explanation using common and simple words.
-                3. **Coherence and Flow**: Analyze the coherence and logical flow of the text. Point out any abrupt transitions or lack of clarity and provide suggestions for improvement.
-                4. **Readability Metrics**: Calculate and provide readability scores using metrics such as Flesch-Kincaid Grade Level, Gunning Fog Index, and any other relevant readability indices.
-                5. **Overall Assessment**: Summarize the overall readability of the article, providing specific examples and actionable recommendations for improvement.
+                Let's think step by step.
 
-                Please provide a detailed analysis and critique following the above criteria.""",
+                1. You are to conduct a detailed analysis and critique following the criteria below:
+                    - **Sentence Structure**: Assess the complexity of sentences. Identify  and list out ALL long, convoluted sentences and suggest ways to simplify them.
+                    - **Vocabulary**: Evaluate the complexity of the vocabulary used. Highlight and list out ALL overly complex words. Suggest simpler words or phrases as an alternative.
+                    - **Coherence and Flow**: Analyze the coherence and logical flow of the text. Point out any abrupt transitions or lack of clarity and provide suggestions for improvement.
+                2. You are to explain why the article has poor readability by performing the following instructions below:
+                    - **Overall Assessment**: Summarize the overall readability of the article,
+                    - **Explanation**: Explain why the article suffers from poor readability.
+                    - **Recommendation**: Provide specific examples and actionable recommendations for improvement.
+                """,
             ),
-            ("human", "Evaluate the following article:\n {article}"),
+            ("human", "Evaluate the following article:\n{article}"),
         ]
         readability_evaluation_prompt = [
             (
@@ -211,53 +269,43 @@ class AzurePrompts(LLMPrompt):
         ]
         return readability_evaluation_prompt
 
-    def return_structure_evaluation_prompt(self) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_structure_evaluation_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the structure evaluation prompt where the chain output will be a string
+
+        Returns:
+            list[tuple[str, str]]: a list containing the structure evaluation prompt. {article} is the only input required to invoke the prompt.
+        """
+
         structure_evaluation_prompt = [
             (
                 "system",
-                """ Objective: Critique the content structure of the article, evaluating its effectiveness and coherence based on the following criteria -
+                """
+                Objective: Critique the content structure of the article, evaluating its effectiveness and coherence based on the following criteria -
 
                 1. Opening
-                Headline
-                -   Does the headline grab attention and stay relevant to the content?
-                -   Does it clearly convey the main topic or benefit of the article?
-
                 Introduction
-                -   Does the introduction hook the reader quickly and effectively?
-                -   Is the relevance of the topic established early on?
-                -   Does the introduction outline the content of the post clearly?
+                -   Does the introduction grab the attention of readers quickly and effectively?
+                -   Does the introduction outline the content of the article clearly?
 
                 2. Content Structure
                 Main Body
                 -   Are subheadings used effectively to organize content?
                 -   Are paragraphs short, focused, and easy to read?
                 -   Does the article incorporate lists where appropriate?
-                -   Are examples or anecdotes included to illustrate points?
-
-                Overall Structure
-                -   Does the article follow a logical flow of ideas?
-                -   Do sections build on each other in a cohesive manner?
-                -   Are transitions between sections smooth and logical?
 
                 3. Writing Style
                 Tone and Language
-                -   Is the tone conversational and accessible to the target audience?
+                -   Is the tone conversational?
                 -   Does the article avoid unexplained jargon or overly technical language?
                 -   Is the language appropriate for the audience's level of knowledge?
-
-                Engagement
-                -   Are questions or prompts used to engage the reader?
-                -   Is "you" language used to make the content more relatable and direct?
+                -   Does the article make the content more relatable and personal by writing from a second-person point of view, e.g. using pronouns such as "you" or "your"?
 
                 4. Closing
-                Call-to-Action (CTA)
-                -   Are clear next steps for the reader provided?
-                -   Is the CTA strategically placed and compelling?
-
                 Conclusion
-                -   Are the key points of the article summarized effectively?
+                -   Are clear next steps and call-to-action for the reader provided?
                 -   Does the conclusion reinforce the main message?
-                -   Does it leave the reader with something to think about or a memorable takeaway?
 
                 5. Overall Effectiveness
                 Value
@@ -280,11 +328,20 @@ class AzurePrompts(LLMPrompt):
 
         return structure_evaluation_prompt
 
-    def return_title_evaluation_prompt(self) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_title_evaluation_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the title evaluation prompt where the chain output will be a string
+
+        Returns:
+            list[tuple[str, str]]: a list containing the title evaluation prompt. {title} and {article} are the inputs required to invoke the prompt.
+        """
+
         title_evaluation_prompt = [
             (
                 "system",
-                """ Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
+                """
+                Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
 
                 Steps to Follow:
                 1.  Identify the Title:
@@ -309,30 +366,27 @@ class AzurePrompts(LLMPrompt):
                 -   Use specific examples or excerpts from the article to support your evaluation.
                 -   Highlight any discrepancies or misalignment between the title and the content.
 
-                6.  Suggestions for Improvement:
-                -   If the title is not fully relevant, suggest alternative titles that more accurately capture the essence of the article.
-                -   Explain why the suggested titles are more appropriate based on the article's content. """,
+                Your assessment should emphasize the relevance of the article and explain why the title is irrelevant as and when needed.
+                """,
             ),
             ("human", """ Title: "10 Tips for Effective Time Management" """),
             (
                 "assistant",
-                """ Content Summary:
+                """
+                Content Summary:
                 -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
 
                 Comparison and Evaluation:
                 -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
                 -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
                 -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
-                -   The relevance score is high due to the direct alignment of content with the title.
-
-                Suggested Title (if needed):
-                -   "Mastering Time Management: 10 Essential Tips for Success" (if the original title needs more emphasis on mastery and success). """,
+                -   The relevance score is high due to the direct alignment of content with the title.""",
             ),
             (
                 "system",
                 """ Instructions:
                 1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
-                2.  Write a brief report based on your findings, including specific examples and any suggested improvements. """,
+                2.  Write a brief report based on your findings, including specific examples.""",
             ),
             (
                 "human",
@@ -342,39 +396,46 @@ class AzurePrompts(LLMPrompt):
 
         return title_evaluation_prompt
 
-    def return_meta_desc_evaluation_prompt(self) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_meta_desc_evaluation_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the meta description evaluation prompt where the chain output will be a string
+
+        Returns:
+            list[tuple[str, str]]: a list containing the meta description evaluation prompt. {meta} and {article} are the inputs required to invoke the prompt.
+        """
+
         meta_desc_evaluation_prompt = [
             (
                 "system",
                 """
-            Objective: Assess the relevance of the article's meta description by comparing it with the content of the article.
+                Objective: Assess the relevance of the article's meta description by comparing it with the content of the article.
 
-            Steps to Follow:
-            1.  Identify the Meta Description:
-            -   What is the meta description of the article?
+                Steps to Follow:
+                1.  Identify the Meta Description:
+                -   What is the meta description of the article?
 
-            2.  Analyze the Meta Description:
-            -   What main topic or benefit does the meta description convey?
-            -   Is the meta description clear, concise, and engaging?
+                2.  Analyze the Meta Description:
+                -   What main topic or benefit does the meta description convey?
+                -   Is the meta description clear, concise, and engaging?
 
-            3.  Review the Content:
-            -   Read the entire article carefully.
-            -   Summarize the main points and key themes of the article.
-            -   Note any specific sections or statements that align with or diverge from the meta description.
+                3.  Review the Content:
+                -   Read the entire article carefully.
+                -   Summarize the main points and key themes of the article.
+                -   Note any specific sections or statements that align with or diverge from the meta description.
 
-            4.  Compare Meta Description and Content:
-            -   Does the content directly address the main topic or benefit stated in the meta description?
-            -   Are the main themes and messages of the article consistent with the expectations set by the meta description?
-            -   Identify any significant information in the article that is not reflected in the meta description and vice versa.
+                4.  Compare Meta Description and Content:
+                -   Does the content directly address the main topic or benefit stated in the meta description?
+                -   Are the main themes and messages of the article consistent with the expectations set by the meta description?
+                -   Identify any significant information in the article that is not reflected in the meta description and vice versa.
 
-            5.  Evaluate Relevance:
-            -   Provide a detailed explanation of how well the meta description reflects the content.
-            -   Use specific examples or excerpts from the article to support your evaluation.
-            -   Highlight any discrepancies or misalignment between the meta description and the content.
+                5.  Evaluate Relevance:
+                -   Provide a detailed explanation of how well the meta description reflects the content.
+                -   Use specific examples or excerpts from the article to support your evaluation.
+                -   Highlight any discrepancies or misalignment between the meta description and the content.
 
-            6.  Suggestions for Improvement:
-            -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
-            -   Explain why the suggested descriptions are more appropriate based on the article's content. """,
+                Your assessment should emphasize the relevance of the article and explain why the meta description is irrelevant as and when needed.
+                """,
             ),
             (
                 "human",
@@ -382,38 +443,47 @@ class AzurePrompts(LLMPrompt):
             ),
             (
                 "assistant",
-                """ Content Summary:
-            -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
+                """
+                Content Summary:
+                -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
 
-            Comparison and Evaluation:
-            -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
-            -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
-            -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
-            -   The relevance score is high due to the direct alignment of content with the meta description.
-
-            Suggested Meta Description (if needed):
-            -   "Discover 10 essential time management strategies to enhance productivity and reach your goals." """,
+                Comparison and Evaluation:
+                -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
+                -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
+                -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
+                -   The relevance score is high due to the direct alignment of content with the meta description.
+                """,
             ),
             (
                 "system",
-                """ Instructions:
-            -   Use the steps provided to evaluate the relevance of the article's meta description.
-            -   Write a brief report based on your findings, including specific examples and any suggested improvements. """,
+                """
+                Instructions:
+                -   Use the steps provided to evaluate the relevance of the article's meta description.
+                -   Write a brief report based on your findings, including specific examples.
+                """,
             ),
             (
                 "human",
                 """
-            Evaluate the following Meta Description:
-            {meta}
+                Evaluate the following Meta Description:
+                {meta}
 
-            Use the following article:
-            {article}
-            """,
+                Use the following article:
+                {article}
+                """,
             ),
         ]
+
         return meta_desc_evaluation_prompt
 
-    def return_researcher_prompt(self, step) -> list:
+    @staticmethod
+    def return_researcher_prompt(step) -> list[tuple[str, str]]:
+        """
+        Returns the researcher prompt
+
+        Returns:
+            list[tuple[str, str]]: a list containing the researcher prompt. {Article} is the only input required to invoke the prompt.
+        """
 
         match step:
             case "generate keypoints":
@@ -605,18 +675,20 @@ class AzurePrompts(LLMPrompt):
                 ]
         return additional_content_prompt
 
+    @staticmethod
     def return_compiler_prompt(self) -> list[tuple[str, str]]:
         """
-        Returns the compiler prompt for Azure ChatGPT
+        Returns the compiler prompt
 
         Returns:
-            compiler_prompt (string): this is a string containing the prompt for a compiler llm. {Keypoints} is the only input required to invoke the prompt.
+            list[tuple[str, str]]: a list containing the prompt for a Compiler LLM. {Keypoints} is the only input required to invoke the prompt.
         """
 
         compiler_prompt = [
             (
                 "system",
-                """ Your task is to compare and merge the keypoints and their content given to you.
+                """ 
+                Your task is to compare and merge the keypoints and their content given to you.
                 Your final answer be a final compilation of all the keypoints from the two articles, with no loss in information and no duplicated sentences.
                 You are NOT supposed to summarise the content.
                 You will be given a context guideline as well as a set of instructions.
@@ -641,7 +713,7 @@ class AzurePrompts(LLMPrompt):
                 You may use bullet points, but do NOT paraphrase the sentences
                 Remove ALL sentences under the "Omitted Sentences" section when compiling the information.
 
-                You may add conjuctions and connectors between sentences if it improves the flow of the sentences.
+                You may add conjunctions and connectors between sentences if it improves the flow of the sentences.
                 You MUST retain ALL key information, especially information pertaining to specific disease names and medications.
                 ### End of Instructions
 
@@ -656,9 +728,9 @@ class AzurePrompts(LLMPrompt):
                 Content: Parkinson's disease is a neuro-degenerative disease.
 
                 Main keypoint: Symptoms of Parkinson's disease
-                Contet: Some common symptoms of PD include:
+                Content: Some common symptoms of PD include:
                     - Muscle rigidity, where muscle remains contracted for a long time
-                    - Tremoring in hands
+                    - Tremouring in hands
                     - Impaired balance and coordination, sometimes leading to falls.
 
                 Main keypoint: Remedies to Parkinson's disease
@@ -700,12 +772,23 @@ class AzurePrompts(LLMPrompt):
         ]
         return compiler_prompt
 
-    def return_content_prompt(self) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_content_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the content optimisation prompt
+
+        Returns:
+            list[tuple[str, str]]: a list containing the content optimisation prompt. {Keypoints} is the only input required to invoke the prompt.
+
+        Note:
+            The prompt is solely applicable for Health and Conditions
+        """
 
         optimise_health_conditions_content_prompt = [
             (
                 "system",
-                """ You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
+                """
+                You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
 
                     Your task is to utilise content from the given key points to fill in for the required sections stated below.
                     You will also be given a set of instructions that you MUST follow.
@@ -781,8 +864,8 @@ class AzurePrompts(LLMPrompt):
                         You must use the given key points to FILL IN the required sections.
                         Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts.
 
-                        Follow these instructions step by step carefully
-                    ### End of instructions
+                    Follow these instructions step by step carefully
+                ### End of instructions
                 """,
             ),
             (
@@ -793,9 +876,21 @@ class AzurePrompts(LLMPrompt):
                 """,
             ),
         ]
+
         return optimise_health_conditions_content_prompt
 
-    def return_writing_prompt(self) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_writing_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the writing guidelines optimisation prompt
+
+        Returns:
+            list[tuple[str, str]]: a list containing the writing guidelines optimisation prompt. {Content} is the only input required to invoke the prompt.
+
+        Note:
+            The prompt is solely applicable for Health and Conditions
+        """
+
         optimise_writing_prompt = [
             (
                 "system",
@@ -846,22 +941,28 @@ class AzurePrompts(LLMPrompt):
                     Your answer MUST be between 300 to 1500 words.
                     Your answer should also contain a close word count to the original content.
                     You MUST remove ALL instances of "Main keypoint" and "Sub keypoint" from the headers. Your answer must be a final readable article with appropriate headers. Otherwise, keep the original headers.
+
                     Mandatory Use of Guidelines: Use the writing guidelines above to rewrite the content.
-                    You must NOT change any part of the article's structure. Your task is to simply rewrite the content, not change the article structure.
+                    You MUST NOT change any part of the article's structure. Your task is to simply rewrite the content, not change the article structure.
                     No Prompt Instructions: Do not include any of these prompt instructions in your response. The reader should not be aware of these prompts.
-                ### End of instructions""",
-            ),
-            (
-                "human",
-                """
-                Rewrite the following content:
-                {Content}
+                ### End of instructions
                 """,
             ),
+            ("human", "Rewrite the following content:\n{Content}"),
         ]
         return optimise_writing_prompt
 
-    def return_hemingway_readability_optimisation_prompt(self, step: str) -> str:
+    @staticmethod
+    def return_hemingway_readability_optimisation_prompt(step) -> list[tuple[str, str]]:
+        """
+        Returns the readability optimisation prompt
+
+        Returns:
+            list[tuple[str, str]]: a list containing the readability optimisation prompt. {Content} is the only input required to invoke the prompt.
+
+        Note:
+            The prompt is solely applicable for Health and Conditions
+        """
         match step:
             case "shortening sentences":
                 hemingway_readability_optimisation_prompt = [
@@ -1056,11 +1157,20 @@ class AzurePrompts(LLMPrompt):
 
                 return hemingway_readability_optimisation_prompt
 
-    def return_personality_evaluation_prompt(self) -> str:
+    @staticmethod
+    def return_personality_evaluation_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the personality evaluation prompt
+
+        Returns:
+            list[tuple[str, str]]: a list containing the personality evaluation prompt. {Content} is the only input required to invoke the prompt.
+        """
+
         personality_evaluation_prompt = [
             (
                 "system",
-                """ Your task is to evaluate a given content and check if it follows the set of personality and voice guidelines provided below.
+                """
+                Your task is to evaluate a given content and check if it follows the set of personality and voice guidelines provided below.
 
                 ### Start of guidelines
                     You should check these guidelines with the given content carefully step by step to determine if it follows the personality.
@@ -1092,18 +1202,19 @@ class AzurePrompts(LLMPrompt):
                 Otherwise, if you determine that the given content adheres to the writing guidelines, your final answer will be "True".
                 """,
             ),
-            (
-                "human",
-                """
-                Evaluate the following content:
-                {Content}
-                """,
-            ),
+            ("human", "Evaluate the following content:\n{Content}"),
         ]
 
         return personality_evaluation_prompt
 
-    def return_title_prompt(self, step: str) -> str:
+    @staticmethod
+    def return_title_prompt(step: str) -> list[tuple[str, str]]:
+        """
+        Returns the title optimisation prompt
+
+        Returns:
+            list[tuple[str, str]]: a list containing the title optimisation prompt. {Content} is the only input required to invoke the prompt.
+        """        
         match step:
             case "optimise title":
                 optimise_title_prompt = [
@@ -1228,8 +1339,14 @@ class AzurePrompts(LLMPrompt):
                 ]
 
                 return shorten_title
+    @staticmethod
+    def return_meta_desc_prompt(step: str) -> list[tuple[str, str]]:
+        """
+        Returns the meta description optimisation prompt
 
-    def return_meta_desc_prompt(self, step) -> list[tuple[str, str]]:
+        Returns:
+            list[tuple[str, str]]: a list containing the meta description optimisation prompt. {Content} is the only input required to invoke the prompt.
+        """
         match step:
             case "optimise meta desc":
                 optimise_meta_desc_prompt = [
@@ -1256,7 +1373,8 @@ class AzurePrompts(LLMPrompt):
                         ### End of guidelines
 
                         Check through your writing carefully.
-                        """,
+                        
+                """,
                     ),
                     (
                         "human",
@@ -1328,7 +1446,14 @@ class LlamaPrompts(LLMPrompt):
     Refer to https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3/ for more information.
     """
 
-    def return_readability_evaluation_prompt(self) -> str:
+    @staticmethod
+    def return_readability_evaluation_prompt() -> str:
+        """
+        Returns the readability evaluation prompt where the chain output will be a string
+
+        Returns:
+            str : a string containing the readability evaluation prompt. {Article} is the only input required to invoke the prompt.
+        """
 
         readability_evaluation_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -1352,7 +1477,14 @@ class LlamaPrompts(LLMPrompt):
 
         return readability_evaluation_prompt
 
-    def return_structure_evaluation_prompt(self) -> str:
+    @staticmethod
+    def return_structure_evaluation_prompt() -> str:
+        """
+        Returns the structure evaluation prompt where the chain output will be a string
+
+        Returns:
+            str : a string containing the structure evaluation prompt. {Article} is the only input required to invoke the prompt.
+        """
 
         structure_evaluation_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -1425,7 +1557,14 @@ class LlamaPrompts(LLMPrompt):
 
         return structure_evaluation_prompt
 
-    def return_title_evaluation_prompt(self) -> str:
+    @staticmethod
+    def return_title_evaluation_prompt() -> str:
+        """
+        Returns the title evaluation prompt where the chain output will be a string
+
+        Returns:
+            str : a string containing the title evaluation prompt. {Title} and {Article} are the inputs required to invoke the prompt.
+        """
 
         title_evaluation_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -1480,6 +1619,7 @@ class LlamaPrompts(LLMPrompt):
             <|start_header_id|>user<|end_header_id|>
             Title:
             {Title}
+
             Article:
             {Article}
             <|eot_id|>
@@ -1489,75 +1629,84 @@ class LlamaPrompts(LLMPrompt):
 
         return title_evaluation_prompt
 
-    def return_meta_desc_evaluation_prompt(self) -> str:
+    @staticmethod
+    def return_meta_desc_evaluation_prompt() -> str:
+        """
+        Returns the meta description evaluation prompt where the chain output will be a string
+
+        Returns:
+            str : a string containing the meta description evaluation prompt. {Meta} and {Article} are the inputs required to invoke the prompt.
+        """
 
         meta_desc_evaluation_prompt = """
-        <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-        Objective: Assess the relevance of the article's meta description by comparing it with the content of the article.
+            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+            Objective: Assess the relevance of the article's meta description by comparing it with the content of the article.
 
-        Steps to Follow:
-        1.  Identify the Meta Description:
-        -   What is the meta description of the article?
+            Steps to Follow:
+            1.  Identify the Meta Description:
+            -   What is the meta description of the article?
 
-        2.  Analyze the Meta Description:
-        -   What main topic or benefit does the meta description convey?
-        -   Is the meta description clear, concise, and engaging?
+            2.  Analyze the Meta Description:
+            -   What main topic or benefit does the meta description convey?
+            -   Is the meta description clear, concise, and engaging?
 
-        3.  Review the Content:
-        -   Read the entire article carefully.
-        -   Summarize the main points and key themes of the article.
-        -   Note any specific sections or statements that align with or diverge from the meta description.
+            3.  Review the Content:
+            -   Read the entire article carefully.
+            -   Summarize the main points and key themes of the article.
+            -   Note any specific sections or statements that align with or diverge from the meta description.
 
-        4.  Compare Meta Description and Content:
-        -   Does the content directly address the main topic or benefit stated in the meta description?
-        -   Are the main themes and messages of the article consistent with the expectations set by the meta description?
-        -   Identify any significant information in the article that is not reflected in the meta description and vice versa.
+            4.  Compare Meta Description and Content:
+            -   Does the content directly address the main topic or benefit stated in the meta description?
+            -   Are the main themes and messages of the article consistent with the expectations set by the meta description?
+            -   Identify any significant information in the article that is not reflected in the meta description and vice versa.
 
-        5.  Evaluate Relevance:
-        -   Provide a detailed explanation of how well the meta description reflects the content.
-        -   Use specific examples or excerpts from the article to support your evaluation.
-        -   Highlight any discrepancies or misalignment between the meta description and the content.
+            5.  Evaluate Relevance:
+            -   Provide a detailed explanation of how well the meta description reflects the content.
+            -   Use specific examples or excerpts from the article to support your evaluation.
+            -   Highlight any discrepancies or misalignment between the meta description and the content.
 
-        6.  Suggestions for Improvement:
-        -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
-        -   Explain why the suggested descriptions are more appropriate based on the article's content.
+            6.  Suggestions for Improvement:
+            -   If the meta description is not fully relevant, suggest alternative descriptions that more accurately capture the essence of the article.
+            -   Explain why the suggested descriptions are more appropriate based on the article's content.
 
-        Example Analysis:
-        Meta Description: "Learn 10 effective time management tips to boost your productivity and achieve your goals."
+            Example Analysis:
+            Meta Description: "Learn 10 effective time management tips to boost your productivity and achieve your goals."
 
-        Content Summary:
-        -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
+            Content Summary:
+            -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
 
-        Comparison and Evaluation:
-        -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
-        -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
-        -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
-        -   The relevance score is high due to the direct alignment of content with the meta description.
+            Comparison and Evaluation:
+            -   The meta description promises "10 effective time management tips to boost your productivity and achieve your goals," and the article delivers on this promise by providing ten actionable tips.
+            -   Each section of the article corresponds to a tip mentioned in the meta description, ensuring coherence and relevance.
+            -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the meta description's promise of effective time management strategies.
+            -   The relevance score is high due to the direct alignment of content with the meta description.
 
-        Suggested Meta Description (if needed):
-        -   "Discover 10 essential time management strategies to enhance productivity and reach your goals."
+            Suggested Meta Description (if needed):
+            -   "Discover 10 essential time management strategies to enhance productivity and reach your goals."
 
-        Instructions:
-        -   Use the steps provided to evaluate the relevance of the article's meta description.
-        -   Write a brief report based on your findings, including specific examples and any suggested improvements.
-        <|start_header_id|>user<|end_header_id|>
-        Meta Description:
-        {Meta}
-        Article:
-        {Article}
-        <|eot_id|>
-        <|start_header_id|>assistant<|end_header_id|>
-        Answer:
+            Instructions:
+            -   Use the steps provided to evaluate the relevance of the article's meta description.
+            -   Write a brief report based on your findings, including specific examples and any suggested improvements.
+            <|start_header_id|>user<|end_header_id|>
+            Meta Description:
+            {Meta}
+
+            Article:
+            {Article}
+            <|eot_id|>
+            <|start_header_id|>assistant<|end_header_id|>
+            Answer:
         """
 
         return meta_desc_evaluation_prompt
 
-    def return_researcher_prompt(self) -> str:
+    @staticmethod
+    def return_researcher_prompt() -> str:
         """
-        Returns the researcher prompt for Llama3
+        Returns the researcher prompt
 
         Returns:
-            researcher_prompt (string): this is a string containing the prompt for a researcher llm. {Article} is the only input required to invoke the prompt.
+            str: a string containing the researcher prompt. {Article} is the only input required to invoke the prompt.
         """
 
         researcher_prompt = """
@@ -1610,19 +1759,19 @@ class LlamaPrompts(LLMPrompt):
             Article:
             '''{Article}'''
             <|eot_id|>
-
             <|start_header_id|>assistant<|end_header_id|>
             Answer:
         """
 
         return researcher_prompt
 
-    def return_compiler_prompt(self) -> str:
+    @staticmethod
+    def return_compiler_prompt() -> str:
         """
-        Returns the compiler prompt for Llama3
+        Returns the compiler prompt
 
         Returns:
-            compiler_prompt (string): this is a string containing the prompt for a compiler llm. {Keypoints} is the only input required to invoke the prompt.
+            str: a string containing the prompt for a Compiler LLM. {Keypoints} is the only input required to invoke the prompt.
         """
 
         compiler_prompt = """
@@ -1667,13 +1816,22 @@ class LlamaPrompts(LLMPrompt):
             Compile the key points below:
             {Keypoints}
             <|eot_id|>
-
             <|start_header_id|>assistant<|end_header_id|>
             Answer:
         """
         return compiler_prompt
 
-    def return_content_prompt(self) -> str:
+    @staticmethod
+    def return_content_prompt() -> str:
+        """
+        Returns the content optimisation prompt
+
+        Returns:
+            str: a string containing the content optimisation prompt. {Keypoints} is the only input required to invoke the prompt.
+
+        Note:
+            The prompt is solely applicable for Health and Conditions
+        """
 
         optimise_health_conditions_content_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -1773,10 +1931,22 @@ class LlamaPrompts(LLMPrompt):
             <|eot_id|>
             <|start_header_id|>assistant<|end_header_id|>
             Answer:
-            """
+        """
+
         return optimise_health_conditions_content_prompt
 
-    def return_writing_prompt(self) -> str:
+    @staticmethod
+    def return_writing_prompt() -> str:
+        """
+        Returns the writing guidelines optimisation prompt
+
+        Returns:
+            str: a string containing the writing guidelines optimisation prompt. {Content} is the only input required to invoke the prompt.
+
+        Note:
+            The prompt is solely applicable for Health and Conditions
+        """
+
         optimise_health_conditions_writing_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
@@ -1828,16 +1998,26 @@ class LlamaPrompts(LLMPrompt):
                 Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts
             ### End of instructions
 
-            <|eot_id|><|start_header_id|>user<|end_header_id|>
+            <|eot_id|>
+            <|start_header_id|>user<|end_header_id|>
             Content:
             {Content}
-            <|eot_id|><|start_header_id|>assistant<|end_header_id|>
-            Answer:
             <|eot_id|>
-            """
+            <|start_header_id|>assistant<|end_header_id|>
+            Answer:
+        """
+
         return optimise_health_conditions_writing_prompt
 
-    def return_title_prompt(self) -> str:
+    @staticmethod
+    def return_title_prompt() -> str:
+        """
+        Returns the title optimisation prompt
+
+        Returns:
+            str: a string containing the title optimisation prompt. {Content} is the only input required to invoke the prompt.
+        """
+
         optimise_title_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
@@ -1903,16 +2083,26 @@ class LlamaPrompts(LLMPrompt):
                 Your answer must strictly only include the titles.
             ### End of instructions
 
-            <|eot_id|><|start_header_id|>user<|end_header_id|>
+            <|eot_id|>
+            <|start_header_id|>user<|end_header_id|>
             Content:
             {Content}
-            <|eot_id|><|start_header_id|>assistant<|end_header_id|>
-            Answer:
             <|eot_id|>
-            """
+            <|start_header_id|>assistant<|end_header_id|>
+            Answer:
+        """
+
         return optimise_title_prompt
 
-    def return_meta_desc_prompt(self) -> str:
+    @staticmethod
+    def return_meta_desc_prompt() -> str:
+        """
+        Returns the meta description optimisation prompt
+
+        Returns:
+            str: a string containing the meta description optimisation prompt. {Content} is the only input required to invoke the prompt.
+        """
+
         optimise_meta_desc_prompt = """
             <|begin_of_text|><|start_header_id|>system<|end_header_id|>
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
@@ -1952,6 +2142,7 @@ class LlamaPrompts(LLMPrompt):
             You must consider the guidelines given and write your meta description based on it.
             Your answer must strictly only include the meta descriptions.
             ### End of instructions
+
             <|eot_id|>
             <|start_header_id|>user<|end_header_id|>
             Content:
@@ -1959,7 +2150,8 @@ class LlamaPrompts(LLMPrompt):
             <|eot_id|>
             <|start_header_id|>assistant<|end_header_id|>
             Answer:
-            """
+        """
+
         return optimise_meta_desc_prompt
 
 
@@ -1972,7 +2164,14 @@ class MistralPrompts(LLMPrompt):
     Refer to https://community.aws/content/2dFNOnLVQRhyrOrMsloofnW0ckZ/how-to-prompt-mistral-ai-models-and-why?lang=en for more information.
     """
 
-    def return_readability_evaluation_prompt(self) -> str:
+    @staticmethod
+    def return_readability_evaluation_prompt() -> str:
+        """
+        Returns the readability evaluation prompt where the chain output will be a string
+
+        Returns:
+            str : a string containing the readability evaluation prompt. {Article} is the only input required to invoke the prompt.
+        """
 
         readability_evaluation_prompt = """
             <s> [INST]
@@ -1996,7 +2195,14 @@ class MistralPrompts(LLMPrompt):
 
         return readability_evaluation_prompt
 
-    def return_structure_evaluation_prompt(self) -> str:
+    @staticmethod
+    def return_structure_evaluation_prompt() -> str:
+        """
+        Returns the structure evaluation prompt where the chain output will be a string
+
+        Returns:
+            str : a string containing the structure evaluation prompt. {Article} is the only input required to invoke the prompt.
+        """
 
         structure_evaluation_prompt = """
             <s> [INST]
@@ -2069,7 +2275,14 @@ class MistralPrompts(LLMPrompt):
 
         return structure_evaluation_prompt
 
-    def return_title_evaluation_prompt(self) -> str:
+    @staticmethod
+    def return_title_evaluation_prompt() -> str:
+        """
+        Returns the title evaluation prompt where the chain output will be a string
+
+        Returns:
+            str : a string containing the title evaluation prompt. {Title} and {Article} are the inputs required to invoke the prompt.
+        """
 
         title_evaluation_prompt = """
             <s> [INST]
@@ -2123,6 +2336,7 @@ class MistralPrompts(LLMPrompt):
 
             Title:
             {Title}
+
             Article:
             {Article}
 
@@ -2133,7 +2347,14 @@ class MistralPrompts(LLMPrompt):
 
         return title_evaluation_prompt
 
-    def return_meta_desc_evaluation_prompt(self) -> str:
+    @staticmethod
+    def return_meta_desc_evaluation_prompt() -> str:
+        """
+        Returns the meta description evaluation prompt where the chain output will be a string
+
+        Returns:
+            str : a string containing the meta description evaluation prompt. {Meta} and {Article} are the inputs required to invoke the prompt.
+        """
 
         meta_desc_evaluation_prompt = """
             <s> [INST]
@@ -2187,6 +2408,7 @@ class MistralPrompts(LLMPrompt):
 
             Meta Description:
             {Meta}
+
             Article:
             {Article}
 
@@ -2197,12 +2419,13 @@ class MistralPrompts(LLMPrompt):
 
         return meta_desc_evaluation_prompt
 
-    def return_researcher_prompt(self) -> str:
+    @staticmethod
+    def return_researcher_prompt() -> str:
         """
-        Returns the researcher prompt for Mistral 7b
+        Returns the researcher prompt
 
         Returns:
-            researcher_prompt: this is a string containing the prompt for a researcher llm. {Article} is the only input required to invoke the prompt.
+            str: a string containing the researcher prompt. {Article} is the only input required to invoke the prompt.
         """
 
         researcher_prompt = """
@@ -2235,21 +2458,23 @@ class MistralPrompts(LLMPrompt):
             Buy these essential oils!
             "
 
-            Article: {Article}
-            [/INST]
+            Article:
+            {Article}
 
+            [/INST]
             Answer:
             </s>
         """
 
         return researcher_prompt
 
-    def return_compiler_prompt(self) -> str:
+    @staticmethod
+    def return_compiler_prompt() -> str:
         """
-        Returns the compiler prompt for Mistral 7b
+        Returns the compiler prompt
 
         Returns:
-            compiler_prompt: this is a string containing the prompt for a compiler llm. {Keypoints} is the only input required to invoke the prompt.
+            str: a string containing the prompt for a Compiler LLM. {Keypoints} is the only input required to invoke the prompt.
         """
 
         compiler_prompt = """
@@ -2294,6 +2519,7 @@ class MistralPrompts(LLMPrompt):
 
             Below are the key points you will need to compile:
             {Keypoints}
+
             [/INST]
 
             Answer:
@@ -2302,7 +2528,18 @@ class MistralPrompts(LLMPrompt):
 
         return compiler_prompt
 
-    def return_content_prompt(self) -> str:
+    @staticmethod
+    def return_content_prompt() -> str:
+        """
+        Returns the content optimisation prompt
+
+        Returns:
+            str: a string containing the content optimisation prompt. {Keypoints} is the only input required to invoke the prompt.
+
+        Note:
+            The prompt is solely applicable for Health and Conditions
+        """
+
         optimise_health_conditions_content_prompt = """
             <s> [INST]
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
@@ -2359,18 +2596,29 @@ class MistralPrompts(LLMPrompt):
             You should only use bullet points SPARINGLY and only <= 2 sections in your writing should contain bullet points.
             Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts
             ### End of instructions
-            [/INST]
 
             Key points:
             {Keypoints}
 
+            [/INST]
             Answer:
             </s>
-            """
+        """
 
         return optimise_health_conditions_content_prompt
 
-    def return_writing_prompt(self) -> str:
+    @staticmethod
+    def return_writing_prompt() -> str:
+        """
+        Returns the writing guidelines optimisation prompt
+
+        Returns:
+            str: a string containing the writing guidelines optimisation prompt. {Content} is the only input required to invoke the prompt.
+
+        Note:
+            The prompt is solely applicable for Health and Conditions
+        """
+
         optimise_health_conditions_writing_prompt = """
             <s> [INST]
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
@@ -2421,18 +2669,26 @@ class MistralPrompts(LLMPrompt):
             If the content is given in bullet points, you are to maintain the same structure of the bullet points.
             Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts
             ### End of instructions
-            [/INST]
 
             Content:
             {Content}
 
+            [/INST]
             Answer:
             </s>
-            """
+        """
 
         return optimise_health_conditions_writing_prompt
 
-    def return_title_prompt(self) -> str:
+    @staticmethod
+    def return_title_prompt() -> str:
+        """
+        Returns the title optimisation prompt
+
+        Returns:
+            str: a string containing the title optimisation prompt. {Content} is the only input required to invoke the prompt.
+        """
+
         optimise_title_prompt = """
             <s> [INST]
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
@@ -2498,16 +2754,25 @@ class MistralPrompts(LLMPrompt):
                 Your answer must strictly only include the titles.
             ### End of instructions
 
-            [/INST]
             Content:
             {Content}
 
+            [/INST]
             Answer:
             </s>
-            """
+        """
+
         return optimise_title_prompt
 
-    def return_meta_desc_prompt(self) -> str:
+    @staticmethod
+    def return_meta_desc_prompt() -> str:
+        """
+        Returns the meta description optimisation prompt
+
+        Returns:
+            str: a string containing the meta description optimisation prompt. {Content} is the only input required to invoke the prompt.
+        """
+
         optimise_meta_desc_prompt = """
             <s> [INST]
             You are part of a article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
@@ -2548,24 +2813,46 @@ class MistralPrompts(LLMPrompt):
                 Your answer must strictly only include the meta descriptions.
             ### End of instructions
 
-            [/INST]
             Content:
             {Content}
 
+            [/INST]
             Answer:
             </s>
-            """
+        """
+
         return optimise_meta_desc_prompt
 
 
 def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
-    """Return the number of tokens in a string."""
+    """
+    Returns the number of tokens in a given string
+
+    Args:
+        string (str): the string to tokenize
+        encoding_name (str, optional): the encoding name, must be available in OpenAI's tiktoken package. Defaults to "cl100k_base".
+
+    Returns:
+        int: the number of tokens
+    """
+
+    # Get the encoding from the tiktoken package
     encoding = tiktoken.get_encoding(encoding_name)
+    # Count the number of tokens in the list
     num_tokens = len(encoding.encode(string))
+
     return num_tokens
 
 
 if __name__ == "__main__":
     prompter = prompt_tool("azure")
-    prompt = prompter.return_researcher_prompt()
-    # print(num_tokens_from_string(prompt))
+
+    # Save the prompt as a .txt file
+    prompt_msgs = prompter.return_meta_desc_evaluation_prompt()
+    prompt = ""
+    for msg in prompt_msgs:
+        prompt += msg[1] + "\n"
+    print(prompt_msgs)
+    prompt = re.sub(r" +", " ", prompt)
+    with open("../docs/meta_desc_evaluation_prompt.txt", "w") as f:
+        f.write(prompt)

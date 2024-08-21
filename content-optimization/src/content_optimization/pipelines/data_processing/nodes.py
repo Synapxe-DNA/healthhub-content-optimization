@@ -157,6 +157,7 @@ def extract_data(
     all_contents_added: dict[str, Callable[[], Any]],
     word_count_cutoff: int,
     whitelist: list[int],
+    blacklist: dict[int, str],
 ) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
     """
     Extracts data from processed content and stores it in parquet files
@@ -164,23 +165,18 @@ def extract_data(
 
     Args:
         all_contents_added (dict[str, Callable[[], Any]]):
-            A dictionary containing the standardized `partitions.PartitionedDataset`
-            where the keys are the content categories and the values loads the
-            standardized parquet data as `pandas.DataFrame`.
-
-        word_count_cutoff (int): The minimum number of words in an article
-            to be considered before flagging for removal.
-
+            A dictionary containing the standardized `partitions.PartitionedDataset` where the keys are the content
+            categories and the values loads the standardized parquet data as `pandas.DataFrame`.
+        word_count_cutoff (int): The minimum number of words in an article to be considered before flagging for removal.
         whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
+        blacklist (dict[int, str]): The list of article IDs to remove. See https://bitly.cx/f8FIk.
 
     Returns:
-        tuple[dict[str, pd.DataFrame], dict[str, str]]:
-            A tuple containing two dictionaries. The first dictionary contains
-            the extracted data stored as partitioned parquet files, where the keys
-            are the content categories and the values are the corresponding dataframes.
-            The second dictionary contains the extracted text stored as partitioned
-            text files, where the keys are the file paths and the values are the extracted
-            text.
+        tuple[dict[str, pd.DataFrame], dict[str, str]]: A tuple containing two dictionaries. The first dictionary
+            contains the extracted data stored as partitioned parquet files, where the keys are the content categories
+            and the values are the corresponding dataframes.
+            The second dictionary contains the extracted text stored as partitioned text files, where the keys are the
+            file paths and the values are the extracted text.
     """
     all_contents_extracted = {}  # to store as partitioned parquet files
     all_extracted_text = {}  # to store as partitioned text files
@@ -260,7 +256,9 @@ def extract_data(
 
         # After extraction, we flag to remove articles with no content,
         # duplicated content, duplicated URL or below word count cutoff
-        df = flag_articles_to_remove_after_extraction(df, word_count_cutoff, whitelist)
+        df = flag_articles_to_remove_after_extraction(
+            df, word_count_cutoff, whitelist, blacklist
+        )
 
         # Store dataframes in a parquet file named `content_category`
         all_contents_extracted[content_category] = df

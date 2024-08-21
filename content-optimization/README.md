@@ -98,6 +98,8 @@ cat requirements.txt | xargs poetry add
 
     - [`feature_engineering/`](src/content_optimization/pipelines/feature_engineering): contains the code for the `feature_engineering` pipeline; for more information, refer [here](#feature-engineering)
 
+    - [`clustering/`](src/content_optimization/pipelines/clustering): contains the code for the `clustering` pipeline; for more information, refer [here](#clustering)
+
 - [`tests/`](tests): contains all unit and integrations tests for the Kedro pipeline; it is to be mirrored as per `data/` and `src/content_optimization/` directories. Refer [here](https://docs.kedro.org/en/stable/tutorial/test_a_project.html) for more information.
 
   - [`data/`](tests/data): contains all data for the project at every stage for the testing environment
@@ -166,8 +168,63 @@ kedro run --nodes="extract_keywords_node"
 
 ### Clustering <a id="clustering"></a>
 
-```python
-# TODO: Clustering Pipeline Documentation
+> [!IMPORTANT]
+> Before running the [`clustering`](src/content_optimization/pipelines/clustering/pipeline.py) pipeline, ensure that you have already ran the `data_processing` and `feature_engineering` pipeline. Additionally, make sure that Neo4j is set up locally.
+
+#### Prerequisites
+
+#### 1. Configuration
+
+Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
+
+```yaml
+neo4j_credentials:
+  username: your_username
+  password: your_password
+```
+
+Ensure that your `parameters_clustering.yml` file includes the Neo4j configurations:
+
+```yaml
+neo4j_config:
+  uri: neo4j://localhost:7687
+  database: hh-articles
+```
+
+#### 2.Neo4j Set Up
+
+<details>
+  <summary>Local Neo4j Setup Instuctions</summary>
+
+1. Download and Install Neo4j <br>
+
+   - Follow the [installation guide](https://neo4j.com/docs/operations-manual/current/installation/) provided by Neo4j
+
+2. Add Local DBMS <br>
+
+   - Open Neo4j Desktop <br>
+   - Create a new project or select an existing project <br>
+   - Click on "Add" and select "Add Local DBMS" <br>
+   - Use the username and password in your `conf/base/credentials.yml` file. <br>
+
+3. Create Database <br>
+
+   - Create a database with the name specified in the `database` variable in `parameters_clustering.yml` <br>
+
+4. Install GDS Library Plugins: <br>
+
+   - Follow the instructions in the [Neo4j GDS Library Installation Guide](https://neo4j.com/docs/graph-data-science/current/installation/neo4j-desktop/) to install the GDS library plugins<br>
+
+</details>
+
+#### 3. Data File
+
+- Verify that the file `data/01_raw/Synapxe Content Prioritisation - Live Healthy_020724.xlsx` is available in the specified directory.
+
+You can run the entire `clustering` pipeline by running:
+
+```zsh
+kedro run --pipeline=clustering
 ```
 
 ## Test the Kedro Project
