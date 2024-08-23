@@ -27,6 +27,7 @@ class ArticleInputs(TypedDict):
     article_category_names: Union[str, Optional[list[str]]]
     page_views: Union[int, Optional[list[int]]]
 
+
 class SkipLLMEvals(TypedDict):
     """
     A dictionary type definition for storing input data related to skipping LLM evaluations. This is typically used when
