@@ -17,6 +17,7 @@ from states.definitions import (
     ContentJudge,
     MetaFlags,
     MetaJudge,
+    SkipLLMEvals,
     TitleFlags,
     TitleJudge,
 )
@@ -40,6 +41,7 @@ class ChecksState(TypedDict):
 
     Attributes:
         article_inputs (ArticleInputs): Contains inputs related to the article being evaluated.
+        skip_llm_evaluations (SkipLLMEvals): Contains input flags whether to skip LLM-based evaluations
         content_flags (Annotated[ContentFlags, merge_dict]): Flags based on content analysis using rule-based/statistical methods.
         title_flags (Annotated[TitleFlags, merge_dict]): Flags based on title analysis using rule-based/statistical methods.
         meta_flags (Annotated[MetaFlags, merge_dict]): Flags based on meta description analysis using rule-based/statistical methods.
@@ -51,6 +53,9 @@ class ChecksState(TypedDict):
 
     # Article Inputs
     article_inputs: ArticleInputs
+
+    # Skip LLM evaluations
+    skip_llm_evaluations: SkipLLMEvals
 
     # Flags for rule-based/statistical-based methods
     content_flags: Annotated[ContentFlags, merge_dict]
@@ -127,6 +132,11 @@ def content_explanation_node(state: ChecksState) -> dict:
         dict: Updated content judge dictionary containing explanations for content quality.
     """
 
+    # Check if LLM evaluation is skipped
+    skip_llm = state.get("skip_llm_evaluations", {}).get("decision", False)
+    if skip_llm:
+        return
+
     # Extract article content, content flags and content judge from the state
     article_content = state.get("article_inputs")["article_content"]
     content_flags = state.get("content_flags", {})
@@ -155,20 +165,30 @@ def content_evaluation_llm_node(state: ChecksState) -> dict:
 
     Returns:
         dict: Updated content judge dictionary containing decisions and explanations for content quality.
+
+    Note:
+        Writing style optimisation has been removed as all articles are being flagged as true. Further refinement is required.
+        For now, the writing style evaluation has been commented out upon request. However, this may change in the future.
     """
 
-    # Extract article content and content judge from the state
-    article_content = state.get("article_inputs")["article_content"]
-    content_judge = state.get("content_judge", {})
-    content_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
+    # Check if LLM evaluation is skipped
+    skip_llm = state.get("skip_llm_evaluations", {}).get("decision", False)
+    if skip_llm:
+        return
 
-    # Check for poor content structure - Refer to `return_structure_evaluation_prompt` function in agents/prompts.py
-    content_structure_eval = content_evaluation_agent.evaluate_content(
-        article_content, choice="structure"
-    )
-    content_judge["structure"] = content_structure_eval
-
-    return {"content_judge": content_judge}
+    # # Extract article content and content judge from the state
+    # article_content = state.get("article_inputs")["article_content"]
+    # content_judge = state.get("content_judge", {})
+    # content_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
+    #
+    # # Check for poor content structure - Refer to `return_structure_evaluation_prompt` function in agents/prompts.py
+    # content_structure_eval = content_evaluation_agent.evaluate_content(
+    #     article_content, choice="structure"
+    # )
+    # content_judge["structure"] = content_structure_eval
+    #
+    # return {"content_judge": content_judge}
+    pass
 
 
 def title_evaluation_rules_node(state: ChecksState) -> dict:
@@ -208,6 +228,11 @@ def title_evaluation_llm_node(state: ChecksState) -> dict:
     Returns:
         dict: Updated title judge dictionary containing decisions and explanations regarding title relevance
     """
+
+    # Check if LLM evaluation is skipped
+    skip_llm = state.get("skip_llm_evaluations", {}).get("decision", False)
+    if skip_llm:
+        return
 
     # Extract article title, article content and title judge from the state
     article_title = state.get("article_inputs")["article_title"]
@@ -261,6 +286,11 @@ def meta_desc_evaluation_llm_node(state: ChecksState) -> dict:
     Returns:
         dict: Updated meta judge dictionary containing decisions and explanations regarding meta description relevance
     """
+
+    # Check if LLM evaluation is skipped
+    skip_llm = state.get("skip_llm_evaluations", {}).get("decision", False)
+    if skip_llm:
+        return
 
     # Extract article meta description, article content and meta judge from the state
     meta_desc = state.get("article_inputs")["meta_desc"]
@@ -423,6 +453,9 @@ def save_evaluation_dataframe(
 
     Returns:
         None
+
+    Note:
+        The columns stated in df_store must exist. Refer to `format_checks_outputs` in utils/formatters.py
     """
 
     # Generate current timestamp for the filename
@@ -499,6 +532,10 @@ if __name__ == "__main__":
                     "article_content": article_content,
                     "meta_desc": meta_desc,
                 },
+                "skip_llm_evaluations": {
+                    "decision": False,
+                    "explanation": None,
+                },
                 "content_flags": {},
                 "title_flags": {},
                 "meta_flags": {},
@@ -510,10 +547,30 @@ if __name__ == "__main__":
                     "explanation_agent": explanation_agent,
                 },
             }
+            try:
+                # Execute the Optimisation Checks on the article
+                response = execute_graph(app, inputs)
+                print(response)
+            # Skip LLM evaluations if Azure Content Filter is triggered
+            except ValueError:
+                ex_type, ex_value, ex_traceback = sys.exc_info()
+                if (
+                    ex_value
+                    == "Azure has not provided the response due to a content filter being triggered"
+                ):
+                    print(
+                        "Content Filter has been triggered. Skipping LLM-based evaluations..."
+                    )
+                    skip_llm_evaluations = {
+                        "decision": True,
+                        "explanation": "LLM unable to process content due to Azure's content filtering on hate, sexual, violence, and self-harm related categories",
+                    }
+                    inputs["skip_llm_evaluations"] = skip_llm_evaluations
+                    response = execute_graph(app, inputs)
+                    print(response)
+                else:
+                    raise ex_type(ex_value).with_traceback(ex_traceback)
 
-            # Execute the Optimisation Checks on the article
-            response = execute_graph(app, inputs)
-            print(response)
             # Save output with the correct keys (Easier to parse into a Pandas DataFrame)
             result = format_checks_outputs(response)
             print("Result generated!")
