@@ -418,7 +418,7 @@ def format_checks_outputs(checks: dict) -> dict:
 
     # Extracting Flags for Skipping LLM generation for evaluations & explanations
     skip_llm_evaluations = checks.get("skip_llm_evaluations")
-    skip_llm_eval_decision = bool(skip_llm_evaluations.get("decision"), False)
+    skip_llm_eval_decision = bool(skip_llm_evaluations.get("decision", False))
     skip_llm_eval_explanation = skip_llm_evaluations.get("explanation", None)
 
     # Extracting Content flags (Rule-based) from the checks dictionary
