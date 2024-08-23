@@ -280,7 +280,7 @@ class AzurePrompts(LLMPrompt):
                 """
                 Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
 
-                Steps to Follow:
+                Steps to Follow -
                 1.  Identify the Title:
                 -   What is the title of the article?
 
@@ -321,13 +321,16 @@ class AzurePrompts(LLMPrompt):
             ),
             (
                 "system",
-                """ Instructions:
+                """
+                Instructions:
                 1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
-                2.  Write a brief report based on your findings, including specific examples.""",
+                2.  Write a brief report based on your findings, including specific examples.
+                3.  Do NOT make any title suggestions or recommendations. Focus solely on the critique instead.
+                """,
             ),
             (
                 "human",
-                "Evaluate the following title:\n{title} \nUsing the following article:\n{article}",
+                "Evaluate the following title:\n{title}\n\nUsing the following article:\n{article}",
             ),
         ]
 
@@ -395,8 +398,9 @@ class AzurePrompts(LLMPrompt):
                 "system",
                 """
                 Instructions:
-                -   Use the steps provided to evaluate the relevance of the article's meta description.
-                -   Write a brief report based on your findings, including specific examples.
+                1.  Use the steps provided to evaluate the relevance of the article's meta description.
+                2.  Write a brief report based on your findings, including specific examples.
+                3.  Do NOT make any meta description suggestions or recommendations. Focus solely on the critique instead.
                 """,
             ),
             (
