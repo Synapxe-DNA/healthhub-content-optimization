@@ -162,6 +162,7 @@ class OptimisedArticle(TypedDict):
 
     researcher_keypoints: Optional[list[str]]
     compiled_keypoints: Optional[str]
+    sorted_content: Optional[str]
     optimised_content: Optional[str]
     optimised_writing: Optional[str]
     optimised_article_title: Optional[list]
@@ -203,6 +204,7 @@ class OptimisationAgents(TypedDict):
 
     researcher_agent: LLMInterface
     compiler_agent: LLMInterface
+    content_sorting_agent: LLMInterface
     content_optimisation_agent: LLMInterface
     writing_optimisation_agent: LLMInterface
     title_optimisation_agent: LLMInterface

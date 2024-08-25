@@ -252,14 +252,15 @@ def content_guidelines_optimisation_node(state):
     """
     optimised_article_output = state.get("optimised_article_output")
 
-    keypoints = optimised_article_output["researcher_keypoints"]
-    if "compiled_keypoints" in optimised_article_output.keys():
-        keypoints = optimised_article_output["compiled_keypoints"]
+    sorted_content = optimised_article_output['sorted_content']
+    # keypoints = optimised_article_output["researcher_keypoints"]
+    # if "compiled_keypoints" in optimised_article_output.keys():
+    #     keypoints = optimised_article_output["compiled_keypoints"]
 
     # Runs the compiler LLM to compile the keypoints
     content_optimisation_agent = state.get("llm_agents")["content_optimisation_agent"]
 
-    optimised_content = content_optimisation_agent.optimise_content(keypoints)
+    optimised_content = content_optimisation_agent.optimise_content(sorted_content)
 
     optimised_article_output["optimised_content"] = optimised_content
 
@@ -269,6 +270,38 @@ def content_guidelines_optimisation_node(state):
     return {
         "optimised_article_output": optimised_article_output,
         "user_flags": user_flags,
+    }
+
+
+def content_guidelines_sorting_node(state):
+    """Creates a content guidelines sorting node, which will sort the content of the article based on a given structure.
+
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+
+    Returns:
+        a dictionary with keys "optimised_content"
+            - sorted_content: a String containing the sorted article from the content guidelines sorting LLM
+    """
+    optimised_article_output = state.get("optimised_article_output")
+
+    keypoints = optimised_article_output["researcher_keypoints"]
+    if "compiled_keypoints" in optimised_article_output.keys():
+        keypoints = optimised_article_output["compiled_keypoints"]
+
+    # Runs the compiler LLM to compile the keypoints
+    content_sorting_agent = state.get("llm_agents")["content_sorting_agent"]
+
+    sorted_content = content_sorting_agent.sort_content(keypoints)
+
+    optimised_article_output["sorted_content"] = sorted_content
+
+    # user_flags = state.get("user_flags")
+    # user_flags["flag_for_content_optimisation"] = False
+
+    return {
+        "optimised_article_output": optimised_article_output,
+        # "user_flags": user_flags,
     }
 
 
@@ -407,7 +440,6 @@ def personality_guidelines_evaluation_node(state):
 
     # Obtaining article_flags dict
     article_evaluation = state.get("article_evaluation", {})
-
     # Updating article_evaluation with the updated personality_evaluation flags
     article_evaluation["writing_has_personality"] = personality_evaluation
 
@@ -438,7 +470,7 @@ def check_for_compiler(state):
 
     if len(article_content) < 2:
         if content_optimisation_flag:
-            return "content_guidelines_optimisation_node"
+            return "content_guidelines_sorting_node"
         elif writing_optimisation_flag:
             return "writing_guidelines_optimisation_node"
         elif title_optimisation_flag:
@@ -458,7 +490,7 @@ def decide_next_optimisation_node(state):
         state: a dictionary storing relevant attributes as keys and content as the respective items.
 
     Returns:
-        "content_guidelines_optimisation_node": returned if flag_for_content_optimisation is True
+        "content_guidelines_sorting_node": returned if flag_for_content_optimisation is True
         "title_optimisation_node": returned if previous flag is False and flag_for_title_optimisation is True
         "meta_description_optimisation_node": returned if previous flags are False and flag_for_meta_desc_optimisation is True
         END: returned if all flags are False, as no further optimisation is required for the article
@@ -471,7 +503,7 @@ def decide_next_optimisation_node(state):
     ]
 
     if content_optimisation_flag:
-        return "content_guidelines_optimisation_node"
+        return "content_guidelines_sorting_node"
     elif writing_optimisation_flag:
         return "writing_guidelines_optimisation_node"
     elif title_optimisation_flag:
@@ -645,6 +677,7 @@ def build_graph():
     nodes = {
         "researcher_node": researcher_node,
         "compiler_node": compiler_node,
+        "content_guidelines_sorting_node": content_guidelines_sorting_node,
         "content_guidelines_optimisation_node": content_guidelines_optimisation_node,
         "writing_guidelines_optimisation_node": writing_guidelines_optimisation_node,
         "title_optimisation_node": title_optimisation_node,
@@ -656,6 +689,7 @@ def build_graph():
     # Declaring dictionary with all edges
     edges = {
         START: ["researcher_node"],
+        "content_guidelines_sorting_node": ["content_guidelines_optimisation_node"],
         "meta_description_optimisation_node": [END],
     }
 
@@ -666,7 +700,7 @@ def build_graph():
             check_for_compiler,
             {
                 "compiler_node": "compiler_node",
-                "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
+                "content_guidelines_sorting_node": "content_guidelines_sorting_node",
                 "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
                 "title_optimisation_node": "title_optimisation_node",
                 "meta_description_optimisation_node": "meta_description_optimisation_node",
@@ -676,7 +710,7 @@ def build_graph():
         "compiler_node": (
             decide_next_optimisation_node,
             {
-                "content_guidelines_optimisation_node": "content_guidelines_optimisation_node",
+                "content_guidelines_sorting_node": "content_guidelines_sorting_node",
                 "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
                 "title_optimisation_node": "title_optimisation_node",
                 "meta_description_optimisation_node": "meta_description_optimisation_node",
@@ -753,6 +787,7 @@ if __name__ == "__main__":
     compiler_agent = start_llm(MODEL, ROLES.COMPILER)
     meta_desc_optimisation_agent = start_llm(MODEL, ROLES.META_DESC, temperature=0.5)
     title_optimisation_agent = start_llm(MODEL, ROLES.TITLE, temperature=0.5)
+    content_sorting_agent = start_llm(MODEL, ROLES.CONTENT_SORTER)
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(
         MODEL, ROLES.WRITING_OPTIMISATION, temperature=0.6
@@ -769,73 +804,113 @@ if __name__ == "__main__":
         # "Weight, BMI and Health Problems" # live health
         # "Does Your Child Need The Influenza Vaccine?" #live-healthy, null, original readability of 13
         # "Smoking Control Programmes" #live-healthy, body care, original readability of 14
-        # "Chickenpox: Symptoms and Treatment Options" # diseases-and-conditions, conditions and illnesses, original readability of 11
+        "Chickenpox: Symptoms and Treatment Options" # diseases-and-conditions, conditions and illnesses, original readability of 11
+        # "Pneumonia"
     ]
 
-    # # This article list contains all articles under group 7
+    processed_input_articles = concat_headers_to_content(article_list)
+
+    inputs = {
+        "article_rewriting_tries": 0,
+        "original_article_inputs": {
+            "article_content": processed_input_articles,
+            "article_title": article_list,
+        },
+        "article_evaluation": {},
+        "optimised_article_output": {
+            "researcher_keypoints": [],
+            "article_researcher_counter": 0,
+        },
+        "user_flags": {
+            "flag_for_content_optimisation": True,
+            "flag_for_title_optimisation": False,
+            "flag_for_meta_desc_optimisation": False,
+            "flag_for_writing_optimisation": True,
+        },
+        "llm_agents": {
+            "researcher_agent": researcher_agent,
+            "compiler_agent": compiler_agent,
+            "content_optimisation_agent": content_optimisation_agent,
+            "content_sorting_agent": content_sorting_agent,
+            "writing_optimisation_agent": writing_optimisation_agent,
+            "title_optimisation_agent": title_optimisation_agent,
+            "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
+            "readability_optimisation_agent": readability_optimisation_agent,
+            "personality_evaluation_agent": personality_evaluation_agent,
+        },
+    }
+
+    result = execute_graph(app, inputs)
+
+    # Prints the various checks
+    print_checks(result, MODEL)
+
+    print(result)
+
+
+    # This article list contains all articles under group 7
     # article_list = [
     #     "Common childhood conditions – Gastroenteritis",
     #     "Food Poisoning in Children",
     #     "Stomach Flu in Children"
     # ]
 
-    # This article list contains all articles under group 139
-    article_list = [
-        "10 Essential Tips for Mental Well-Being",
-        "7 Easy Tips for Better Mental Well-being",
-        "Achieve Mental Wellness by Practising Mindfulness",
-        "Improve Your Mental Well-being by Going Solo",
-        "Mental Wellness Is About the Little Habits Too",
-        "Positive Mental Well-being—The Foundation for a Flourishing Life",
-    ]
+    # # This article list contains all articles under group 139
+    # article_list = [
+    #     "10 Essential Tips for Mental Well-Being",
+    #     "7 Easy Tips for Better Mental Well-being",
+    #     "Achieve Mental Wellness by Practising Mindfulness",
+    #     "Improve Your Mental Well-being by Going Solo",
+    #     "Mental Wellness Is About the Little Habits Too",
+    #     "Positive Mental Well-being—The Foundation for a Flourishing Life",
+    # ]
 
-    processed_input_articles = concat_headers_to_content(article_list)
 
-    # Opening the excel contents
-    optimization_check = pd.ExcelFile(
-        "article-harmonisation/data/optimization_checks/Stage 1 user annotation for HPB (Updated).xlsx"
-    )
-    df = optimization_check.parse("User Annotation (to optimise)")
+    # # Opening the excel contents
+    # optimization_check = pd.ExcelFile(
+    #     "article-harmonisation/data/optimization_checks/Stage 1 user annotation for HPB (Updated).xlsx"
+    # )
+    # df = optimization_check.parse("User Annotation (to optimise)")
 
-    num_of_articles_in_excel = len(df)
+    # num_of_articles_in_excel = len(df)
 
-    for article_idx in range(num_of_articles_in_excel):
-        # Extracting article contents
-        article = df.iloc[article_idx]
+    # for article_idx in range(num_of_articles_in_excel):
+    #     # Extracting article contents
+    #     article = df.iloc[article_idx]
 
-        article_title = article["title"]
+    #     article_title = article["title"]
 
-        processed_input_articles = concat_headers_to_content(article_title)
+    #     processed_input_articles = concat_headers_to_content(article_title)
 
-        print(return_optimisation_flags(article))
+    #     print(return_optimisation_flags(article))
 
-        # Dictionary with the various input keys and items
-        inputs = {
-            "article_rewriting_tries": 0,
-            "original_article_inputs": {
-                "article_content": processed_input_articles,
-                "article_title": article_list,
-            },
-            "optimised_article_output": {
-                "researcher_keypoints": [],
-                "article_researcher_counter": 0,
-            },
-            "user_flags": return_optimisation_flags(article),
-            "llm_agents": {
-                "researcher_agent": researcher_agent,
-                "compiler_agent": compiler_agent,
-                "content_optimisation_agent": content_optimisation_agent,
-                "writing_optimisation_agent": writing_optimisation_agent,
-                "title_optimisation_agent": title_optimisation_agent,
-                "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
-                "readability_optimisation_agent": readability_optimisation_agent,
-                "personality_evaluation_agent": personality_evaluation_agent,
-            },
-        }
+    #     # Dictionary with the various input keys and items
+    #     inputs = {
+    #         "article_rewriting_tries": 0,
+    #         "original_article_inputs": {
+    #             "article_content": processed_input_articles,
+    #             "article_title": article_list,
+    #         },
+    #         "optimised_article_output": {
+    #             "researcher_keypoints": [],
+    #             "article_researcher_counter": 0,
+    #         },
+    #         "user_flags": return_optimisation_flags(article),
+    #         "llm_agents": {
+    #             "researcher_agent": researcher_agent,
+    #             "compiler_agent": compiler_agent,
+    #             "content_optimisation_agent": content_optimisation_agent,
+    #             "writing_optimisation_agent": writing_optimisation_agent,
+    #             "title_optimisation_agent": title_optimisation_agent,
+    #             "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
+    #             "readability_optimisation_agent": readability_optimisation_agent,
+    #             "personality_evaluation_agent": personality_evaluation_agent,
+    #         },
+    #     }
 
-        result = execute_graph(app, inputs)
+    #     result = execute_graph(app, inputs)
 
-        # Prints the various checks
-        print_checks(result, MODEL)
+    #     # Prints the various checks
+    #     print_checks(result, MODEL)
 
-        print(result)
+    #     print(result)

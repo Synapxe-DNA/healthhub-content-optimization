@@ -972,7 +972,7 @@ class Azure(LLMInterface):
 
         return response
 
-    def optimise_content(self, keypoints: list[str]) -> str:
+    def optimise_content(self, sorted_content: list[str]) -> str:
         # TODO: Write up the docstring for the input argument - structure_evaluation. Note: Amend the abstract class accordingly to include structure_evaluation parameter
         """
         An article is generated based on the keypoints provided.
@@ -1003,10 +1003,33 @@ class Azure(LLMInterface):
         print("Optimising article content based on content guidelines...")
         res = chain.invoke(
             {
-                "Keypoints": keypoints,
+                "Content": sorted_content,
+
             }
         )
         print("Article content optimised")
+        response = re.sub(" +", " ", res)
+
+        return response
+
+    def sort_content(self, keypoints: list[str]) -> str:
+        if self.role != ROLES.CONTENT_SORTER:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run sort_content()"
+            )
+
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_sorting_prompt()
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+        print("Sorting article content based on content structure...")
+        res = chain.invoke(
+            {
+                "Content": keypoints,
+            }
+        )
+        print("Article content sorted")
         response = re.sub(" +", " ", res)
 
         return response

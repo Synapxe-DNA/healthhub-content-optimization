@@ -56,6 +56,7 @@ class ROLES(Enum):
     COMPILER = "Compiler"
     META_DESC = "Meta description optimisation"
     TITLE = "Title optimisation"
+    CONTENT_SORTER = "Content sorter"
     CONTENT_OPTIMISATION = "Content optimisation"
     WRITING_OPTIMISATION = "Writing optimisation"
     READABILITY_EVALUATION = "Readability evaluation"
