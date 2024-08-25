@@ -790,21 +790,13 @@ class AzurePrompts(LLMPrompt):
                 """
                 You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
 
-                    Your task is to utilise content from the given key points to fill in for the required sections stated below.
+                    Your task is to phrase the content from the given article content using the following guidelines and examples.
+                    If one of the sections has no content, you MUST write your own content based on the header. Your writing MUST be relevant to the header and the topic.
                     You will also be given a set of instructions that you MUST follow.
 
                     ### Start of content requirements
                         When rewriting the content, your writing MUST meet the requirements stated here.
-                        If the key points do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
-
-                        Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
-                            1. Overview of the condition
-                                - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
-                            2. Causes and Risk Factors
-                            3. Symptoms and Signs
-                            4. Complications
-                            5. Treatment and Prevention
-                            6. When to see a doctor
+                        Do NOT change the content structure. ALL headers present in the given content should be presented in your final answer.
 
                         You must also use the following guidelines and examples to phrase your writing.
 
@@ -857,16 +849,123 @@ class AzurePrompts(LLMPrompt):
                     ### Start of instructions
                         You MUST follow these instructions when writing out your content.
 
-                        You MUST always ensure that all the key information you have been given is reflected in your final answer. There must be NO information loss.
-                        Your answer should also contain a close word count to the original content.
-                        You MUST follow the content requirements.
-                        You MUST NOT abridge the content AT ALL. Instead, your task is only to restructure the writing to fit these guidelines. There MUST NOT be any loss in key information between the original keypoints and your final answer.
-                        You must use the given key points to FILL IN the required sections.
-                        Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts.
+                        1. RETENTION OF INFORMATION
+                        Ensure ALL information from the original content is reflected in your final answer.
+                        Do NOT omit any details, facts, examples, or specific nouns.
+                        If unsure how to rewrite a point, retain it in its original form.
 
-                    Follow these instructions step by step carefully
-                ### End of instructions
+                        2. CONTENT STRUCTURE
+                        Do NOT change the content structure or the headers.
+                        Do NOT leave any sections empty.
+
+                        3. CONTENT LENGTH
+                        Maintain a word count close to the original content.
+
+                        4. ACCURACY AND COMPLETENESS
+                        After rewriting each section, review the original content to ensure all points are included.
+                        Do NOT abridge or summarize the content. Your task is to restructure, not condense.
+
+                        5. CLARITY AND PRESENTATION
+                        Do NOT include any prompt instructions in your response.
+                        The reader must NOT be aware of the prompts or instructions you've been given.
+
+                        6. FINAL CHECK
+                        Before submitting, compare your rewritten content with the original to ensure no information has been lost.
+                        Verify that your response adheres to all the above instructions.
+
+
+                    ### End of instructions
                 """,
+            ),
+            (
+                "human",
+                """
+                Rewrite the following sorted content:
+                {Content}
+                """,
+            ),
+        ]
+        return optimise_health_conditions_content_prompt
+    
+    def return_content_sorting_prompt(self) -> list[tuple[str, str]]:
+
+        health_conditions_content_sorting_prompt = [
+            (
+                "system",
+                """ You are part of an article re-writing process. Your task is to sort the given keypoints into the following structure:
+
+                    ### Overview of the condition
+
+                    ### Causes and Risk Factors of the condition
+
+                    ### Symptoms and Signs
+
+                    ### Complications
+
+                    ### What to eat for dinner
+
+                    ### Treatment and Prevention
+
+                    ### When to see a doctor
+
+                Your final answer MUST include these sections with the relevant headers in this specific order and follow the instructions provided.
+
+                Instructions:
+                1. If the key points do not contain information for one of the above sections, include the section headers in the final answer with no body of text for that section.
+                2. You may use the original keypoint header name as the section header if it's similar enough to the predefined headers, but maintain the overall structure.
+                3. Do NOT modify the content of the keypoints; your task is to sort them into the most appropriate sections.
+                4. If a keypoint doesn't fit any predefined section:
+                    a. First, try to broaden your interpretation of the existing sections.
+                    b. If it still doesn't fit, create a new section with a clear, descriptive title based on the keypoint's content. You may use the keypoint header as the title.
+                    c. IMPORTANT: Place the new section immediately before or after the most closely related predefined section. Do not place new sections at the beginning or end of the article unless they are specifically related to the overview or follow-up care.
+                    d. Ensure the new section maintains the article's overall coherence.
+                5. Do NOT leave out any of the keypoints provided.
+
+                Let's think step by step:
+
+                1. Sort the following keypoints:
+
+                    "Main Keypoint: Causes of Influenza
+                    Content: Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
+                    
+                    Main Keypoint: Use of MediSave
+                    Content: Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
+                    "
+
+                2. Determine which section each keypoint falls under and sort it accordingly. Multiple keypoints can go into a single section. The information in this keypoint is relevant to the final section "Causes and Risk Factors" and will be sorted in accordingly. The original keypoint header name will be kept as it is similar to "Causes and Risk Factors" header.
+
+                    Your answer:
+                    "### Overview of Influenza
+
+                    ### Causes of Influenza
+                    Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
+
+                    ### Symptoms and Signs
+
+                    ### Complications
+
+                    ### What to eat for dinner
+
+                    ### Treatment and Prevention
+
+                    ### When to see a doctor
+
+                    ### Use of MediSave
+                    Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
+                
+                3. For content that doesn't fit the predefined sections, follow step 4 in the instructions provided above, paying special attention to proper placement of new sections.
+                
+                4. Check through each step carefully with each keypoint. Ensure that all keypoints and their content are included in your final answer.
+
+                Final Reminders:
+                Adhere to the given structure, only adding sections when absolutely necessary.
+                Do not remove any of the predefined sections.
+                Always place new sections next to the most closely related predefined sections.
+                Ensure ALL keypoints and their content are included in your final answer.
+                Maintain a logical flow of information throughout the article.
+
+                """
+                
             ),
             (
                 "human",
@@ -876,8 +975,7 @@ class AzurePrompts(LLMPrompt):
                 """,
             ),
         ]
-
-        return optimise_health_conditions_content_prompt
+        return health_conditions_content_sorting_prompt
 
     @staticmethod
     def return_writing_prompt() -> list[tuple[str, str]]:
@@ -897,7 +995,7 @@ class AzurePrompts(LLMPrompt):
                 """ You are part of an article re-writing process. The article content is aimed to educate readers about a health-related topic and motivate them to take charge of their health.
 
                 Your objective is to rewrite the given article to based on the given guidelines and instructions.
-                Your writing should carry a casual, friendly and engaging tone. Do NOT write in a professional and formal tone. Do NOT write in a conversational style as well.
+                Your writing should carry a professional, friendly and engaging tone. Do NOT write in a formal tone. Do NOT write in a conversational style as well.
 
                 Follow the personality and voice guidelines below and adhere to the specific instructions provided.
                 You should use the given examples to form your final answer.
@@ -1142,6 +1240,8 @@ class AzurePrompts(LLMPrompt):
 
                         Do not change the article structure such as use of headers.
                         Do not alter any bullet points.
+                        Do NOT leave out any examples present in the original article.
+                        Do NOT leave out any nouns present in the original article.
 
                         You can use this example to help you identify redundant phrasing and to structure your answer.
 
