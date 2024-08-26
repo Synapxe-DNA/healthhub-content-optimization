@@ -179,19 +179,25 @@ def flag_duplicated(
 
     if column == "extracted_content_body":
         duplicated_df = df[
-            (df[column].duplicated())  # we want duplicated articles
+            (
+                df[column].duplicated(keep="first")
+            )  # we want duplicated articles, first instance is not flagged
             & (df[column].notna())  # ignore null values
             & (df[column] != "")  # ignore empty extracted content
             & (~df["to_remove"])  # ignore articles that were already flagged
         ]
+
         value = "Duplicated Content"
 
     elif column == "full_url":
         duplicated_df = df[
-            (df[column].duplicated())  # we want duplicated URLs
+            (
+                df[column].duplicated(keep="first")
+            )  # we want duplicated URLs, first instance is not flagged
             & (df[column].notna())  # ignore null values
             & (~df["to_remove"])  # ignore articles that were already flagged
         ]
+
         value = "Duplicated URL"
 
     for i in range(len(duplicated_df)):
@@ -389,8 +395,32 @@ def flag_multilingual_content(df: pd.DataFrame, whitelist: list[int]) -> pd.Data
     return df
 
 
+def flag_articles_via_blacklist(
+    df: pd.DataFrame, blacklist: dict[int, str]
+) -> pd.DataFrame:
+    """
+    Flags articles to remove based on blacklist provided in `parameters_data_processing.yml`
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the articles.
+        blacklist (dict[int, str]): The list of article IDs to remove. See https://bitly.cx/f8FIk.
+
+    Returns:
+        pd.DataFrame: The DataFrame with updated flags for articles to remove.
+    """
+    for article_id, remove_type in blacklist.items():
+        idx = df.loc[df["id"] == article_id].index
+        df.loc[idx, "to_remove"] = True
+        df.loc[idx, "remove_type"] = remove_type
+
+    return df
+
+
 def flag_articles_to_remove_after_extraction(
-    df: pd.DataFrame, word_count_cutoff: int, whitelist: list[int]
+    df: pd.DataFrame,
+    word_count_cutoff: int,
+    whitelist: list[int],
+    blacklist: dict[int, str],
 ) -> pd.DataFrame:
     """
     Flags articles to remove after extraction based on several different criteria.
@@ -399,15 +429,160 @@ def flag_articles_to_remove_after_extraction(
         df (pd.DataFrame): The DataFrame containing the articles.
         word_count_cutoff (int): The word count threshold for flagging articles.
         whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
+        blacklist (dict[int, str]): The list of article IDs to remove. See https://bitly.cx/f8FIk.
 
     Returns:
         pd.DataFrame: The DataFrame with updated flags for articles to remove.
     """
     df = flag_no_extracted_content(df, whitelist)
+    df = flag_recipe_articles(df, whitelist)
     df = flag_duplicated(df, whitelist, column="extracted_content_body")
     df = flag_duplicated(df, whitelist, column="full_url")
-    df = flag_recipe_articles(df, whitelist)
     df = flag_multilingual_content(df, whitelist)
     df = flag_below_word_count_cutoff(df, word_count_cutoff, whitelist)
+    df = flag_articles_via_blacklist(df, blacklist)
+
+    return df
+
+
+def add_content_body(df: pd.DataFrame, excel_errors: dict[str, str]) -> pd.DataFrame:
+    """
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the articles
+        excel_errors (dict[str,str]): A dictionary that maps each article friendly url to the updated content body
+
+    Returns:
+        pd.DataFrame: The DataFrame with updated content body for articles with Excel errors.
+
+    """
+    for friendly_url, text in excel_errors.items():
+        # Fetch rows where `friendly_url` column value must match filename
+        article_index = df.index[df["friendly_url"] == friendly_url]
+        # Skip if the index is empty
+        if article_index.empty:
+            continue
+        # Assign Raw HTML content to `content_body` column
+        df.loc[article_index, "content_body"] = text
+
+    return df
+
+
+def add_updated_urls(
+    df: pd.DataFrame, new_urls: dict[str, dict[str, str]]
+) -> pd.DataFrame:
+    """
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the articles
+        new_urls: A dictionary that maps each article id to the updated full_url
+
+    Returns:
+        pd.DataFrame: The DataFrame with updated full_url for articles with known 404 errors
+
+    """
+    for article_id, url in new_urls.items():
+        # Fetch rows where `id` column value must match article_id
+        article_index = df.index[df["id"] == article_id]
+        # Skip if the index is empty
+        if article_index.empty:
+            continue
+        # Assign updated_url to `full_url` and `full_url2` column
+        df.loc[article_index, "full_url"] = url
+        df.loc[article_index, "full_url2"] = url
+
+    return df
+
+
+def invert_ia_mappings(
+    mappings: dict[str, dict[str, list[str]]]
+) -> dict[str, dict[str, str]]:
+    """
+
+    Args:
+        mappings (dict[str, dict[str, list[str]]]): A dictionary that maps the new IA mapping to the article category name for each content category
+
+    Returns:
+        dict[str, dict[str, str]]: The inverted mapping of article category name to its new IA mapping for each content category
+
+    """
+    invert_mappings = {}
+    # Iterate through the new IA mapping to the article_category_names value
+    for content_category, values in mappings.items():
+        map_dicts = {}
+        # Flip the mappings to article_category_names -> new IA map
+        for ia_map, category_names in values.items():
+            for category_name in category_names:
+                map_dicts[category_name] = ia_map
+
+        # Assign for each content category
+        invert_mappings[content_category] = map_dicts
+
+    return invert_mappings
+
+
+def map_category_names(
+    mappings: dict[str, dict[str, str]],
+    df: pd.DataFrame,
+    content_category_column: str,
+    reference_column: str,
+    new_column_name: str,
+) -> pd.DataFrame:
+    """
+
+    Args:
+        mappings (dict[str, dict[str, str]]): A dictionary that maps the article category name to new IA mapping for each content category
+        df (pd.DataFrame): The DataFrame containing the articles
+        content_category_column (str): Refer to the column name of the content category (i.e. "content_category")
+        reference_column (str): Refer to the column name of the article category (i.e. "article_category_names")
+        new_column_name (str): The newly created column name for the IA mappings
+
+    Returns:
+        pd.DataFrame: The DataFrame with updated IA mapping for each content category
+
+    """
+    # Initially assign the new column to None
+    df[new_column_name] = None
+
+    # Iterate through all rows in the dataframe
+    for index, row in df.iterrows():
+        # Get the assigned value of the "article_category_names" column
+        category_string = row[reference_column]
+        # Get content category of the article
+        content_category = row[content_category_column]
+        # Get the IA Mapping for the respective content category
+        category_map = mappings.get(content_category, None)
+
+        # Skip if the assigned value is not a string
+        if not isinstance(category_string, str):
+            continue
+
+        # Replace Ampersand symbol ("&") to "and"
+        category_string = category_string.replace("&", "and")
+
+        # Assign the new value to the "article_category_names" column
+        df.at[index, reference_column] = category_string
+        # Remove empty stings
+        categories_list = list(
+            filter(lambda x: len(x.strip()) > 0, category_string.split(","))
+        )
+
+        # If the IA Mapping exists for the given content category, perform the IA Mapping for the article
+        if category_map is not None:
+            for ind, category_name in enumerate(categories_list):
+                # Assign the new IA Mapping to the article if it exists. Otherwise, assign a null value
+                result = category_map.get(category_name, None)
+                categories_list[ind] = result.strip() if result is not None else None
+
+            # Keep unique and non-null values only
+            unique_categories_list = list(
+                filter(lambda x: x is not None, list(set(categories_list)))
+            )
+
+            # Assign the new mappings as a joined string and assign a null value if empty string
+            joined_string = " | ".join(unique_categories_list)
+            df.at[index, new_column_name] = (
+                joined_string.strip() if joined_string else None
+            )
 
     return df
