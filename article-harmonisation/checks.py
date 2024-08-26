@@ -358,15 +358,16 @@ def create_checks_graph(state: ChecksState) -> CompiledGraph:
     return app
 
 
-def load_evaluation_dataframe(filepath: str) -> tuple[pd.DataFrame]:
+def load_evaluation_dataframe(full_data_filepath: str, ids_filepath: str) -> tuple[pd.DataFrame]:
     """
     Load and prepare evaluation dataframe for article harmonisation.
 
-    This function loads data from a parquet file, checks for previously evaluated articles, and filters the dataframe to
-    include only relevant Health Promotion Board articles that haven't been evaluated yet.
+    This function loads the full dataset from a parquet file + article IDs from a csv file, checks for previously evaluated articles,
+    and filters the dataframe to include only relevant Health Promotion Board articles that haven't been evaluated yet.
 
     Args:
-        filepath (str): The path to the parquet file to load.
+        full_data_filepath (str): The path to the parquet file to load the full dataset.
+        ids_filepath (str): The path to the parquet file to load the article IDs.
 
     Returns:
         tuple: A tuple containing two pandas DataFrames:
@@ -378,7 +379,7 @@ def load_evaluation_dataframe(filepath: str) -> tuple[pd.DataFrame]:
     """
 
     # Load data from merged_data.parquet
-    df = pd.read_parquet(filepath)
+    df = pd.read_parquet(full_data_filepath)
 
     # Get latest evaluation dataframe
     filepaths = sorted(
@@ -396,19 +397,9 @@ def load_evaluation_dataframe(filepath: str) -> tuple[pd.DataFrame]:
         evaluated_article_ids = list(df_eval.article_id)
         print(f"Evaluated Article IDs: {evaluated_article_ids}")
 
-    # Get the final predicted clusters dataframe (user annotation)
-    df_final_clusters = pd.read_excel(
-        f"{ROOT_DIR}/article-harmonisation/data/marked_articles/final_predicted_clusters.xlsx"
-    )
-    individual_articles_ids = list(
-        df_final_clusters[df_final_clusters["group_keywords"].isna()].id
-    )
-
-    # Get the dataframe of articles that HealthHub has requested for optimisation check (user annotation)
-    df_post_annotation = pd.read_excel(
-        f"{ROOT_DIR}/article-harmonisation/data/marked_articles/post-HH annotation (articles marked individual for optimisation check).xlsx"
-    )
-    ids_to_optimise = individual_articles_ids + list(df_post_annotation.article_id)
+    # Get articles for Optimisation
+    df_ids_to_optimise = pd.read_csv(ids_filepath)
+    ids_to_optimise = list(df_ids_to_optimise.article_id)
 
     # Filter for relevant HPB articles
     df_keep = df[~df["to_remove"]]
@@ -485,7 +476,8 @@ if __name__ == "__main__":
 
     # Get dataframe of articles to be evaluated
     merged_data_filepath = f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet"
-    df_keep, df_evaluated = load_evaluation_dataframe(merged_data_filepath)
+    ids_to_optimise_filepath = f"{ROOT_DIR}/article-harmonisation/data/ids_for_optimisation.csv"
+    df_keep, df_evaluated = load_evaluation_dataframe(merged_data_filepath, ids_to_optimise_filepath)
 
     # Note: n can be adjusted as and when needed.
     # Usually, lower n is useful for generating evaluations in a more stable manner
