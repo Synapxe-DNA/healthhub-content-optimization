@@ -13,9 +13,6 @@ def return_optimisation_flags(article):
         flag_for_meta_desc_optimisation=True,
         flag_for_writing_optimisation=True,
     )
-    # Checks if the content category is not diseases and conditions, as it will not require content optimisation if it's not.
-    if article["content category"] != "diseases-and-conditions":
-        flags["flag_for_content_optimisation"] = False
     try:
         # Checking for the other flags
         if not article["overall title flags"]:
@@ -24,6 +21,11 @@ def return_optimisation_flags(article):
             flags["flag_for_meta_desc_optimisation"] = False
         if not article["overall content flags"]:
             flags["flag_for_writing_optimisation"] = False
+
+        # Checks if the content category is not diseases and conditions, as it will not require content optimisation if it's not.
+        if article["content category"] != "diseases-and-conditions":
+            flags["flag_for_content_optimisation"] = False
+
         return flags
     except KeyError:
         # Returning the other flags as true as this is a harmonisation flow

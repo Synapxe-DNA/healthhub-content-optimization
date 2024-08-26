@@ -203,70 +203,6 @@ class AzurePrompts(LLMPrompt):
             ),
             ("human", "Evaluate the following article:\n{article}"),
         ]
-        readability_evaluation_prompt = [
-            (
-                "system",
-                """
-                Your task is to break up long sentences with multiple commas into bullet points. Follow the guide below on how you should approach the content.
-
-                Let's think step by step.
-
-                Example 1:
-
-                1. Rewrite the long sentences in this content.
-                    "Taking care of your body and mind is crucial for a long and healthy life. To maintain good health, it's important to eat a balanced diet rich in fruits and vegetables, drink plenty of water, get at least 8 hours of sleep each night, exercise regularly, and avoid harmful habits like smoking and excessive alcohol consumption. Regular check-ups with your doctor are also essential. Don't forget to manage stress effectively."
-
-                2. Start by analyzing each sentences indvidually. This is a long sentence with multiple commas:
-
-                    "To maintain good health,
-                    it's important to eat a balanced diet rich in fruits and vegetables,
-                    drink plenty of water,
-                    get at least 8 hours of sleep each night,
-                    exercise regularly,
-                    and avoid harmful habits like smoking and excessive alcohol consumption."
-
-                3. We will now break this sentence into bullet points, with each item being a separate bullet point.
-                Your final answer:
-                    "Taking care of your body and mind is crucial for a long and healthy life.
-
-                    To maintain good health, it's important to:
-                        - eat a balanced diet rich in fruits and vegetables,
-                        - drink plenty of water,
-                        - get at least 8 hours of sleep each night,
-                        - exercise regularly,
-                        - avoid harmful habits like smoking and excessive alcohol consumption
-
-                    Regular check-ups with your doctor are also essential. Don't forget to manage stress effectively."
-
-                Example 2:
-
-                1. Rewrite the long sentences in this content.
-                    "Achieving high productivity requires deliberate effort and effective strategies. To boost your productivity, it's essential to plan your day ahead, prioritize your tasks, take regular breaks to avoid burnout, stay organized with to-do lists, and minimize distractions like social media and unnecessary meetings. Keep a positive mindset throughout the day. Celebrate small wins to stay motivated."
-
-                2. Start by analyzing each sentences indvidually. This is a long sentence with multiple commas:
-
-                    "To boost your productivity,
-                    it's essential to plan your day ahead,
-                    prioritize your tasks,
-                    take regular breaks to avoid burnout,
-                    stay organized with to-do lists,
-                    and minimize distractions like social media and unnecessary meetings."
-
-                3. We will now break this sentence into bullet points, with each item being a separate bullet point.
-                Your final answer:
-                    "Achieving high productivity requires deliberate effort and effective strategies.
-                    To boost your productivity, you can:
-                        - plan your day ahead,
-                        - prioritize your tasks,
-                        - take regular breaks to avoid burnout,
-                        - stay organized with to-do lists,
-                        - minimize distractions like social media and unnecessary meetings
-
-                    Keep a positive mindset throughout the day. Celebrate small wins to stay motivated."
-                    """,
-            ),
-            ("human", """Rewrite the long sentences in this content.\n {article}"""),
-        ]
         return readability_evaluation_prompt
 
     @staticmethod
@@ -477,9 +413,15 @@ class AzurePrompts(LLMPrompt):
         return meta_desc_evaluation_prompt
 
     @staticmethod
-    def return_researcher_prompt(step) -> list[tuple[str, str]]:
+    def return_researcher_prompt(step: str) -> list[tuple[str, str]]:
         """
-        Returns the researcher prompt
+        Returns the specified researcher prompt. There are two possible research prompts, namely:
+
+        1. "generate keypoints": This prompt is used to process the content for a given article and section out irrelevant sentences under an "omitted sentences" section below.
+        2. "add additional input": This prompt is used to add any additional input from the User Annotation Excel sheet to the processed keypoints.
+
+        Args:
+            step(str): a String indicating the step in which the researcher node is at. It can either be "generate keypoints" or "add additional input"
 
         Returns:
             list[tuple[str, str]]: a list containing the researcher prompt. {Article} is the only input required to invoke the prompt.
@@ -487,7 +429,7 @@ class AzurePrompts(LLMPrompt):
 
         match step:
             case "generate keypoints":
-                researcher_prompt = [
+                generate_keypoints_prompt = [
                     (
                         "system",
                         """You are part of a article combination process. Your main task is to analyze the headers in the article to identify and omit any unnecessary sentences under the header.
@@ -594,7 +536,7 @@ class AzurePrompts(LLMPrompt):
                         "Sort the key points below based on the instructions and examples you have received:\n{Article}",
                     ),
                 ]
-                return researcher_prompt
+                return generate_keypoints_prompt
 
             case "add additional input":
                 additional_content_prompt = [
@@ -676,9 +618,9 @@ class AzurePrompts(LLMPrompt):
         return additional_content_prompt
 
     @staticmethod
-    def return_compiler_prompt(self) -> list[tuple[str, str]]:
+    def return_compiler_prompt() -> list[tuple[str, str]]:
         """
-        Returns the compiler prompt
+        Returns the compiler prompt which compiles keypoints from multiple articles.
 
         Returns:
             list[tuple[str, str]]: a list containing the prompt for a Compiler LLM. {Keypoints} is the only input required to invoke the prompt.
@@ -773,111 +715,137 @@ class AzurePrompts(LLMPrompt):
         return compiler_prompt
 
     @staticmethod
-    def return_content_prompt() -> list[tuple[str, str]]:
+    def return_content_prompt(step: str) -> list[tuple[str, str]]:
         """
-        Returns the content optimisation prompt
+        Returns the content optimisation prompt. There are 3 different content prompt that can be returned:
+
+        1. "optimise health and conditions": This prompt contains a pre-defined structure that all diseases-and-conditions articles will follow, regardless of optimisation or harmonisation.
+        2. "extract main article structure": This prompt will produce a template based on the article input. This is used as the first step duing harmonisation of live-healthy articles, where it will extract out the structure of the main article.
+        3. "optimise live healthy": This prompt will structure the given content based on the extracted article template. This is used as the second step during the harmonisation of live-healthy articles.
+
+        Args:
+            step(str): a String indicating which content prompt should be returned.
 
         Returns:
             list[tuple[str, str]]: a list containing the content optimisation prompt. {Keypoints} is the only input required to invoke the prompt.
-
-        Note:
-            The prompt is solely applicable for Health and Conditions
         """
+        match step:
+            case "optimise health and conditions":
+                optimise_health_conditions_content_prompt = [
+                    (
+                        "system",
+                        """
+                        You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
 
-        optimise_health_conditions_content_prompt = [
-            (
-                "system",
-                """
-                You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
+                            Your task is to utilise content from the given key points to fill in for the required sections stated below.
+                            You will also be given a set of instructions that you MUST follow.
 
-                    Your task is to utilise content from the given key points to fill in for the required sections stated below.
-                    You will also be given a set of instructions that you MUST follow.
+                            ### Start of content requirements
+                                When rewriting the content, your writing MUST meet the requirements stated here.
+                                If the key points do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
 
-                    ### Start of content requirements
-                        When rewriting the content, your writing MUST meet the requirements stated here.
-                        If the key points do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
+                                Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
+                                    1. Overview of the condition
+                                        - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
+                                    2. Causes and Risk Factors
+                                    3. Symptoms and Signs
+                                    4. Complications
+                                    5. Treatment and Prevention
+                                    6. When to see a doctor
 
-                        Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
-                            1. Overview of the condition
-                                - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
-                            2. Causes and Risk Factors
-                            3. Symptoms and Signs
-                            4. Complications
-                            5. Treatment and Prevention
-                            6. When to see a doctor
+                                You must also use the following guidelines and examples to phrase your writing.
 
-                        You must also use the following guidelines and examples to phrase your writing.
+                                1. Elaborate and Insightful
+                                    Your writing should expand upon the given key points and write new content aimed at educating readers on the condition.
+                                    You MUST state the primary intent, goals, and a glimpse of information in the first paragraph.
 
-                        1. Elaborate and Insightful
-                            Your writing should expand upon the given key points and write new content aimed at educating readers on the condition.
-                            You MUST state the primary intent, goals, and a glimpse of information in the first paragraph.
+                                2. Carry a positive tone
+                                    Do NOT convey negative sentiments in your writing.
+                                    You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
+                                    Example: We recommend taking the diabetes medicine as prescribed by your doctor or pharmacist. This will help in the medicine’s effectiveness and reduce the risk of side effects.
 
-                        2. Carry a positive tone
-                            Do NOT convey negative sentiments in your writing.
-                            You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
-                            Example: We recommend taking the diabetes medicine as prescribed by your doctor or pharmacist. This will help in the medicine’s effectiveness and reduce the risk of side effects.
+                                3. Provide reassurance
+                                    Your writing should reassure readers that the situation is not a lost cause.
+                                    Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
 
-                        3. Provide reassurance
-                            Your writing should reassure readers that the situation is not a lost cause.
-                            Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
+                                You should write your content based on the required sections step by step.
+                                After each section has been rewritten, you must check your writing with each guideline step by step.
 
-                        You should write your content based on the required sections step by step.
-                        After each section has been rewritten, you must check your writing with each guideline step by step.
+                                Here is an example you should use to structure your writing:
+                                    ### Start of example
+                                        1. Overview of Influenza
+                                        Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
 
-                        Here is an example you should use to structure your writing:
-                            ### Start of example
-                                1. Overview of Influenza
-                                Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
+                                        2. Causes and Risk Factors
+                                        Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. The flu virus is classified into three main types: A, B, and C. Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. Factors that increase the risk of contracting influenza include close contact with infected individuals, a weakened immune system, and lack of vaccination. Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
 
-                                2. Causes and Risk Factors
-                                Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. The flu virus is classified into three main types: A, B, and C. Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. Factors that increase the risk of contracting influenza include close contact with infected individuals, a weakened immune system, and lack of vaccination. Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
+                                        3. Symptoms and Signs
+                                        Some symptoms include: High fever, cough, headache, and muscle aches. Other symptoms include sneezing, nasal discharge, and loss of appetite. Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhoea, although these are more common in children.
 
-                                3. Symptoms and Signs
-                                Some symptoms include: High fever, cough, headache, and muscle aches. Other symptoms include sneezing, nasal discharge, and loss of appetite. Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhoea, although these are more common in children.
+                                        4. Complications of Influenza
+                                        The following people are at greater risk of influenza-related complications:
+                                        - Persons aged 65 years old and above.
+                                        - Children aged between 6 months old to 5 years old.
+                                        - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
+                                        - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalisation or even death, particularly in vulnerable populations.
 
-                                4. Complications of Influenza
-                                The following people are at greater risk of influenza-related complications:
-                                - Persons aged 65 years old and above.
-                                - Children aged between 6 months old to 5 years old.
-                                - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
-                                - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalisation or even death, particularly in vulnerable populations.
+                                        5. Treatment and Prevention
+                                        Here are some ways to battle influenza and to avoid it:
+                                        Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
+                                        Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
+                                        Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
 
-                                5. Treatment and Prevention
-                                Here are some ways to battle influenza and to avoid it:
-                                Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
-                                Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
-                                Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
+                                        6. When to See a Doctor
+                                        You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
+                                    ### End of example
 
-                                6. When to See a Doctor
-                                You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
-                            ### End of example
+                            ### End of content requirements
 
-                    ### End of content requirements
+                            ### Start of instructions
+                                You MUST follow these instructions when writing out your content.
 
-                    ### Start of instructions
-                        You MUST follow these instructions when writing out your content.
+                                You MUST always ensure that all the key information you have been given is reflected in your final answer. There must be NO information loss.
+                                Your answer should also contain a close word count to the original content.
+                                You MUST follow the content requirements.
+                                You MUST NOT abridge the content AT ALL. Instead, your task is only to restructure the writing to fit these guidelines. There MUST NOT be any loss in key information between the original keypoints and your final answer.
+                                You must use the given key points to FILL IN the required sections.
+                                Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts.
 
-                        You MUST always ensure that all the key information you have been given is reflected in your final answer. There must be NO information loss.
-                        Your answer should also contain a close word count to the original content.
-                        You MUST follow the content requirements.
-                        You MUST NOT abridge the content AT ALL. Instead, your task is only to restructure the writing to fit these guidelines. There MUST NOT be any loss in key information between the original keypoints and your final answer.
-                        You must use the given key points to FILL IN the required sections.
-                        Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts.
+                            Follow these instructions step by step carefully
+                        ### End of instructions
+                        """,
+                    ),
+                    (
+                        "human",
+                        """
+                        Sort the following keypoints:
+                        {Keypoints}
+                        """,
+                    ),
+                ]
 
-                    Follow these instructions step by step carefully
-                ### End of instructions
-                """,
-            ),
-            (
-                "human",
-                """
-                Sort the following keypoints:
-                {Keypoints}
-                """,
-            ),
-        ]
+                return optimise_health_conditions_content_prompt
+            case "optimise live healthy":
+                pass
+            case "extract main article structure":
+                extract_main_article_structure = [
+                    (
+                        "system",
+                        """
+                        You are part of an article rewriting flow. Your task is to analyse and write out a template of the given article's structure and flow.
 
-        return optimise_health_conditions_content_prompt
+                        The template will be used by subsequent agents to structure their writing.
+                        """,
+                    ),
+                    (
+                        "human",
+                        """
+                        Write out a template based on this article's structure and flow:
+                        {article}
+                        """,
+                    ),
+                ]
+                return extract_main_article_structure
 
     @staticmethod
     def return_writing_prompt() -> list[tuple[str, str]]:
@@ -885,10 +853,7 @@ class AzurePrompts(LLMPrompt):
         Returns the writing guidelines optimisation prompt
 
         Returns:
-            list[tuple[str, str]]: a list containing the writing guidelines optimisation prompt. {Content} is the only input required to invoke the prompt.
-
-        Note:
-            The prompt is solely applicable for Health and Conditions
+            list[tuple[str, str]]: a list containing the writing guidelines optimisation prompt. {ontent} is the only input required to invoke the prompt.
         """
 
         optimise_writing_prompt = [
@@ -953,12 +918,24 @@ class AzurePrompts(LLMPrompt):
         return optimise_writing_prompt
 
     @staticmethod
-    def return_hemingway_readability_optimisation_prompt(step) -> list[tuple[str, str]]:
+    def return_hemingway_readability_optimisation_prompt(
+        step: str,
+    ) -> list[tuple[str, str]]:
         """
-        Returns the readability optimisation prompt
+        Returns the hemingway_readability_optimisation_prompt. There are 4 possible hemingway_readability_optimisation_prompt:
+
+        1. "shortening sentences": This prompt is used to shorten sentences in a given text.
+        2. "simplifying complex terms": This prompt is used to identify complex terms and replace them with simpler synonyms or common phrases.
+        3. "breaking into bullet points": This prompt is used to identify long sentences with multiple commas and break them up into bullet points.
+        4. "cutting out redundant areas": This prompt is used to shorten the writing by cutting out redundant areas.
+
+        All 4 prompts should be used to improve the hemmingway readability score of an article.
+
+        Args:
+            step(str): a String indicating the step in which the readability optimisation node is at.
 
         Returns:
-            list[tuple[str, str]]: a list containing the readability optimisation prompt. {Content} is the only input required to invoke the prompt.
+            list[tuple[str, str]]: a list containing the hemingway_readability_optimisation_prompt. {content} is the only input required to invoke the prompt.
 
         Note:
             The prompt is solely applicable for Health and Conditions
@@ -1210,7 +1187,16 @@ class AzurePrompts(LLMPrompt):
     @staticmethod
     def return_title_prompt(step: str) -> list[tuple[str, str]]:
         """
-        Returns the title optimisation prompt
+        Returns the specified title optimisation prompt. There are 2 possible title optimisation prompts, namely:
+
+        1. "optimise title": This prompt is used to instruct the LLM agent to optimise the article title based on several guidelines from the content playbook.
+            - Note that this prompt takes in 2 inputs:
+                1. {feedback}: The title optimisation feedback extracted from the User Annotation Excel file
+                2. {content}: Content for the llm to write the new optimised title.
+        2. "shorten title": This prompt is used to shorten the optimised titles to ensure the optimised titles meet the length requirements.
+
+        Args:
+            step(str): a String indicating the step in which the title optimisation node is at and which title prompt to return.
 
         Returns:
             list[tuple[str, str]]: a list containing the title optimisation prompt. {Content} is the only input required to invoke the prompt.
@@ -1271,7 +1257,7 @@ class AzurePrompts(LLMPrompt):
                                     2. Title 2
                                     3. Title 3
                                 ### End of title format example
-                            Check through the length of each title carefully. Each title MUST be less than 71 characters including the spaces.
+                            Check through the length of each title carefully. Each title MUST be less than 65 characters including the spaces.
                             You must write your titles such that they address points in the feedback given.
                             You MUST consider the guidelines and the examples when writing out the title.
                             You must NOT reveal any part of the prompt in your answer.
@@ -1343,7 +1329,16 @@ class AzurePrompts(LLMPrompt):
     @staticmethod
     def return_meta_desc_prompt(step: str) -> list[tuple[str, str]]:
         """
-        Returns the meta description optimisation prompt
+        Returns the specified meta description optimisation prompt. There are 2 possible meta description optimisation prompts, namely:
+
+        1. "optimise meta desc": This prompt is used to instruct the LLM agent to optimise the meta desc based on several guidelines.
+            - Note that this prompt takes in 2 inputs:
+                1. {feedback}: The meta description optimisation feedback extracted from the User Annotation Excel file
+                2. {content}: Content for the llm to write the new optimised meta descriptions.
+        2. "shorten meta desc": This prompt is used to shorten the optimised meta descriptions to ensure the optimised meta descriptions meet the length requirements.
+
+        Args:
+            step(str): a String indicating the step in which the meta description optimisation node is at and which meta description prompt to return.
 
         Returns:
             list[tuple[str, str]]: a list containing the meta description optimisation prompt. {Content} is the only input required to invoke the prompt.

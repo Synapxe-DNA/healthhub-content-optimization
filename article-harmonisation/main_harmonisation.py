@@ -14,11 +14,21 @@ MODEL = settings.MODEL_NAME
 # File path to user annotation Excel file
 USER_ANNOTATION = "article-harmonisation/data/optimization_checks/Stage 1 user annotation for HPB (Updated).xlsx"
 
+# Declaring the respective sheet names for optimisation and harmonisation
 OPTIMISATION_SHEET_NAME = "Article Optimisation Output"
 HARMONISATION_SHEET_NAME = "Article Harmonisation Output"
 
 
 def optimise_articles(app):
+    """Runs the article optimisation flow.
+
+    Details of the articles are extracted from the merged_data.parquet file obtained from the kedro pipeline and from the User Annotation Excel File.
+
+    Optimised outputs are stored in the User Annotation Excel File
+
+    Args:
+        - app: GraphState object of the optimisation graph
+    """
     # Opening the excel contents
     optimization_check = pd.ExcelFile(USER_ANNOTATION)
 
@@ -100,6 +110,7 @@ def optimise_articles(app):
             },
         }
 
+        # Running the article harmonisation process
         result = execute_graph(app, inputs)
 
         article_inputs = [
@@ -158,12 +169,22 @@ def optimise_articles(app):
             # Note that reasons_for_poor_readability and reasons_for_improving_writing_style are not included as it complicates the llm prompt, leading to poorer performance.
         ]
 
+        # Storing the optimised outputs into the User Annotation Excel File
         store_optimised_outputs(
             USER_ANNOTATION, OPTIMISATION_SHEET_NAME, article_inputs
         )
 
 
 def harmonise_articles(app):
+    """Runs the article harmonisation flow.
+
+    Details of the articles are extracted from the merged_data.parquet file obtained from the kedro pipeline and from the User Annotation Excel File.
+
+    Optimised outputs are stored in the User Annotation Excel File
+
+    Args:
+        - app: GraphState object of the harmonisation graph
+    """
     # Opening the excel contents
     optimization_check = pd.ExcelFile(USER_ANNOTATION)
 
@@ -193,7 +214,7 @@ def harmonise_articles(app):
 
         # For loop iterating through each sub group in a specific group flagged for harmonisation
         for sub_group_num in sub_group_numbers:
-            print(f"Harmonising subgroup {sub_group_num}")
+            print(f"Harmonising subgroup {int(sub_group_num)}")
             # Extracting all rows in df in this subgroup
             subgrouped_articles = grouped_articles_to_harmonise[
                 grouped_articles_to_harmonise["Subgroup"] == sub_group_num
@@ -229,6 +250,10 @@ def harmonise_articles(app):
                 article_id = article["article_id"]
                 article_url = article["url"]
                 article_page_views = article["page_views"]
+                main_article = article[
+                    "Main Article? (Y)"
+                ]  # checks if the article is the main article for the sub group harmonisation
+
                 # If additional input cell in the Excel sheet is empty, it returns nan, which is of float type. Hence, if it's a float type, we set it to "".
                 if isinstance(
                     article["User: additional content to add for harmonisation"], float
@@ -260,6 +285,10 @@ def harmonise_articles(app):
                         f"\n\n{article_additional_inputs}"
                     )
 
+                # If statement checking if the article is the main article for the sub group harmonisation
+                if main_article == "Y":
+                    main_article_content = concat_headers_to_content([article_id]).pop()
+
             inputs = {
                 "article_rewriting_tries": 0,
                 "original_article_inputs": {
@@ -271,6 +300,7 @@ def harmonise_articles(app):
                     "article_category_names": article_group_category_names,
                     "page_views": article_sub_group_page_views,
                     "additional_input": article_sub_group_additional_inputs,
+                    "main_article_content": main_article_content,
                 },
                 "optimised_article_output": {
                     "researcher_keypoints": [],
@@ -288,6 +318,7 @@ def harmonise_articles(app):
                 },
             }
 
+            # Running the article harmonisation process
             result = execute_graph(app, inputs)
 
             article_inputs = [
@@ -329,6 +360,7 @@ def harmonise_articles(app):
                 None,  # User attached updated article
             ]
 
+            # Storing the optimised outputs into the User Annotation Excel File
             store_optimised_outputs(
                 USER_ANNOTATION, HARMONISATION_SHEET_NAME, article_inputs
             )
@@ -349,7 +381,9 @@ if __name__ == "__main__":
         MODEL, ROLES.READABILITY_OPTIMISATION, temperature=0.5
     )
 
+    # Obtaining the GraphState
     app = build_graph()
 
+    # Running the appropriate process
     # harmonise_articles(app)
     optimise_articles(app)
