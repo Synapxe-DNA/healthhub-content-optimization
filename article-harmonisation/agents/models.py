@@ -1025,7 +1025,7 @@ class Azure(LLMInterface):
         print("Sorting article content based on content structure...")
         res = chain.invoke(
             {
-                "Content": keypoints,
+                "Keypoints": keypoints,
             }
         )
         print("Article content sorted")
