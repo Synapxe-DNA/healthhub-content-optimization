@@ -104,11 +104,11 @@ first_level_cluster_size:
   type: pandas.CSVDataset
   filepath: data/07_model_output/first_level_cluster_size.csv
 
-clustered_nodes:
+first_level_clustered_nodes:
   type: pandas.CSVDataset
   filepath: data/07_model_output/first_level_clustered_nodes.csv
 
-unclustered_nodes:
+first_level_unclustered_nodes:
   type: pandas.CSVDataset
   filepath: data/07_model_output/first_level_unclustered_nodes.csv
 
