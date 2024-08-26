@@ -139,6 +139,7 @@ class ArticleEvaluation(TypedDict):
     reasons_for_poor_readability: Optional[str]
     reasons_for_improving_writing_style: Optional[str]
     writing_has_personality: Optional[bool]
+    change_summary: Optional[str]
 
 
 class OptimisedArticle(TypedDict):
@@ -193,6 +194,7 @@ class OptimisationAgents(TypedDict):
     Attributes:
         researcher_agent (LLMInterface): The agent responsible for researching and identifying key points in the article.
         compiler_agent (LLMInterface): The agent responsible for compiling key points into a summary.
+        content_sorting_agent (LLMInterface): The agent resposible for sorting the content structure of the article.
         content_optimisation_agent (LLMInterface): The agent responsible for optimising the content of the article.
         writing_optimisation_agent (LLMInterface): The agent responsible for optimising the writing of the article.
         title_optimisation_agent (LLMInterface): The agent responsible for optimising the article title.
@@ -200,6 +202,7 @@ class OptimisationAgents(TypedDict):
         readability_optimisation_agent (LLMInterface): The agent responsible for optimising the readability of the article.
         personality_evaluation_agent (LLMInterface): The agent responsible for evaluating the article's adherence to the required personality and voice.
         writing_evaluation_agent (LLMInterface): The agent responsible for evaluating the quality and effectiveness of the writing.
+        changes_summariser_agent (LLMInterface): The agent responsible for producing a summary of the changes between the original and optimized article.
     """
 
     researcher_agent: LLMInterface
@@ -211,3 +214,4 @@ class OptimisationAgents(TypedDict):
     meta_desc_optimisation_agent: LLMInterface
     readability_optimisation_agent: LLMInterface
     personality_evaluation_agent: LLMInterface
+    changes_summariser_agent: LLMInterface

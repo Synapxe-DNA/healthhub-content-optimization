@@ -91,12 +91,14 @@ def optimise_articles(app):
             "llm_agents": {
                 "researcher_agent": researcher_agent,
                 "compiler_agent": compiler_agent,
+                "content_sorting_agent": content_sorting_agent,
                 "content_optimisation_agent": content_optimisation_agent,
                 "writing_optimisation_agent": writing_optimisation_agent,
                 "title_optimisation_agent": title_optimisation_agent,
                 "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
                 "readability_optimisation_agent": readability_optimisation_agent,
                 "personality_evaluation_agent": personality_evaluation_agent,
+                "changes_summariser_agent": changes_summariser_agent,
             },
         }
 
@@ -152,7 +154,9 @@ def optimise_articles(app):
                 if article_flags["flag_for_writing_optimisation"]
                 else None
             ),  # Rewritten article content (should be a link)
-            None,  # Optimised changes summary (could be nil)
+            (
+                result["article_evaluation"].get("change_summary", None)
+            ),  # Optimised changes summary (could be nil)
             None,  # User approval for optimised article (Y/N)
             None,  # User attached updated article
             # Note that reasons_for_poor_readability and reasons_for_improving_writing_style are not included as it complicates the llm prompt, leading to poorer performance.
@@ -279,12 +283,14 @@ def harmonise_articles(app):
                 "llm_agents": {
                     "researcher_agent": researcher_agent,
                     "compiler_agent": compiler_agent,
+                    "content_sorting_agent": content_sorting_agent,
                     "content_optimisation_agent": content_optimisation_agent,
                     "writing_optimisation_agent": writing_optimisation_agent,
                     "title_optimisation_agent": title_optimisation_agent,
                     "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
                     "readability_optimisation_agent": readability_optimisation_agent,
                     "personality_evaluation_agent": personality_evaluation_agent,
+                    "changes_summariser_agent": changes_summariser_agent,
                 },
             }
 
@@ -324,7 +330,9 @@ def harmonise_articles(app):
                 result["optimised_article_output"][
                     "optimised_writing"
                 ],  # Rewritten article content (should be a link)
-                None,  # Optimised changes summary (could be nil)
+                (
+                    result["article_evaluation"].get("change_summary", None)
+                ),  # Optimised changes summary (could be nil)
                 None,  # User approval for optimised article (Y/N)
                 None,  # User attached updated article
             ]
@@ -340,6 +348,7 @@ if __name__ == "__main__":
     compiler_agent = start_llm(MODEL, ROLES.COMPILER)
     meta_desc_optimisation_agent = start_llm(MODEL, ROLES.META_DESC, temperature=0.1)
     title_optimisation_agent = start_llm(MODEL, ROLES.TITLE, temperature=0.5)
+    content_sorting_agent = start_llm(MODEL, ROLES.CONTENT_SORTER)
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(
         MODEL, ROLES.WRITING_OPTIMISATION, temperature=0.6
@@ -348,6 +357,7 @@ if __name__ == "__main__":
     readability_optimisation_agent = start_llm(
         MODEL, ROLES.READABILITY_OPTIMISATION, temperature=0.5
     )
+    changes_summariser_agent = start_llm(MODEL, ROLES.CHANGES_SUMMARISER)
 
     app = build_graph()
 

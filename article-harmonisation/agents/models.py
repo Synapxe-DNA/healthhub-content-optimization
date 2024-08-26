@@ -1103,6 +1103,40 @@ class Azure(LLMInterface):
 
         return response
 
+    def produce_changes_summary(self, original_content, optimised_content):
+        """
+        Produces a summary of the changes that happened when rewriting original article to optimized article.
+
+        Args:
+            original_content (str): the original article content
+            optimised_content (str): the optimised article content
+
+        Returns:
+              str: A response string containing the summary of the changes
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+
+        # Raises an error if the role is not "Title optimisation"
+        if self.role != ROLES.CHANGES_SUMMARISER:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run produce_changes_summary()"
+            )
+        
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_changes_summariser_prompt()
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+
+        print("Producing summary of the changes...")
+        response = chain.invoke({"Original": original_content, "Optimised": optimised_content})
+        print("Summary of changes completed")
+
+        return response
+
+
     def optimise_title(self, content, feedback):
         """
         The article title is generated based on the optimised article content

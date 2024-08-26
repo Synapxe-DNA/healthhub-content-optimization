@@ -42,11 +42,13 @@ class ROLES(Enum):
           COMPILER: Compiler LLM to compile keypoints across multiple article contents
           META_DESC: Meta Description LLM to generate the article meta description based on the optimised article content
           TITLE: Meta Description LLM to generate the article title based on the optimised article content
-          CONTENT_OPTIMISATION: Content Optimisation LLM to generate the article content based on the compiled keypoints
+          CONTENT_SORTER: Content sorter LLM to structure the article into predefined sections based on the compiled keypoints
+          CONTENT_OPTIMISATION: Content Optimisation LLM to enhance the article content based on the sorted content
           WRITING_OPTIMISATION: Writing Optimisation LLM to optimise the article content based on the provided writing style
           READABILITY_EVALUATION: Readability Evaluation LLM to evaluate the readability of the generated article content
           READABILITY_OPTIMISATION: Readability Evaluation LLM to optimise the readability of the generated article content
           PERSONALITY_EVALUATION: Personality Evaluation LLM to evaluate the writing style of the generated article content
+          CHANGES_SUMMARISER: Changes Summariser LLM to summarise the changes between the original article and the optimized article
     """
 
     # Declaring node roles
@@ -62,3 +64,4 @@ class ROLES(Enum):
     READABILITY_EVALUATION = "Readability evaluation"
     READABILITY_OPTIMISATION = "Readability optimisation"
     PERSONALITY_EVALUATION = "Personality evaluation"
+    CHANGES_SUMMARISER = "Changes summariser"

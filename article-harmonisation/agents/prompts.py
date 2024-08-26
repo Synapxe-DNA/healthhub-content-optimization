@@ -1537,6 +1537,69 @@ class AzurePrompts(LLMPrompt):
                 ]
 
                 return shorten_meta_desc_prompt
+    
+    @staticmethod
+    def return_changes_summariser_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the change summariser prompt
+
+        Returns:
+            list[tuple[str, str]]: a list containing the change summariser prompt. {Orignial} and {Optimized} are the only inputs required to invoke the prompt.
+        """
+        change_summariser_prompt = [
+            (
+                "system",
+                """
+                You will be given two versions of an article: the original version and the optimised version after rewriting. Your task is to analyze and summarize the differences between these two versions, focusing on the following aspects:
+
+                Content Removal:
+
+                Identify any significant information, sections, or key points that were present in the original version but have been removed in the optimized version.
+                Explain the potential impact of these removals on the overall message or effectiveness of the article.
+
+
+                Content Addition:
+
+                Highlight any new information, sections, or key points that have been added to the optimized version.
+                Discuss how these additions enhance or change the article's message, clarity, or effectiveness.
+
+
+                Structural Changes:
+
+                Note any significant changes in the organization or structure of the content between the two versions.
+                Explain how these structural changes might affect the reader's understanding or engagement with the article.
+
+
+                Language and Style:
+
+                Identify any notable changes in language, tone, or writing style between the original and optimized versions.
+                Discuss how these changes might impact the article's readability, engagement, or target audience.
+
+
+                Overall Impact:
+
+                Provide a brief assessment of whether the changes in the optimized version have improved the article's quality, clarity, or effectiveness compared to the original version.
+                If applicable, suggest any areas where further optimization might be beneficial.
+
+
+                Please provide your analysis in a clear, concise manner, using bullet points or numbered lists where appropriate to enhance readability.
+                """,
+            ),
+            (
+                "human", 
+                """
+                Compare the original and optimised articles and come up with a summary of the changes made.
+
+                Original article: 
+                {Original}
+                
+                Optimised article:
+                {Optimised}
+                """
+            ),
+        ]
+        return change_summariser_prompt
+
 
 
 class LlamaPrompts(LLMPrompt):

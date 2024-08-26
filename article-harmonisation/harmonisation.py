@@ -447,6 +447,42 @@ def personality_guidelines_evaluation_node(state):
         "article_evaluation": article_evaluation,
     }
 
+def changes_summariser_node(state):
+    """Creates a changes summariser node that summarises the changes that have taken place after rewriting the original article to the optimized article.
+
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+
+    Returns:
+        "article_evaluation": dictionary with updated changes_summary indicating the changes in content that have taken place from the original to the optimized article.
+    """
+    # Obtaining the original article
+    original_article_inputs = state.get("original_article_inputs")
+    original_article = original_article_inputs["article_content"]
+
+    # Obtaining the recently readability optimised writing
+    optimised_article_output = state.get("optimised_article_output")
+    optimised_writing = optimised_article_output.get("optimised_writing")
+
+    changes_summary_agent = state.get("llm_agents")[
+        "changes_summariser_agent"
+    ]
+
+    changes_summary = changes_summary_agent.produce_changes_summary(
+        original_content=original_article,
+        optimised_content=optimised_writing
+    )
+
+    # Obtaining article_flags dict
+    article_evaluation = state.get("article_evaluation", {})
+    # Updating article_evaluation with the updated personality_evaluation flags
+    article_evaluation["change_summary"] = changes_summary
+
+    return {
+        "article_evaluation": article_evaluation,
+    }
+
+
 
 # functions to determine next node
 def check_for_compiler(state):
@@ -522,23 +558,7 @@ def check_personality_after_readability_optimisation(state):
     has_personality = content_flags["writing_has_personality"]
 
     if has_personality:
-        # Extracts user flags for title and meta desc optimisation
-        title_optimisation_flags = state.get("user_flags")[
-            "flag_for_title_optimisation"
-        ]
-        meta_desc_optimisation_flags = state.get("user_flags")[
-            "flag_for_meta_desc_optimisation"
-        ]
-
-        if title_optimisation_flags:
-            # Moves state to title optimisation node if article has been flagged for title optimisation
-            return "title_optimisation_node"
-        elif meta_desc_optimisation_flags:
-            # Moves state to meta desc optimisation node if article has been flagged for meta desc optimisation
-            return "meta_description_optimisation_node"
-        else:
-            # If not other optimisation steps are needed, article optimisation ends.
-            return END
+        return "changes_summariser_node"
 
     else:
         return "writing_guidelines_optimisation_node"
@@ -649,20 +669,8 @@ def check_readability_after_writing_optimisation(state):
 
         else:
             print("Number of writing retries exceeded limit hit.")
-        # Checks if article is flagged for title and meta_desc optimisation
-        title_optimisation_flags = state.get("user_flags")[
-            "flag_for_title_optimisation"
-        ]
-        meta_desc_optimisation_flags = state.get("user_flags")[
-            "flag_for_meta_desc_optimisation"
-        ]
-
-        if title_optimisation_flags:
-            return "title_optimisation_node"
-        elif meta_desc_optimisation_flags:
-            return "meta_description_optimisation_node"
-        else:
-            return END
+        # Go to changes summary node
+        return "changes_summariser_node"
 
     else:
         # Send article for readability optimisation as it's readability score is >= 10
@@ -684,6 +692,7 @@ def build_graph():
         "meta_description_optimisation_node": meta_description_optimisation_node,
         "personality_guidelines_evaluation_node": personality_guidelines_evaluation_node,
         "readability_optimisation_node": readability_optimisation_node,
+        "changes_summariser_node": changes_summariser_node,
     }
 
     # Declaring dictionary with all edges
@@ -730,9 +739,7 @@ def build_graph():
             check_readability_after_writing_optimisation,
             {
                 "readability_optimisation_node": "readability_optimisation_node",
-                "title_optimisation_node": "title_optimisation_node",
-                "meta_description_optimisation_node": "meta_description_optimisation_node",
-                END: END,
+                "changes_summariser_node": "changes_summariser_node"
             },
         ),
         "readability_optimisation_node": (
@@ -746,10 +753,16 @@ def build_graph():
             check_personality_after_readability_optimisation,
             {
                 "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
+                "changes_summariser_node": "changes_summariser_node",
+            },
+        ),
+        "changes_summariser_node": (
+            decide_next_optimisation_node,
+            {
                 "title_optimisation_node": "title_optimisation_node",
                 "meta_description_optimisation_node": "meta_description_optimisation_node",
                 END: END,
-            },
+            }
         ),
         "title_optimisation_node": (
             check_optimised_titles_length,
