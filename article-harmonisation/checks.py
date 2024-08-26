@@ -1,49 +1,54 @@
-import os
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, TypedDict
 
 import pandas as pd
-from dotenv import load_dotenv
-from langgraph.graph import END, START, MessagesState, StateGraph
-from models import start_llm
-from phoenix.trace.langchain import LangChainInstrumentor
+from agents.enums import MODELS, ROLES
+from agents.models import LLMInterface, start_llm
+from config import settings
+from langgraph.graph import END, START
 from utils.evaluations import calculate_readability
-
-# Setting the environment for HuggingFaceHub
-load_dotenv()
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
-os.environ["PHOENIX_PROJECT_NAME"] = os.getenv("PHOENIX_PROJECT_NAME", "")
-
-# Available models configured to the project
-MODELS = ["mistral", "llama3"]
-
-# Declaring model to use
-MODEL = MODELS[1]
-
-# Declaring node roles
-EVALUATOR = "Evaluator"
-EXPLAINER = "Explainer"
+from utils.graphs import create_graph, draw_graph, execute_graph
+from utils.paths import get_root_dir
+from utils.reducers import merge_dict
 
 # Declaring maximum new tokens
-MAX_NEW_TOKENS = 3000
+MAX_NEW_TOKENS = settings.MAX_NEW_TOKENS
+
+# Declaring model to use
+MODEL = MODELS("azure").name
 
 
-def merge_dict(dict1, dict2):
-    for key, val in dict1.items():
-        if isinstance(val, dict):
-            if key in dict2 and type(dict2[key] == dict):
-                merge_dict(dict1[key], dict2[key])
-        else:
-            if key in dict2:
-                dict1[key] = dict2[key]
-
-    for key, val in dict2.items():
-        if key not in dict1:
-            dict1[key] = val
-
-    return dict1
+class ContentFlags(TypedDict):
+    is_unreadable: bool
+    low_words_count: bool
 
 
-class GraphState(TypedDict):
+class ContentJudge(TypedDict):
+    readability: str
+    structure: str
+
+
+class TitleFlags(TypedDict):
+    long_title: bool
+
+
+class TitleJudge(TypedDict):
+    title: str
+
+
+class MetaFlags(TypedDict):
+    not_within_word_count: bool
+
+
+class MetaJudge(TypedDict):
+    meta_desc: str
+
+
+class LLMAgents(TypedDict):
+    evaluation_agent: LLMInterface
+    explanation_agent: LLMInterface
+
+
+class ChecksState(TypedDict):
     """This class contains the different keys relevant to the project. It inherits from the TypedDict class.
 
     Attributes:
@@ -65,20 +70,20 @@ class GraphState(TypedDict):
     meta_desc: str
 
     # Flags for rule-based/statistical-based methods
-    content_flags: Annotated[dict[str, bool], merge_dict]
-    title_flags: Annotated[dict[str, bool], merge_dict]
-    meta_flags: Annotated[dict[str, bool], merge_dict]
+    content_flags: Annotated[ContentFlags, merge_dict]
+    title_flags: Annotated[TitleFlags, merge_dict]
+    meta_flags: Annotated[MetaFlags, merge_dict]
 
     # Explanations for various criteria
-    content_judge: Annotated[dict[str, str], merge_dict]
-    title_judge: Annotated[dict[str, str], merge_dict]
-    meta_judge: Annotated[dict[str, str], merge_dict]
+    content_judge: Annotated[ContentJudge, merge_dict]
+    title_judge: Annotated[TitleJudge, merge_dict]
+    meta_judge: Annotated[MetaJudge, merge_dict]
 
     # Agents
-    llm_agents: dict[str, Any]
+    llm_agents: LLMAgents
 
 
-def content_evaluation_rules_node(state: MessagesState) -> str:
+def content_evaluation_rules_node(state: ChecksState) -> dict:
     article_content = state.get("article_content", "")
     content_flags = state.get("content_flags", {})
 
@@ -108,7 +113,25 @@ def content_evaluation_rules_node(state: MessagesState) -> str:
     return {"content_flags": content_flags}
 
 
-def content_evaluation_llm_node(state: MessagesState) -> str:
+def content_explanation_node(state: ChecksState) -> dict:
+    article_content = state.get("article_content", "")
+    content_flags = state.get("content_flags", {})
+    content_judge = state.get("content_judge", {})
+
+    # Explain Poor Readability based on Readability Matrix - Low Priority
+    readabilty = content_flags.get("is_unreadable", False)
+
+    if readabilty:
+        explanation_agent = state.get("llm_agents")["explanation_agent"]
+        readability_explanation = explanation_agent.evaluate_content(
+            article_content, choice="readability"
+        )
+        content_judge["readability"] = readability_explanation
+
+    return {"content_judge": content_judge}
+
+
+def content_evaluation_llm_node(state: ChecksState) -> dict:
     article_content = state.get("article_content", "")
     content_judge = state.get("content_judge", {})
     content_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
@@ -129,25 +152,7 @@ def content_evaluation_llm_node(state: MessagesState) -> str:
     return {"content_judge": content_judge}
 
 
-def content_explanation_node(state: MessagesState) -> str:
-    article_content = state.get("article_content", "")
-    content_flags = state.get("content_flags", {})
-    content_judge = state.get("content_judge", {})
-
-    # Explain Poor Readability based on Readability Matrix - Low Priority
-    readabilty = content_flags.get("is_unreadable", False)
-
-    if readabilty:
-        explanation_agent = state.get("llm_agents")["explanation_agent"]
-        readability_explanation = explanation_agent.evaluate_content(
-            article_content, choice="readability"
-        )
-        content_judge["readability"] = readability_explanation
-
-    return {"content_judge": content_judge}
-
-
-def title_evaluation_rules_node(state: MessagesState) -> str:
+def title_evaluation_rules_node(state: ChecksState) -> dict:
     article_title = state.get("article_title", "")
     title_flags = state.get("title_flags", {})
 
@@ -165,7 +170,7 @@ def title_evaluation_rules_node(state: MessagesState) -> str:
     return {"title_flags": title_flags}
 
 
-def title_evaluation_llm_node(state: MessagesState) -> str:
+def title_evaluation_llm_node(state: ChecksState) -> dict:
     article_title = state.get("article_title", "")
     article_content = state.get("article_content", "")
     title_judge = state.get("title_judge", {})
@@ -180,7 +185,7 @@ def title_evaluation_llm_node(state: MessagesState) -> str:
     return {"title_judge": title_judge}
 
 
-def meta_desc_evaluation_rules_node(state: MessagesState) -> str:
+def meta_desc_evaluation_rules_node(state: ChecksState) -> dict:
     meta_desc = state.get("meta_desc", "")
     meta_flags = state.get("meta_flags", {})
 
@@ -197,7 +202,7 @@ def meta_desc_evaluation_rules_node(state: MessagesState) -> str:
     return {"meta_flags": meta_flags}
 
 
-def meta_desc_evaluation_llm_node(state: MessagesState) -> str:
+def meta_desc_evaluation_llm_node(state: ChecksState) -> dict:
     meta_desc = state.get("meta_desc", "")
     article_content = state.get("article_content", "")
     meta_judge = state.get("meta_judge", {})
@@ -212,57 +217,54 @@ def meta_desc_evaluation_llm_node(state: MessagesState) -> str:
     return {"meta_judge": meta_judge}
 
 
-# Creating a StateGraph object with GraphState as input.
-workflow = StateGraph(GraphState)
-
-# Adding the nodes to the workflow
-workflow.add_node("content_evaluation_rules_node", content_evaluation_rules_node)
-workflow.add_node("content_explanation_node", content_explanation_node)
-workflow.add_node("content_evaluation_llm_node", content_evaluation_llm_node)
-workflow.add_node("title_evaluation_rules_node", title_evaluation_rules_node)
-workflow.add_node("title_evaluation_llm_node", title_evaluation_llm_node)
-workflow.add_node("meta_desc_evaluation_rules_node", meta_desc_evaluation_rules_node)
-workflow.add_node("meta_desc_evaluation_llm_node", meta_desc_evaluation_llm_node)
-
-# Content Evaluation
-workflow.add_edge(START, "content_evaluation_rules_node")
-workflow.add_edge("content_evaluation_rules_node", "content_explanation_node")
-workflow.add_edge("content_explanation_node", "content_evaluation_llm_node")
-workflow.add_edge("content_evaluation_llm_node", END)
-
-# Title Evaluation
-workflow.add_edge(START, "title_evaluation_rules_node")
-workflow.add_edge("title_evaluation_rules_node", "title_evaluation_llm_node")
-workflow.add_edge("title_evaluation_llm_node", END)
-
-# Meta Description Evaluation
-workflow.add_edge(START, "meta_desc_evaluation_rules_node")
-workflow.add_edge("meta_desc_evaluation_rules_node", "meta_desc_evaluation_llm_node")
-workflow.add_edge("meta_desc_evaluation_llm_node", END)
-
-
-graph = workflow.compile()
-
-
 if __name__ == "__main__":
+    ROOT_DIR = get_root_dir()
+
+    nodes = {
+        "content_evaluation_rules_node": content_evaluation_rules_node,
+        "content_explanation_node": content_explanation_node,
+        "content_evaluation_llm_node": content_evaluation_llm_node,
+        "title_evaluation_rules_node": title_evaluation_rules_node,
+        "title_evaluation_llm_node": title_evaluation_llm_node,
+        "meta_desc_evaluation_rules_node": meta_desc_evaluation_rules_node,
+        "meta_desc_evaluation_llm_node": meta_desc_evaluation_llm_node,
+    }
+
+    edges = {
+        START: [
+            "content_evaluation_rules_node",
+            "title_evaluation_rules_node",
+            "meta_desc_evaluation_rules_node",
+        ],
+        "content_evaluation_rules_node": ["content_explanation_node"],
+        "content_explanation_node": ["content_evaluation_llm_node"],
+        "content_evaluation_llm_node": [END],
+        "title_evaluation_rules_node": ["title_evaluation_llm_node"],
+        "title_evaluation_llm_node": [END],
+        "meta_desc_evaluation_rules_node": ["meta_desc_evaluation_llm_node"],
+        "meta_desc_evaluation_llm_node": [END],
+    }
+
+    app = create_graph(ChecksState, nodes, edges)
+
     # Save Graph
-    img = graph.get_graph(xray=True).draw_mermaid_png()
-    with open("checks.png", "wb") as f:
-        f.write(img)
+    draw_graph(
+        app,
+        f"{ROOT_DIR}/article-harmonisation/docs/images/optimisation_checks_flow.png",
+    )
 
     # Start LLM
-    evaluation_agent = start_llm(MODEL, EVALUATOR)
-    explanation_agent = start_llm(MODEL, EXPLAINER)
-
-    LangChainInstrumentor().instrument()
+    evaluation_agent = start_llm(MODEL, ROLES.EVALUATOR)
+    explanation_agent = start_llm(MODEL, ROLES.EXPLAINER)
 
     # Load data from merged_data.parquet and randomly sample 30 rows
-    df = pd.read_parquet("./data/merged_data.parquet")
+    df = pd.read_parquet(f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet")
     df_keep = df[~df["to_remove"]]
-    df_sample = df_keep.sample(n=30, replace=False, random_state=42)
+    df_sample = df_keep.sample(n=1, replace=False, random_state=42)
     rows = df_sample.shape[0]
     print(rows)
 
+    records = []
     for i in range(rows):
         # Set up
         article_content = df_sample["extracted_content_body"].iloc[i]
@@ -271,7 +273,6 @@ if __name__ == "__main__":
         meta_desc = meta_desc if meta_desc is not None else "No meta description"
 
         print(f"Checking {article_title} now...")
-        records = []
         # Set up Inputs
         inputs = {
             "article_content": article_content,
@@ -289,10 +290,12 @@ if __name__ == "__main__":
             },
         }
 
-        response = graph.invoke(input=inputs)
+        response = execute_graph(app, inputs)
         print(response)
         del response["llm_agents"]
         records.append(response)
 
     df_save = pd.DataFrame.from_records(records)
-    df_save.to_parquet("./data/agentic_response.parquet")
+    df_save.to_parquet(
+        f"{ROOT_DIR}/article-harmonisation/data/optimization_checks/agentic_response.parquet"
+    )

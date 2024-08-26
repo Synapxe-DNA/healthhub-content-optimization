@@ -63,17 +63,11 @@ cat requirements.txt | xargs poetry add
 
     - `all_contents_standardized/`: contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
 
-    - `all_contents_extracted/`: contains all extracted data; stored in columns named `related_sections`, `extracted_content_body`, `extracted_links` and `extracted_headers`; below is a brief description what each column represents:
-
-      - `related_sections`: related sections from the HTML content body; includes both "Related" as well as "Read these next"
-
-      - `extracted_content_body`: extracted content body from the HTML content body
-
-      - `extracted_links`: extracted links from the HTML content body; for example, links from the "Related" and "Read these next" sections
-
-      - `extracted_headers`: extracted headers from the HTML content body; headers include all `<h>` tags
+    - `all_contents_extracted/`: contains all extracted data; various data was extracted from the HTML content body. Refer to the [Dataset](#dataset-info) description below
 
     - `all_extracted_text/`: contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
+
+    - `all_contents_mapped/`: contains all the new IA mappings as provided in the [kedro configuration](conf/base/parameters_data_processing.yml) as new columns
 
   - [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
@@ -103,6 +97,8 @@ cat requirements.txt | xargs poetry add
     - [`data_processing/`](src/content_optimization/pipelines/data_processing): contains the code for the `data_processing` pipeline; for more information, refer [here](#data-processing)
 
     - [`feature_engineering/`](src/content_optimization/pipelines/feature_engineering): contains the code for the `feature_engineering` pipeline; for more information, refer [here](#feature-engineering)
+
+    - [`clustering/`](src/content_optimization/pipelines/clustering): contains the code for the `clustering` pipeline; for more information, refer [here](#clustering)
 
 - [`tests/`](tests): contains all unit and integrations tests for the Kedro pipeline; it is to be mirrored as per `data/` and `src/content_optimization/` directories. Refer [here](https://docs.kedro.org/en/stable/tutorial/test_a_project.html) for more information.
 
@@ -172,8 +168,63 @@ kedro run --nodes="extract_keywords_node"
 
 ### Clustering <a id="clustering"></a>
 
-```python
-# TODO: Clustering Pipeline Documentation
+> [!IMPORTANT]
+> Before running the [`clustering`](src/content_optimization/pipelines/clustering/pipeline.py) pipeline, ensure that you have already ran the `data_processing` and `feature_engineering` pipeline. Additionally, make sure that Neo4j is set up locally.
+
+#### Prerequisites
+
+#### 1. Configuration
+
+Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
+
+```yaml
+neo4j_credentials:
+  username: your_username
+  password: your_password
+```
+
+Ensure that your `parameters_clustering.yml` file includes the Neo4j configurations:
+
+```yaml
+neo4j_config:
+  uri: neo4j://localhost:7687
+  database: hh-articles
+```
+
+#### 2.Neo4j Set Up
+
+<details>
+  <summary>Local Neo4j Setup Instuctions</summary>
+
+1. Download and Install Neo4j <br>
+
+   - Follow the [installation guide](https://neo4j.com/docs/operations-manual/current/installation/) provided by Neo4j
+
+2. Add Local DBMS <br>
+
+   - Open Neo4j Desktop <br>
+   - Create a new project or select an existing project <br>
+   - Click on "Add" and select "Add Local DBMS" <br>
+   - Use the username and password in your `conf/base/credentials.yml` file. <br>
+
+3. Create Database <br>
+
+   - Create a database with the name specified in the `database` variable in `parameters_clustering.yml` <br>
+
+4. Install GDS Library Plugins: <br>
+
+   - Follow the instructions in the [Neo4j GDS Library Installation Guide](https://neo4j.com/docs/graph-data-science/current/installation/neo4j-desktop/) to install the GDS library plugins<br>
+
+</details>
+
+#### 3. Data File
+
+- Verify that the file `data/01_raw/Synapxe Content Prioritisation - Live Healthy_020724.xlsx` is available in the specified directory.
+
+You can run the entire `clustering` pipeline by running:
+
+```zsh
+kedro run --pipeline=clustering
 ```
 
 ## Test the Kedro Project
@@ -190,7 +241,7 @@ kedro run --nodes="extract_keywords_node"
 # TODO: Integration Tests Documentation
 ```
 
-## Dataset <a id="dataset"></a>
+## Dataset <a id="dataset-info"></a>
 
 ### General Information
 
@@ -199,7 +250,7 @@ kedro run --nodes="extract_keywords_node"
 - **Dataset Description:** Merged collection of Health Hub articles across different content categories
 - **Version**: v1
 - **Date of Creation:** June 28, 2024
-- **Last Updated:** June 28, 2024
+- **Last Updated:** August 2, 2024
 
 ### File Information
 
@@ -210,7 +261,7 @@ kedro run --nodes="extract_keywords_node"
 ### Data Schema <a id="data-schema"></a>
 
 - **Number of Rows:** 2613
-- **Number of Columns:** 33
+- **Number of Columns:** 39
 - **Subject Area/Domain:** Health Hub Articles
 
 #### **Columns**
@@ -742,6 +793,32 @@ kedro run --nodes="extract_keywords_node"
   - Data Type: `string`
   - Description:
     - The extracted text from the `content_body` column
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`l1_mappings`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - A list of L1 IA Mappings presented as a joined string, delimited by "|"
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`l2_mappings`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - A list of L2 IA Mappings presented as a joined string, delimited by "|"
   - Null Values Allowed: Yes
   - Primary Key: No
   - Foreign Key: No

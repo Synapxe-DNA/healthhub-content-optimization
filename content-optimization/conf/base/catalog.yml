@@ -38,6 +38,12 @@ all_extracted_text:
   dataset: text.TextDataset
   filename_suffix: ".txt"
 
+all_contents_mapped:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/all_contents_mapped
+  dataset: pandas.ParquetDataset
+  filename_suffix: ".parquet"
+
 merged_data:
   type: pandas.ParquetDataset
   filepath: data/03_primary/merged_data.parquet
@@ -71,3 +77,57 @@ filtered_data_with_keywords:
   type: pandas.ParquetDataset
   filepath: data/03_primary/filtered_data_with_keywords.parquet
   versioned: true
+
+embeddings_data:
+  type: pandas.ParquetDataset
+  filepath: data/04_feature/embeddings_data.parquet
+
+weighted_embeddings:
+  type: pickle.PickleDataset
+  filepath: data/04_feature/weighted_embeddings.pkl
+
+ground_truth_data:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/Synapxe Content Prioritisation - Live Healthy_020724.xlsx
+  load_args:
+    sheet_name: 2
+
+first_level_pred_cluster:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/first_level_predicted_cluster.csv
+
+first_level_metrics:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/first_level_metrics.csv
+
+first_level_cluster_size:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/first_level_cluster_size.csv
+
+clustered_nodes:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/first_level_clustered_nodes.csv
+
+unclustered_nodes:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/first_level_unclustered_nodes.csv
+
+final_cluster_size:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/final_cluster_size.csv
+
+final_predicted_cluster:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/final_predicted_clusters.csv
+
+final_clustered_nodes:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/final_clustered_nodes.csv
+
+final_unclustered_nodes:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/final_unclustered_nodes.csv
+
+final_metrics:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/final_metrics.csv
