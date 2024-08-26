@@ -29,8 +29,7 @@ def select_and_rename_columns(
          df: pd.DataFrame
              The input DataFrame to be processed.
          columns_to_add: list[str] | None
-             List of column names to add back if they were dropped due to being all null.
-             If None, no columns are added back.
+             List of column names to add back if they were dropped due to being all null. If None, no columns are added back.
          columns_to_keep: list[str]
              List of column names to keep, in the desired order.
          default_columns: list[str]
@@ -66,16 +65,13 @@ def flag_articles_to_remove_before_extraction(
     df: pd.DataFrame, regex: str = r"(<[div|p|h2].*?>)"
 ) -> pd.DataFrame:
     """
-    Flags articles to remove before extraction based on a given regex pattern or
-    because it contains no content or has was rejected by Excel due to a "Value
-    exceeded maximum cell size" error. The default regex pattern flags out dummy
-    content. Dummy content are content without the necessary HTML tags.
+    Flags articles to remove before extraction based on a given regex pattern or because it contains no content or was
+    rejected by Excel due to a "Value exceeded maximum cell size" error. The default regex pattern flags out dummy content.
+    Dummy content are content without the necessary HTML tags.
 
     Args:
         df (pd.DataFrame): The DataFrame containing the articles.
-        regex (str):
-            The regex pattern to search for in the `content_body` column.
-            Defaults to r"(<[div|p|h2].*?>)".
+        regex (str): The regex pattern to search for in the `content_body` column. Defaults to r"(<[div|p|h2].*?>)".
 
     Returns:
         pd.DataFrame: The DataFrame with a new column `to_remove` indicating whether an article should be removed.
@@ -128,8 +124,8 @@ def flag_no_extracted_content(df: pd.DataFrame, whitelist: list[int]) -> pd.Data
 
     Returns:
         pd.DataFrame:
-            The modified DataFrame with the `to_remove` and `remove_type` columns updated. The `remove_type`
-            column is updated with the type of "No Extracted Content".
+            The modified DataFrame with the `to_remove` and `remove_type` columns updated. The `remove_type` column is
+            updated with the type of "No Extracted Content".
     """
     # All content ids without extracted content
     no_extracted_content_ids = set(
@@ -162,14 +158,12 @@ def flag_duplicated(
         df (pd.DataFrame): The DataFrame to flag duplicated rows in.
         whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
         column (str):
-            The column to check for duplicated values. Must be either
-            `extracted_content_body` and `full_url`.
+            The column to check for duplicated values. Must be either `extracted_content_body` and `full_url`.
 
     Returns:
         pd.DataFrame:
-            The DataFrame with a new column `to_remove` indicating whether a row
-            should be removed. The `remove_type` column is also updated with the type of
-            "Duplicated Content" or "Duplicated URL".
+            The DataFrame with a new column `to_remove` indicating whether a row should be removed. The `remove_type`
+            column is also updated with the type of "Duplicated Content" or "Duplicated URL".
 
     Raises:
         AssertionError: If the `column` parameter is None or not valid.
@@ -231,8 +225,8 @@ def flag_recipe_articles(df: pd.DataFrame, whitelist: list[int]) -> pd.DataFrame
 
     Returns:
         pd.DataFrame:
-            The modified DataFrame with the `to_remove` and `remove_type` columns updated. The `remove_type`
-            column is updated with the type of "Recipe".
+            The modified DataFrame with the `to_remove` and `remove_type` columns updated. The `remove_type` column is
+            updated with the type of "Recipe".
     """
 
     # `title` and `keywords` column
@@ -301,14 +295,12 @@ def flag_below_word_count_cutoff(
     Args:
         df (pd.DataFrame): The DataFrame containing the articles.
         word_count_cutoff (int):
-            The word count for an article to be flagged. If the word count falls below this
-            threshold, the article is flagged.
+            The word count for an article to be flagged. If the word count falls below this threshold, the article is flagged.
         whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
 
     Returns:
         pd.DataFrame:
-            The DataFrame with a new column `to_remove` indicating whether an article should be
-            removed. The `remove_type` column is also updated with the type of "Below Word Count".
+            The DataFrame with a new column `to_remove` indicating whether an article should be removed. The `remove_type` column is also updated with the type of "Below Word Count".
     """
     indexes = df.query("to_remove != True")["extracted_content_body"].apply(
         lambda x: len(x.split()) > 0 and len(x.split()) <= word_count_cutoff
@@ -344,8 +336,8 @@ def flag_multilingual_content(df: pd.DataFrame, whitelist: list[int]) -> pd.Data
 
     Returns:
         pd.DataFrame:
-            The DataFrame with a new column `to_remove` indicating whether an article should be
-            removed. The `remove_type` column is also updated with the type of "Multilingual".
+            The DataFrame with a new column `to_remove` indicating whether an article should be removed. The `remove_type`
+            column is also updated with the type of "Multilingual".
     """
 
     def find_multilingual(friendly_url: str | None = None) -> bool:
@@ -447,14 +439,12 @@ def flag_articles_to_remove_after_extraction(
 
 def add_content_body(df: pd.DataFrame, excel_errors: dict[str, str]) -> pd.DataFrame:
     """
-
     Args:
         df (pd.DataFrame): The DataFrame containing the articles
         excel_errors (dict[str,str]): A dictionary that maps each article friendly url to the updated content body
 
     Returns:
         pd.DataFrame: The DataFrame with updated content body for articles with Excel errors.
-
     """
     for friendly_url, text in excel_errors.items():
         # Fetch rows where `friendly_url` column value must match filename
@@ -472,14 +462,12 @@ def add_updated_urls(
     df: pd.DataFrame, new_urls: dict[str, dict[str, str]]
 ) -> pd.DataFrame:
     """
-
     Args:
         df (pd.DataFrame): The DataFrame containing the articles
         new_urls: A dictionary that maps each article id to the updated full_url
 
     Returns:
         pd.DataFrame: The DataFrame with updated full_url for articles with known 404 errors
-
     """
     for article_id, url in new_urls.items():
         # Fetch rows where `id` column value must match article_id
@@ -498,12 +486,13 @@ def invert_ia_mappings(
     mappings: dict[str, dict[str, list[str]]]
 ) -> dict[str, dict[str, str]]:
     """
-
     Args:
-        mappings (dict[str, dict[str, list[str]]]): A dictionary that maps the new IA mapping to the article category name for each content category
+        mappings (dict[str, dict[str, list[str]]]): A dictionary that maps the new IA mapping to the article category name
+            for each content category
 
     Returns:
-        dict[str, dict[str, str]]: The inverted mapping of article category name to its new IA mapping for each content category
+        dict[str, dict[str, str]]: The inverted mapping of article category name to its new IA mapping for each content
+            category
 
     """
     invert_mappings = {}
@@ -529,7 +518,6 @@ def map_category_names(
     new_column_name: str,
 ) -> pd.DataFrame:
     """
-
     Args:
         mappings (dict[str, dict[str, str]]): A dictionary that maps the article category name to new IA mapping for each content category
         df (pd.DataFrame): The DataFrame containing the articles

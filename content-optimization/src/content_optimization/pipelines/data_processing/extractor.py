@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 class HTMLExtractor:
     """
-    A class to extract and process various elements from HTML content
-    using BeautifulSoup.
+    A class to extract and process various elements from HTML content using BeautifulSoup.
 
     Attributes:
         content_name (str): The name of the article
