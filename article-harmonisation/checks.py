@@ -1,5 +1,6 @@
 import sys
 import time
+import traceback
 from datetime import datetime
 from glob import glob
 from typing import Annotated, Optional, TypedDict
@@ -551,15 +552,15 @@ if __name__ == "__main__":
                 # Execute the Optimisation Checks on the article
                 response = execute_graph(app, inputs)
                 print(response)
-            # Skip LLM evaluations if Azure Content Filter is triggered
-            except ValueError:
-                ex_type, ex_value, ex_traceback = sys.exc_info()
-                if (
-                    ex_value
-                    == "Azure has not provided the response due to a content filter being triggered"
-                ):
+            except ValueError as value_error:
+                # Skip LLM evaluations if Azure Content Filter is triggered
+                message = (
+                    getattr(value_error, "message", repr(value_error)).strip().lower()
+                )
+                if "content filter being triggered" in message:
                     print(
-                        "Content Filter has been triggered. Skipping LLM-based evaluations..."
+                        "Content Filter has been triggered. Skipping LLM-based evaluations...",
+                        end="\n\n",
                     )
                     skip_llm_evaluations = {
                         "decision": True,
@@ -569,7 +570,7 @@ if __name__ == "__main__":
                     response = execute_graph(app, inputs)
                     print(response)
                 else:
-                    raise ex_type(ex_value).with_traceback(ex_traceback)
+                    raise value_error
 
             # Save output with the correct keys (Easier to parse into a Pandas DataFrame)
             result = format_checks_outputs(response)
@@ -593,7 +594,8 @@ if __name__ == "__main__":
         print(f"Exception raised: {repr(ex)}")
         print(f"Exception type: {ex_type}")
         print(f"Exception value: {ex_value}")
-        print(f"Exception traceback: {ex_traceback}")
+        print("Exception traceback:")
+        traceback.print_tb(ex_traceback)
 
     # Save the evaluated outputs into a new dataframe - Very useful esp when Keyboard Interrupts are executed. Generated evaluations are preserved.
     finally:
