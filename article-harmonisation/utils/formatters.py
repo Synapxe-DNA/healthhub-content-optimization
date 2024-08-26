@@ -418,13 +418,13 @@ def format_checks_outputs(checks: dict) -> dict:
 
     # Extracting Flags for Skipping LLM generation for evaluations & explanations
     skip_llm_evaluations = checks.get("skip_llm_evaluations")
-    skip_llm_eval_decision = bool(skip_llm_evaluations.get("decision", False))
+    skip_llm_eval_decision = skip_llm_evaluations.get("decision", None)
     skip_llm_eval_explanation = skip_llm_evaluations.get("explanation", None)
 
     # Extracting Content flags (Rule-based) from the checks dictionary
     content_flags = checks.get("content_flags")
-    poor_readability = bool(content_flags.get("is_unreadable"))
-    insufficient_content = bool(content_flags.get("low_word_count"))
+    poor_readability = content_flags.get("is_unreadable")
+    insufficient_content = content_flags.get("low_word_count")
 
     # Extracting Content flags (LLM-based) from the checks dictionary
     content_judge = checks.get("content_judge")
@@ -435,23 +435,21 @@ def format_checks_outputs(checks: dict) -> dict:
 
     # Extracting Title flags (Rule-based) from the checks dictionary
     title_flags = checks.get("title_flags")
-    long_title = bool(title_flags.get("long_title"))
+    long_title = title_flags.get("long_title")
 
     # Extracting Title flags (LLM-based) from the checks dictionary
     title_judge = checks.get("title_judge")
-    irrelevant_title_decision = bool(
-        title_judge.get("title", {}).get("decision", False)
-    )
+    irrelevant_title_decision = title_judge.get("title", {}).get("decision", None)
     irrelevant_title_explanation = title_judge.get("title", {}).get("explanation", None)
 
     # Extracting Meta description flags (Rule-based) from the checks dictionary
     meta_flags = checks.get("meta_flags")
-    meta_not_within_char_count = bool(meta_flags.get("not_within_char_count"))
+    meta_not_within_char_count = meta_flags.get("not_within_char_count")
 
     # Extracting Meta description flags (LLM-based) from the checks dictionary
     meta_judge = checks.get("meta_judge")
-    irrelevant_meta_desc_decision = bool(
-        meta_judge.get("meta_desc", {}).get("decision", False)
+    irrelevant_meta_desc_decision = meta_judge.get("meta_desc", {}).get(
+        "decision", None
     )
     irrelevant_meta_desc_explanation = meta_judge.get("meta_desc", {}).get(
         "explanation", None
@@ -474,20 +472,20 @@ def format_checks_outputs(checks: dict) -> dict:
         poor_readability
         | insufficient_content
         | long_title
-        | irrelevant_title_decision
+        | bool(irrelevant_title_decision)
         | meta_not_within_char_count
-        | irrelevant_meta_desc_decision
+        | bool(irrelevant_meta_desc_decision)
     )
 
     # Title-related flags and explanations
-    result["overall title flags"] = long_title | irrelevant_title_decision
+    result["overall title flags"] = long_title | bool(irrelevant_title_decision)
     result["long title"] = long_title
     result["irrelevant title"] = irrelevant_title_decision
     result["reason for irrelevant title"] = irrelevant_title_explanation
 
     # Meta description-related flags and explanations
-    result["overall meta description flags"] = (
-        meta_not_within_char_count | irrelevant_meta_desc_decision
+    result["overall meta description flags"] = meta_not_within_char_count | bool(
+        irrelevant_meta_desc_decision
     )
     result["meta description"] = meta_description
     result["meta description not within 70 and 160 characters"] = (
