@@ -891,7 +891,8 @@ class AzurePrompts(LLMPrompt):
         ]
         return optimise_health_conditions_content_prompt
     
-    def return_content_sorting_prompt(self) -> list[tuple[str, str]]:
+    @staticmethod
+    def return_content_sorting_prompt() -> list[tuple[str, str]]:
 
         health_conditions_content_sorting_prompt = [
             (
@@ -905,8 +906,6 @@ class AzurePrompts(LLMPrompt):
                     ### Symptoms and Signs
 
                     ### Complications
-
-                    ### What to eat for dinner
 
                     ### Treatment and Prevention
 
@@ -947,8 +946,6 @@ class AzurePrompts(LLMPrompt):
                     ### Symptoms and Signs
 
                     ### Complications
-
-                    ### What to eat for dinner
 
                     ### Treatment and Prevention
 
