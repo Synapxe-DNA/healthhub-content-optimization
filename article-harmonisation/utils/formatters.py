@@ -429,6 +429,33 @@ def format_checks_outputs(checks: dict) -> dict:
     This function processes the input dictionary `checks` containing results from multiple content checks (such as flags
     and decisions based on rule-based and LLM-based assessments) and formats these into a comprehensive output dictionary.
 
+    These are the dictionary keys:
+        -   "article_id",
+        -   "title",
+        -   "url",
+        -   "content category",
+        -   "article category names",
+        -   "page views",
+        -   "Skipped LLM Evaluations",
+        -   "Reason for Skipping LLM Evaluations"
+        -   "overall flags",
+        -   "overall title flags",
+        -   "long title",
+        -   "irrelevant title",
+        -   "reason for irrelevant title",
+        -   "overall meta description flags",
+        -   "meta description",
+        -   "meta description not within 70 and 160 characters",
+        -   "irrelevant meta description",
+        -   "reason for irrelevant meta description",
+        -   "overall content flags",
+        -   "poor readability",
+        -   "reason for poor readability",
+        -   "insufficient content",
+        -   "Action",
+        -   "Reason for Action (IMPT for Cancellation)",
+        -   "Optional: additional content to add for optimisation"
+
     Args:
         checks (dict): A dictionary containing the results from content checks, including article inputs, content flags,
             title flags, and meta description flags.
@@ -444,15 +471,21 @@ def format_checks_outputs(checks: dict) -> dict:
     article_inputs = checks.get("article_inputs")
     article_id = int(article_inputs.get("article_id"))
     title = article_inputs.get("article_title")
+    meta_description = article_inputs.get("meta_desc")
     url = article_inputs.get("article_url")
     content_category = article_inputs.get("content_category")
     article_category_names = article_inputs.get("article_category_names")
     page_views = int(article_inputs.get("page_views"))
 
+    # Extracting Flags for Skipping LLM generation for evaluations & explanations
+    skip_llm_evaluations = checks.get("skip_llm_evaluations")
+    skip_llm_eval_decision = skip_llm_evaluations.get("decision", None)
+    skip_llm_eval_explanation = skip_llm_evaluations.get("explanation", None)
+
     # Extracting Content flags (Rule-based) from the checks dictionary
     content_flags = checks.get("content_flags")
-    poor_readability = bool(content_flags.get("is_unreadable"))
-    insufficient_content = bool(content_flags.get("low_word_count"))
+    poor_readability = content_flags.get("is_unreadable")
+    insufficient_content = content_flags.get("low_word_count")
 
     # Extracting Content flags (LLM-based) from the checks dictionary
     content_judge = checks.get("content_judge")
@@ -460,26 +493,26 @@ def format_checks_outputs(checks: dict) -> dict:
     readability_explanation = content_judge.get("readability", {}).get(
         "explanation", None
     )
-    structure_decision = bool(content_judge.get("structure").get("decision"))
-    structure_explanation = content_judge.get("structure").get("explanation", None)
 
     # Extracting Title flags (Rule-based) from the checks dictionary
     title_flags = checks.get("title_flags")
-    long_title = bool(title_flags.get("long_title"))
+    long_title = title_flags.get("long_title")
 
     # Extracting Title flags (LLM-based) from the checks dictionary
     title_judge = checks.get("title_judge")
-    irrelevant_title_decision = bool(title_judge.get("title").get("decision"))
-    irrelevant_title_explanation = title_judge.get("title").get("explanation", None)
+    irrelevant_title_decision = title_judge.get("title", {}).get("decision", None)
+    irrelevant_title_explanation = title_judge.get("title", {}).get("explanation", None)
 
     # Extracting Meta description flags (Rule-based) from the checks dictionary
     meta_flags = checks.get("meta_flags")
-    meta_not_within_char_count = bool(meta_flags.get("not_within_char_count"))
+    meta_not_within_char_count = meta_flags.get("not_within_char_count")
 
     # Extracting Meta description flags (LLM-based) from the checks dictionary
     meta_judge = checks.get("meta_judge")
-    irrelevant_meta_desc_decision = bool(meta_judge.get("meta_desc").get("decision"))
-    irrelevant_meta_desc_explanation = meta_judge.get("meta_desc").get(
+    irrelevant_meta_desc_decision = meta_judge.get("meta_desc", {}).get(
+        "decision", None
+    )
+    irrelevant_meta_desc_explanation = meta_judge.get("meta_desc", {}).get(
         "explanation", None
     )
 
@@ -491,27 +524,31 @@ def format_checks_outputs(checks: dict) -> dict:
     result["article category names"] = article_category_names
     result["page views"] = page_views
 
+    # Check if LLM Evaluation is skipped for the article
+    result["Skipped LLM Evaluations"] = skip_llm_eval_decision
+    result["Reason for Skipping LLM Evaluations"] = skip_llm_eval_explanation
+
     # Overall flags based on content, title, and meta description checks
     result["overall flags"] = (
         poor_readability
         | insufficient_content
-        | structure_decision
         | long_title
-        | irrelevant_title_decision
+        | bool(irrelevant_title_decision)
         | meta_not_within_char_count
-        | irrelevant_meta_desc_decision
+        | bool(irrelevant_meta_desc_decision)
     )
 
     # Title-related flags and explanations
-    result["overall title flags"] = long_title | irrelevant_title_decision
+    result["overall title flags"] = long_title | bool(irrelevant_title_decision)
     result["long title"] = long_title
     result["irrelevant title"] = irrelevant_title_decision
     result["reason for irrelevant title"] = irrelevant_title_explanation
 
     # Meta description-related flags and explanations
-    result["overall meta description flags"] = (
-        meta_not_within_char_count | irrelevant_meta_desc_decision
+    result["overall meta description flags"] = meta_not_within_char_count | bool(
+        irrelevant_meta_desc_decision
     )
+    result["meta description"] = meta_description
     result["meta description not within 70 and 160 characters"] = (
         meta_not_within_char_count
     )
@@ -519,17 +556,14 @@ def format_checks_outputs(checks: dict) -> dict:
     result["reason for irrelevant meta description"] = irrelevant_meta_desc_explanation
 
     # Content-related flags and explanations
-    result["overall content flags"] = (
-        poor_readability | insufficient_content | structure_decision
-    )
+    result["overall content flags"] = poor_readability | insufficient_content
     result["poor readability"] = poor_readability
     result["reason for poor readability"] = readability_explanation
     result["insufficient content"] = insufficient_content
-    result["writing style needs improvement"] = structure_decision
-    result["reason for improving writing style"] = structure_explanation
 
     # Placeholder fields for further actions and additional content
     result["Action"] = ""
-    result["Additional Content"] = ""
+    result["Reason for Action (IMPT for Cancellation)"] = ""
+    result["Optional: additional content to add for optimisation"] = ""
 
     return result

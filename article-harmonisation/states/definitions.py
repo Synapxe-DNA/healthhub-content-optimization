@@ -29,6 +29,21 @@ class ArticleInputs(TypedDict):
     additional_input: Optional[str]
 
 
+class SkipLLMEvals(TypedDict):
+    """
+    A dictionary type definition for storing input data related to skipping LLM evaluations. This is typically used when
+    running into errors raised from the Azure Content FFilter
+
+    Attributes:
+        decision (bool): Flag indicating if the LLM evaluations should be skipped.
+        explanation (str): A string indicating why the LLM evaluations should be skipped. Typically derived from the error
+            message
+    """
+
+    decision: bool
+    explanation: Optional[str]
+
+
 class ContentFlags(TypedDict):
     """
     A dictionary type definition for storing flags related to content evaluation.

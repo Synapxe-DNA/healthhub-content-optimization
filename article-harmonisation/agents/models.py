@@ -649,38 +649,39 @@ class Azure(LLMInterface):
                     }
                 )
 
-            case "structure":
-                # Set up prompts for structure evaluation and decision-making
-                evaluation_prompt = ChatPromptTemplate.from_messages(
-                    self.prompt_template.return_structure_evaluation_prompt()
-                )
-                decision_prompt = ChatPromptTemplate.from_messages(
-                    self.prompt_template.return_decision_prompt()
-                )
-
-                # Create evaluation chain
-                evaluation_chain = (
-                    evaluation_prompt
-                    | self.model
-                    | StrOutputParser()
-                    | {"evaluation": RunnablePassthrough()}
-                )
-
-                # Create decision chain
-                decision_chain = (
-                    decision_prompt
-                    | self.model
-                    | StrOutputParser()
-                    | RunnableLambda(parse_string_to_boolean)
-                )
-
-                # Combine chains for structure evaluation
-                chain = (
-                    evaluation_chain
-                    | {"text": itemgetter("evaluation")}
-                    | RunnableParallel(text=itemgetter("text"), decision=decision_chain)
-                    | RunnableLambda(self.evaluation_summary_router)
-                )
+            # # NOTE: Code is commented out as the Writing Style Evaluation is no longer required at the moment
+            # case "structure":
+            #     # Set up prompts for structure evaluation and decision-making
+            #     evaluation_prompt = ChatPromptTemplate.from_messages(
+            #         self.prompt_template.return_structure_evaluation_prompt()
+            #     )
+            #     decision_prompt = ChatPromptTemplate.from_messages(
+            #         self.prompt_template.return_decision_prompt()
+            #     )
+            #
+            #     # Create evaluation chain
+            #     evaluation_chain = (
+            #         evaluation_prompt
+            #         | self.model
+            #         | StrOutputParser()
+            #         | {"evaluation": RunnablePassthrough()}
+            #     )
+            #
+            #     # Create decision chain
+            #     decision_chain = (
+            #         decision_prompt
+            #         | self.model
+            #         | StrOutputParser()
+            #         | RunnableLambda(parse_string_to_boolean)
+            #     )
+            #
+            #     # Combine chains for structure evaluation
+            #     chain = (
+            #         evaluation_chain
+            #         | {"text": itemgetter("evaluation")}
+            #         | RunnableParallel(text=itemgetter("text"), decision=decision_chain)
+            #         | RunnableLambda(self.evaluation_summary_router)
+            #     )
 
             case _:
                 # Raise an error for invalid choices
