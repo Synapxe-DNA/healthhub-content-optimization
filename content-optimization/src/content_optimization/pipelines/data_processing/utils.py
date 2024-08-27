@@ -300,7 +300,8 @@ def flag_below_word_count_cutoff(
 
     Returns:
         pd.DataFrame:
-            The DataFrame with a new column `to_remove` indicating whether an article should be removed. The `remove_type` column is also updated with the type of "Below Word Count".
+            The DataFrame with a new column `to_remove` indicating whether an article should be removed. The `remove_type`
+            column is also updated with the type of "Below Word Count".
     """
     indexes = df.query("to_remove != True")["extracted_content_body"].apply(
         lambda x: len(x.split()) > 0 and len(x.split()) <= word_count_cutoff
@@ -519,7 +520,8 @@ def map_category_names(
 ) -> pd.DataFrame:
     """
     Args:
-        mappings (dict[str, dict[str, str]]): A dictionary that maps the article category name to new IA mapping for each content category
+        mappings (dict[str, dict[str, str]]): A dictionary that maps the article category name to new IA mapping for each
+            content category
         df (pd.DataFrame): The DataFrame containing the articles
         content_category_column (str): Refer to the column name of the content category (i.e. "content_category")
         reference_column (str): Refer to the column name of the article category (i.e. "article_category_names")

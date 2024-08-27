@@ -50,8 +50,7 @@ class HTMLExtractor:
     @classmethod
     def clean_text(cls, text: str) -> str:
         """
-        Cleans the given text by normalizing Unicode characters,
-        handling special symbols, replacing problematic characters,
+        Cleans the given text by normalizing Unicode characters, handling special symbols, replacing problematic characters,
         and removing multiple whitespace.
 
         Args:
@@ -86,8 +85,7 @@ class HTMLExtractor:
     @classmethod
     def preprocess_html(cls, html_content: str) -> BeautifulSoup:
         """
-        Preprocesses the given HTML content by replacing all <br>
-        tags with newline characters.
+        Preprocesses the given HTML content by replacing all <br> tags with newline characters.
 
         Args:
             html_content (str): The HTML content to be preprocessed.
