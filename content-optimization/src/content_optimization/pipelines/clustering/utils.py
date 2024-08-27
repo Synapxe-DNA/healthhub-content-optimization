@@ -20,6 +20,7 @@ from .ctfidf import CTFIDFVectorizer
 logging.basicConfig(level=logging.INFO)
 
 nltk.download("wordnet")
+nltk.download("stopwords")
 stopwords = list(stopwords.words("english"))
 lemmatizer = WordNetLemmatizer()
 
