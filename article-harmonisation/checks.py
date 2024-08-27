@@ -358,7 +358,9 @@ def create_checks_graph(state: ChecksState) -> CompiledGraph:
     return app
 
 
-def load_evaluation_dataframe(full_data_filepath: str, ids_filepath: str) -> tuple[pd.DataFrame]:
+def load_evaluation_dataframe(
+    full_data_filepath: str, ids_filepath: str
+) -> tuple[pd.DataFrame]:
     """
     Load and prepare evaluation dataframe for article harmonisation.
 
@@ -476,8 +478,12 @@ if __name__ == "__main__":
 
     # Get dataframe of articles to be evaluated
     merged_data_filepath = f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet"
-    ids_to_optimise_filepath = f"{ROOT_DIR}/article-harmonisation/data/ids_for_optimisation.csv"
-    df_keep, df_evaluated = load_evaluation_dataframe(merged_data_filepath, ids_to_optimise_filepath)
+    ids_to_optimise_filepath = (
+        f"{ROOT_DIR}/article-harmonisation/data/ids_for_optimisation.csv"
+    )
+    df_keep, df_evaluated = load_evaluation_dataframe(
+        merged_data_filepath, ids_to_optimise_filepath
+    )
 
     # Note: n can be adjusted as and when needed.
     # Usually, lower n is useful for generating evaluations in a more stable manner
