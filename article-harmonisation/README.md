@@ -54,9 +54,9 @@ Next, head to the [Microsoft Azure](https://www.portal.azure.com/#home) and set 
 
 Copy your new token and paste it under your `.env` file.
 
-- Set the Resource Name as `AZURE_OPENAI_API_SERVICE`
+- Set the Resource Name as `AZURE_OPENAI_SERVICE`
 - Set the Deployment Name as `AZURE_DEPLOYMENT_NAME`.
-- Set the Endpoint URL (`AZURE_OPENAI_ENDPOINT`) as `f"https://{AZURE_OPENAI_API_SERVICE}.openai.azure.com/"`. Replace `{AZURE_OPENAI_API_SERVICE}` in the URL.
+- Set the Endpoint URL (`AZURE_OPENAI_ENDPOINT`) as `f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com/"`. Replace `{AZURE_OPENAI_SERVICE}` in the URL.
 - Set the `AZURE_OPENAI_API_VERSION` to the latest version mentioned [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/api-version-deprecation)
 
 Finally, head to [`quickstart.py`](examples/quickstart.py) and run the file to check if your packages are working.
