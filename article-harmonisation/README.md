@@ -8,16 +8,28 @@ The models are deployed through Azure OpenAI Endpoints. Currently, this project 
 > [!WARNING]
 > The prompts for the HuggingFace models are not updated as we no longer use them. You will need to update the prompts and LLM Chains to mimic the implementation for Azure OpenAI Chat models.
 
-The article harmonisation process is broken up into 2 stages -
+The article rewriting process is broken up into 2 main processes -
 
 1. Article Optimisation Checks
 
   <p align="center">
       <img src="docs/images/Optimisation%20Checks%20Flow.jpg" width="600", alt="Article Optimisation Checks">
   </p>
+
 2. Article Rewriting
+
+Article Rewriting has two unique processes, namely:
+
+#### Article Optimisation
+
   <p align="center">
-      <img src="docs/images/Article%20Rewriting%20Flow.jpg" width="600", alt="Article Rewriting">
+      <img src="docs/images/article_optimisation_flow.jpg" width="600", alt="Article Rewriting">
+  </p>
+
+#### Article Harmonisation
+
+  <p align="center">
+      <img src="docs/images/article_harmonisation_flow.jpg" width="600", alt="Article Rewriting">
   </p>
 
 This is the current article harmonisation flow. This diagram will be continually updated as more nodes are added in.
@@ -172,11 +184,9 @@ As of 28 August 2024, the User Annotation Excel file name is set to "Stage 1 use
 
 You should also ensure that the 2 sheets named "Article Harmonisation Output" and "Article Optimisation Output" are in the User Annotation Excel file as the optimised outputs will be stored there
 
-Do ensure that the file name, user action column name and user annotation sheet names are still accurate to ensure that the project runs smoothly.
+**Do ensure that the file name, user action column name and user annotation sheet names are still accurate to ensure that the project runs smoothly.**
 
-You will need to specify which function to use `optimise_articles` for article optimisation and `harmonise_articles` for article harmonisation in `main_harmonisation.py`.
-
-Currently, the article harmonisation and optimisation is a single process but it might be bound to change in future developments.
+When deciding which workflow to run, you will need to specify which function to use `optimise_articles` for article optimisation and `harmonise_articles` for article harmonisation in `main_harmonisation.py`.
 
 To run the agentic framework on CLI -
 
