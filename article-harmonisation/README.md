@@ -183,7 +183,12 @@ As for `ids_for_optimisation.csv`, ensure that the `article_id` column is presen
 
 Then, head to [`checks.py`](checks.py) and run the file to start the article optimization checks workflow.
 
-Currently, the article optimization checks is ran concurrently within the workflow. This may result in deadlocks.
+The generated evaluations are stored in a parquet file called `agentic_response_*.parquet` in the [`data/optimization_checks`](data/optimization_checks) directory. The `*` in the parquet file will be the timestamp `YYYY-MM-DD HH-MM-SS` at which the file was generated.
+
+You should select the latest parquet file as that would be the latest generation from the Optimisation Checks workflow. If you need to redo the workflow, ensure that these parquet files are cleared from the [`data/optimization_checks`](data/optimization_checks) directory.
+
+> [!WARNING]
+> Currently, the article optimization checks is ran concurrently within the workflow. This may result in deadlocks.
 
 To run the agentic framework on CLI -
 
