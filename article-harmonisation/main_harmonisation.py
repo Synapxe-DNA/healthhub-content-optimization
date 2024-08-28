@@ -12,7 +12,8 @@ from utils.graphs import execute_graph
 MODEL = settings.MODEL_NAME
 
 # File path to user annotation Excel file
-USER_ANNOTATION = "article-harmonisation/data/optimization_checks/Stage 1 user annotation for HPB (Updated).xlsx"
+USER_ANNOTATION_FILE = "Stage 1 user annotation for HPB (Updated).xlsx"
+USER_ANNOTATION = f"article-harmonisation/data/article_rewriting/{USER_ANNOTATION_FILE}"
 
 # Declaring the respective sheet names for optimisation and harmonisation
 OPTIMISATION_SHEET_NAME = "Article Optimisation Output"
@@ -36,8 +37,10 @@ def optimise_articles(app):
     # df = optimization_check.parse('User Annotation (to optimise)')
     df = optimization_check.parse("optimise_test")
 
-    # Removing all articles not requiring any type of optimisation
-    df = df[(df["Action"] != "No action") & (~df["Action"].apply(isinstance, args=(float,)))]
+    # Removing all articles not requiring any type of optimisation. This includes all empty fields and "No action".
+    df = df[
+        (df["Action"] != "No action") & (~df["Action"].apply(isinstance, args=(float,)))
+    ]
 
     print("Num of articles to optimise: ", len(df))
     num_of_articles_in_df = len(df)
@@ -385,5 +388,5 @@ if __name__ == "__main__":
     app = build_graph()
 
     # Running the appropriate process
-    # harmonise_articles(app)
-    optimise_articles(app)
+    harmonise_articles(app)
+    # optimise_articles(app)

@@ -1,5 +1,4 @@
 import re
-from pathlib import Path
 
 import pyarrow.parquet as pq
 
@@ -353,86 +352,6 @@ def split_into_list(optimised_items: str, num_of_items: int):
 
     # returning the item_list with the processed titles
     return item_list
-
-
-def print_checks(result: dict, model: str) -> None:
-    """
-    Prints and saves the key outputs from the harmonisation process for various stages of article optimization.
-
-    This function generates a report containing the following information:
-    1. Researcher LLM outputs: Prints out the sentences in their respective categories, including sentences omitted by the LLM.
-    2. Compiler LLM outputs: Prints out the compiled keypoints.
-    3. Content optimization LLM outputs: Prints out the optimized article content.
-    4. Title optimization LLM outputs: Prints out the optimized title.
-    5. Meta description optimization LLM outputs: Prints out the optimized meta description.
-
-    The results are saved to a text file specific to the provided model.
-
-    Args:
-        result (dict): A dictionary containing the final outputs from the graph.
-        model (str): The name of the model, used for naming the output file.
-
-    Note:
-        The function writes the output to a text file in the 'article-harmonisation/docs/txt_outputs' directory.
-    """
-
-    # Determine the number of articles undergoing the harmonisation process
-    num_of_articles = len(result.get("original_article_inputs")["article_content"])
-
-    # Create the directory for storing output text files if it doesn't exist
-    Path(f"{ROOT_DIR}/article-harmonisation/docs/txt_outputs").mkdir(
-        parents=True, exist_ok=True
-    )
-
-    # Open the file for writing the output
-    with open(
-        f"{ROOT_DIR}/article-harmonisation/docs/txt_outputs/{model}_compiled_keypoints_check.txt",
-        "w",
-    ) as f:
-
-        # Iterate through each article content and write to the file
-        for content_index in range(num_of_articles):
-            if content_index > 0:
-                f.write(" \n ----------------- \n")
-            f.write(f"Original Article {content_index+1} content \n")
-            article = result.get("original_article_inputs")["article_content"][
-                content_index
-            ]
-            for keypoint in article:
-                f.write(keypoint + "\n")
-        f.write(" \n -----------------")
-
-        # Printing each keypoint produced by Researcher LLM
-        print("\nRESEARCHER LLM CHECKS\n -----------------", file=f)
-        for i in range(0, num_of_articles):
-            print(f"These are the keypoints for article {i+1}\n".upper(), file=f)
-            print(
-                result.get("optimised_article_output")["researcher_keypoints"][i],
-                file=f,
-            )
-            print(" \n -----------------", file=f)
-
-        # Printing compiled keypoints produced by Compiler LLM
-        if "compiled_keypoints" in result["optimised_article_output"].keys():
-            print("COMPILER LLM CHECKS \n ----------------- ", file=f)
-            print(
-                str(result.get("optimised_article_output")["compiled_keypoints"]),
-                file=f,
-            )
-            print(" \n -----------------", file=f)
-
-        # Checking for optimised content produced by the content optimisation flow
-        flags = {"optimised_content", "optimised_writing", "article_title", "meta_desc"}
-        keys = result.get("optimised_article_output").keys()
-        print("CONTENT OPTIMISATION CHECKS\n ----------------- \n", file=f)
-        for flag in flags:
-            if flag in keys:
-                print(f"These is the optimised {flag.upper()}", file=f)
-                print(result.get("optimised_article_output")[flag], file=f)
-                print(" \n ----------------- \n", file=f)
-            else:
-                print(f"{flag.upper()} has not been flagged for optimisation.", file=f)
-                print(" \n ----------------- \n", file=f)
 
 
 def parse_string_to_boolean(string_to_check: str) -> bool:
