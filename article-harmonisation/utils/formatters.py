@@ -403,8 +403,6 @@ def format_checks_outputs(checks: dict) -> dict:
         -   "content category",
         -   "article category names",
         -   "page views",
-        -   "Skipped LLM Evaluations",
-        -   "Reason for Skipping LLM Evaluations"
         -   "overall flags",
         -   "overall title flags",
         -   "long title",

@@ -364,8 +364,7 @@ def load_evaluation_dataframe(
     """
     Load and prepare evaluation dataframe for article harmonisation.
 
-    This function loads the full dataset from a parquet file + article IDs from a csv file, checks for previously evaluated articles,
-    and filters the dataframe to include only relevant Health Promotion Board articles that haven't been evaluated yet.
+    This function loads the full dataset from a parquet file + article IDs from a csv file, checks for previously evaluated articles.
 
     Args:
         full_data_filepath (str): The path to the parquet file to load the full dataset.
