@@ -93,7 +93,9 @@ To run the agentic framework on CLI -
 
 ### Running the Article Rewriting Workflow
 
-To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `harmonisation.py` and run the file to start the article harmonisation process.
+To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `main_harmonisation.py` and run the file to start the article harmonisation process.
+
+You will need to specify which function to use `optimise_articles` for article optimisation and `harmonise_articles` for article harmonisation in `main_harmonisation.py`. 
 
 Currently, the article harmonisation and optimisation is a single process but it might be bound to change in future developments.
 
@@ -105,7 +107,7 @@ To run the agentic framework on CLI -
     # Change directory to ROOT
     cd ..
     # Run the python script
-    python3 ./article-harmonisation/harmonisation.py
+    python3 ./article-harmonisation/main_harmonisation.py
 ```
 
 ### Running the streamlit application

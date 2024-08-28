@@ -1306,7 +1306,7 @@ class AzurePrompts(LLMPrompt):
                                 This shortened version has 62 characters with spaces, which meets the length requirements now:
                                     "Living Healthy: Tips to Nutrition, Exercise, and Mental Health"
 
-                            4. Return your rewritten tit;es as the final answer.
+                            4. Return your rewritten titles as the final answer.
 
                                 Your final answer:
                                 "1. Simple Steps to a Healthy Lifestyle: Tips for Everyday Well-Being

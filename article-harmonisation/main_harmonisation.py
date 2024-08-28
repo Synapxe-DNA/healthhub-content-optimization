@@ -37,7 +37,7 @@ def optimise_articles(app):
     df = optimization_check.parse("optimise_test")
 
     # Removing all articles not requiring any type of optimisation
-    df = df[df["overall flags"]]
+    df = df[(df["Action"] != "No action") & (~df["Action"].apply(isinstance, args=(float,)))]
 
     print("Num of articles to optimise: ", len(df))
     num_of_articles_in_df = len(df)
@@ -73,7 +73,7 @@ def optimise_articles(app):
         ]
 
         # Determines which optimisation steps are flagged by user
-        article_flags = return_optimisation_flags(article)
+        article_flags = return_optimisation_flags(article, "optimisation")
 
         # Dictionary with the various input keys and items
         inputs = {
@@ -97,7 +97,7 @@ def optimise_articles(app):
             "optimised_article_output": {
                 "researcher_keypoints": [],
             },
-            "user_flags": return_optimisation_flags(article),
+            "user_flags": return_optimisation_flags(article, "optimisation"),
             "llm_agents": {
                 "researcher_agent": researcher_agent,
                 "compiler_agent": compiler_agent,
@@ -305,7 +305,7 @@ def harmonise_articles(app):
                 "optimised_article_output": {
                     "researcher_keypoints": [],
                 },
-                "user_flags": return_optimisation_flags(article),
+                "user_flags": return_optimisation_flags(article, "harmonisation"),
                 "llm_agents": {
                     "researcher_agent": researcher_agent,
                     "compiler_agent": compiler_agent,

@@ -480,6 +480,10 @@ def personality_guidelines_evaluation_node(state):
     # Obtaining the article_evaluation Dictionary
     article_evaluation = state.get("article_evaluation", {})
 
+    # state.get("article_evaluation") may return null at times, hence it should be assigned to an empty dictionary
+    if not article_evaluation:
+        article_evaluation = {}
+
     # Updating article_evaluation with the updated personality_evaluation flags
     article_evaluation["writing_has_personality"] = personality_evaluation
 
@@ -594,7 +598,7 @@ def decide_next_optimisation_node(state):
         return END
 
 
-def check_personality_after_readability_optimisation(state):
+def check_personality_after_personality_evaluation(state):
     """Checks for the personality evaluation of the readability optimised article to determine if a subsequent round of writing optimisation is required.
 
     If personality evaluation has failed, then state will be directed to writing_guidelines_optimisation_node for another round of writing guidelines optimisation.
@@ -906,7 +910,7 @@ def build_graph():
         ),
         # Conditional edge from personality_guidelines_evaluation_node that checks the personality evaluation of a rewritten article to determine whether to direct the state for another round of writing guidelines optimisation or to other optimisation nodes.
         "personality_guidelines_evaluation_node": (
-            check_personality_after_readability_optimisation,
+            check_personality_after_personality_evaluation,
             {
                 "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
                 "title_optimisation_node": "title_optimisation_node",
