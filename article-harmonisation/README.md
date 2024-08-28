@@ -30,6 +30,67 @@ This is the current article harmonisation flow. This diagram will be continually
 
 ## Installation guide
 
+### Setting up the Virtual environment
+
+#### Anaconda (Recommended)
+
+You can download the Anaconda Distribution for your respective operating system [here](https://docs.anaconda.com/anaconda/install/). You may also find out how to get started with Anaconda Distribution [here](https://docs.anaconda.com/anaconda/getting-started/). To verfiy your installation, you can head to the Command Line Interface (CLI) and run the following command:
+
+```zsh
+conda list
+```
+
+You should see a list of packages installed in your active environment and their versions displayed. For more information, refer [here](https://docs.anaconda.com/anaconda/install/verify-install/).
+
+---
+
+Once set up, create a virtual environment using `conda` and install dependencies:
+
+```zsh
+# Create a virtual environment
+conda create -n <VENV_NAME> python=3.12 -y
+conda activate <VENV_NAME>
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+#### venv
+
+You can use Python's native virtual environment `venv` to setup the project
+
+```zsh
+# Create a virtual environment
+python3 -m venv <VENV_NAME>
+```
+
+You can then activate the environment and install the dependencies using the following commands -
+
+For UNIX-based systems (macOS / Linux):
+
+```zsh
+# Activate virtual environment
+source <VENV_NAME>/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+For Windows:
+
+```powershell
+# Activate virtual environment
+.\<VENV_NAME>\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+> [!TIP]
+> If you're using Python's native virtual environment `venv`, it is best practice to name your virtual environment `venv`.
+
+---
+
 ### Installing Relevant Packages
 
 Start by installing all the packages required to run the project.
@@ -74,9 +135,18 @@ If you are unable to run the server, perform the following command - `pip instal
 
 ## Instruction to run the project
 
+### Adding the necessary inputs files
+
+In order to run the project, you require 3 key files -
+
+1. `merged_data.parquet` from the Data Processing pipeline - Refer to `content-optimization/data/03_primary/merged_data.parquet` to obtain the file.
+2. `ids_for_optimisation.csv` from the Clustering Pipeline - Refer to `content-optimization/notebooks/exclude_articles.ipynb` to generate the file.
+
 ### Running the Optimisation Checks Workflow
 
-To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to [`checks.py`](checks.py) and run the file to start the article optimization checks workflow.
+To run the project, first ensure that you have installed all the packages in `requirements.txt`.
+Next, add the `merged_data.parqet` and `ids_for_optimisation.csv` to the `data` directory of the `article-harmonisation` project.
+Then, head to [`checks.py`](checks.py) and run the file to start the article optimization checks workflow.
 
 Currently, the article optimization checks is ran concurrently within the workflow. This may result in deadlocks.
 
