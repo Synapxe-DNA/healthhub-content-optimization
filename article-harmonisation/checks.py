@@ -400,11 +400,12 @@ def load_evaluation_dataframe(
             evaluated_article_ids = list(df_eval.article_id)
             print(f"Evaluated Article IDs: {evaluated_article_ids}")
         else:
-            print("Article ID does not exist in Latest Article Evaluation Dataset. Please remove this file if it is empty.")
+            print(
+                "Article ID does not exist in Latest Article Evaluation Dataset. Please remove this file if it is empty."
+            )
             print("Evaluating all articles...")
             evaluated_article_ids = []
             df_eval = None
-
 
     # Get articles for Optimisation
     df_ids_to_optimise = pd.read_csv(ids_filepath)
