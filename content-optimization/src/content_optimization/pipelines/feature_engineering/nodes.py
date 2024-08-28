@@ -5,6 +5,7 @@ generated using Kedro 0.19.6
 
 from typing import Any
 
+import nltk
 import numpy as np
 import pandas as pd
 from alive_progress import alive_bar
@@ -18,6 +19,8 @@ from nltk.tokenize import sent_tokenize
 from pytictoc import TicToc
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
+
+nltk.download("punkt_tab")
 
 
 def extract_keywords(
