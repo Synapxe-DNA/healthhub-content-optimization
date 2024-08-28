@@ -150,4 +150,4 @@ json_data_rag:
   type: partitions.PartitionedDataset
   dataset: json.JSONDataset
   path: data/03_primary/processed_articles/
-  filename_suffix: ".json"  
+  filename_suffix: ".json"

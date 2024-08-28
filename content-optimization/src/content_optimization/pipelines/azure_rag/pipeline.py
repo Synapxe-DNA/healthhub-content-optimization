@@ -4,16 +4,16 @@ generated using Kedro 0.19.6
 """
 
 from content_optimization.pipelines.azure_rag.nodes import (
+    extract_content,
     filter_articles,
     process_html_tables,
-    extract_content,
 )
-
 from kedro.pipeline import Pipeline, node, pipeline
 
 
 def create_pipeline(**kwargs) -> Pipeline:
-    return pipeline([
+    return pipeline(
+        [
             node(
                 func=filter_articles,
                 inputs="merged_data",
@@ -29,11 +29,12 @@ def create_pipeline(**kwargs) -> Pipeline:
             node(
                 func=extract_content,
                 inputs=[
-                    "processed_data_rag", 
-                    "params:article_content_columns", 
-                    "params:table_content_columns", 
-                    ],
+                    "processed_data_rag",
+                    "params:article_content_columns",
+                    "params:table_content_columns",
+                ],
                 outputs="json_data_rag",
                 name="extract_content_node",
-            )
-    ])
+            ),
+        ]
+    )

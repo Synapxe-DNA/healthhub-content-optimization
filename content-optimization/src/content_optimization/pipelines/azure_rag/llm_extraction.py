@@ -1,9 +1,12 @@
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from openai import AzureOpenAI
 
+
 def ask(html_content: str) -> str:
     azure_credential = DefaultAzureCredential()
-    token_provider = get_bearer_token_provider(azure_credential, "https://cognitiveservices.azure.com/.default")
+    token_provider = get_bearer_token_provider(
+        azure_credential, "https://cognitiveservices.azure.com/.default"
+    )
 
     openai_client = AzureOpenAI(
         api_version="2024-03-01-preview",
@@ -12,7 +15,7 @@ def ask(html_content: str) -> str:
     )
 
     prompt = """
-    Below is the given full article html, extract the content of the tables, including any descriptions about the tables or may be helpful for the user to understand the tables. 
+    Below is the given full article html, extract the content of the tables, including any descriptions about the tables or may be helpful for the user to understand the tables.
     Do not retain any of the text that are not helpful for the tables, remove all html tags and replace them with markdown format.
     Output the response as a single, readable string without any other sentences needed.
 
