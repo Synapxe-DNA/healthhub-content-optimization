@@ -42,9 +42,9 @@ This diagram will be continually updated as more nodes are added in.
 
 ## Rules and Guidelines
 
-- Don't remove any lines from the `.gitignore` file provided (although you may modify or add to it)
+- Don't remove any lines from the [`.gitignore`](../.gitignore) file provided (although you may modify or add to it)
 - Don't commit data to the repository
-- Don't commit any credentials or local configuration to the repository. Remember to add `.env` to `.gitignore`
+- Don't commit any credentials or local configuration to the repository. Remember to add [`.env`](.env.example) to [`.gitignore`](../.gitignore)
 
 ## Installation guide
 
@@ -114,6 +114,7 @@ pip install -r requirements.txt
 Start by installing all the packages required to run the project.
 
 ```zsh
+# In the article-harmonisation directory
 pip install -r requirements.txt
 ```
 
@@ -131,7 +132,7 @@ az account show
 
 Next, head to the [Microsoft Azure](https://www.portal.azure.com/#home) and set up the Azure OpenAI Chat Model Deployment.
 
-Copy your new token and paste it under your `.env` file.
+Copy your new token and paste it under your [`.env`](.env.example) file.
 
 - Set the Resource Name as `AZURE_OPENAI_SERVICE`
 - Set the Deployment Name as `AZURE_DEPLOYMENT_NAME`.
@@ -163,9 +164,9 @@ In order to run the project, you require 3 key files -
 
 ### Running the Optimisation Checks Workflow
 
-To run the project, first ensure that you have installed all the packages in `requirements.txt`.
+To run the project, first ensure that you have installed all the packages in [`requirements.txt`](requirements.txt).
 
-Next, add the `merged_data.parqet` and `ids_for_optimisation.csv` to the `data` directory of the `article-harmonisation` project.
+Next, add the `merged_data.parquet` and `ids_for_optimisation.csv` to the [`data`](data) directory of the `article-harmonisation` project.
 
 Ensure the following columns are present in `merged_data.parquet` -
 
@@ -197,17 +198,21 @@ python3 ./article-harmonisation/checks.py
 
 ### Running the Article Generation Workflow
 
-To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `main_harmonisation.py` and run the file to start the article harmonisation process.
+To run the project, first ensure that you have installed all the packages in [`requirements.txt`](requirements.txt). Next, head to [`main_harmonisation.py`](main_harmonisation.py) and run the file to start the article harmonisation process.
 
-Before running the project, you will also need to ensure that the User Annotation Excel file is placed in `article-harmonisation/data/article_rewriting` as the article rewriting process extracts data from the Excel file to determine which optimisation steps to take. Users will flag out the optimisation steps they wish to take under the column `User: additional content to add for harmonisation`.
+Before running the project, you will also need to ensure that the User Annotation Excel file is placed in [`article-harmonisation/data/article_rewriting`](./data/article_rewriting) directory as the article rewriting process extracts data from the Excel file to determine which optimisation steps to take. Users will flag out the optimisation steps they wish to take under the column `User: additional content to add for harmonisation`.
 
-As of 28 August 2024, the User Annotation Excel file name is set to "Stage 1 user annotation for HPB (Updated).xlsx" and the column for user annotation is "User: additional content to add for harmonisation". The User Annotation sheet name for article harmonisation is "User Annotation (to harmonise)" and the sheet name for article optimisation is "User Annotation (to optimise)"
+> [!NOTE]
+> As of 28 August 2024, the User Annotation Excel file name is set to `Stage 1 user annotation for HPB (Updated).xlsx` and the column for user annotation is "User: additional content to add for harmonisation". The User Annotation sheet name for article harmonisation is `User Annotation (to harmonise)` and the sheet name for article optimisation is `User Annotation (to optimise)`
 
 You should also ensure that the 2 sheets named "Article Harmonisation Output" and "Article Optimisation Output" are in the User Annotation Excel file as the optimised outputs will be stored there
 
 **Do ensure that the file name, user action column name and user annotation sheet names are still accurate to ensure that the project runs smoothly.**
 
-When deciding which workflow to run, you will need to specify which function to use `optimise_articles` for article optimisation and `harmonise_articles` for article harmonisation in `main_harmonisation.py`.
+When deciding which workflow to run, you will need to specify which function to use in [`main_harmonisation.py`](main_harmonisation.py):
+
+- `optimise_articles` for article optimisation
+- `harmonise_articles` for article harmonisation
 
 To run the agentic framework on CLI -
 
