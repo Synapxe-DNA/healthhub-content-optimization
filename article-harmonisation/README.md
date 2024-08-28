@@ -30,6 +30,67 @@ This is the current article harmonisation flow. This diagram will be continually
 
 ## Installation guide
 
+### Setting up the Virtual environment
+
+#### Anaconda (Recommended)
+
+You can download the Anaconda Distribution for your respective operating system [here](https://docs.anaconda.com/anaconda/install/). You may also find out how to get started with Anaconda Distribution [here](https://docs.anaconda.com/anaconda/getting-started/). To verfiy your installation, you can head to the Command Line Interface (CLI) and run the following command:
+
+```zsh
+conda list
+```
+
+You should see a list of packages installed in your active environment and their versions displayed. For more information, refer [here](https://docs.anaconda.com/anaconda/install/verify-install/).
+
+---
+
+Once set up, create a virtual environment using `conda` and install dependencies:
+
+```zsh
+# Create a virtual environment
+conda create -n <VENV_NAME> python=3.12 -y
+conda activate <VENV_NAME>
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+#### venv
+
+You can use Python's native virtual environment `venv` to setup the project
+
+```zsh
+# Create a virtual environment
+python3 -m venv <VENV_NAME>
+```
+
+You can then activate the environment and install the dependencies using the following commands -
+
+For UNIX-based systems (macOS / Linux):
+
+```zsh
+# Activate virtual environment
+source <VENV_NAME>/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+For Windows:
+
+```powershell
+# Activate virtual environment
+.\<VENV_NAME>\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+> [!TIP]
+> If you're using Python's native virtual environment `venv`, it is best practice to name your virtual environment `venv`.
+
+---
+
 ### Installing Relevant Packages
 
 Start by installing all the packages required to run the project.
@@ -54,9 +115,9 @@ Next, head to the [Microsoft Azure](https://www.portal.azure.com/#home) and set 
 
 Copy your new token and paste it under your `.env` file.
 
-- Set the Resource Name as `AZURE_OPENAI_API_SERVICE`
+- Set the Resource Name as `AZURE_OPENAI_SERVICE`
 - Set the Deployment Name as `AZURE_DEPLOYMENT_NAME`.
-- Set the Endpoint URL (`AZURE_OPENAI_ENDPOINT`) as `f"https://{AZURE_OPENAI_API_SERVICE}.openai.azure.com/"`. Replace `{AZURE_OPENAI_API_SERVICE}` in the URL.
+- Set the Endpoint URL (`AZURE_OPENAI_ENDPOINT`) as `f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com/"`. Replace `{AZURE_OPENAI_SERVICE}` in the URL.
 - Set the `AZURE_OPENAI_API_VERSION` to the latest version mentioned [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/api-version-deprecation)
 
 Finally, head to [`quickstart.py`](examples/quickstart.py) and run the file to check if your packages are working.
@@ -74,9 +135,19 @@ If you are unable to run the server, perform the following command - `pip instal
 
 ## Instruction to run the project
 
+### Adding the necessary inputs files
+
+In order to run the project, you require 3 key files -
+
+1. `merged_data.parquet` from the Data Processing pipeline - Refer to `content-optimization/data/03_primary/merged_data.parquet` to obtain the file.
+2. `ids_for_optimisation.csv` from the Clustering Pipeline - Refer to `content-optimization/notebooks/exclude_articles.ipynb` to generate the file.
+3. `Stage 1 user annotation for HPB (Updated).xlsx` from `Step 1 Harmonisation and Optimisation Checks` in the `LLM Exploration` Google Drive
+
 ### Running the Optimisation Checks Workflow
 
-To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to [`checks.py`](checks.py) and run the file to start the article optimization checks workflow.
+To run the project, first ensure that you have installed all the packages in `requirements.txt`.
+Next, add the `merged_data.parqet` and `ids_for_optimisation.csv` to the `data` directory of the `article-harmonisation` project.
+Then, head to [`checks.py`](checks.py) and run the file to start the article optimization checks workflow.
 
 Currently, the article optimization checks is ran concurrently within the workflow. This may result in deadlocks.
 
@@ -167,6 +238,6 @@ To run the `streamlit` application -
 - [`app.py`](app.py): python file containing the streamlit application
 - [`checks.py`](checks.py): python file containing the Article Optimisation Checks workflow. Run this file to execute the optimisation checks process
 - [`config.py`](config.py): python file containing the initialisation of environment variables for use within the project
-- [`harmonisation.py`](harmonisation.py): python file containing the Article Rewriting workflow. Run this file to execute the rewriting process
-- [`main.py`](main.py): python file to run the project
+- [`harmonisation.py`](harmonisation.py): python file containing the nodes and graph compilation for the Article Generation workflow.
+- [`main_harmonisation.py`](main_harmonisation.py): python file to run the Article Generation. Run this file to execute the rewriting process.
 - [`requirements.txt`](requirements.txt): txt file containing all the packages needed to run the project

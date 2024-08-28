@@ -396,8 +396,16 @@ def load_evaluation_dataframe(
         latest_fpath = filepaths[-1]
         print(f"Loading latest article evaluation dataframe from {latest_fpath}...")
         df_eval = pd.read_parquet(latest_fpath)
-        evaluated_article_ids = list(df_eval.article_id)
-        print(f"Evaluated Article IDs: {evaluated_article_ids}")
+        if "article_id" in df_eval.columns:
+            evaluated_article_ids = list(df_eval.article_id)
+            print(f"Evaluated Article IDs: {evaluated_article_ids}")
+        else:
+            print(
+                "Article ID does not exist in Latest Article Evaluation Dataset. Please remove this file if it is empty."
+            )
+            print("Evaluating all articles...")
+            evaluated_article_ids = []
+            df_eval = None
 
     # Get articles for Optimisation
     df_ids_to_optimise = pd.read_csv(ids_filepath)
@@ -557,9 +565,12 @@ if __name__ == "__main__":
                 )
                 if "content filter being triggered" in message:
                     print(
-                        "Content Filter has been triggered. Skipping LLM-based evaluations...",
-                        end="\n\n",
+                        "Content Filter has been triggered.",
+                        f"Article ID: {article_id}",
+                        f"Article Title: {article_title}",
+                        sep="\n",
                     )
+                    print("Skipping LLM-based evaluations...", end="\n\n")
                     skip_llm_evaluations = {
                         "decision": True,
                         "explanation": "LLM unable to process content due to Azure's content filtering on hate, sexual, violence, and self-harm related categories",
