@@ -1,0 +1,24 @@
+# This is a boilerplate parameters config generated for pipeline 'azure_rag'
+# using Kedro 0.19.6.
+#
+# Documentation for this file format can be found in "Parameters"
+# Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
+
+article_content_columns:
+  - id
+  - title
+  - cover_image_url
+  - full_url
+  - extracted_content_body
+  - content_category
+  - category_description
+  - has_table
+
+table_content_columns:
+  - id
+  - title
+  - cover_image_url
+  - full_url
+  - processed_table_content
+  - content_category
+  - category_description

@@ -135,3 +135,19 @@ final_unclustered_nodes:
 final_metrics:
   type: pandas.CSVDataset
   filepath: data/07_model_output/final_metrics.csv
+
+filtered_data_rag:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/filtered_data.parquet
+  versioned: true
+
+processed_data_rag:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/processed_data.parquet
+  versioned: true
+
+json_data_rag:
+  type: partitions.PartitionedDataset
+  dataset: json.JSONDataset
+  path: data/03_primary/processed_articles/
+  filename_suffix: ".json"  
