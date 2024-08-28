@@ -373,6 +373,7 @@ blacklist:
   1442951: "Table of Contents"
   1443534: "Table of Contents"
   1443526: "Table of Contents"
+  1437513: "LLM is unable to process content due to Azure's content filtering on hate, sexual, violence, and self-harm related categories"
 
 # Refer to https://docs.google.com/spreadsheets/d/1bcmD7GXILn4LqF0Bo9dcdCnRomwCVFQv (IA Mappings)
 l1_mappings:
