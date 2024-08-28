@@ -16,6 +16,7 @@ azure_credentials = credentials["azure_credentials"]
 api_version = azure_credentials["API_VERSION"]
 azure_endpoint = azure_credentials["AZURE_ENDPOINT"]
 cognitive_services = azure_credentials["COGNITIVE_SERVICES"]
+model_deployment = azure_credentials["MODEL_DEPLOYMENT"]
 
 
 def ask(html_content: str) -> str:
@@ -46,7 +47,7 @@ def ask(html_content: str) -> str:
 
     response = openai_client.chat.completions.create(
         messages=query_messages,
-        model="chat",
+        model=model_deployment,
         temperature=0.0,
         max_tokens=2000,
         n=1,
