@@ -30,9 +30,8 @@ def standardize_columns(
     """
     Standardizes the columns of multiple dataframes in a dictionary.
 
-    This function takes in a dictionary of dataframes, where each dataframe
-    is associated with a filename. It then standardizes the columns of each dataframe
-    by performing the following steps:
+    This function takes in a dictionary of dataframes, where each dataframe is associated with a filename.
+    It then standardizes the columns of each dataframe by performing the following steps:
 
     1. Get the content category from the filename.
     2. Load the dataframe using the provided partition function.
@@ -44,9 +43,8 @@ def standardize_columns(
 
     Args:
         all_contents (dict[str, Callable[[], Any]]):
-            A dictionary containing the raw `partitions.PartitionedDataset`
-            where the keys are the filenames and the values loads the raw excel data as
-            `pandas.DataFrame`.
+            A dictionary containing the raw `partitions.PartitionedDataset`where the keys are the filenames and the
+            values loads the raw excel data as `pandas.DataFrame`.
 
         columns_to_add_cfg (dict[str, list[str]]):
             A dictionary mapping content categories to lists of column names to add.
@@ -59,9 +57,8 @@ def standardize_columns(
 
     Returns:
         dict[str, pd.DataFrame]:
-            A dictionary that contains the standardized dataframes stored as partitioned
-            parquet files, where the keys are the content categories and the values are
-            the corresponding dataframes.
+            A dictionary that contains the standardized dataframes stored as partitioned parquet files, where the keys
+            are the content categories and the values are the corresponding dataframes.
     """
     all_contents_standardized = {}
 
@@ -108,17 +105,16 @@ def add_data(
     4. Flags articles that should be removed before extraction.
 
     Args:
-        all_contents_standardized (dict[str, Callable[[], Any]]): A dictionary where keys are content
-            categories and values are functions that return dataframes of standardized content.
-        missing_contents (dict[str, Callable[[], Any]]): A dictionary where keys are file paths and
-            values are functions that load the content of text files.
-        updated_urls (dict[str, dict[int, str]]): A dictionary where keys are content categories and
-            values are dictionaries mapping index to updated URLs.
+        all_contents_standardized (dict[str, Callable[[], Any]]): A dictionary where keys are content categories and
+            values are functions that return dataframes of standardized content.
+        missing_contents (dict[str, Callable[[], Any]]): A dictionary where keys are file paths and values are functions
+            that load the content of text files.
+        updated_urls (dict[str, dict[int, str]]): A dictionary where keys are content categories and values are
+            dictionaries mapping index to updated URLs.
 
     Returns:
-        dict[str, Callable[[], Any]]: A dictionary where keys are content categories and values are
-        functions that return processed dataframes with added data.
-
+        dict[str, Callable[[], Any]]: A dictionary where keys are content categories and values are functions that return
+            processed dataframes with added data.
     """
     excel_errors = {}
     all_contents_added = {}
@@ -275,22 +271,21 @@ def map_data(
     Map extracted content data to L1 and L2 Information Architecture (IA) categories.
 
     This function processes the extracted content data, applying L1 and L2 IA mappings for each content category.
-    It inverts the provided mappings, iterates through each content category, and applies the mappings
-    to the 'article_category_names' column in the dataframe.
+    It inverts the provided mappings, iterates through each content category, and applies the mappings to the
+    'article_category_names' column in the dataframe.
 
     Args:
-        all_contents_extracted (dict[str, Callable[[], Any]]): A dictionary where keys are
-            content categories and values are functions that return dataframes of extracted content.
+        all_contents_extracted (dict[str, Callable[[], Any]]): A dictionary where keys are content categories and values
+            are functions that return dataframes of extracted content.
         l1_mappings (dict[str, dict[str, list[str]]]): A dictionary of L1 category mappings.
-            The outer key is the content category, inner key is the target (new) category,
-            and the value is a list of source (old) categories.
-        l2_mappings (dict[str, dict[str, list[str]]]): A dictionary of L2 category mappings,
-            structured similarly to l1_mappings.
+            The outer key is the content category, inner key is the target (new) category, and the value is a list of
+            source (old) categories.
+        l2_mappings (dict[str, dict[str, list[str]]]): A dictionary of L2 category mappings, structured similarly to
+            l1_mappings.
 
     Returns:
-        dict[str, Callable[[], Any]]: A dictionary where keys are content categories and values
-        are functions that return dataframes with mapped L1 and L2 categories. The returned
-        dataframes include new columns for the mapped categories.
+        dict[str, Callable[[], Any]]: A dictionary where keys are content categories and values are functions that return
+            dataframes with mapped L1 and L2 categories. The returned dataframes include new columns for the mapped categories.
 
     Note:
         - This function uses the `invert_ia_mappings` and `map_category_names` helper functions.
@@ -335,8 +330,7 @@ def merge_data(all_contents_mapped: dict[str, Callable[[], Any]]) -> pd.DataFram
 
     Parameters:
         all_contents_mapped (dict[str, Callable[[], Any]]):
-            A dictionary containing the `partitions.PartitionedDataset`
-            where the values load the parquet data as `pandas.DataFrame`.
+            A dictionary containing the `partitions.PartitionedDataset` where the values load the parquet data as `pandas.DataFrame`.
 
     Returns:
         pd.DataFrame: The merged dataframe.
