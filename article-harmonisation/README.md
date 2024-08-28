@@ -138,7 +138,7 @@ Copy your new token and paste it under your `.env` file.
 - Set the Endpoint URL (`AZURE_OPENAI_ENDPOINT`) as `f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com/"`. Replace `{AZURE_OPENAI_SERVICE}` in the URL.
 - Set the `AZURE_OPENAI_API_VERSION` to the latest version mentioned [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/api-version-deprecation)
 
-Finally, head to [`quickstart.py`](examples/quickstart.py) and run the file to check if your packages are working.
+Finally, head to [`quickstart.py`](examples/quitart.py) and run the file to check if your packages are working.
 
 ### Setting up LLM Observability via arize-phoenix
 
