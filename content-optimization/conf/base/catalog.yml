@@ -1,3 +1,4 @@
+# Data Processing Pipeline
 all_contents:
   type: partitions.PartitionedDataset
   path: data/01_raw/all_contents # path to the location of partitions
@@ -49,6 +50,7 @@ merged_data:
   filepath: data/03_primary/merged_data.parquet
   versioned: true
 
+# Jupyter Notebooks
 raw_word_counts:
   type: content_optimization.datasets.plotly.HTMLDataset
   filepath: data/08_reporting/raw_word_counts.html
@@ -73,6 +75,7 @@ recipes_data:
     index: false
   versioned: true
 
+# Feature Engineering Pipeline
 filtered_data_with_keywords:
   type: pandas.ParquetDataset
   filepath: data/03_primary/filtered_data_with_keywords.parquet
@@ -86,6 +89,7 @@ weighted_embeddings:
   type: pickle.PickleDataset
   filepath: data/04_feature/weighted_embeddings.pkl
 
+# Clustering Pipeline
 ground_truth_data:
   type: pandas.ExcelDataset
   filepath: data/01_raw/Synapxe Content Prioritisation - Live Healthy_020724.xlsx
@@ -104,11 +108,11 @@ first_level_cluster_size:
   type: pandas.CSVDataset
   filepath: data/07_model_output/first_level_cluster_size.csv
 
-clustered_nodes:
+first_level_clustered_nodes:
   type: pandas.CSVDataset
   filepath: data/07_model_output/first_level_clustered_nodes.csv
 
-unclustered_nodes:
+first_level_unclustered_nodes:
   type: pandas.CSVDataset
   filepath: data/07_model_output/first_level_unclustered_nodes.csv
 
