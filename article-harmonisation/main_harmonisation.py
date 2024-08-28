@@ -16,9 +16,10 @@ USER_ANNOTATION_FILE = "Stage 1 user annotation for HPB (Updated).xlsx"
 USER_ANNOTATION = f"article-harmonisation/data/article_rewriting/{USER_ANNOTATION_FILE}"
 
 # Declaring the respective sheet names for optimisation and harmonisation
-OPTIMISATION_SHEET_NAME = "Article Optimisation Output"
-HARMONISATION_SHEET_NAME = "Article Harmonisation Output"
-
+OPTIMISATION_SHEET_OUTPUT = "Article Optimisation Output"
+HARMONISATION_SHEET_OUTPUT = "Article Harmonisation Output"
+OPTIMISATION_SHEET_INPUT = "User Annotation (to optimise)"
+HARMONISATION_SHEET_INPUT = "User Annotation (to combine)"
 
 def optimise_articles(app):
     """Runs the article optimisation flow.
@@ -35,7 +36,7 @@ def optimise_articles(app):
 
     # Setting df to the User Annotation sheets for article optimisation
     # df = optimization_check.parse('User Annotation (to optimise)')
-    df = optimization_check.parse("optimise_test")
+    df = optimization_check.parse(OPTIMISATION_SHEET_INPUT)
 
     # Removing all articles not requiring any type of optimisation. This includes all empty fields and "No action".
     df = df[
@@ -174,7 +175,7 @@ def optimise_articles(app):
 
         # Storing the optimised outputs into the User Annotation Excel File
         store_optimised_outputs(
-            USER_ANNOTATION, OPTIMISATION_SHEET_NAME, article_inputs
+            USER_ANNOTATION, OPTIMISATION_SHEET_OUTPUT, article_inputs
         )
 
 
@@ -193,7 +194,7 @@ def harmonise_articles(app):
 
     # Setting df to the User Annotation sheets for article harmonisation
     # df = optimization_check.parse('User Annotation (to combine)')
-    df = optimization_check.parse("harmonise_test")
+    df = optimization_check.parse(HARMONISATION_SHEET_INPUT)
 
     # Removing all articles not flagged for combination
     df = df[df["Action"] == "Combine"]
@@ -365,7 +366,7 @@ def harmonise_articles(app):
 
             # Storing the optimised outputs into the User Annotation Excel File
             store_optimised_outputs(
-                USER_ANNOTATION, HARMONISATION_SHEET_NAME, article_inputs
+                USER_ANNOTATION, HARMONISATION_SHEET_OUTPUT, article_inputs
             )
 
 
@@ -388,5 +389,5 @@ if __name__ == "__main__":
     app = build_graph()
 
     # Running the appropriate process
-    harmonise_articles(app)
-    # optimise_articles(app)
+    # harmonise_articles(app)
+    optimise_articles(app)
