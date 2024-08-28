@@ -141,6 +141,7 @@ In order to run the project, you require 3 key files -
 
 1. `merged_data.parquet` from the Data Processing pipeline - Refer to `content-optimization/data/03_primary/merged_data.parquet` to obtain the file.
 2. `ids_for_optimisation.csv` from the Clustering Pipeline - Refer to `content-optimization/notebooks/exclude_articles.ipynb` to generate the file.
+3. `Stage 1 user annotation for HPB (Updated).xlsx` from `Step 1 Harmonisation and Optimisation Checks` in the `LLM Exploration` Google Drive
 
 ### Running the Optimisation Checks Workflow
 
