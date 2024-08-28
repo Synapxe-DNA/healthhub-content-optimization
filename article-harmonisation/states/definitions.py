@@ -16,6 +16,8 @@ class ArticleInputs(TypedDict):
         content_category (Union[str, Optional[list[str]]]): The category of the content. Can be a single string or a list of strings.
         article_category_names (Union[str, Optional[list[str]]]): The category names for the article. Can be a single string or a list of strings.
         page_views (Union[int, Optional[list[int]]]): The number of page views the article has received. Can be a single integer or a list of integers.
+        additional_input (Optional[str]): The additional input added by the user in the User Annotation Excel file
+        main_article_content (Optional[str]): Stores the original article content of the "main article", only applicable for live-healthy article harmonisation.
     """
 
     article_id: Union[int, Optional[list[int]]]
@@ -26,6 +28,8 @@ class ArticleInputs(TypedDict):
     content_category: Union[str, Optional[list[str]]]
     article_category_names: Union[str, Optional[list[str]]]
     page_views: Union[int, Optional[list[int]]]
+    additional_input: Optional[str]
+    main_article_content: Optional[str]
 
 
 class SkipLLMEvals(TypedDict):
@@ -50,13 +54,10 @@ class ContentFlags(TypedDict):
     Attributes:
         is_unreadable (bool): Flag indicating if the content is unreadable.
         low_word_count (bool): Flag indicating if the content has a low word count.
-        has_personality (bool): Flag indicating if the content maintains personality, as per the personality evaluation
-            node, ensuring it aligns with the HH voice and personality guidelines.
     """
 
     is_unreadable: bool
     low_word_count: bool
-    has_personality: bool  # from the personality evaluation node to determine if the optimised writing still meets the guidelines of the HH voice and personality
 
 
 class ContentJudge(TypedDict):
@@ -132,6 +133,30 @@ class ChecksAgents(TypedDict):
     explanation_agent: LLMInterface
 
 
+class ArticleEvaluation(TypedDict):
+    """
+    A dictionary type definition for article evaluation extracted from the Excel sheet, as well as personality evaluation of the article.
+
+    Attributes:
+        reasons_for_irrelevant_title (Optional[str]): A String storing the reasons for irrelevant title from article evaluation process and extracted from the User Annotation Excel File
+            Can be `None` if no evaluation are availble.
+        reasons_for_irrelevant_meta_desc (Optional[str]): A String storing the reasons for irrelevant meta desc from article evaluation process and extracted from the User Annotation Excel File
+            Can be `None` if no evaluation are availble.
+        reasons_for_poor_readability (Optional[str]): A String storing the reasons for poor readability from article evaluation process and extracted from the User Annotation Excel File
+            Can be `None` if no evaluation are availble.
+        reasons_for_improving_writing_style (Optional[str]): A String storing reasons for improving writing style from article evaluation process and extracted from the User Annotation Excel File
+            Can be `None` if no evaluation are availble.
+        writing_has_personality (Optional[str]): The optimised title of the article.
+            Can be `None` if no personality evaluation is required.
+    """
+
+    reasons_for_irrelevant_title: Optional[str]
+    reasons_for_irrelevant_meta_desc: Optional[str]
+    reasons_for_poor_readability: Optional[str]
+    reasons_for_improving_writing_style: Optional[str]
+    writing_has_personality: Optional[bool]
+
+
 class OptimisedArticle(TypedDict):
     """
     A dictionary type definition for storing data related to an optimised article.
@@ -155,8 +180,8 @@ class OptimisedArticle(TypedDict):
     compiled_keypoints: Optional[str]
     optimised_content: Optional[str]
     optimised_writing: Optional[str]
-    optimised_article_title: Optional[str]
-    optimised_meta_desc: Optional[str]
+    optimised_article_title: Optional[list]
+    optimised_meta_desc: Optional[list]
 
 
 class OptimisationFlags(TypedDict):
@@ -200,4 +225,3 @@ class OptimisationAgents(TypedDict):
     meta_desc_optimisation_agent: LLMInterface
     readability_optimisation_agent: LLMInterface
     personality_evaluation_agent: LLMInterface
-    writing_evaluation_agent: LLMInterface

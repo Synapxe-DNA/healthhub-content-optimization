@@ -1,4 +1,4 @@
-from pathlib import Path
+import re
 
 import pyarrow.parquet as pq
 
@@ -7,6 +7,7 @@ from .paths import get_root_dir
 ROOT_DIR = get_root_dir()
 MERGED_DATA_DIRECTORY = f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet"
 
+# Declaring column headers used in merged_data.parquet
 CONTENT_BODY = "extracted_content_body"
 EXTRACTED_HEADERS = "extracted_headers"
 ARTICLE_TITLE = "title"
@@ -16,40 +17,38 @@ SUBCATEGORIES = "article_category_names"
 ARTICLE_ID = "id"
 ARTICLE_URL = "full_url"
 
+# Obtaining the merged data
 MERGED_DF = pq.read_table(MERGED_DATA_DIRECTORY)
 
-# TODO: Clean up formatters.py to be more presentable and structured
 
-
-def get_article_list_indexes(articles: list, setting: str = "title") -> list[int]:
+def get_article_list_indexes(article_ids: list, setting: str = "ids") -> list:
     """
-    Get indexes of articles in the MERGED_DF based on title or filename.
+    Get indexes of articles in the MERGED_DF based on ids or filename.
 
     Args:
-        articles (list): List of article titles or filenames to search for.
+        article_ids (list): List of article ids to search for.
         setting (str, optional): Setting to determine search method.
-            Can be "title" or "filename". Defaults to "title".
+            Can be "ids" or "filename". Defaults to "ids".
 
     Returns:
         list: List of indexes in MERGED_DF where the articles were found.
 
     Raises:
-        ValueError: If setting is not "title" or "filename".
+        ValueError: If setting is not "ids" or "filename".
     """
-
     article_list_idx = []
-    if setting == "title":
-        # Extract article indexes based on "title" column from MERGED_DF
-        extracted_titles = list(MERGED_DF[ARTICLE_TITLE])
-        for article_title in extracted_titles:
-            if article_title.as_py() in articles:
-                idx = extracted_titles.index(article_title)
+    if setting == "ids":
+        # Extract article indexes based on "ids" column from MERGED_DF
+        extracted_ids = list(MERGED_DF[ARTICLE_ID])
+        for article_id in extracted_ids:
+            if article_id.as_py() in article_ids:
+                idx = extracted_ids.index(article_id)
                 article_list_idx.append(idx)
     elif setting == "filename":
         # Extract article indexes based on "id" column from MERGED_DF
         # Note: The filename will contain the article ID which is delimited by the "_" symbol
-        extracted_ids = list(MERGED_DF["id"])
-        for article in articles:
+        extracted_ids = list(MERGED_DF[ARTICLE_ID])
+        for article in article_ids:
             # Extract article ID from filename
             article_id = int(article.split("/")[-1].split(".")[0].split("_")[-1])
             for row_id in extracted_ids:
@@ -64,7 +63,7 @@ def get_article_list_indexes(articles: list, setting: str = "title") -> list[int
 
 def get_article_titles(article_idxs: list) -> list[str]:
     """
-    Retrieve article titles from MERGED_DF based on provided indexes.
+    Retrieve article indexes from MERGED_DF based on provided indexes.
 
     Args:
         article_idxs (list): List of indexes corresponding to articles in MERGED_DF.
@@ -72,11 +71,15 @@ def get_article_titles(article_idxs: list) -> list[str]:
     Returns:
         list: List of article titles as strings.
     """
-
+    # List storing the article titles
     article_titles = []
+
+    # For loop iterating through each article index
     for idx in article_idxs:
         # Extract title from MERGED_DF and convert to string
         title = str(MERGED_DF[ARTICLE_TITLE][idx])
+
+        # Appending extracted title to article_titles
         article_titles.append(title)
     return article_titles
 
@@ -129,7 +132,7 @@ def extract_content_for_evaluation(
     return article_details
 
 
-def concat_headers_to_content(articles: list) -> list[str]:
+def concat_headers_to_content(article_id: list) -> list[str]:
     """
     Concatenate headers to content for given articles.
 
@@ -145,72 +148,123 @@ def concat_headers_to_content(articles: list) -> list[str]:
     Note:
         This function relies on the MERGED_DF global variable and the get_article_list_indexes function.
     """
-
     final_configured_articles = []
-    article_list_idx = get_article_list_indexes(articles)
-    for num in range(len(articles)):
+    # Obtaining list of article indexes
+    article_list_idx = get_article_list_indexes(article_id)
+
+    # For loop iterating through the length of article_id
+    for num in range(len(article_id)):
+        # Extracting the article
         idx = article_list_idx[num]
         article_headers = list(MERGED_DF[EXTRACTED_HEADERS][idx])
         article_content = str(MERGED_DF[CONTENT_BODY][idx])
+        article_title = str(MERGED_DF[ARTICLE_TITLE][idx])
 
-        # List to store all headers + content as elements
+        # this list will store all the headers + content as elements
         split_content = []
 
-        # Title of the article
-        article_title = articles[num]
-
-        # Dictionary to store headers based on their heading type (h1 - h6)
+        # Stores headers based on their heading type, h1 - h6
         header_dictionary = {}
 
-        for header_details in article_headers:
-            header_title = header_details[0].as_py()
-            header_type = header_details[1].as_py()
+        # If statement that checks if there are article_headers for the article
+        if len(article_headers) > 0:
+            # For loop iterating through each header in article_headers
+            for header_details in article_headers:
+                # Extracting header_title as a String
+                header_title = header_details[0].as_py()
 
-            # Add header to the dictionary
-            header_list = header_dictionary.get(header_type, [])
-            header_list.append(header_title)
-            header_dictionary[header_type] = header_list
+                # Some header_titles are just empty strings, which cannot run .split(). This if statement checks if the header_title is an empty string first.
+                if len(header_title.strip()) != 0:
+                    # Extracting the header type of the specific header
+                    header_type = header_details[1].as_py()
 
-            # TODO: Explain what exactly is going on here. Otherwise, abstract it as a separate function for better clarity
-            match header_type:
-                case "h1":
-                    header = f"h1 Main Header: {header_title}"
-                case "h2":
-                    header = f"h2 Sub Header: {header_title}"
-                    if "h1" in header_dictionary.keys():
-                        header += f"\nSub Header to h1 Main Header: {header_dictionary['h1'][-1]}"
-                case "h3":
-                    header = f"h3 Sub Section: {header_title}"
-                    if "h2" in header_dictionary.keys():
-                        header += f"\nSub Section to h2 Sub Header: {header_dictionary['h2'][-1]}"
-                case "h4":
-                    header = f"h4 Sub Section: {header_title}"
-                    if "h3" in header_dictionary.keys():
-                        header += f"\nSub Section to h3 Sub Section: {header_dictionary['h3'][-1]}"
-                case "h5":
-                    header = f"h5 Sub Section: {header_title}"
-                    if "h4" in header_dictionary.keys():
-                        header += f"\nSub Section to h4 Sub Section: {header_dictionary['h4'][-1]}"
-                case "h6":
-                    header = f"h6 Sub Section: {header_title}"
-                    if "h5" in header_dictionary.keys():
-                        header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}"
+                    # checks if the specific header type exists as a key in header_dictionary
+                    header_list = header_dictionary.get(header_type, [])
 
-            # Split content and add formatted header
-            if not split_content:
-                split_content.extend(article_content.split(header_title))
-            else:
-                last_content = split_content.pop()
-                split_content.extend(last_content.split(header_title))
+                    # adding the header to the respective item in header_dictionary
+                    header_list.append(header_title)
+                    header_dictionary[header_type] = header_list
 
-            split_content[-1] = header + "\n" + split_content[-1][1:]
+                    # Explanation for section below:
+                    # This section determines the type of the header and creates an appropriate String to better represent it.
+                    # This helps the researcher LLM to better determine what headers are considered main, sub, etc.
+                    # It is especially helpful for use cases for list type article headers, where the "parent" title is a h2 header and it has multiple "child" headers as h3 headers for each list item.
+                    # Extracting the headers directly from the merged_data.parquet does not effectively capture this relationship.
+                    # This section matches the header type to the various header html tags and creates a respective String called header based on the header type.
+                    # It then checks if there is a "parent" header to this sub header, a second String will be concatenated to the header String which states the "child" headers relation to the "parent" header
 
-        # Concatenate all content with the article title as the main header
+                    match header_type:
+                        # if header type is h1, the header_title is defined as Main Header, which is stored in header.
+                        case "h1":
+                            header = f"h1 Main Header: {header_title}"
+
+                        # if header type is h2, the String header is defined as a Sub Header, which is stored in header.
+                        case "h2":
+                            header = f"h2 Sub Header: {header_title}"
+                            # If statement checking if there are any h1 headers as potential parents for this subheader
+                            if "h1" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h1'] is set as the parent header.
+                                header += f"\nSub Header to h1 Main Header: {header_dictionary['h1'][-1]}"
+
+                        # if header type is h3, the String header is defined as a Sub Header, which is stored in header.
+                        case "h3":
+                            header = f"h3 Sub Section: {header_title}"
+                            # If statement checking if there are any h2 headers as potential parents for this subheader
+                            if "h2" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h2'] is set as the parent header.
+                                header += f"\nSub Section to h2 Sub Header: {header_dictionary['h2'][-1]}"
+
+                        # if header type is h4, the String header is defined as a Sub Header, which is stored in header.
+                        case "h4":
+                            header = f"h4 Sub Section: {header_title}"
+                            # If statement checking if there are any h3 headers as potential parents for this subheader
+                            if "h3" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h3'] is set as the parent header.
+                                header += f"\nSub Section to h3 Sub Section: {header_dictionary['h3'][-1]}"
+
+                        # if header type is h5, the String header is defined as a Sub Header, which is stored in header.
+                        case "h5":
+                            header = f"h5 Sub Section: {header_title}"
+                            # If statement checking if there are any h4 headers as potential parents for this subheader
+                            if "h4" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h4'] is set as the parent header.
+                                header += f"\nSub Section to h4 Sub Section: {header_dictionary['h4'][-1]}"
+
+                        # if header type is h5, the String header is defined as a Sub Header, which is stored in header.
+                        case "h6":
+                            # If statement checking if there are any h5 headers as potential parents for this subheader
+                            header = f"h6 Sub Section: {header_title}"
+                            if "h5" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h5'] is set as the parent header.
+                                header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}"
+
+                    # If statement checking if split_content is empty List
+                    if not split_content:
+                        # Extends split_content with resultant list from article_content split by the header_title
+                        split_content.extend(article_content.split(header_title, 1))
+                    else:
+                        # Obtains last item from split_content, since split_content is not empty
+                        last_content = split_content.pop()
+
+                        # Extends split_content with resultant list from last_content split by the header_title
+                        split_content.extend(last_content.split(header_title, 1))
+
+                    # Adding the header defined from the previous match case and concatenating it to the last item in split_content
+                    split_content[-1] = header + "\n" + split_content[-1][1:]
+
+        else:
+            # If there are no headers in the article, the article content is directly added to cplit_content
+            split_content.append(article_content)
+
+        # concatenate all into this string. The title is used as the main header.
         final_labelled_article = f"Article Header: {article_title}\n"
+
         for new_content in split_content:
+            # If statement checking if there are empty strings in split_content and empty headers
             if len(new_content.strip()) > 0:
                 final_labelled_article += new_content + "\n"
 
+        # Adding this processed article to the final_configured_articles list
         final_configured_articles.append(final_labelled_article)
 
     return final_configured_articles
@@ -246,84 +300,58 @@ def extract_article_details(articles: list) -> tuple[list[int], list[str]]:
     return article_ids, urls
 
 
-def print_checks(result: dict, model: str) -> None:
-    """
-    Prints and saves the key outputs from the harmonisation process for various stages of article optimization.
-
-    This function generates a report containing the following information:
-    1. Researcher LLM outputs: Prints out the sentences in their respective categories, including sentences omitted by the LLM.
-    2. Compiler LLM outputs: Prints out the compiled keypoints.
-    3. Content optimization LLM outputs: Prints out the optimized article content.
-    4. Title optimization LLM outputs: Prints out the optimized title.
-    5. Meta description optimization LLM outputs: Prints out the optimized meta description.
-
-    The results are saved to a text file specific to the provided model.
+def split_into_list(optimised_items: str, num_of_items: int):
+    """This function takes an input where
 
     Args:
-        result (dict): A dictionary containing the final outputs from the graph.
-        model (str): The name of the model, used for naming the output file.
+        optimised_items: String containing the optimised titles/meta desc. They should be in the order:
+            1. Title 1 / Meta desc 1
+            2. Title 2 / Meta desc 2
+            3. Title 3 / Meta desc 3
+        num_of_items: a int variable determining the number of titles/meta desc being generated by the llm.
 
-    Note:
-        The function writes the output to a text file in the 'article-harmonisation/docs/txt_outputs' directory.
+    Returns:
+        item_list: a list with each optimised title/meta desc as an individual item.
     """
+    # item_list is used to store the split titles
+    item_list = []
 
-    # Determine the number of articles undergoing the harmonisation process
-    num_of_articles = len(result.get("original_article_inputs")["article_content"])
+    for idx in range(1, num_of_items + 1):
 
-    # Create the directory for storing output text files if it doesn't exist
-    Path(f"{ROOT_DIR}/article-harmonisation/docs/txt_outputs").mkdir(
-        parents=True, exist_ok=True
-    )
+        # if item_list is empty, it will split from optimised_items
+        if not item_list:
+            split_items = optimised_items.split(str(idx) + ".")
+        else:
+            # if item_list is not empty, it will take the last item in the list and split from there
+            split_items = item_list.pop().split(str(idx) + ".")
 
-    # Open the file for writing the output
-    with open(
-        f"{ROOT_DIR}/article-harmonisation/docs/txt_outputs/{model}_compiled_keypoints_check.txt",
-        "w",
-    ) as f:
+        # adding the split items into item_list
+        item_list.extend(split_items)
 
-        # Iterate through each article content and write to the file
-        for content_index in range(num_of_articles):
-            if content_index > 0:
-                f.write(" \n ----------------- \n")
-            f.write(f"Original Article {content_index+1} content \n")
-            article = result.get("original_article_inputs")["article_content"][
-                content_index
-            ]
-            for keypoint in article:
-                f.write(keypoint + "\n")
-        f.write(" \n -----------------")
+    # stores the indexes of the items due to be removed, such as empty strings
+    idx_to_remove = []
+    for item_idx in range(len(item_list)):
+        item = item_list[item_idx]
 
-        # Printing each keypoint produced by Researcher LLM
-        print("\nRESEARCHER LLM CHECKS\n -----------------", file=f)
-        for i in range(0, num_of_articles):
-            print(f"These are the keypoints for article {i+1}\n".upper(), file=f)
-            print(
-                result.get("optimised_article_output")["researcher_keypoints"][i],
-                file=f,
-            )
-            print(" \n -----------------", file=f)
+        # checks if the item is an empty string
+        if len(item.strip()) == 0:
+            idx_to_remove.append(item_idx)
 
-        # Printing compiled keypoints produced by Compiler LLM
-        if "compiled_keypoints" in result["optimised_article_output"].keys():
-            print("COMPILER LLM CHECKS \n ----------------- ", file=f)
-            print(
-                str(result.get("optimised_article_output")["compiled_keypoints"]),
-                file=f,
-            )
-            print(" \n -----------------", file=f)
+        # regex to remove ", \\n, \\ from each item
+        title = re.sub(r'("|\\n|\\)', "", item)
 
-        # Checking for optimised content produced by the content optimisation flow
-        flags = {"optimised_content", "optimised_writing", "article_title", "meta_desc"}
-        keys = result.get("optimised_article_output").keys()
-        print("CONTENT OPTIMISATION CHECKS\n ----------------- \n", file=f)
-        for flag in flags:
-            if flag in keys:
-                print(f"These is the optimised {flag.upper()}", file=f)
-                print(result.get("optimised_article_output")[flag], file=f)
-                print(" \n ----------------- \n", file=f)
-            else:
-                print(f"{flag.upper()} has not been flagged for optimisation.", file=f)
-                print(" \n ----------------- \n", file=f)
+        # stripping all leading and trailing white spaces
+        title = title.strip()
+
+        # replacing the old title with the newly processed title
+        item_list[item_idx] = title
+
+    # removing all items with their indexes flagged to be removed in idx_to_remove
+    for idx in idx_to_remove:
+        item_list.pop(idx)
+
+    # returning the item_list with the processed titles
+    return item_list
 
 
 def parse_string_to_boolean(string_to_check: str) -> bool:
