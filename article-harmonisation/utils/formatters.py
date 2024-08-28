@@ -1,5 +1,4 @@
 import re
-from pathlib import Path
 
 import pyarrow.parquet as pq
 
@@ -8,6 +7,7 @@ from .paths import get_root_dir
 ROOT_DIR = get_root_dir()
 MERGED_DATA_DIRECTORY = f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet"
 
+# Declaring column headers used in merged_data.parquet
 CONTENT_BODY = "extracted_content_body"
 EXTRACTED_HEADERS = "extracted_headers"
 ARTICLE_TITLE = "title"
@@ -17,9 +17,8 @@ SUBCATEGORIES = "article_category_names"
 ARTICLE_ID = "id"
 ARTICLE_URL = "full_url"
 
+# Obtaining the merged data
 MERGED_DF = pq.read_table(MERGED_DATA_DIRECTORY)
-
-# TODO: Clean up formatters.py to be more presentable and structured
 
 
 def get_article_list_indexes(article_ids: list, setting: str = "ids") -> list:
@@ -64,7 +63,7 @@ def get_article_list_indexes(article_ids: list, setting: str = "ids") -> list:
 
 def get_article_titles(article_idxs: list) -> list[str]:
     """
-    Retrieve article titles from MERGED_DF based on provided indexes.
+    Retrieve article indexes from MERGED_DF based on provided indexes.
 
     Args:
         article_idxs (list): List of indexes corresponding to articles in MERGED_DF.
@@ -72,11 +71,15 @@ def get_article_titles(article_idxs: list) -> list[str]:
     Returns:
         list: List of article titles as strings.
     """
-
+    # List storing the article titles
     article_titles = []
+
+    # For loop iterating through each article index
     for idx in article_idxs:
         # Extract title from MERGED_DF and convert to string
         title = str(MERGED_DF[ARTICLE_TITLE][idx])
+
+        # Appending extracted title to article_titles
         article_titles.append(title)
     return article_titles
 
@@ -146,8 +149,12 @@ def concat_headers_to_content(article_id: list) -> list[str]:
         This function relies on the MERGED_DF global variable and the get_article_list_indexes function.
     """
     final_configured_articles = []
+    # Obtaining list of article indexes
     article_list_idx = get_article_list_indexes(article_id)
+
+    # For loop iterating through the length of article_id
     for num in range(len(article_id)):
+        # Extracting the article
         idx = article_list_idx[num]
         article_headers = list(MERGED_DF[EXTRACTED_HEADERS][idx])
         article_content = str(MERGED_DF[CONTENT_BODY][idx])
@@ -159,11 +166,16 @@ def concat_headers_to_content(article_id: list) -> list[str]:
         # Stores headers based on their heading type, h1 - h6
         header_dictionary = {}
 
+        # If statement that checks if there are article_headers for the article
         if len(article_headers) > 0:
+            # For loop iterating through each header in article_headers
             for header_details in article_headers:
+                # Extracting header_title as a String
                 header_title = header_details[0].as_py()
+
                 # Some header_titles are just empty strings, which cannot run .split(). This if statement checks if the header_title is an empty string first.
-                if len(header_title.strip()) == 0:
+                if len(header_title.strip()) != 0:
+                    # Extracting the header type of the specific header
                     header_type = header_details[1].as_py()
 
                     # checks if the specific header type exists as a key in header_dictionary
@@ -173,51 +185,86 @@ def concat_headers_to_content(article_id: list) -> list[str]:
                     header_list.append(header_title)
                     header_dictionary[header_type] = header_list
 
-                    # TODO: Explain what exactly is going on here. Otherwise, abstract it as a separate function for better clarity
+                    # Explanation for section below:
+                    # This section determines the type of the header and creates an appropriate String to better represent it.
+                    # This helps the researcher LLM to better determine what headers are considered main, sub, etc.
+                    # It is especially helpful for use cases for list type article headers, where the "parent" title is a h2 header and it has multiple "child" headers as h3 headers for each list item.
+                    # Extracting the headers directly from the merged_data.parquet does not effectively capture this relationship.
+                    # This section matches the header type to the various header html tags and creates a respective String called header based on the header type.
+                    # It then checks if there is a "parent" header to this sub header, a second String will be concatenated to the header String which states the "child" headers relation to the "parent" header
+
                     match header_type:
+                        # if header type is h1, the header_title is defined as Main Header, which is stored in header.
                         case "h1":
                             header = f"h1 Main Header: {header_title}"
+
+                        # if header type is h2, the String header is defined as a Sub Header, which is stored in header.
                         case "h2":
                             header = f"h2 Sub Header: {header_title}"
+                            # If statement checking if there are any h1 headers as potential parents for this subheader
                             if "h1" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h1'] is set as the parent header.
                                 header += f"\nSub Header to h1 Main Header: {header_dictionary['h1'][-1]}"
+
+                        # if header type is h3, the String header is defined as a Sub Header, which is stored in header.
                         case "h3":
                             header = f"h3 Sub Section: {header_title}"
+                            # If statement checking if there are any h2 headers as potential parents for this subheader
                             if "h2" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h2'] is set as the parent header.
                                 header += f"\nSub Section to h2 Sub Header: {header_dictionary['h2'][-1]}"
+
+                        # if header type is h4, the String header is defined as a Sub Header, which is stored in header.
                         case "h4":
                             header = f"h4 Sub Section: {header_title}"
+                            # If statement checking if there are any h3 headers as potential parents for this subheader
                             if "h3" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h3'] is set as the parent header.
                                 header += f"\nSub Section to h3 Sub Section: {header_dictionary['h3'][-1]}"
+
+                        # if header type is h5, the String header is defined as a Sub Header, which is stored in header.
                         case "h5":
                             header = f"h5 Sub Section: {header_title}"
+                            # If statement checking if there are any h4 headers as potential parents for this subheader
                             if "h4" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h4'] is set as the parent header.
                                 header += f"\nSub Section to h4 Sub Section: {header_dictionary['h4'][-1]}"
+
+                        # if header type is h5, the String header is defined as a Sub Header, which is stored in header.
                         case "h6":
+                            # If statement checking if there are any h5 headers as potential parents for this subheader
                             header = f"h6 Sub Section: {header_title}"
                             if "h5" in header_dictionary.keys():
+                                # Adding second String to header with title of the "parent" header. The last item in header_dictionary['h5'] is set as the parent header.
                                 header += f"\nSub Section to h5 Sub Section: {header_dictionary['h5'][-1]}"
 
-                    # Split content and add formatted header
+                    # If statement checking if split_content is empty List
                     if not split_content:
+                        # Extends split_content with resultant list from article_content split by the header_title
                         split_content.extend(article_content.split(header_title, 1))
                     else:
+                        # Obtains last item from split_content, since split_content is not empty
                         last_content = split_content.pop()
+
+                        # Extends split_content with resultant list from last_content split by the header_title
                         split_content.extend(last_content.split(header_title, 1))
 
+                    # Adding the header defined from the previous match case and concatenating it to the last item in split_content
                     split_content[-1] = header + "\n" + split_content[-1][1:]
 
         else:
+            # If there are no headers in the article, the article content is directly added to cplit_content
             split_content.append(article_content)
 
         # concatenate all into this string. The title is used as the main header.
         final_labelled_article = f"Article Header: {article_title}\n"
 
         for new_content in split_content:
-            # checking if there are empty strings in split_content and empty headers
+            # If statement checking if there are empty strings in split_content and empty headers
             if len(new_content.strip()) > 0:
                 final_labelled_article += new_content + "\n"
 
+        # Adding this processed article to the final_configured_articles list
         final_configured_articles.append(final_labelled_article)
 
     return final_configured_articles
@@ -305,86 +352,6 @@ def split_into_list(optimised_items: str, num_of_items: int):
 
     # returning the item_list with the processed titles
     return item_list
-
-
-def print_checks(result: dict, model: str) -> None:
-    """
-    Prints and saves the key outputs from the harmonisation process for various stages of article optimization.
-
-    This function generates a report containing the following information:
-    1. Researcher LLM outputs: Prints out the sentences in their respective categories, including sentences omitted by the LLM.
-    2. Compiler LLM outputs: Prints out the compiled keypoints.
-    3. Content optimization LLM outputs: Prints out the optimized article content.
-    4. Title optimization LLM outputs: Prints out the optimized title.
-    5. Meta description optimization LLM outputs: Prints out the optimized meta description.
-
-    The results are saved to a text file specific to the provided model.
-
-    Args:
-        result (dict): A dictionary containing the final outputs from the graph.
-        model (str): The name of the model, used for naming the output file.
-
-    Note:
-        The function writes the output to a text file in the 'article-harmonisation/docs/txt_outputs' directory.
-    """
-
-    # Determine the number of articles undergoing the harmonisation process
-    num_of_articles = len(result.get("original_article_inputs")["article_content"])
-
-    # Create the directory for storing output text files if it doesn't exist
-    Path(f"{ROOT_DIR}/article-harmonisation/docs/txt_outputs").mkdir(
-        parents=True, exist_ok=True
-    )
-
-    # Open the file for writing the output
-    with open(
-        f"{ROOT_DIR}/article-harmonisation/docs/txt_outputs/{model}_compiled_keypoints_check.txt",
-        "w",
-    ) as f:
-
-        # Iterate through each article content and write to the file
-        for content_index in range(num_of_articles):
-            if content_index > 0:
-                f.write(" \n ----------------- \n")
-            f.write(f"Original Article {content_index+1} content \n")
-            article = result.get("original_article_inputs")["article_content"][
-                content_index
-            ]
-            for keypoint in article:
-                f.write(keypoint + "\n")
-        f.write(" \n -----------------")
-
-        # Printing each keypoint produced by Researcher LLM
-        print("\nRESEARCHER LLM CHECKS\n -----------------", file=f)
-        for i in range(0, num_of_articles):
-            print(f"These are the keypoints for article {i+1}\n".upper(), file=f)
-            print(
-                result.get("optimised_article_output")["researcher_keypoints"][i],
-                file=f,
-            )
-            print(" \n -----------------", file=f)
-
-        # Printing compiled keypoints produced by Compiler LLM
-        if "compiled_keypoints" in result["optimised_article_output"].keys():
-            print("COMPILER LLM CHECKS \n ----------------- ", file=f)
-            print(
-                str(result.get("optimised_article_output")["compiled_keypoints"]),
-                file=f,
-            )
-            print(" \n -----------------", file=f)
-
-        # Checking for optimised content produced by the content optimisation flow
-        flags = {"optimised_content", "optimised_writing", "article_title", "meta_desc"}
-        keys = result.get("optimised_article_output").keys()
-        print("CONTENT OPTIMISATION CHECKS\n ----------------- \n", file=f)
-        for flag in flags:
-            if flag in keys:
-                print(f"These is the optimised {flag.upper()}", file=f)
-                print(result.get("optimised_article_output")[flag], file=f)
-                print(" \n ----------------- \n", file=f)
-            else:
-                print(f"{flag.upper()} has not been flagged for optimisation.", file=f)
-                print(" \n ----------------- \n", file=f)
 
 
 def parse_string_to_boolean(string_to_check: str) -> bool:
