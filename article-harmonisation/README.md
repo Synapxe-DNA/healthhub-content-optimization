@@ -238,6 +238,6 @@ To run the `streamlit` application -
 - [`app.py`](app.py): python file containing the streamlit application
 - [`checks.py`](checks.py): python file containing the Article Optimisation Checks workflow. Run this file to execute the optimisation checks process
 - [`config.py`](config.py): python file containing the initialisation of environment variables for use within the project
-- [`harmonisation.py`](harmonisation.py): python file containing the nodes and graph compilation for the Article Generation workflow. 
+- [`harmonisation.py`](harmonisation.py): python file containing the nodes and graph compilation for the Article Generation workflow.
 - [`main_harmonisation.py`](main_harmonisation.py): python file to run the Article Generation. Run this file to execute the rewriting process.
 - [`requirements.txt`](requirements.txt): txt file containing all the packages needed to run the project
