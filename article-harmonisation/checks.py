@@ -394,7 +394,10 @@ def load_evaluation_dataframe(
         df_eval = None
     else:
         latest_fpath = filepaths[-1]
-        print(f"Loading latest article evaluation dataframe from {latest_fpath}...", end="\n\n")
+        print(
+            f"Loading latest article evaluation dataframe from {latest_fpath}...",
+            end="\n\n",
+        )
         df_eval = pd.read_parquet(latest_fpath)
         if "article_id" in df_eval.columns:
             evaluated_article_ids = list(df_eval.article_id)
@@ -411,22 +414,8 @@ def load_evaluation_dataframe(
     df_ids_to_optimise = pd.read_csv(ids_filepath)
     ids_to_optimise = list(df_ids_to_optimise.article_id)
 
-    # Filter for relevant HPB articles
-    df_keep = df[~df["to_remove"]]
-    df_keep = df_keep[df_keep["pr_name"] == "Health Promotion Board"]
-    df_keep = df_keep[
-        df_keep["content_category"].isin(
-            [
-                "cost-and-financing",
-                "live-healthy-articles",
-                "diseases-and-conditions",
-                "medical-care-and-facilities",
-                "support-group-and-others",
-            ]
-        )
-    ]
     # Keep articles of interest that need to be evaluated based on provided user annotations
-    df_keep = df_keep[df_keep["id"].isin(ids_to_optimise)]
+    df_keep = df[df["id"].isin(ids_to_optimise)]
 
     # Filter out articles that have already been evaluated
     df_keep = df_keep[~df_keep["id"].isin(evaluated_article_ids)]
