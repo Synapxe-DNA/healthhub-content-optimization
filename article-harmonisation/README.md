@@ -1,4 +1,4 @@
-# Article harmonisation
+# Article Optimisation & Generation
 
 ## Introduction
 
@@ -195,7 +195,7 @@ To run the agentic framework on CLI -
     python3 ./article-harmonisation/checks.py
 ```
 
-### Running the Article Rewriting Workflow
+### Running the Article Generation Workflow
 
 To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `main_harmonisation.py` and run the file to start the article harmonisation process.
 
