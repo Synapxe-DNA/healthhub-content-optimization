@@ -3,7 +3,7 @@
 ## Introduction
 
 This project will be utilizing Large Language Model (LLM) graphs to harmonise similar articles, followed article optimisation based on HealthHub content playbook guidelines.
-The models are deployed through Azure OpenAI Endpoints. Currently, this project uses [GPT-4o-mini](https://azure.microsoft.com/en-us/blog/openais-fastest-model-gpt-4o-mini-is-now-available-on-azure-ai/) from Microsoft Azure.
+The models are deployed through Azure OpenAI Endpoints. Currently, this project uses [GPT-4o-mini](https://azure.microsoft.com/blog/openais-fastest-model-gpt-4o-mini-is-now-available-on-azure-ai/) from Microsoft Azure.
 
 > [!WARNING]
 > The prompts for the HuggingFace models are not updated as we no longer use them. You will need to update the prompts and LLM Chains to mimic the implementation for Azure OpenAI Chat models.
@@ -119,9 +119,9 @@ pip install -r requirements.txt
 
 ### Setting up Microsoft Azure OpenAI
 
-First, install the Azure Command-Line Interface (CLI) to access the Azure resources. Refer to this [guide](https://learn.microsoft.com/en-us/cli/azure/) for the installation procedures.
+First, install the Azure Command-Line Interface (CLI) to access the Azure resources. Refer to this [guide](https://learn.microsoft.com/cli/azure/) for the installation procedures.
 
-Sign in to your Azure account via the CLI. Refer to this [guide](https://learn.microsoft.com/en-us/cli/azure/authenticate-azure-cli-managed-identity).
+Sign in to your Azure account via the CLI. Refer to this [guide](https://learn.microsoft.com/cli/azure/authenticate-azure-cli-managed-identity).
 
 After a successful login, run the following command to check that your credentials are saved -
 
@@ -136,9 +136,9 @@ Copy your new token and paste it under your `.env` file.
 - Set the Resource Name as `AZURE_OPENAI_SERVICE`
 - Set the Deployment Name as `AZURE_DEPLOYMENT_NAME`.
 - Set the Endpoint URL (`AZURE_OPENAI_ENDPOINT`) as `f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com/"`. Replace `{AZURE_OPENAI_SERVICE}` in the URL.
-- Set the `AZURE_OPENAI_API_VERSION` to the latest version mentioned [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/api-version-deprecation)
+- Set the `AZURE_OPENAI_API_VERSION` to the latest version mentioned [here](https://learn.microsoft.com/azure/ai-services/openai/api-version-deprecation)
 
-Finally, head to [`quickstart.py`](examples/quitart.py) and run the file to check if your packages are working.
+Finally, head to [`quickstart.py`](examples/quickstart.py) and run the file to check if your packages are working.
 
 ### Setting up LLM Observability via arize-phoenix
 
