@@ -4,6 +4,20 @@
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
 
+duplicated_articles:
+  - 1445629
+  - 1443608
+  - 1435183
+  - 1435335
+  - 1434652
+
+duplicated_content:
+  - 1497409
+  - 1469472
+
+lengthy_articles:
+  - 1435223
+
 article_content_columns:
   - id
   - title

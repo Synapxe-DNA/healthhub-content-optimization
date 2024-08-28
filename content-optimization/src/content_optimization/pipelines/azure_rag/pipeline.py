@@ -16,7 +16,12 @@ def create_pipeline(**kwargs) -> Pipeline:
         [
             node(
                 func=filter_articles,
-                inputs="merged_data",
+                inputs=[
+                    "merged_data",
+                    "params:duplicated_articles",
+                    "params:duplicated_content",
+                    "params:lengthy_articles",
+                    ],
                 outputs="filtered_data_rag",
                 name="filter_articles_node",
             ),

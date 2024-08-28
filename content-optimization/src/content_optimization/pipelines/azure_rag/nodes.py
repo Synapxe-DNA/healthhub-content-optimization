@@ -9,7 +9,11 @@ import pandas as pd
 from content_optimization.pipelines.azure_rag.llm_extraction import ask
 
 
-def filter_articles(merged_data: pd.DataFrame) -> pd.DataFrame:
+def filter_articles(merged_data: pd.DataFrame,
+                    duplicated_articles: List[int],
+                    duplicated_content: List[int],
+                    lengthy_articles: List[int],
+                    ) -> pd.DataFrame:
     print(merged_data.head())
     # Apply the filtering conditions
     # Remove articles with 'No HTML Tags' from the 'remove_type' column
@@ -27,19 +31,19 @@ def filter_articles(merged_data: pd.DataFrame) -> pd.DataFrame:
 
     # Remove the duplicated articles with specific 'id' values
     filtered_data_rag = filtered_data_rag[
-        ~filtered_data_rag["id"].isin([1445629, 1443608, 1435183, 1435335, 1434652])
+        ~filtered_data_rag["id"].isin(duplicated_articles)
     ]
 
     # Remove 'Duplicated Content' from 'remove_type' column, except for specific 'id' values
     filtered_data_rag = filtered_data_rag[
         (filtered_data_rag["remove_type"] != "Duplicated Content")
-        | (filtered_data_rag["id"].isin([1497409, 1469472]))
+        | (filtered_data_rag["id"].isin(duplicated_content))
     ]
 
     # Remove the article that is too lengthy
-    article_id_to_exclude = 1435223
+    article_id_to_exclude = lengthy_articles
     filtered_data_rag = filtered_data_rag[
-        filtered_data_rag["id"] != article_id_to_exclude
+        ~filtered_data_rag["id"].isin(lengthy_articles)
     ]
 
     return filtered_data_rag
