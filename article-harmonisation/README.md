@@ -126,7 +126,7 @@ Sign in to your Azure account via the CLI. Refer to this [guide](https://learn.m
 After a successful login, run the following command to check that your credentials are saved -
 
 ```bash
-  az account show
+az account show
 ```
 
 Next, head to the [Microsoft Azure](https://www.portal.azure.com/#home) and set up the Azure OpenAI Chat Model Deployment.
@@ -145,8 +145,8 @@ Finally, head to [`quickstart.py`](examples/quickstart.py) and run the file to c
 To set up the `arize-phoenix` LLM observability server -
 
 ```python
-    # Launches the web server at http://127.0.0.1:6006
-    python3 -m phoenix.server.main serve
+# Launches the web server at http://127.0.0.1:6006
+python3 -m phoenix.server.main serve
 ```
 
 If you are unable to run the server, perform the following command - `pip install 'arize-phoenix[evals]'`. For more information, refer to [`Phoenix Setup Environment`](https://docs.arize.com/phoenix/setup/environments).
@@ -157,9 +157,9 @@ If you are unable to run the server, perform the following command - `pip instal
 
 In order to run the project, you require 3 key files -
 
-1. `merged_data.parquet` from the Data Processing pipeline - Refer to `content-optimization/data/03_primary/merged_data.parquet` to obtain the file.
-2. `ids_for_optimisation.csv` from the Clustering Pipeline - Refer to `content-optimization/notebooks/exclude_articles.ipynb` to generate the file.
-3. `Stage 1 user annotation for HPB (Updated).xlsx` from `Step 1 Harmonisation and Optimisation Checks` in the `LLM Exploration` Google Drive
+1. `merged_data.parquet` from the Data Processing pipeline - Refer to [`content-optimization/data/03_primary/`](../content-optimization/data/03_primary) to obtain the file.
+2. `ids_for_optimisation.csv` from the Clustering Pipeline - Refer to [`content-optimization/notebooks/exclude_articles.ipynb`](../content-optimization/notebooks/exclude_articles.ipynb) to generate the file.
+3. `Stage 1 user annotation for HPB (Updated).xlsx` from [`Step 1 Harmonisation and Optimisation Checks`](https://drive.google.com/drive/folders/1ywUNxLDkNLVaYlawjZrz8CX_fKbf5joz) in the `LLM Exploration` Google Drive
 
 ### Running the Optimisation Checks Workflow
 
@@ -187,12 +187,12 @@ Currently, the article optimization checks is ran concurrently within the workfl
 To run the agentic framework on CLI -
 
 ```python
-    # Install the requirements within `article-harmonisation` directory
-    pip install -r requirements.txt
-    # Change directory to ROOT
-    cd ..
-    # Run the python script
-    python3 ./article-harmonisation/checks.py
+# Install the requirements within `article-harmonisation` directory
+pip install -r requirements.txt
+# Change directory to ROOT
+cd ..
+# Run the python script
+python3 ./article-harmonisation/checks.py
 ```
 
 ### Running the Article Generation Workflow
@@ -212,12 +212,12 @@ When deciding which workflow to run, you will need to specify which function to 
 To run the agentic framework on CLI -
 
 ```python
-    # Install the requirements within `article-harmonisation` directory
-    pip install -r requirements.txt
-    # Change directory to ROOT
-    cd ..
-    # Run the python script
-    python3 ./article-harmonisation/main_harmonisation.py
+# Install the requirements within `article-harmonisation` directory
+pip install -r requirements.txt
+# Change directory to ROOT
+cd ..
+# Run the python script
+python3 ./article-harmonisation/main_harmonisation.py
 ```
 
 Finally, the output will be reflected in the User Annotation Excel file, under "Article Harmonisation Output" for Article Harmonisation and "Article Optimisation Output" for Article Optimisation.
@@ -230,10 +230,10 @@ Finally, the output will be reflected in the User Annotation Excel file, under "
 To run the `streamlit` application -
 
 ```python
-    # Install the requirements within `article-harmonisation` directory
-    pip install -r requirements.txt
-    # Run the streamlit demo
-    streamlit run ./app.py
+# Install the requirements within `article-harmonisation` directory
+pip install -r requirements.txt
+# Run the streamlit demo
+streamlit run ./app.py
 ```
 
 ## File Structure
