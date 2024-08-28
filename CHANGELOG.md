@@ -1,5 +1,9 @@
 # Changelog
 
+## August 26, 2024 <a id="august-26-2024"></a>
+
+- Added articles labeled as 'excluded' by HH in the Stage 1 User Annotation for HPB_HHcomments_20Aug24.xlsx file to the blacklist
+
 ## August 16, 2024 <a id="august-16-2024"></a>
 
 - Added `generate_embeddings_node` and `combine_embeddings_by_weightage_node` to [`feature_engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering) pipeline to generate feature embeddings
