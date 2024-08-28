@@ -394,7 +394,7 @@ def load_evaluation_dataframe(
         df_eval = None
     else:
         latest_fpath = filepaths[-1]
-        print(f"Loading latest article evaluation dataframe from {latest_fpath}...")
+        print(f"Loading latest article evaluation dataframe from {latest_fpath}...", end="\n\n")
         df_eval = pd.read_parquet(latest_fpath)
         if "article_id" in df_eval.columns:
             evaluated_article_ids = list(df_eval.article_id)
@@ -403,7 +403,7 @@ def load_evaluation_dataframe(
             print(
                 "Article ID does not exist in Latest Article Evaluation Dataset. Please remove this file if it is empty."
             )
-            print("Evaluating all articles...")
+            print("Evaluating all articles...", end="\n\n")
             evaluated_article_ids = []
             df_eval = None
 
