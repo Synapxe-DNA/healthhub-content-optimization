@@ -1,4 +1,4 @@
-# Article harmonisation
+# Article Optimisation & Generation
 
 ## Introduction
 
@@ -11,28 +11,34 @@ The models are deployed through Azure OpenAI Endpoints. Currently, this project 
 The article rewriting process is broken up into 2 main processes -
 
 1. Article Optimisation Checks
+2. Article Generation
+
+### Article Optimisation Checks
 
   <p align="center">
       <img src="docs/images/Optimisation%20Checks%20Flow.jpg" width="600", alt="Article Optimisation Checks">
   </p>
 
-2. Article Rewriting
+### Article Generation
 
-Article Rewriting has two unique processes, namely:
+Article Generation has two unique processes, namely:
+
+1. Article Optimisation
+2. Article Harmonisation
 
 #### Article Optimisation
 
   <p align="center">
-      <img src="docs/images/article_optimisation_flow.jpg" width="600", alt="Article Rewriting">
+      <img src="docs/images/article_optimisation_flow.jpg" width="600", alt="Article Optimisation">
   </p>
 
 #### Article Harmonisation
 
   <p align="center">
-      <img src="docs/images/article_harmonisation_flow.jpg" width="600", alt="Article Rewriting">
+      <img src="docs/images/article_harmonisation_flow.jpg" width="600", alt="Article Harmonisation">
   </p>
 
-This is the current article harmonisation flow. This diagram will be continually updated as more nodes are added in.
+This diagram will be continually updated as more nodes are added in.
 
 ## Rules and Guidelines
 
@@ -158,7 +164,22 @@ In order to run the project, you require 3 key files -
 ### Running the Optimisation Checks Workflow
 
 To run the project, first ensure that you have installed all the packages in `requirements.txt`.
+
 Next, add the `merged_data.parqet` and `ids_for_optimisation.csv` to the `data` directory of the `article-harmonisation` project.
+
+Ensure the following columns are present in `merged_data.parquet` -
+
+1. `id`: Article ID
+2. `extracted_content_body`: Article Content
+3. `title`: Article Title
+4. `category_description`: Meta Description of the article
+5. `full_url`: URL of the article
+6. `content_category`: Content Category of the article
+7. `article_category_names`: Sub-categories of the article
+8. `page_views`: Page views of the article
+
+As for `ids_for_optimisation.csv`, ensure that the `article_id` column is present.
+
 Then, head to [`checks.py`](checks.py) and run the file to start the article optimization checks workflow.
 
 Currently, the article optimization checks is ran concurrently within the workflow. This may result in deadlocks.
@@ -174,7 +195,7 @@ To run the agentic framework on CLI -
     python3 ./article-harmonisation/checks.py
 ```
 
-### Running the Article Rewriting Workflow
+### Running the Article Generation Workflow
 
 To run the project, first ensure that you have installed all the packages in `requirements.txt`. Next, head to `main_harmonisation.py` and run the file to start the article harmonisation process.
 
@@ -236,7 +257,7 @@ To run the `streamlit` application -
   - [`generate_annotation_excel.ipynb`](notebooks/generate_annotation_excel.ipynb): Jupyter Notebook to generate the Excel file from the Optimisation Checks output
   - [`readability_scores.ipynb`](notebooks/readability_scores.ipynb): Jupyter Notebook to calculate the readability scores for all articles
 - [`states`](states): contains all the states used for the LangGraph workflow
-  - [`definitions.py`](states/definitions.py): python file containing the TypedDict definitions used in the Optimisation Checks and Article Rewriting workflow
+  - [`definitions.py`](states/definitions.py): python file containing the TypedDict definitions used in the Optimisation Checks and Article Generation workflow
 - [`utils`](utils): contains all the utility functions pertaining to this project
   - [`arize-phoenix.py`](utils/arize-phoenix.py): python file containing the functions related to `arize-phoenix` LLM Observability package
   - [`evaluations.py`](utils/evaluations.py): python file containing the metrics to evaluate the articles
