@@ -565,9 +565,12 @@ if __name__ == "__main__":
                 )
                 if "content filter being triggered" in message:
                     print(
-                        "Content Filter has been triggered. Skipping LLM-based evaluations...",
-                        end="\n\n",
+                        "Content Filter has been triggered.",
+                        f"Article ID: {article_id}",
+                        f"Article Title: {article_title}",
+                        sep="\n",
                     )
+                    print("Skipping LLM-based evaluations...", end="\n\n")
                     skip_llm_evaluations = {
                         "decision": True,
                         "explanation": "LLM unable to process content due to Azure's content filtering on hate, sexual, violence, and self-harm related categories",
