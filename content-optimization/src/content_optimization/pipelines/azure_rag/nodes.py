@@ -5,11 +5,12 @@ generated using Kedro 0.19.6
 
 from typing import Dict, List, Any
 import pandas as pd
-# from content_optimization.pipelines.azure_rag.llm_extraction import ask
+from content_optimization.pipelines.azure_rag.llm_extraction import ask
 
 def filter_articles(
         merged_data: pd.DataFrame
         ) -> pd.DataFrame:
+    print(merged_data.head())
     # Apply the filtering conditions
     # Remove articles with 'No HTML Tags' from the 'remove_type' column
     filtered_data_rag = merged_data.loc[merged_data['remove_type'] != 'No HTML Tags']
@@ -32,27 +33,17 @@ def filter_articles(
     
     return filtered_data_rag
 
-# def process_html_tables(
-#         filtered_data_rag: pd.DataFrame
-#         ) -> pd.DataFrame:
-#     processed_data_rag = filtered_data_rag.copy()
-
-#     def _process_row(row):
-#         if row["has_table"]:
-#             return ask(row["content_body"])
-#         return None
-
-#     processed_data_rag["processed_table_content"] = processed_data_rag.apply(_process_row, axis=1)
-#     return processed_data_rag
-
 def process_html_tables(
         filtered_data_rag: pd.DataFrame
         ) -> pd.DataFrame:
     processed_data_rag = filtered_data_rag.copy()
 
-    # Add a dummy value for 'processed_table_content'
-    processed_data_rag["processed_table_content"] = "dummy_value_for_testing"
+    def _process_row(row):
+        if row["has_table"]:
+            return ask(row["content_body"])
+        return None
 
+    processed_data_rag["processed_table_content"] = processed_data_rag.apply(_process_row, axis=1)
     return processed_data_rag
 
 def extract_content(
@@ -62,7 +53,7 @@ def extract_content(
         ) -> Dict[str, List[Dict[str, Any]]]:
     
     # Prepare the dictionary to hold data
-    data_for_saving = {}
+    json_data_rag = {}
 
     # Loop through each row in the DataFrame using iterrows()
     for index, row in processed_data_rag.iterrows():
@@ -77,9 +68,9 @@ def extract_content(
         content_key = str(row_id) + "_content"
 
         # Append to the dictionary under the unique key
-        if content_key not in data_for_saving:
-            data_for_saving[content_key] = []
-        data_for_saving[content_key].append(extracted_data_content)
+        if content_key not in json_data_rag:
+            json_data_rag[content_key] = []
+        json_data_rag[content_key].append(extracted_data_content)
 
         if has_table:
             # Create the dictionary for the table
@@ -90,8 +81,8 @@ def extract_content(
             table_key = str(row_id) + "_table"
 
             # Append to the dictionary under the unique key
-            if table_key not in data_for_saving:
-                data_for_saving[table_key] = []
-            data_for_saving[table_key].append(extracted_data_table)
+            if table_key not in json_data_rag:
+                json_data_rag[table_key] = []
+            json_data_rag[table_key].append(extracted_data_table)
 
-    return data_for_saving
+    return json_data_rag

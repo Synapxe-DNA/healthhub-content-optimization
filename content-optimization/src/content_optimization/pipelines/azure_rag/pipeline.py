@@ -17,23 +17,23 @@ def create_pipeline(**kwargs) -> Pipeline:
             node(
                 func=filter_articles,
                 inputs="merged_data",
-                outputs="filtered_data",
+                outputs="filtered_data_rag",
                 name="filter_articles_node",
             ),
             node(
                 func=process_html_tables,
-                inputs="filtered_data",
-                outputs="processed_data",
+                inputs="filtered_data_rag",
+                outputs="processed_data_rag",
                 name="process_html_tables_node",
             ),
             node(
                 func=extract_content,
                 inputs=[
-                    "processed_data", 
+                    "processed_data_rag", 
                     "params:article_content_columns", 
                     "params:table_content_columns", 
                     ],
-                outputs="data_for_saving",
+                outputs="json_data_rag",
                 name="extract_content_node",
             )
     ])
