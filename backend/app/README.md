@@ -48,7 +48,7 @@ poetry run mock
 
 ### Populate MongoDB with Actual Data
 
-Ensure that docker with MongoDB is configured and running before proceeding. If not already set up, follow the setup instructions [here](https://github.com/Wilsven/healthhub-content-optimization/tree/clustering_sx/docker)
+Ensure that docker with MongoDB is configured and running before proceeding. If not already set up, follow the setup instructions [here](../../docker)
 
 #### Steps to Populate Data
 
