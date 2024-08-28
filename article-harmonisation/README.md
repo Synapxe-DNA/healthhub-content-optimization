@@ -99,6 +99,8 @@ Before running the project, you will also need to ensure that the User Annotatio
 
 As of 28 August 2024, the User Annotation Excel file name is set to "Stage 1 user annotation for HPB (Updated).xlsx" and the column for user annotation is "User: additional content to add for harmonisation". The User Annotation sheet name for article harmonisation is "User Annotation (to harmonise)" and the sheet name for article optimisation is "User Annotation (to optimise)"
 
+You should also ensure that the 2 sheets named "Article Harmonisation Output" and "Article Optimisation Output" are in the User Annotation Excel file as the optimised outputs will be stored there
+
 Do ensure that the file name, user action column name and user annotation sheet names are still accurate to ensure that the project runs smoothly.
 
 You will need to specify which function to use `optimise_articles` for article optimisation and `harmonise_articles` for article harmonisation in `main_harmonisation.py`.
