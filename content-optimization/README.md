@@ -75,7 +75,7 @@ cat requirements.txt | xargs poetry add
 
     - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#merged-data-data-schema)
 
-    - `filtered_data.parquet/`: contains the filtered data after removing the 'to_remove' categories for indexing; for more information on the data, refer [here](#processed-articles-file-information)
+    - `filtered_data.parquet/`: contains the filtered data after removing the 'to_remove' categories for indexing; for more information on the data, refer [here](#processed-articles-information)
 
     - `processed_data.parquet/`: contains the processed data after passing filtered_data into the LLM to clean the "content_body" column to the new "processed_table_content" for indexing; for more information on the data, refer [here](#processed-articles-file-information)
 
