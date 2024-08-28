@@ -416,11 +416,6 @@ def format_checks_outputs(checks: dict) -> dict:
     article_category_names = article_inputs.get("article_category_names")
     page_views = int(article_inputs.get("page_views"))
 
-    # Extracting Flags for Skipping LLM generation for evaluations & explanations
-    skip_llm_evaluations = checks.get("skip_llm_evaluations")
-    skip_llm_eval_decision = skip_llm_evaluations.get("decision", None)
-    skip_llm_eval_explanation = skip_llm_evaluations.get("explanation", None)
-
     # Extracting Content flags (Rule-based) from the checks dictionary
     content_flags = checks.get("content_flags")
     poor_readability = content_flags.get("is_unreadable")
@@ -485,10 +480,6 @@ def format_checks_outputs(checks: dict) -> dict:
     result["content category"] = content_category
     result["article category names"] = article_category_names
     result["page views"] = page_views
-
-    # Check if LLM Evaluation is skipped for the article
-    result["Skipped LLM Evaluations"] = skip_llm_eval_decision
-    result["Reason for Skipping LLM Evaluations"] = skip_llm_eval_explanation
 
     # Title-related flags and explanations
     result["long title"] = long_title
