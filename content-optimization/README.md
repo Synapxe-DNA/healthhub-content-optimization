@@ -71,15 +71,15 @@ cat requirements.txt | xargs poetry add
 
   - [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
-    - `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#data-schema)
+    - `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#merged-data-data-schema)
 
-    - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#data-schema)
+    - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#merged-data-data-schema)
 
-    - `filtered_data.parquet/`: contains the filtered data after removing the 'to_remove' categories for indexing.
+    - `filtered_data.parquet/`: contains the filtered data after removing the 'to_remove' categories for indexing; for more information on the data, refer [here](#processed-articles-file-information)
 
-    - `processed_data.parquet/`: contains the processed data after passing filtered_data into the LLM to clean the "content_body" column to the new "processed_table_content" for indexing.
+    - `processed_data.parquet/`: contains the processed data after passing filtered_data into the LLM to clean the "content_body" column to the new "processed_table_content" for indexing; for more information on the data, refer [here](#processed-articles-file-information)
 
-    - `processed_articles/`: contains the JSON data for article content and article tables for ingestion into the index.
+    - `processed_articles/`: contains the JSON data for article content and article tables for ingestion into the index; for more information on the data, refer [here](#processed-articles-file-information)
 
   - [`04_feature/`](data/04_feature): contains the features data
 
@@ -106,7 +106,7 @@ cat requirements.txt | xargs poetry add
 
     - [`clustering/`](src/content_optimization/pipelines/clustering): contains the code for the `clustering` pipeline; for more information, refer [here](#clustering)
 
-    - [`azure_rag/`](src/content_optimization/pipelines/azure_rag): contains the code for the `azure_rag` pipeline; for more information, refer [here](#azure_rag)
+    - [`azure_rag/`](src/content_optimization/pipelines/azure_rag): contains the code for the `azure_rag` pipeline; for more information, refer [here](#azure-rag)
 
 - [`tests/`](tests): contains all unit and integrations tests for the Kedro pipeline; it is to be mirrored as per `data/` and `src/content_optimization/` directories. Refer [here](https://docs.kedro.org/en/stable/tutorial/test_a_project.html) for more information.
 
@@ -179,9 +179,9 @@ kedro run --nodes="extract_keywords_node"
 > [!IMPORTANT]
 > Before running the [`clustering`](src/content_optimization/pipelines/clustering/pipeline.py) pipeline, ensure that you have already ran the `data_processing` and `feature_engineering` pipeline. Additionally, make sure that Neo4j is set up locally.
 
-#### Prerequisites
+#### Prerequisites <a id="clustering-prerequisites"></a>
 
-#### 1. Configuration
+#### 1. Configuration <a id="clustering-configuration"></a>
 
 Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
 
@@ -240,9 +240,9 @@ kedro run --pipeline="clustering"
 > [!IMPORTANT]
 > Before running the [`azure_rag`](src/content_optimization/pipelines/azure_rag/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
 
-#### Prerequisites
+#### Prerequisites <a id="azure-rag-prerequisites"></a>
 
-#### 1. Configuration
+#### 1. Configuration <a id="azure-rag-configuration"></a>
 
 Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
 
@@ -257,7 +257,7 @@ azure_credentials:
 You can run the entire `azure_rag` pipeline by running:
 
 ```zsh
-kedro run --pipeline="azure_rag" 
+kedro run --pipeline="azure_rag"
 ```
 
 ## Test the Kedro Project
@@ -276,7 +276,7 @@ kedro run --pipeline="azure_rag"
 
 ## Dataset <a id="dataset-info"></a>
 
-### General Information
+### General Information <a id="merged-data-general-information"></a>
 
 - **Dataset Name:** `merged_data.parquet`
 - **Location**: [`data/03_primary`](data/03_primary)
@@ -285,19 +285,19 @@ kedro run --pipeline="azure_rag"
 - **Date of Creation:** June 28, 2024
 - **Last Updated:** August 2, 2024
 
-### File Information
+### File Information <a id="merged-data-file-information"></a>
 
 - **File Format:** Apache Parquet
 - **Number of Files:** 1
 - **Total Size:** 13.5MB
 
-### Data Schema <a id="data-schema"></a>
+### Data Schema <a id="merged-data-data-schema"></a>
 
 - **Number of Rows:** 2613
 - **Number of Columns:** 39
 - **Subject Area/Domain:** Health Hub Articles
 
-#### **Columns**
+#### **Columns** <a id="merged-data-columns"></a>
 
 <details>
   <summary>Expand for more information</summary>
@@ -860,12 +860,12 @@ kedro run --pipeline="azure_rag"
 
 </details>
 
-### Data Quality and Processing
+### Data Quality and Processing <a id="merged-data-quality-and-processing"></a>
 
 <details>
   <summary>Expand for more information</summary>
 
-#### Data Cleaning Process
+#### Data Cleaning Process <a id="merged-data-data-cleaning-process"></a>
 
 1. Standardise all column names
 2. Removed columns where all values are `NaN`
@@ -876,22 +876,22 @@ kedro run --pipeline="azure_rag"
 7. Flagged articles with no extracted content body
 8. Merged all articles across different content categories into one dataframe
 
-#### Missing Data Handling
+#### Missing Data Handling <a id="merged-data-missing-data-handling"></a>
 
 - Left as is for exploration purposes
 - No data imputation was used
 
-#### Known Issues or Limitations
+#### Known Issues or Limitations <a id="merged-data-issues"></a>
 
 - Issue with handling text extraction within `<div>` containers
 
-#### Data Quality Checks
+#### Data Quality Checks <a id="merged-data-data-quality-checks"></a>
 
 - Under [`data/02_intermediate`](data/02_intermediate)
 
 </details>
 
-### General Information
+### General Information <a id="processed-articles-general-information"></a>
 
 - **Dataset Name:** `processed_articles`
 - **Location**: [`data/03_primary`](data/03_primary)
@@ -900,13 +900,13 @@ kedro run --pipeline="azure_rag"
 - **Date of Creation:** August 28, 2024
 - **Last Updated:** August 28, 2024
 
-### File Information
+### File Information <a id="processed-articles-file-information"></a>
 
-- **File Format:** JSON 
+- **File Format:** JSON
 - **Number of Files:** 2713
 - **Total Size:** 30.8MB
 
-#### **Columns**
+#### **Columns** <a id="processed-articles-columns"></a>
 
 <details>
   <summary>Expand for more information</summary>
@@ -1011,27 +1011,27 @@ kedro run --pipeline="azure_rag"
 
 </details>
 
-### Data Quality and Processing
+### Data Quality and Processing <a id="processed-articles-data-quality-and-processing"></a>
 
 <details>
   <summary>Expand for more information</summary>
 
-#### Data Cleaning Process
+#### Data Cleaning Process <a id="processed-articles-data-cleaning-process"></a>
 
 1. Filter articles by their 'to_remove' categories
-2. Convert the data in 'content_body' column to 'processed_table_content' with the LLM. 
-3. Split the dataframe by rows and according to their 'extracted_content_body' and "processed_table_content" to {row_id}_content.json and {row_id}_table.json.
+2. Convert the data in 'content_body' column to 'processed_table_content' with the LLM.
+3. Split the dataframe by rows and according to their 'extracted_content_body' and "processed_table_content" to {row_id}\_content.json and {row_id}\_table.json.
 
-#### Missing Data Handling
+#### Missing Data Handling <a id="processed-articles-missing-data-handling"></a>
 
 - Left as is for exploration purposes
 - No data imputation was used
 
-#### Known Issues or Limitations
+#### Known Issues or Limitations <a id="processed-articles-issues"></a>
 
 - N.A.
 
-#### Data Quality Checks
+#### Data Quality Checks <a id="processed-articles-data-quality-checks"></a>
 
 - N.A.
 
