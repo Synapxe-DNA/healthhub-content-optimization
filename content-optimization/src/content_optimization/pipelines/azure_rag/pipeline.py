@@ -21,7 +21,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "params:duplicated_articles",
                     "params:duplicated_content",
                     "params:lengthy_articles",
-                    ],
+                ],
                 outputs="filtered_data_rag",
                 name="filter_articles_node",
             ),

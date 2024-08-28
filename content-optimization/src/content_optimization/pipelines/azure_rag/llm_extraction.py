@@ -1,8 +1,9 @@
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from openai import AzureOpenAI
 from pathlib import Path
+
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from kedro.config import OmegaConfigLoader
 from kedro.framework.project import settings
+from openai import AzureOpenAI
 
 # Substitute <project_root> with the [root folder for your project](https://docs.kedro.org/en/stable/tutorial/spaceflights_tutorial.html#terminology)
 conf_path = str(Path("./") / settings.CONF_SOURCE)
@@ -16,11 +17,10 @@ api_version = azure_credentials["API_VERSION"]
 azure_endpoint = azure_credentials["AZURE_ENDPOINT"]
 cognitive_services = azure_credentials["COGNITIVE_SERVICES"]
 
+
 def ask(html_content: str) -> str:
     azure_credential = DefaultAzureCredential()
-    token_provider = get_bearer_token_provider(
-        azure_credential, cognitive_services
-    )
+    token_provider = get_bearer_token_provider(azure_credential, cognitive_services)
 
     openai_client = AzureOpenAI(
         api_version=api_version,
