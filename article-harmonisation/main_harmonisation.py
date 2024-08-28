@@ -21,6 +21,7 @@ HARMONISATION_SHEET_OUTPUT = "Article Harmonisation Output"
 OPTIMISATION_SHEET_INPUT = "User Annotation (to optimise)"
 HARMONISATION_SHEET_INPUT = "User Annotation (to combine)"
 
+
 def optimise_articles(app):
     """Runs the article optimisation flow.
 
