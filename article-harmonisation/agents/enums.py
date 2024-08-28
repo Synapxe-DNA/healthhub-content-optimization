@@ -1,22 +1,25 @@
 from enum import Enum
 
+from config import settings
+
 
 class MODELS(Enum):
-    """
-    # Meta Llama
-    # "meta-llama/Meta-Llama-3-8B-Instruct",
-    # "meta-llama/Meta-Llama-3.1-8B-Instruct",
-    # Phi 3
-    # "microsoft/Phi-3-mini-128k-instruct",
-    # Mistral
-    # "mistralai/Mistral-7B-Instruct-v0.3",
-    # "NousResearch/Hermes-2-Pro-Mistral-7B",
+    """Enumeration of supported AI models.
+
+    This enum represents the various AI models available for use in the application.
+    It includes models from different providers such as Meta, Microsoft, and Mistral.
+
+    Attributes:
+        LLAMA3: Meta's Llama 3 model (from HuggingFace).
+        PHI3: Microsoft's Phi-3 model (from HuggingFace).
+        MISTRAL: Mistral AI's Instruct model (from HuggingFace).
+        AZURE: Azure deployment model (name fetched from settings).
     """
 
-    llama3 = "meta-llama/Meta-Llama-3-8B-Instruct"
-    phi3 = "microsoft/Phi-3-mini-128k-instruct"
-    mistral = "mistralai/Mistral-7B-Instruct-v0.3"
-    azure = "gpt-35-turbo-0125"
+    LLAMA3 = "meta-llama/Meta-Llama-3-8B-Instruct"
+    PHI3 = "microsoft/Phi-3-mini-128k-instruct"
+    MISTRAL = "mistralai/Mistral-7B-Instruct-v0.3"
+    AZURE = settings.AZURE_DEPLOYMENT_NAME
 
     @classmethod
     def _missing_(cls, name: str):
@@ -28,6 +31,24 @@ class MODELS(Enum):
 
 
 class ROLES(Enum):
+    """Enumeration of AI Agentic Roles.
+
+    This enum represents the various AI agents used in the article evaluation and rewriting workflow.
+
+    Attributes:
+          EVALUATOR: Evaluator LLM to evaluate (i.e. decide and summarise evaluations) in Optimisation Checks Graph
+          EXPLAINER: Explainer LLM to explain rule-based approaches (e.g. poor readability) used to evaluate articles
+          RESEARCHER: Researcher LLM to extract keypoints from the article content and determine sentences to omit
+          COMPILER: Compiler LLM to compile keypoints across multiple article contents
+          META_DESC: Meta Description LLM to generate the article meta description based on the optimised article content
+          TITLE: Meta Description LLM to generate the article title based on the optimised article content
+          CONTENT_OPTIMISATION: Content Optimisation LLM to generate the article content based on the compiled keypoints
+          WRITING_OPTIMISATION: Writing Optimisation LLM to optimise the article content based on the provided writing style
+          READABILITY_EVALUATION: Readability Evaluation LLM to evaluate the readability of the generated article content
+          READABILITY_OPTIMISATION: Readability Evaluation LLM to optimise the readability of the generated article content
+          PERSONALITY_EVALUATION: Personality Evaluation LLM to evaluate the writing style of the generated article content
+    """
+
     # Declaring node roles
     EVALUATOR = "Evaluator"
     EXPLAINER = "Explainer"
@@ -37,3 +58,6 @@ class ROLES(Enum):
     TITLE = "Title optimisation"
     CONTENT_OPTIMISATION = "Content optimisation"
     WRITING_OPTIMISATION = "Writing optimisation"
+    READABILITY_EVALUATION = "Readability evaluation"
+    READABILITY_OPTIMISATION = "Readability optimisation"
+    PERSONALITY_EVALUATION = "Personality evaluation"
