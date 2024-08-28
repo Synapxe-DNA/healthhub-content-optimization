@@ -75,6 +75,12 @@ cat requirements.txt | xargs poetry add
 
     - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#data-schema)
 
+    - `filtered_data.parquet/`: contains the filtered data after removing the 'to_remove' categories for indexing.
+
+    - `processed_data.parquet/`: contains the processed data after passing filtered_data into the LLM to clean the "content_body" column to the new "processed_table_content" for indexing.
+
+    - `processed_articles/`: contains the JSON data for article content and article tables for ingestion into the index.
+
   - [`04_feature/`](data/04_feature): contains the features data
 
   - [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\\_count)}$
@@ -99,6 +105,8 @@ cat requirements.txt | xargs poetry add
     - [`feature_engineering/`](src/content_optimization/pipelines/feature_engineering): contains the code for the `feature_engineering` pipeline; for more information, refer [here](#feature-engineering)
 
     - [`clustering/`](src/content_optimization/pipelines/clustering): contains the code for the `clustering` pipeline; for more information, refer [here](#clustering)
+
+    - [`azure_rag/`](src/content_optimization/pipelines/azure_rag): contains the code for the `azure_rag` pipeline; for more information, refer [here](#azure_rag)
 
 - [`tests/`](tests): contains all unit and integrations tests for the Kedro pipeline; it is to be mirrored as per `data/` and `src/content_optimization/` directories. Refer [here](https://docs.kedro.org/en/stable/tutorial/test_a_project.html) for more information.
 
@@ -126,7 +134,7 @@ This will run the entire project for all pipelines.
 You can run the entire `data_processing` pipeline by running:
 
 ```zsh
-kedro run --pipeline=data_processing
+kedro run --pipeline="data_processing"
 ```
 
 If for any reason, you would like to run specific nodes in the `data_processing` pipeline, you can run:
@@ -156,7 +164,7 @@ The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/D
 You can run the entire `feature_engineering` pipeline by running:
 
 ```zsh
-kedro run --pipeline=feature_engineering
+kedro run --pipeline="feature_engineering"
 ```
 
 If for any reason, you would like to run specific nodes in the `feature_engineering` pipeline, you can run:
@@ -224,7 +232,32 @@ neo4j_config:
 You can run the entire `clustering` pipeline by running:
 
 ```zsh
-kedro run --pipeline=clustering
+kedro run --pipeline="clustering"
+```
+
+### Azure RAG <a id="azure-rag"></a>
+
+> [!IMPORTANT]
+> Before running the [`azure_rag`](src/content_optimization/pipelines/azure_rag/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
+
+#### Prerequisites
+
+#### 1. Configuration
+
+Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
+
+```yaml
+azure_credentials:
+  API_VERSION: <api_version>
+  AZURE_ENDPOINT: <resource_end_point>
+  COGNITIVE_SERVICES: <cognitive_service_link>
+  MODEL_DEPLOYMENT: <chat_deployment_name>
+```
+
+You can run the entire `azure_rag` pipeline by running:
+
+```zsh
+kedro run --pipeline="azure_rag" 
 ```
 
 ## Test the Kedro Project
@@ -855,5 +888,151 @@ kedro run --pipeline=clustering
 #### Data Quality Checks
 
 - Under [`data/02_intermediate`](data/02_intermediate)
+
+</details>
+
+### General Information
+
+- **Dataset Name:** `processed_articles`
+- **Location**: [`data/03_primary`](data/03_primary)
+- **Dataset Description:** JSON format of the article content and tables files
+- **Version**: v1
+- **Date of Creation:** August 28, 2024
+- **Last Updated:** August 28, 2024
+
+### File Information
+
+- **File Format:** JSON 
+- **Number of Files:** 2713
+- **Total Size:** 30.8MB
+
+#### **Columns**
+
+<details>
+  <summary>Expand for more information</summary>
+
+- **`id`**
+  <details>
+
+  - Data Type: `integer`
+  - Description:
+    - Corresponds to the Article ID
+  - Example Values:
+    - 1464154
+  - Null Values Allowed: No
+  - Primary Key: Yes
+  - Foreign Key: No
+
+  </details>
+
+- **`title`**
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - Title of the article
+  - Example Values:
+    - deLIGHTS for Diabetic Patients
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`cover_image_url`**
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - URL of the cover image of the article
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`full_url`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - URL of the article
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`content_category`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - The content category that the article corresponds to on HealthHub
+  - Example Values:
+    - medications
+    - live-healthy-articles
+    - diseases-and-conditions
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: Yes
+
+  </details>
+
+- **`category_description`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - Brief Summary of the article that is typically found at the top of the webpage
+  - Example Values:
+    - Learn how your mind affects your physical and emotional health to strengthen your mental well-being.
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`content`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - Post processed table/article content by the LLM.
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+</details>
+
+### Data Quality and Processing
+
+<details>
+  <summary>Expand for more information</summary>
+
+#### Data Cleaning Process
+
+1. Filter articles by their 'to_remove' categories
+2. Convert the data in 'content_body' column to 'processed_table_content' with the LLM. 
+3. Split the dataframe by rows and according to their 'extracted_content_body' and "processed_table_content" to {row_id}_content.json and {row_id}_table.json.
+
+#### Missing Data Handling
+
+- Left as is for exploration purposes
+- No data imputation was used
+
+#### Known Issues or Limitations
+
+- N.A.
+
+#### Data Quality Checks
+
+- N.A.
 
 </details>
