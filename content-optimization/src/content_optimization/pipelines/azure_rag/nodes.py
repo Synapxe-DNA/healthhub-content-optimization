@@ -49,12 +49,24 @@ def filter_articles(
     return filtered_data_rag
 
 
-def process_html_tables(filtered_data_rag: pd.DataFrame) -> pd.DataFrame:
+def process_html_tables(
+    filtered_data_rag: pd.DataFrame,
+    temperature: int,
+    max_tokens: int,
+    n_completions: int,
+    seed: int,
+) -> pd.DataFrame:
     processed_data_rag = filtered_data_rag.copy()
 
     def _process_row(row):
         if row["has_table"]:
-            return ask(row["content_body"])
+            return ask(
+                html_content=row["content_body"],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                n_completions=n_completions,
+                seed=seed,
+            )
         return None
 
     processed_data_rag["processed_table_content"] = processed_data_rag.apply(

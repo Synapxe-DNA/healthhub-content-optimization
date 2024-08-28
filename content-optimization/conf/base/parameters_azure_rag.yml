@@ -18,6 +18,14 @@ duplicated_content:
 lengthy_articles:
   - 1435223
 
+temperature: 0.0
+
+max_tokens: 2000
+
+n_completions: 1
+
+seed: 1234
+
 article_content_columns:
   - id
   - title

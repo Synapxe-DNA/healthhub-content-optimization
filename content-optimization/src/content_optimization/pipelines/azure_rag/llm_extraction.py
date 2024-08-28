@@ -19,7 +19,13 @@ cognitive_services = azure_credentials["COGNITIVE_SERVICES"]
 model_deployment = azure_credentials["MODEL_DEPLOYMENT"]
 
 
-def ask(html_content: str) -> str:
+def ask(
+    html_content: str,
+    temperature: int,
+    max_tokens: int,
+    n_completions: int,
+    seed: int,
+) -> str:
     azure_credential = DefaultAzureCredential()
     token_provider = get_bearer_token_provider(azure_credential, cognitive_services)
 
@@ -48,10 +54,10 @@ def ask(html_content: str) -> str:
     response = openai_client.chat.completions.create(
         messages=query_messages,
         model=model_deployment,
-        temperature=0.0,
-        max_tokens=2000,
-        n=1,
-        seed=1234,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        n=n_completions,
+        seed=seed,
     )
 
     return response.choices[0].message.content

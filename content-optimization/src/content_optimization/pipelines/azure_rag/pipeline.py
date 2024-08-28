@@ -27,7 +27,13 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=process_html_tables,
-                inputs="filtered_data_rag",
+                inputs=[
+                    "filtered_data_rag",
+                    "params:temperature",
+                    "params:max_tokens",
+                    "params:n_completions",
+                    "params:seed",
+                ],
                 outputs="processed_data_rag",
                 name="process_html_tables_node",
             ),
