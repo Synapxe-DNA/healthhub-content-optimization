@@ -23,19 +23,19 @@ azure_credentials:
 **Step 1:** For API_VERSION, see here for the latest version: [API Version Reference](https://learn.microsoft.com/azure/ai-services/openai/reference)
 
 **Step 2:**
-![Step 2](./docs/images/azure_1.png)
+![Step 2](/content-optimization/docs/images/azure_1.png)
 
 **Step 3:**
-![Step 3](./docs/images/azure_2.png)
+![Step 3](/content-optimization/docs/images/azure_2.png)
 
 **Step 4:**
-![Step 4](./docs/images/azure_3.png)
+![Step 4](/content-optimization/docs/images/azure_3.png)
 
 **Step 5:**
-![Step 5](./docs/images/azure_4.png)
+![Step 5](/content-optimization/docs/images/azure_4.png)
 
 **Step 6:**
-![Step 6](./docs/images/azure_5.png)
+![Step 6](/content-optimization/docs/images/azure_5.png)
 
 > _Note:_ Please do not check in any local configuration to version control.
 
