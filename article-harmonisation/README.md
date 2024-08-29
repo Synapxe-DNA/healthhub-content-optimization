@@ -207,10 +207,9 @@ To run the project, first ensure that you have installed all the packages in [`r
 
 Before running the project, you will also need to ensure that the User Annotation Excel file is placed in [`article-harmonisation/data/article_rewriting`](./data/article_rewriting) directory as the article rewriting process extracts data from the Excel file to determine which optimisation steps to take. Users will flag out the optimisation steps they wish to take under the column `User: additional content to add for harmonisation`.
 
-> [!NOTE]
-> As of 28 August 2024, the User Annotation Excel file name is set to `Stage 1 user annotation for HPB (Updated).xlsx` and the column for user annotation is `User: additional content to add for harmonisation`. The User Annotation sheet name for article harmonisation is `User Annotation (to harmonise)` and the sheet name for article optimisation is `User Annotation (to optimise)`
+As of 28 August 2024, the User Annotation Excel file name is set to "Stage 1 user annotation for HPB_sample.xlsx" and the column for user annotation is "User: additional content to add for harmonisation". The User Annotation sheet name for article harmonisation is "User Annotation (to harmonise)" and the sheet name for article optimisation is "User Annotation (to optimise)"
 
-You should also ensure that the 2 sheets named `Article Harmonisation Output` and `Article Optimisation Output` are in the User Annotation Excel file as the optimised outputs will be stored there
+The optimised output will be stored under `article-harmonisation/data/article_rewriting/Stage 2 user annotation for HPB.xlsx`. A new Excel file will be created if this file does not already exist.
 
 **Do ensure that the file name, user action column name and user annotation sheet names are still accurate to ensure that the project runs smoothly.**
 
@@ -230,7 +229,7 @@ cd ..
 python3 ./article-harmonisation/main_harmonisation.py
 ```
 
-Finally, the output will be reflected in the User Annotation Excel file, under `Article Harmonisation Output` for Article Harmonisation and `Article Optimisation Output` for Article Optimisation.
+Finally, the output will be reflected in the User Annotation Excel file, under "User Annotation (Harmonised)" for Article Harmonisation and "User Annotation (Optimised)" for Article Optimisation.
 
 ### Running the streamlit application
 
