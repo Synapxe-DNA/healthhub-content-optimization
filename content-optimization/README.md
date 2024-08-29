@@ -71,9 +71,15 @@ cat requirements.txt | xargs poetry add
 
   - [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
-    - `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#data-schema)
+    - `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#merged-data-data-schema)
 
-    - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#data-schema)
+    - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#merged-data-data-schema)
+
+    - `filtered_data.parquet/`: contains the filtered data after removing the 'to_remove' categories for indexing; for more information on the data, refer [here](#processed-articles-file-information)
+
+    - `processed_data.parquet/`: contains the processed data after passing filtered_data into the LLM to clean the "content_body" column to the new "processed_table_content" for indexing; for more information on the data, refer [here](#processed-articles-file-information)
+
+    - `processed_articles/`: contains the JSON data for article content and article tables for ingestion into the index; for more information on the data, refer [here](#processed-articles-file-information)
 
   - [`04_feature/`](data/04_feature): contains the features data
 
@@ -99,6 +105,8 @@ cat requirements.txt | xargs poetry add
     - [`feature_engineering/`](src/content_optimization/pipelines/feature_engineering): contains the code for the `feature_engineering` pipeline; for more information, refer [here](#feature-engineering)
 
     - [`clustering/`](src/content_optimization/pipelines/clustering): contains the code for the `clustering` pipeline; for more information, refer [here](#clustering)
+
+    - [`azure_rag/`](src/content_optimization/pipelines/azure_rag): contains the code for the `azure_rag` pipeline; for more information, refer [here](#azure-rag)
 
 - [`tests/`](tests): contains all unit and integrations tests for the Kedro pipeline; it is to be mirrored as per `data/` and `src/content_optimization/` directories. Refer [here](https://docs.kedro.org/en/stable/tutorial/test_a_project.html) for more information.
 
@@ -126,7 +134,7 @@ This will run the entire project for all pipelines.
 You can run the entire `data_processing` pipeline by running:
 
 ```zsh
-kedro run --pipeline=data_processing
+kedro run --pipeline="data_processing"
 ```
 
 If for any reason, you would like to run specific nodes in the `data_processing` pipeline, you can run:
@@ -156,7 +164,7 @@ The pipeline is a [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/D
 You can run the entire `feature_engineering` pipeline by running:
 
 ```zsh
-kedro run --pipeline=feature_engineering
+kedro run --pipeline="feature_engineering"
 ```
 
 If for any reason, you would like to run specific nodes in the `feature_engineering` pipeline, you can run:
@@ -171,9 +179,9 @@ kedro run --nodes="extract_keywords_node"
 > [!IMPORTANT]
 > Before running the [`clustering`](src/content_optimization/pipelines/clustering/pipeline.py) pipeline, ensure that you have already ran the `data_processing` and `feature_engineering` pipeline. Additionally, make sure that Neo4j is set up locally.
 
-#### Prerequisites
+#### Prerequisites <a id="clustering-prerequisites"></a>
 
-#### 1. Configuration
+#### 1. Configuration <a id="clustering-configuration"></a>
 
 Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
 
@@ -224,7 +232,32 @@ neo4j_config:
 You can run the entire `clustering` pipeline by running:
 
 ```zsh
-kedro run --pipeline=clustering
+kedro run --pipeline="clustering"
+```
+
+### Azure RAG <a id="azure-rag"></a>
+
+> [!IMPORTANT]
+> Before running the [`azure_rag`](src/content_optimization/pipelines/azure_rag/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
+
+#### Prerequisites <a id="azure-rag-prerequisites"></a>
+
+#### 1. Configuration <a id="azure-rag-configuration"></a>
+
+Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
+
+```yaml
+azure_credentials:
+  API_VERSION: <api_version>
+  AZURE_ENDPOINT: <resource_end_point>
+  COGNITIVE_SERVICES: <cognitive_service_link>
+  MODEL_DEPLOYMENT: <chat_deployment_name>
+```
+
+You can run the entire `azure_rag` pipeline by running:
+
+```zsh
+kedro run --pipeline="azure_rag"
 ```
 
 ## Test the Kedro Project
@@ -243,7 +276,7 @@ kedro run --pipeline=clustering
 
 ## Dataset <a id="dataset-info"></a>
 
-### General Information
+### General Information <a id="merged-data-general-information"></a>
 
 - **Dataset Name:** `merged_data.parquet`
 - **Location**: [`data/03_primary`](data/03_primary)
@@ -252,19 +285,19 @@ kedro run --pipeline=clustering
 - **Date of Creation:** June 28, 2024
 - **Last Updated:** August 2, 2024
 
-### File Information
+### File Information <a id="merged-data-file-information"></a>
 
 - **File Format:** Apache Parquet
 - **Number of Files:** 1
 - **Total Size:** 13.5MB
 
-### Data Schema <a id="data-schema"></a>
+### Data Schema <a id="merged-data-data-schema"></a>
 
 - **Number of Rows:** 2613
 - **Number of Columns:** 39
 - **Subject Area/Domain:** Health Hub Articles
 
-#### **Columns**
+#### **Columns** <a id="merged-data-columns"></a>
 
 <details>
   <summary>Expand for more information</summary>
@@ -827,12 +860,12 @@ kedro run --pipeline=clustering
 
 </details>
 
-### Data Quality and Processing
+### Data Quality and Processing <a id="merged-data-quality-and-processing"></a>
 
 <details>
   <summary>Expand for more information</summary>
 
-#### Data Cleaning Process
+#### Data Cleaning Process <a id="merged-data-data-cleaning-process"></a>
 
 1. Standardise all column names
 2. Removed columns where all values are `NaN`
@@ -843,17 +876,163 @@ kedro run --pipeline=clustering
 7. Flagged articles with no extracted content body
 8. Merged all articles across different content categories into one dataframe
 
-#### Missing Data Handling
+#### Missing Data Handling <a id="merged-data-missing-data-handling"></a>
 
 - Left as is for exploration purposes
 - No data imputation was used
 
-#### Known Issues or Limitations
+#### Known Issues or Limitations <a id="merged-data-issues"></a>
 
 - Issue with handling text extraction within `<div>` containers
 
-#### Data Quality Checks
+#### Data Quality Checks <a id="merged-data-data-quality-checks"></a>
 
 - Under [`data/02_intermediate`](data/02_intermediate)
+
+</details>
+
+### General Information <a id="processed-articles-general-information"></a>
+
+- **Dataset Name:** `processed_articles`
+- **Location**: [`data/03_primary`](data/03_primary)
+- **Dataset Description:** JSON format of the article content and tables files
+- **Version**: v1
+- **Date of Creation:** August 28, 2024
+- **Last Updated:** August 28, 2024
+
+### File Information <a id="processed-articles-file-information"></a>
+
+- **File Format:** JSON
+- **Number of Files:** 2713
+- **Total Size:** 30.8MB
+
+#### **Columns** <a id="processed-articles-columns"></a>
+
+<details>
+  <summary>Expand for more information</summary>
+
+- **`id`**
+  <details>
+
+  - Data Type: `integer`
+  - Description:
+    - Corresponds to the Article ID
+  - Example Values:
+    - 1464154
+  - Null Values Allowed: No
+  - Primary Key: Yes
+  - Foreign Key: No
+
+  </details>
+
+- **`title`**
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - Title of the article
+  - Example Values:
+    - deLIGHTS for Diabetic Patients
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`cover_image_url`**
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - URL of the cover image of the article
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`full_url`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - URL of the article
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`content_category`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - The content category that the article corresponds to on HealthHub
+  - Example Values:
+    - medications
+    - live-healthy-articles
+    - diseases-and-conditions
+  - Null Values Allowed: No
+  - Primary Key: No
+  - Foreign Key: Yes
+
+  </details>
+
+- **`category_description`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - Brief Summary of the article that is typically found at the top of the webpage
+  - Example Values:
+    - Learn how your mind affects your physical and emotional health to strengthen your mental well-being.
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+- **`content`**
+
+  <details>
+
+  - Data Type: `string`
+  - Description:
+    - Post processed table/article content by the LLM.
+  - Null Values Allowed: Yes
+  - Primary Key: No
+  - Foreign Key: No
+
+  </details>
+
+</details>
+
+### Data Quality and Processing <a id="processed-articles-data-quality-and-processing"></a>
+
+<details>
+  <summary>Expand for more information</summary>
+
+#### Data Cleaning Process <a id="processed-articles-data-cleaning-process"></a>
+
+1. Filter articles by their 'to_remove' categories
+2. Convert the data in 'content_body' column to 'processed_table_content' with the LLM.
+3. Split the dataframe by rows and according to their 'extracted_content_body' and "processed_table_content" to {row_id}\_content.json and {row_id}\_table.json.
+
+#### Missing Data Handling <a id="processed-articles-missing-data-handling"></a>
+
+- Left as is for exploration purposes
+- No data imputation was used
+
+#### Known Issues or Limitations <a id="processed-articles-issues"></a>
+
+- N.A.
+
+#### Data Quality Checks <a id="processed-articles-data-quality-checks"></a>
+
+- N.A.
 
 </details>
