@@ -160,17 +160,16 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
 
         # If sheet_name is "User Annotation (Optimised)", creates a list containing the article_optimisation_columns and article_data
         if sheet_name == "User Annotation (Optimised)":
-            data = [[article_optimisation_columns], [article_data]]
-
+            columns = article_optimisation_columns
         # elif sheet_name is "User Annotation (Harmonisaed)", creates a list containing the article_harmonisation_columns and article_data
         elif sheet_name == "User Annotation (Harmonised)":
-            data = [[article_harmonisation_columns], [article_data]]
+            columns = article_harmonisation_columns
         # else raise ValueError
         else:
             raise ValueError(f"{sheet_name} is not a valid sheet name!")
 
         # Creates a dataframe with first list in data as the column headers and subsequent rows as data
-        df = pd.DataFrame(data[1], columns=data[0])
+        df = pd.DataFrame([article_data], columns=columns)
 
         # Converting the dataframe to an Excel sheet
         df.to_excel(file_path, sheet_name=sheet_name, index=False)
