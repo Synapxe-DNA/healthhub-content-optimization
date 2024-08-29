@@ -16,7 +16,9 @@ USER_ANNOTATION_FILE = "Stage 1 user annotation for HPB_sample.xlsx"
 USER_ANNOTATION = f"article-harmonisation/data/article_rewriting/{USER_ANNOTATION_FILE}"
 
 USER_ANNOTATION_OUTPUT = "Stage 2 user annotation for HPB.xlsx"
-USER_ANNOTATION_OUTPUT_PATH = f"article-harmonisation/data/article_rewriting/{USER_ANNOTATION_OUTPUT}"
+USER_ANNOTATION_OUTPUT_PATH = (
+    f"article-harmonisation/data/article_rewriting/{USER_ANNOTATION_OUTPUT}"
+)
 
 # Declaring the respective sheet names for optimisation and harmonisation
 OPTIMISATION_SHEET_OUTPUT = "User Annotation (Optimised)"
@@ -76,7 +78,7 @@ def optimise_articles(app):
             "reason for irrelevant meta description"
         ]
         reasons_for_poor_readability = article["reason for poor readability"]
-        
+
         # Extracting title flags from User Annotation Excel File
         overall_title_flag = article["overall title flags"]
         long_title = article["long title"]
@@ -136,8 +138,8 @@ def optimise_articles(app):
             article_url,  # url
             # Article title optimisation
             str(overall_title_flag),  # Overall title flag
-            str(long_title), # long title
-            str(irrelevant_title), # irrelevant title
+            str(long_title),  # long title
+            str(irrelevant_title),  # irrelevant title
             reasons_for_irrelevant_title,  # Reasons for irrelevant title from evaluation step
             (
                 result["optimised_article_output"]["optimised_article_title"][0]
@@ -158,8 +160,8 @@ def optimise_articles(app):
             None,  # Optional: Title written by user (free text for user to add only if ‘Write your own’ is chosen)
             # Article meta desc optimisation
             str(overall_meta_desc_flag),  # Overall meta desc flag
-            str(meta_desc_length), # Meta desc length not within 70 and 160 characters
-            str(irrelevant_meta_desc), # irrelevant meta description
+            str(meta_desc_length),  # Meta desc length not within 70 and 160 characters
+            str(irrelevant_meta_desc),  # irrelevant meta description
             reasons_for_irrelevant_meta_desc,  # Reasons for irrelevant meta desc from evaluation step
             (
                 result["optimised_article_output"]["optimised_meta_desc"][0]
@@ -180,9 +182,9 @@ def optimise_articles(app):
             None,  # Optional: meta description written by user (free text for user to add only if ‘Write your own’ is chosen)
             # Article writing optimisation
             str(overall_content_flag),  # Overall content flag
-            str(poor_readability), # poor readability
-            reasons_for_poor_readability, # reasons for poor readability
-            str(insufficient_content), # insufficient content
+            str(poor_readability),  # poor readability
+            reasons_for_poor_readability,  # reasons for poor readability
+            str(insufficient_content),  # insufficient content
             (
                 result["optimised_article_output"]["optimised_writing"]
                 if article_flags["flag_for_writing_optimisation"]
@@ -191,7 +193,7 @@ def optimise_articles(app):
             None,  # Article optimisation evaluation summary
             None,  # User approval of optimised article
             None,  # Optional: User attached updated article (Y)
-            None # Content Edit Status (if any)
+            None,  # Content Edit Status (if any)
             # Note that reasons_for_poor_readability and reasons_for_improving_writing_style are not included as it complicates the llm prompt, leading to poorer performance.
         ]
 
@@ -278,11 +280,12 @@ def harmonise_articles(app):
                 article_page_views = article["page_views"]
                 main_article = article[
                     "Main Article Structure? (Y)"
-                ]  # checks if the article is the main article for the sub group harmonisation. 
+                ]  # checks if the article is the main article for the sub group harmonisation.
 
                 # If additional input cell in the Excel sheet is empty, it returns nan, which is of float type. Hence, if it's a float type, we set it to "".
                 if isinstance(
-                    article["Optional: additional content to add for harmonisation"], float
+                    article["Optional: additional content to add for harmonisation"],
+                    float,
                 ):
                     article_additional_inputs = ""
                 else:
@@ -312,10 +315,13 @@ def harmonise_articles(app):
                     )
 
                 # If statement checking if the article is the main article for the sub group harmonisation
-                if main_article == "Y" and article_group_content_category != "diseases-and-condition":
+                if (
+                    main_article == "Y"
+                    and article_group_content_category != "diseases-and-condition"
+                ):
                     main_article_content = concat_headers_to_content([article_id]).pop()
                 else:
-                    main_article_content = ''
+                    main_article_content = ""
 
             inputs = {
                 "article_rewriting_tries": 0,

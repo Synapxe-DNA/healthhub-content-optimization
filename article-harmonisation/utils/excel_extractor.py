@@ -1,4 +1,5 @@
 import warnings
+
 import pandas as pd
 from openpyxl import load_workbook
 from states.definitions import OptimisationFlags
@@ -81,7 +82,7 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
         "Article optimisation evaluation summary",
         "User approval of optimised article",
         "Optional: User attached updated article (Y)",
-        "Content Edit Status (if any)"
+        "Content Edit Status (if any)",
     ]
 
     # List containing all column headers for article optimisation Excel sheet
@@ -114,9 +115,9 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
         "Article optimisation evaluation summary",
         "User approval of optimised article",
         "Optional: User attached updated article (Y)",
-        "Content Edit Status (if any)"
+        "Content Edit Status (if any)",
     ]
-    
+
     # try statement that checks if Excel file already exists
     try:
         # Load the existing workbook
@@ -131,7 +132,7 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
             # Create a new sheet
             sheet = workbook.create_sheet(title=sheet_name)
             print(f"Creating new sheet: {sheet_name}")
-            
+
             # Adding the article optimisation column headers to User Annotation (Optimised) sheet
             if sheet_name == "User Annotation (Optimised)":
                 sheet.append(article_optimisation_columns)
@@ -141,9 +142,9 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
                 sheet.append(article_harmonisation_columns)
 
             # Value Error raised if sheet_name is invalid
-            else: 
+            else:
                 raise ValueError(f"{sheet_name} is not a valid sheet name!")
-            
+
         # Adding article data to the sheet
         sheet.append(article_data)
 
@@ -156,22 +157,18 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
 
         # If sheet_name is "User Annotation (Optimised)", creates a list containing the article_optimisation_columns and article_data
         if sheet_name == "User Annotation (Optimised)":
-            data = [[article_optimisation_columns],
-                    [article_data]
-                    ]
-            
+            data = [[article_optimisation_columns], [article_data]]
+
         # elif sheet_name is "User Annotation (Harmonisaed)", creates a list containing the article_harmonisation_columns and article_data
         elif sheet_name == "User Annotation (Harmonised)":
-            data = [[article_harmonisation_columns],
-                    [article_data]
-                    ]
+            data = [[article_harmonisation_columns], [article_data]]
         # else raise ValueError
-        else: 
+        else:
             raise ValueError(f"{sheet_name} is not a valid sheet name!")
-        
+
         # Creates a dataframe with first list in data as the column headers and subsequent rows as data
-        df = pd.DataFrame(data[1], columns=data[0]) 
+        df = pd.DataFrame(data[1], columns=data[0])
 
         # Converting the dataframe to an Excel sheet
-        df.to_excel(file_path, sheet_name=sheet_name, index= False)
+        df.to_excel(file_path, sheet_name=sheet_name, index=False)
         print("Excel file sucessfully created")
