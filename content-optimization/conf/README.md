@@ -20,22 +20,22 @@ azure_credentials:
   MODEL_DEPLOYMENT: <chat_deployment_name>
 ```
 
-<p><strong>Step 1:</strong> For API_VERSION, see here for the latest version: <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/reference" target="_blank">API Version Reference</a></p>
+**Step 1:** For API_VERSION, see here for the latest version: [API Version Reference](https://learn.microsoft.com/azure/ai-services/openai/reference)
 
-<p><strong>Step 2:</strong></p>
-<img src="docs/images/azure_1.png" height="400" alt="Kedro Pipeline Step 2">
+**Step 2:**
+![Step 2](./docs/images/azure_1.png)
 
-<p><strong>Step 3:</strong></p>
-<img src="docs/images/azure_2.png" height="400" alt="Kedro Pipeline Step 3">
+**Step 3:**
+![Step 3](./docs/images/azure_2.png)
 
-<p><strong>Step 4:</strong></p>
-<img src="docs/images/azure_3.png" height="400" alt="Kedro Pipeline Step 4">
+**Step 4:**
+![Step 4](./docs/images/azure_3.png)
 
-<p><strong>Step 5:</strong></p>
-<img src="docs/images/azure_4.png" height="400" alt="Kedro Pipeline Step 5">
+**Step 5:**
+![Step 5](./docs/images/azure_4.png)
 
-<p><strong>Step 6:</strong></p>
-<img src="docs/images/azure_5.png" height="400" alt="Kedro Pipeline Step 6">
+**Step 6:**
+![Step 6](./docs/images/azure_5.png)
 
 > _Note:_ Please do not check in any local configuration to version control.
 
