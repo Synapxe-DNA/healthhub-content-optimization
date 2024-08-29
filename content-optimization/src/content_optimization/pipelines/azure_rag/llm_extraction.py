@@ -12,11 +12,11 @@ conf_path = str(Path("./") / settings.CONF_SOURCE)
 conf_loader = OmegaConfigLoader(conf_source=conf_path)
 credentials = conf_loader["credentials"]
 
-azure_credentials = credentials["azure_credentials"]
-api_version = azure_credentials["API_VERSION"]
-azure_endpoint = azure_credentials["AZURE_ENDPOINT"]
-cognitive_services = azure_credentials["COGNITIVE_SERVICES"]
-model_deployment = azure_credentials["MODEL_DEPLOYMENT"]
+azure_credentials = credentials.get("azure_credentials", {})
+api_version = azure_credentials.get("API_VERSION", "")
+azure_endpoint = azure_credentials.get("AZURE_ENDPOINT", "")
+cognitive_services = azure_credentials.get("COGNITIVE_SERVICES", "")
+model_deployment = azure_credentials.get("MODEL_DEPLOYMENT", "")
 
 
 def ask(
