@@ -12,12 +12,15 @@ from utils.graphs import execute_graph
 MODEL = settings.MODEL_NAME
 
 # File path to user annotation Excel file
-USER_ANNOTATION_FILE = "Stage 1 user annotation for HPB (Updated).xlsx"
+USER_ANNOTATION_FILE = "Stage 1 user annotation for HPB_sample.xlsx"
 USER_ANNOTATION = f"article-harmonisation/data/article_rewriting/{USER_ANNOTATION_FILE}"
 
+USER_ANNOTATION_OUTPUT = "Stage 2 user annotation for HPB.xlsx"
+USER_ANNOTATION_OUTPUT_PATH = f"article-harmonisation/data/article_rewriting/{USER_ANNOTATION_OUTPUT}"
+
 # Declaring the respective sheet names for optimisation and harmonisation
-OPTIMISATION_SHEET_OUTPUT = "Article Optimisation Output"
-HARMONISATION_SHEET_OUTPUT = "Article Harmonisation Output"
+OPTIMISATION_SHEET_OUTPUT = "User Annotation (Optimised)"
+HARMONISATION_SHEET_OUTPUT = "User Annotation (Harmonised)"
 OPTIMISATION_SHEET_INPUT = "User Annotation (to optimise)"
 HARMONISATION_SHEET_INPUT = "User Annotation (to combine)"
 
@@ -64,20 +67,31 @@ def optimise_articles(app):
         article_category_names = article["article category names"]
         article_page_views = article["page views"]
         article_additional_input = article[
-            "User: additional content to add for harmonisation"
+            "Optional: additional content to add for optimisation"
         ]
 
-        # Extracting article title for article_evaluation
+        # Extracting all reasons
         reasons_for_irrelevant_title = article["reason for irrelevant title"]
         reasons_for_irrelevant_meta_desc = article[
             "reason for irrelevant meta description"
         ]
         reasons_for_poor_readability = article["reason for poor readability"]
-        reasons_for_improving_writing_style = article[
-            "reason for improving writing style"
-        ]
+        
+        # Extracting title flags from User Annotation Excel File
+        overall_title_flag = article["overall title flags"]
+        long_title = article["long title"]
+        irrelevant_title = article["irrelevant title"]
 
-        # Determines which optimisation steps are flagged by user
+        # Extracting meta desc flags from User Annotation Excel File
+        overall_meta_desc_flag = article["overall meta description flags"]
+        meta_desc_length = article["meta description not within 70 and 160 characters"]
+        irrelevant_meta_desc = article["irrelevant meta description"]
+
+        # Extracting content flags from User Annotation Excel File
+        overall_content_flag = article["overall content flags"]
+        poor_readability = article["poor readability"]
+        insufficient_content = article["insufficient content"]
+
         article_flags = return_optimisation_flags(article, "optimisation")
 
         # Dictionary with the various input keys and items
@@ -97,7 +111,6 @@ def optimise_articles(app):
                 "reasons_for_irrelevant_title": reasons_for_irrelevant_title,
                 "reasons_for_irrelevant_meta_desc": reasons_for_irrelevant_meta_desc,
                 "reasons_for_poor_readability": reasons_for_poor_readability,
-                "reasons_for_improving_writing_style": reasons_for_improving_writing_style,
             },
             "optimised_article_output": {
                 "researcher_keypoints": [],
@@ -122,7 +135,9 @@ def optimise_articles(app):
             article_id.pop(),  # article_id. article_id.pop() is used as openpyxl cannot handle list inputs
             article_url,  # url
             # Article title optimisation
-            article_flags["flag_for_title_optimisation"],  # Overall title flag
+            str(overall_title_flag),  # Overall title flag
+            str(long_title), # long title
+            str(irrelevant_title), # irrelevant title
             reasons_for_irrelevant_title,  # Reasons for irrelevant title from evaluation step
             (
                 result["optimised_article_output"]["optimised_article_title"][0]
@@ -142,7 +157,9 @@ def optimise_articles(app):
             None,  # Title chosen (user to choose 1 from: Title 1, Title 2, Title 3 or ‘Write your own’)
             None,  # Optional: Title written by user (free text for user to add only if ‘Write your own’ is chosen)
             # Article meta desc optimisation
-            article_flags["flag_for_meta_desc_optimisation"],  # Overall meta desc flag
+            str(overall_meta_desc_flag),  # Overall meta desc flag
+            str(meta_desc_length), # Meta desc length not within 70 and 160 characters
+            str(irrelevant_meta_desc), # irrelevant meta description
             reasons_for_irrelevant_meta_desc,  # Reasons for irrelevant meta desc from evaluation step
             (
                 result["optimised_article_output"]["optimised_meta_desc"][0]
@@ -162,21 +179,25 @@ def optimise_articles(app):
             None,  # Meta Description chosen (user to choose 1 from: Meta Description 1, Meta Description 2, Meta Description 3 or ‘Write your own’)
             None,  # Optional: meta description written by user (free text for user to add only if ‘Write your own’ is chosen)
             # Article writing optimisation
-            article_flags["flag_for_writing_optimisation"],  # Overall content flag
+            str(overall_content_flag),  # Overall content flag
+            str(poor_readability), # poor readability
+            reasons_for_poor_readability, # reasons for poor readability
+            str(insufficient_content), # insufficient content
             (
                 result["optimised_article_output"]["optimised_writing"]
                 if article_flags["flag_for_writing_optimisation"]
                 else None
             ),  # Rewritten article content (should be a link)
-            None,  # Optimised changes summary (could be nil)
-            None,  # User approval for optimised article (Y/N)
-            None,  # User attached updated article
+            None,  # Article optimisation evaluation summary
+            None,  # User approval of optimised article
+            None,  # Optional: User attached updated article (Y)
+            None # Content Edit Status (if any)
             # Note that reasons_for_poor_readability and reasons_for_improving_writing_style are not included as it complicates the llm prompt, leading to poorer performance.
         ]
 
         # Storing the optimised outputs into the User Annotation Excel File
         store_optimised_outputs(
-            USER_ANNOTATION, OPTIMISATION_SHEET_OUTPUT, article_inputs
+            USER_ANNOTATION_OUTPUT_PATH, OPTIMISATION_SHEET_OUTPUT, article_inputs
         )
 
 
@@ -256,17 +277,17 @@ def harmonise_articles(app):
                 article_url = article["url"]
                 article_page_views = article["page_views"]
                 main_article = article[
-                    "Main Article? (Y)"
-                ]  # checks if the article is the main article for the sub group harmonisation
+                    "Main Article Structure? (Y)"
+                ]  # checks if the article is the main article for the sub group harmonisation. 
 
                 # If additional input cell in the Excel sheet is empty, it returns nan, which is of float type. Hence, if it's a float type, we set it to "".
                 if isinstance(
-                    article["User: additional content to add for harmonisation"], float
+                    article["Optional: additional content to add for harmonisation"], float
                 ):
                     article_additional_inputs = ""
                 else:
                     article_additional_inputs = article[
-                        "User: additional content to add for harmonisation"
+                        "Optional: additional content to add for harmonisation"
                     ]
                 article_title = article["title"]
 
@@ -291,8 +312,10 @@ def harmonise_articles(app):
                     )
 
                 # If statement checking if the article is the main article for the sub group harmonisation
-                if main_article == "Y":
+                if main_article == "Y" and article_group_content_category != "diseases-and-condition":
                     main_article_content = concat_headers_to_content([article_id]).pop()
+                else:
+                    main_article_content = ''
 
             inputs = {
                 "article_rewriting_tries": 0,
@@ -329,45 +352,46 @@ def harmonise_articles(app):
             article_inputs = [
                 article_group_number,  # Group Number
                 article_sub_group,  # Subgroup
+                str(article_sub_group_urls),  # urls
                 article_group_description,  # Group Description
                 str(article_sub_group_ids),  # Article ids
-                str(article_sub_group_urls),  # Article urls
                 # Article title optimisation
                 result["optimised_article_output"]["optimised_article_title"][
                     0
-                ],  # Optimised title 1
+                ],  # Title Option 1
                 result["optimised_article_output"]["optimised_article_title"][
                     1
-                ],  # Optimised title 2
+                ],  # Title Option 2
                 result["optimised_article_output"]["optimised_article_title"][
                     2
-                ],  # Optimised title 3
-                None,  # Title chosen (user to choose 1 from: Title 1, Title 2, Title 3 or ‘Write your own’)
-                None,  # Optional: Title written by user (free text for user to add only if ‘Write your own’ is chosen)
+                ],  # Title Option 3
+                None,  # Title Chosen
+                None,  # Optional: Title written by user
                 # Article meta desc optimisation
                 result["optimised_article_output"]["optimised_meta_desc"][
                     0
-                ],  # Optimised meta desc 1
+                ],  # Meta Description 1
                 result["optimised_article_output"]["optimised_meta_desc"][
                     1
-                ],  # Optimised meta desc 2
+                ],  # Meta Description 2
                 result["optimised_article_output"]["optimised_meta_desc"][
                     2
-                ],  # Optimised meta desc 3
-                None,  # Meta Description chosen (user to choose 1 from: Meta Description 1, Meta Description 2, Meta Description 3 or ‘Write your own’)
-                None,  # Optional: meta description written by user (free text for user to add only if ‘Write your own’ is chosen)
+                ],  # Meta Description 3
+                None,  # Meta Description Chosen
+                None,  # Optional: Meta Description written by user
                 # Article writing optimisation
                 result["optimised_article_output"][
                     "optimised_writing"
-                ],  # Rewritten article content (should be a link)
-                None,  # Optimised changes summary (could be nil)
-                None,  # User approval for optimised article (Y/N)
+                ],  # Optimised article content (should be a link)
+                None,  # Article optimisation evaluation summary (could be nil)
+                None,  # User approval of optimised article
                 None,  # User attached updated article
+                None,  # Content Edit Status (if any)
             ]
 
             # Storing the optimised outputs into the User Annotation Excel File
             store_optimised_outputs(
-                USER_ANNOTATION, HARMONISATION_SHEET_OUTPUT, article_inputs
+                USER_ANNOTATION_OUTPUT_PATH, HARMONISATION_SHEET_OUTPUT, article_inputs
             )
 
 
@@ -390,5 +414,5 @@ if __name__ == "__main__":
     app = build_graph()
 
     # Running the appropriate process
-    # harmonise_articles(app)
+    harmonise_articles(app)
     optimise_articles(app)

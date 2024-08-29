@@ -129,8 +129,6 @@ class ArticleEvaluation(TypedDict):
             Can be `None` if no evaluation are availble.
         reasons_for_poor_readability (Optional[str]): A String storing the reasons for poor readability from article evaluation process and extracted from the User Annotation Excel File
             Can be `None` if no evaluation are availble.
-        reasons_for_improving_writing_style (Optional[str]): A String storing reasons for improving writing style from article evaluation process and extracted from the User Annotation Excel File
-            Can be `None` if no evaluation are availble.
         writing_has_personality (Optional[str]): The optimised title of the article.
             Can be `None` if no personality evaluation is required.
     """
@@ -138,7 +136,6 @@ class ArticleEvaluation(TypedDict):
     reasons_for_irrelevant_title: Optional[str]
     reasons_for_irrelevant_meta_desc: Optional[str]
     reasons_for_poor_readability: Optional[str]
-    reasons_for_improving_writing_style: Optional[str]
     writing_has_personality: Optional[bool]
 
 
