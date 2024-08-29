@@ -1,5 +1,6 @@
 import warnings
 
+import pandas as pd
 from openpyxl import load_workbook
 from states.definitions import OptimisationFlags
 
@@ -19,8 +20,9 @@ def return_optimisation_flags(article, rewriting_process: str):
         flags (OptimisationFlags): A TypedDict with keys for each optimisation flag. The flags will either be True or False, depending on the user input in the User Annotation Excel file
 
     """
+    # Declaring the optimisation flags
     flags = OptimisationFlags(
-        flag_for_content_optimisation=False,
+        flag_for_content_optimisation=True,
         flag_for_title_optimisation=True,
         flag_for_meta_desc_optimisation=True,
         flag_for_writing_optimisation=True,
@@ -49,19 +51,79 @@ def return_optimisation_flags(article, rewriting_process: str):
             return flags
 
 
-def store_optimised_outputs(file_path: str, sheet_name: str, article_data: str):
+def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
     """
     Stores the optimised outputs into an Excel file.
 
     Args:
         file_path (str): A String indicating the file path to the destination Excel file
         sheet_name (str): A String indicating the name of the sheet to store the output in
-        article_data (str): A String storing the article data to be stored
-
+        article_data (list): A List storing the article data to be stored
     """
+
+    # List containing all column headers for article harmonisation Excel sheet
+    article_harmonisation_columns = [
+        "Group Number",
+        "Subgroup",
+        "urls",
+        "Group Description",
+        "Article ids",
+        "Title Option 1",
+        "Title Option 2",
+        "Title Option 3",
+        "Title Chosen",
+        "Optional: Title written by user",
+        "Meta Description 1",
+        "Meta Description 2",
+        "Meta Description 3",
+        "Meta Description Chosen",
+        "Optional: Meta Description written by user",
+        "Optimised article content",
+        "Article optimisation evaluation summary",
+        "User approval of optimised article",
+        "Optional: User attached updated article (Y)",
+        "Content Edit Status (if any)",
+    ]
+
+    # List containing all column headers for article optimisation Excel sheet
+    article_optimisation_columns = [
+        "article id",
+        "url",
+        "Overall title flag",
+        "long title",
+        "irrelevant title",
+        "Reasons for irrelevant title",
+        "Optimised Title 1",
+        "Optimised Title 2",
+        "Optimised Title 3",
+        "Title Chosen",
+        "Optional: Title written by user",
+        "Overall meta description flag",
+        "meta description not within 70 and 160 characters",
+        "irrelevant meta description",
+        "Reasons for irrelevant meta description",
+        "Optimised Meta Description 1",
+        "Optimised Meta Description 2",
+        "Optimised Meta Description 3",
+        "Meta Description Chosen",
+        "Optional: Meta Description written by user",
+        "Overall content flag",
+        "poor readability",
+        "reasons for poor readability",
+        "insufficient content",
+        "Optimised article content",
+        "Article optimisation evaluation summary",
+        "User approval of optimised article",
+        "Optional: User attached updated article (Y)",
+        "Content Edit Status (if any)",
+    ]
+
+    # try statement that checks if Excel file already exists
     try:
         # Load the existing workbook
         workbook = load_workbook(file_path)
+
+        # Checks if sheetname already exists in the workbook
         if sheet_name in workbook.sheetnames:
             # Edit the existing sheet
             sheet = workbook[sheet_name]
@@ -71,6 +133,19 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data: str):
             sheet = workbook.create_sheet(title=sheet_name)
             print(f"Creating new sheet: {sheet_name}")
 
+            # Adding the article optimisation column headers to User Annotation (Optimised) sheet
+            if sheet_name == "User Annotation (Optimised)":
+                sheet.append(article_optimisation_columns)
+
+            # Adding the article harmonisation column headers to User Annotation (Harmonised) sheet
+            elif sheet_name == "User Annotation (Harmonised)":
+                sheet.append(article_harmonisation_columns)
+
+            # Value Error raised if sheet_name is invalid
+            else:
+                raise ValueError(f"{sheet_name} is not a valid sheet name!")
+
+        # Adding article data to the sheet
         sheet.append(article_data)
 
         # Save the workbook
@@ -78,4 +153,22 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data: str):
         print(f"Workbook '{file_path}' saved successfully.")
 
     except FileNotFoundError:
-        print(f"Workbook '{file_path}' not found")
+        print(f"Workbook '{file_path}' not found, creating new Excel file")
+
+        # If sheet_name is "User Annotation (Optimised)", creates a list containing the article_optimisation_columns and article_data
+        if sheet_name == "User Annotation (Optimised)":
+            data = [[article_optimisation_columns], [article_data]]
+
+        # elif sheet_name is "User Annotation (Harmonisaed)", creates a list containing the article_harmonisation_columns and article_data
+        elif sheet_name == "User Annotation (Harmonised)":
+            data = [[article_harmonisation_columns], [article_data]]
+        # else raise ValueError
+        else:
+            raise ValueError(f"{sheet_name} is not a valid sheet name!")
+
+        # Creates a dataframe with first list in data as the column headers and subsequent rows as data
+        df = pd.DataFrame(data[1], columns=data[0])
+
+        # Converting the dataframe to an Excel sheet
+        df.to_excel(file_path, sheet_name=sheet_name, index=False)
+        print("Excel file sucessfully created")
