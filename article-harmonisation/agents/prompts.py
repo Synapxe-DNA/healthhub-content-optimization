@@ -203,70 +203,6 @@ class AzurePrompts(LLMPrompt):
             ),
             ("human", "Evaluate the following article:\n{article}"),
         ]
-        readability_evaluation_prompt = [
-            (
-                "system",
-                """
-                Your task is to break up long sentences with multiple commas into bullet points. Follow the guide below on how you should approach the content.
-
-                Let's think step by step.
-
-                Example 1:
-
-                1. Rewrite the long sentences in this content.
-                    "Taking care of your body and mind is crucial for a long and healthy life. To maintain good health, it's important to eat a balanced diet rich in fruits and vegetables, drink plenty of water, get at least 8 hours of sleep each night, exercise regularly, and avoid harmful habits like smoking and excessive alcohol consumption. Regular check-ups with your doctor are also essential. Don't forget to manage stress effectively."
-
-                2. Start by analyzing each sentences indvidually. This is a long sentence with multiple commas:
-
-                    "To maintain good health,
-                    it's important to eat a balanced diet rich in fruits and vegetables,
-                    drink plenty of water,
-                    get at least 8 hours of sleep each night,
-                    exercise regularly,
-                    and avoid harmful habits like smoking and excessive alcohol consumption."
-
-                3. We will now break this sentence into bullet points, with each item being a separate bullet point.
-                Your final answer:
-                    "Taking care of your body and mind is crucial for a long and healthy life.
-
-                    To maintain good health, it's important to:
-                        - eat a balanced diet rich in fruits and vegetables,
-                        - drink plenty of water,
-                        - get at least 8 hours of sleep each night,
-                        - exercise regularly,
-                        - avoid harmful habits like smoking and excessive alcohol consumption
-
-                    Regular check-ups with your doctor are also essential. Don't forget to manage stress effectively."
-
-                Example 2:
-
-                1. Rewrite the long sentences in this content.
-                    "Achieving high productivity requires deliberate effort and effective strategies. To boost your productivity, it's essential to plan your day ahead, prioritize your tasks, take regular breaks to avoid burnout, stay organized with to-do lists, and minimize distractions like social media and unnecessary meetings. Keep a positive mindset throughout the day. Celebrate small wins to stay motivated."
-
-                2. Start by analyzing each sentences indvidually. This is a long sentence with multiple commas:
-
-                    "To boost your productivity,
-                    it's essential to plan your day ahead,
-                    prioritize your tasks,
-                    take regular breaks to avoid burnout,
-                    stay organized with to-do lists,
-                    and minimize distractions like social media and unnecessary meetings."
-
-                3. We will now break this sentence into bullet points, with each item being a separate bullet point.
-                Your final answer:
-                    "Achieving high productivity requires deliberate effort and effective strategies.
-                    To boost your productivity, you can:
-                        - plan your day ahead,
-                        - prioritize your tasks,
-                        - take regular breaks to avoid burnout,
-                        - stay organized with to-do lists,
-                        - minimize distractions like social media and unnecessary meetings
-
-                    Keep a positive mindset throughout the day. Celebrate small wins to stay motivated."
-                    """,
-            ),
-            ("human", """Rewrite the long sentences in this content.\n {article}"""),
-        ]
         return readability_evaluation_prompt
 
     @staticmethod
@@ -481,9 +417,15 @@ class AzurePrompts(LLMPrompt):
         return meta_desc_evaluation_prompt
 
     @staticmethod
-    def return_researcher_prompt(step) -> list[tuple[str, str]]:
+    def return_researcher_prompt(step: str) -> list[tuple[str, str]]:
         """
-        Returns the researcher prompt
+        Returns the specified researcher prompt. There are two possible research prompts, namely:
+
+        1. "generate keypoints": This prompt is used to process the content for a given article and section out irrelevant sentences under an "omitted sentences" section below.
+        2. "add additional input": This prompt is used to add any additional input from the User Annotation Excel sheet to the processed keypoints.
+
+        Args:
+            step(str): a String indicating the step in which the researcher node is at. It can either be "generate keypoints" or "add additional input"
 
         Returns:
             list[tuple[str, str]]: a list containing the researcher prompt. {Article} is the only input required to invoke the prompt.
@@ -491,7 +433,7 @@ class AzurePrompts(LLMPrompt):
 
         match step:
             case "generate keypoints":
-                researcher_prompt = [
+                generate_keypoints_prompt = [
                     (
                         "system",
                         """You are part of a article combination process. Your main task is to analyze the headers in the article to identify and omit any unnecessary sentences under the header.
@@ -598,7 +540,7 @@ class AzurePrompts(LLMPrompt):
                         "Sort the key points below based on the instructions and examples you have received:\n{Article}",
                     ),
                 ]
-                return researcher_prompt
+                return generate_keypoints_prompt
 
             case "add additional input":
                 additional_content_prompt = [
@@ -680,9 +622,9 @@ class AzurePrompts(LLMPrompt):
         return additional_content_prompt
 
     @staticmethod
-    def return_compiler_prompt(self) -> list[tuple[str, str]]:
+    def return_compiler_prompt() -> list[tuple[str, str]]:
         """
-        Returns the compiler prompt
+        Returns the compiler prompt which compiles keypoints from multiple articles.
 
         Returns:
             list[tuple[str, str]]: a list containing the prompt for a Compiler LLM. {Keypoints} is the only input required to invoke the prompt.
@@ -777,206 +719,315 @@ class AzurePrompts(LLMPrompt):
         return compiler_prompt
 
     @staticmethod
-    def return_content_prompt() -> list[tuple[str, str]]:
+    def return_content_prompt(step: str) -> list[tuple[str, str]]:
         """
-        Returns the content optimisation prompt
+        Returns the content optimisation prompt. There are 3 different content prompt that can be returned:
+
+        1. "structure health and conditions": This prompt contains a pre-defined structure that all diseases-and-conditions articles will follow, regardless of optimisation or harmonisation.
+        2. "optimise health and conditions": This prompt will optimize the content of all diseases-and-conditions articles.
+        3. "extract main article structure": This prompt will produce a template based on the article input. This is used as the first step duing harmonisation of live-healthy articles, where it will extract out the structure of the main article.
+        4. "optimise live healthy": This prompt will structure the given content based on the extracted article template. This is used as the second step during the harmonisation of live-healthy articles.
+
+        Args:
+            step(str): a String indicating which content prompt should be returned.
 
         Returns:
             list[tuple[str, str]]: a list containing the content optimisation prompt. {Keypoints} is the only input required to invoke the prompt.
-
-        Note:
-            The prompt is solely applicable for Health and Conditions
         """
+        match step:
+            case "structure health and conditions":
+                sort_health_conditions_prompt = [
+                    (
+                        "system",
+                        """ You are part of an article re-writing process. Your task is to sort the given keypoints into the following structure:
 
-        optimise_health_conditions_content_prompt = [
-            (
-                "system",
-                """
-                You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
+                            ### Overview of the condition
 
-                    Your task is to phrase the content from the given article content using the following guidelines and examples.
-                    If one of the sections has no content, you MUST write your own content based on the header. Your writing MUST be relevant to the header and the topic.
-                    You will also be given a set of instructions that you MUST follow.
+                            ### Causes and Risk Factors of the condition
 
-                    ### Start of content requirements
-                        When rewriting the content, your writing MUST meet the requirements stated here.
-                        Do NOT change the content structure. ALL headers present in the given content should be presented in your final answer.
+                            ### Symptoms and Signs
 
-                        You must also use the following guidelines and examples to phrase your writing.
+                            ### Complications
 
-                        1. Elaborate and Insightful
-                            Your writing should expand upon the given key points and write new content aimed at educating readers on the condition.
-                            You MUST state the primary intent, goals, and a glimpse of information in the first paragraph.
+                            ### Treatment and Prevention
 
-                        2. Carry a positive tone
-                            Do NOT convey negative sentiments in your writing.
-                            You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
-                            Example: We recommend taking the diabetes medicine as prescribed by your doctor or pharmacist. This will help in the medicine’s effectiveness and reduce the risk of side effects.
+                            ### When to see a doctor
 
-                        3. Provide reassurance
-                            Your writing should reassure readers that the situation is not a lost cause.
-                            Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
+                        Your final answer MUST include these sections with the relevant headers in this specific order and follow the instructions provided.
 
-                        You should write your content based on the required sections step by step.
-                        After each section has been rewritten, you must check your writing with each guideline step by step.
+                        Instructions:
+                        1. If the key points do not contain information for one of the above sections, include the section headers in the final answer with no body of text for that section.
+                        2. You may use the original keypoint header name as the section header if it's similar enough to the predefined headers, but maintain the overall structure.
+                        3. Do NOT modify the content of the keypoints; your task is to sort them into the most appropriate sections.
+                        4. If a keypoint doesn't fit any predefined section:
+                            a. First, try to broaden your interpretation of the existing sections.
+                            b. If it still doesn't fit, create a new section with a clear, descriptive title based on the keypoint's content. You may use the keypoint header as the title.
+                            c. IMPORTANT: Place the new section immediately before or after the most closely related predefined section. Do not place new sections at the beginning or end of the article unless they are specifically related to the overview or follow-up care.
+                            d. Ensure the new section maintains the article's overall coherence.
+                        5. Do NOT leave out any of the keypoints provided.
 
-                        Here is an example you should use to structure your writing:
-                            ### Start of example
-                                1. Overview of Influenza
-                                Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
+                        Let's think step by step:
 
-                                2. Causes and Risk Factors
-                                Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. The flu virus is classified into three main types: A, B, and C. Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. Factors that increase the risk of contracting influenza include close contact with infected individuals, a weakened immune system, and lack of vaccination. Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
+                        1. Sort the following keypoints:
 
-                                3. Symptoms and Signs
-                                Some symptoms include: High fever, cough, headache, and muscle aches. Other symptoms include sneezing, nasal discharge, and loss of appetite. Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhoea, although these are more common in children.
+                            "Main Keypoint: Causes of Influenza
+                            Content: Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
 
-                                4. Complications of Influenza
-                                The following people are at greater risk of influenza-related complications:
-                                - Persons aged 65 years old and above.
-                                - Children aged between 6 months old to 5 years old.
-                                - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
-                                - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalisation or even death, particularly in vulnerable populations.
+                            Main Keypoint: Use of MediSave
+                            Content: Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
+                            "
 
-                                5. Treatment and Prevention
-                                Here are some ways to battle influenza and to avoid it:
-                                Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
-                                Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
-                                Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
+                        2. Determine which section each keypoint falls under and sort it accordingly. Multiple keypoints can go into a single section. The information in this keypoint is relevant to the final section "Causes and Risk Factors" and will be sorted in accordingly. The original keypoint header name will be kept as it is similar to "Causes and Risk Factors" header.
 
-                                6. When to See a Doctor
-                                You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
-                            ### End of example
+                            Your answer:
+                            "### Overview of Influenza
 
-                    ### End of content requirements
+                            ### Causes of Influenza
+                            Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
 
-                    ### Start of instructions
-                        You MUST follow these instructions when writing out your content.
+                            ### Symptoms and Signs
 
-                        1. RETENTION OF INFORMATION
-                        Ensure ALL information from the original content is reflected in your final answer.
-                        Do NOT omit any details, facts, examples, or specific nouns.
-                        If unsure how to rewrite a point, retain it in its original form.
+                            ### Complications
 
-                        2. CONTENT STRUCTURE
-                        Do NOT change the content structure or the headers.
-                        Do NOT leave any sections empty.
+                            ### Treatment and Prevention
 
-                        3. CONTENT LENGTH
-                        Maintain a word count close to the original content.
+                            ### When to see a doctor
 
-                        4. ACCURACY AND COMPLETENESS
-                        After rewriting each section, review the original content to ensure all points are included.
-                        Do NOT abridge or summarize the content. Your task is to restructure, not condense.
+                            ### Use of MediSave
+                            Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
 
-                        5. CLARITY AND PRESENTATION
-                        Do NOT include any prompt instructions in your response.
-                        The reader must NOT be aware of the prompts or instructions you've been given.
+                        3. For content that doesn't fit the predefined sections, follow step 4 in the instructions provided above, paying special attention to proper placement of new sections.
 
-                        6. FINAL CHECK
-                        Before submitting, compare your rewritten content with the original to ensure no information has been lost.
-                        Verify that your response adheres to all the above instructions.
+                        4. Check through each step carefully with each keypoint. Ensure that all keypoints and their content are included in your final answer.
+
+                        Final Reminders:
+                        Adhere to the given structure, only adding sections when absolutely necessary.
+                        Do not remove any of the predefined sections.
+                        Always place new sections next to the most closely related predefined sections.
+                        Ensure ALL keypoints and their content are included in your final answer.
+                        Maintain a logical flow of information throughout the article.
+
+                        """,
+                    ),
+                    (
+                        "human",
+                        """
+                        Sort the following keypoints:
+                        {Keypoints}
+                        """,
+                    ),
+                ]
+                return sort_health_conditions_prompt
+            case "optimise health and conditions":
+                optimise_health_conditions_content_prompt = [
+                    (
+                        "system",
+                        """
+                        You are part of an article re-writing process.
+
+                        Your task is to phrase the content from the given article content using the following guidelines and examples.
+                        If one of the sections has no content, you MUST write your own content based on the header. Your writing MUST be relevant to the header and the topic.
+                        You will also be given a set of instructions that you MUST follow.
+
+                        ### Start of content requirements
+                            When rewriting the content, your writing MUST meet the requirements stated here.
+                            Do NOT change the content structure. ALL headers present in the given content should be presented in your final answer.
+
+                                    You must also use the following guidelines and examples to phrase your writing.
+
+                                    1. Elaborate and Insightful
+                                        Your writing should expand upon the given key points and write new content aimed at educating readers on the condition.
+                                        You MUST state the primary intent, goals, and a glimpse of information in the first paragraph.
+
+                                    2. Carry a positive tone
+                                        Do NOT convey negative sentiments in your writing.
+                                        You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
+                                        Example: We recommend taking the diabetes medicine as prescribed by your doctor or pharmacist. This will help in the medicine’s effectiveness and reduce the risk of side effects.
+
+                                    3. Provide reassurance
+                                        Your writing should reassure readers that the situation is not a lost cause.
+                                        Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
+
+                                    You should write your content based on the required sections step by step.
+                                    After each section has been rewritten, you must check your writing with each guideline step by step.
+
+                                    Here is an example you should use to structure your writing:
+                                        ### Start of example
+                                            1. Overview of Influenza
+                                            Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
+
+                                            2. Causes and Risk Factors
+                                            Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. The flu virus is classified into three main types: A, B, and C. Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. Factors that increase the risk of contracting influenza include close contact with infected individuals, a weakened immune system, and lack of vaccination. Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
+
+                                            3. Symptoms and Signs
+                                            Some symptoms include: High fever, cough, headache, and muscle aches. Other symptoms include sneezing, nasal discharge, and loss of appetite. Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhoea, although these are more common in children.
+
+                                            4. Complications of Influenza
+                                            The following people are at greater risk of influenza-related complications:
+                                            - Persons aged 65 years old and above.
+                                            - Children aged between 6 months old to 5 years old.
+                                            - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
+                                            - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalisation or even death, particularly in vulnerable populations.
+
+                                            5. Treatment and Prevention
+                                            Here are some ways to battle influenza and to avoid it:
+                                            Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
+                                            Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
+                                            Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
+
+                                            6. When to See a Doctor
+                                            You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
+                                        ### End of example
+
+                        ### End of content requirements
+
+                        ### Start of instructions
+                            You MUST follow these instructions when writing out your content.
+
+                            1. RETENTION OF INFORMATION
+                            Ensure ALL information from the original content is reflected in your final answer.
+                            Do NOT omit any details, facts, examples, or specific nouns.
+                            If unsure how to rewrite a point, retain it in its original form.
+
+                            2. CONTENT STRUCTURE
+                            Do NOT change the content structure or the headers.
+                            Do NOT leave any sections empty.
+
+                            3. CONTENT LENGTH
+                            Maintain a word count close to the original content.
+
+                            4. ACCURACY AND COMPLETENESS
+                            After rewriting each section, review the original content to ensure all points are included.
+                            Do NOT abridge or summarize the content. Your task is to restructure, not condense.
+
+                            5. CLARITY AND PRESENTATION
+                            Do NOT include any prompt instructions in your response.
+                            The reader must NOT be aware of the prompts or instructions you've been given.
+
+                            6. FINAL CHECK
+                            Before submitting, compare your rewritten content with the original to ensure no information has been lost.
+                            Verify that your response adheres to all the above instructions.
 
 
-                    ### End of instructions
-                """,
-            ),
-            (
-                "human",
-                """
-                Rewrite the following sorted content:
-                {Content}
-                """,
-            ),
-        ]
-        return optimise_health_conditions_content_prompt
-    
-    @staticmethod
-    def return_content_sorting_prompt() -> list[tuple[str, str]]:
+                        ### End of instructions
+                        """,
+                    ),
+                    (
+                        "human",
+                        """
+                        Rewrite the following sorted content:
+                        {sorted_content}
+                        """,
+                    ),
+                ]
+                return optimise_health_conditions_content_prompt
+            case "extract main live healthy article structure":
+                extract_healthy_main_article_structure = [
+                    (
+                        "system",
+                        """
+                        You are part of an article rewriting flow. Your task is to analyse and write out a template of the given article's structure and flow.
 
-        health_conditions_content_sorting_prompt = [
-            (
-                "system",
-                """ You are part of an article re-writing process. Your task is to sort the given keypoints into the following structure:
+                        The template will be used by subsequent agents to structure their writing.
+                        """,
+                    ),
+                    (
+                        "human",
+                        """
+                        Write out a template based on this article's structure and flow:
+                        {article}
+                        """,
+                    ),
+                ]
+                return extract_healthy_main_article_structure
+            case "structure live healthy":
+                sort_live_healthy_prompt = [
+                    (
+                        "system",
+                        """ You are part of an article re-writing process. Your task is to sort the given keypoints into the structure provided:
 
-                    ### Overview of the condition
+                        Your final answer MUST include these sections in the structure provided with the relevant headers in this specific order and follow the instructions provided.
 
-                    ### Causes and Risk Factors of the condition
+                        Instructions:
+                        1. If the key points do not contain information for one of the above sections, include the section headers in the final answer with no body of text for that section.
+                        2. You may use the original keypoint header name as the section header if it's similar enough to the predefined headers, but maintain the overall structure.
+                        3. Do NOT modify the content of the keypoints; your task is to sort them into the most appropriate sections.
+                        4. If a keypoint doesn't fit any predefined section:
+                            a. First, try to broaden your interpretation of the existing sections.
+                            b. If it still doesn't fit, create a new section with a clear, descriptive title based on the keypoint's content. You may use the keypoint header as the title.
+                            c. IMPORTANT: Place the new section immediately before or after the most closely related predefined section. Do not place new sections at the beginning or end of the article unless they are specifically related to the overview or follow-up care.
+                            d. Ensure the new section maintains the article's overall coherence.
+                        5. Do NOT leave out any of the keypoints provided.
 
-                    ### Symptoms and Signs
+                        Let's think step by step:
 
-                    ### Complications
+                        1. Sort the following keypoints:
 
-                    ### Treatment and Prevention
+                            "Main Keypoint: Causes of Influenza
+                            Content: Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
 
-                    ### When to see a doctor
+                            Main Keypoint: Use of MediSave
+                            Content: Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
+                            "
 
-                Your final answer MUST include these sections with the relevant headers in this specific order and follow the instructions provided.
+                        2. The structure example is provided below.
+                            ### Overview of Influenza
 
-                Instructions:
-                1. If the key points do not contain information for one of the above sections, include the section headers in the final answer with no body of text for that section.
-                2. You may use the original keypoint header name as the section header if it's similar enough to the predefined headers, but maintain the overall structure.
-                3. Do NOT modify the content of the keypoints; your task is to sort them into the most appropriate sections.
-                4. If a keypoint doesn't fit any predefined section:
-                    a. First, try to broaden your interpretation of the existing sections.
-                    b. If it still doesn't fit, create a new section with a clear, descriptive title based on the keypoint's content. You may use the keypoint header as the title.
-                    c. IMPORTANT: Place the new section immediately before or after the most closely related predefined section. Do not place new sections at the beginning or end of the article unless they are specifically related to the overview or follow-up care.
-                    d. Ensure the new section maintains the article's overall coherence.
-                5. Do NOT leave out any of the keypoints provided.
+                            ### Causes of Influenza
 
-                Let's think step by step:
+                            ### Symptoms and Signs
 
-                1. Sort the following keypoints:
+                            ### Complications
 
-                    "Main Keypoint: Causes of Influenza
-                    Content: Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
-                    
-                    Main Keypoint: Use of MediSave
-                    Content: Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
-                    "
+                            ### Treatment and Prevention
 
-                2. Determine which section each keypoint falls under and sort it accordingly. Multiple keypoints can go into a single section. The information in this keypoint is relevant to the final section "Causes and Risk Factors" and will be sorted in accordingly. The original keypoint header name will be kept as it is similar to "Causes and Risk Factors" header.
+                            ### When to see a doctor
 
-                    Your answer:
-                    "### Overview of Influenza
+                            ### Use of MediSave
 
-                    ### Causes of Influenza
-                    Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
+                        3. Determine which section each keypoint falls under and sort it accordingly. Multiple keypoints can go into a single section. The information in this keypoint is relevant to the final section "Causes and Risk Factors" and will be sorted in accordingly. The original keypoint header name will be kept as it is similar to "Causes and Risk Factors" header.
 
-                    ### Symptoms and Signs
+                            Your answer:
+                            "### Overview of Influenza
 
-                    ### Complications
+                            ### Causes of Influenza
+                            Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
 
-                    ### Treatment and Prevention
+                            ### Symptoms and Signs
 
-                    ### When to see a doctor
+                            ### Complications
 
-                    ### Use of MediSave
-                    Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
-                
-                3. For content that doesn't fit the predefined sections, follow step 4 in the instructions provided above, paying special attention to proper placement of new sections.
-                
-                4. Check through each step carefully with each keypoint. Ensure that all keypoints and their content are included in your final answer.
+                            ### Treatment and Prevention
 
-                Final Reminders:
-                Adhere to the given structure, only adding sections when absolutely necessary.
-                Do not remove any of the predefined sections.
-                Always place new sections next to the most closely related predefined sections.
-                Ensure ALL keypoints and their content are included in your final answer.
-                Maintain a logical flow of information throughout the article.
+                            ### When to see a doctor
 
-                """
-                
-            ),
-            (
-                "human",
-                """
-                Sort the following keypoints:
-                {Keypoints}
-                """,
-            ),
-        ]
-        return health_conditions_content_sorting_prompt
+                            ### Use of MediSave
+                            Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
+
+                        4. For content that doesn't fit the predefined sections, follow step 4 in the instructions provided above, paying special attention to proper placement of new sections.
+
+                        5. Check through each step carefully with each keypoint. Ensure that all keypoints and their content are included in your final answer.
+
+                        Final Reminders:
+                        Adhere to the given structure, only adding sections when absolutely necessary.
+                        Do not remove any of the predefined sections.
+                        Always place new sections next to the most closely related predefined sections.
+                        Ensure ALL keypoints and their content are included in your final answer.
+                        Maintain a logical flow of information throughout the article.
+
+                        """,
+                    ),
+                    (
+                        "human",
+                        """
+                        Structure of article:
+                        {Structure}
+                        Sort the following keypoints:
+                        {Keypoints}
+                        """,
+                    ),
+                ]
+                return sort_live_healthy_prompt
 
     @staticmethod
     def return_writing_prompt() -> list[tuple[str, str]]:
@@ -984,10 +1035,7 @@ class AzurePrompts(LLMPrompt):
         Returns the writing guidelines optimisation prompt
 
         Returns:
-            list[tuple[str, str]]: a list containing the writing guidelines optimisation prompt. {Content} is the only input required to invoke the prompt.
-
-        Note:
-            The prompt is solely applicable for Health and Conditions
+            list[tuple[str, str]]: a list containing the writing guidelines optimisation prompt. {ontent} is the only input required to invoke the prompt.
         """
 
         optimise_writing_prompt = [
@@ -1052,12 +1100,24 @@ class AzurePrompts(LLMPrompt):
         return optimise_writing_prompt
 
     @staticmethod
-    def return_hemingway_readability_optimisation_prompt(step) -> list[tuple[str, str]]:
+    def return_hemingway_readability_optimisation_prompt(
+        step: str,
+    ) -> list[tuple[str, str]]:
         """
-        Returns the readability optimisation prompt
+        Returns the hemingway_readability_optimisation_prompt. There are 4 possible hemingway_readability_optimisation_prompt:
+
+        1. "shortening sentences": This prompt is used to shorten sentences in a given text.
+        2. "simplifying complex terms": This prompt is used to identify complex terms and replace them with simpler synonyms or common phrases.
+        3. "breaking into bullet points": This prompt is used to identify long sentences with multiple commas and break them up into bullet points.
+        4. "cutting out redundant areas": This prompt is used to shorten the writing by cutting out redundant areas.
+
+        All 4 prompts should be used to improve the hemmingway readability score of an article.
+
+        Args:
+            step(str): a String indicating the step in which the readability optimisation node is at.
 
         Returns:
-            list[tuple[str, str]]: a list containing the readability optimisation prompt. {Content} is the only input required to invoke the prompt.
+            list[tuple[str, str]]: a list containing the hemingway_readability_optimisation_prompt. {content} is the only input required to invoke the prompt.
 
         Note:
             The prompt is solely applicable for Health and Conditions
@@ -1311,7 +1371,16 @@ class AzurePrompts(LLMPrompt):
     @staticmethod
     def return_title_prompt(step: str) -> list[tuple[str, str]]:
         """
-        Returns the title optimisation prompt
+        Returns the specified title optimisation prompt. There are 2 possible title optimisation prompts, namely:
+
+        1. "optimise title": This prompt is used to instruct the LLM agent to optimise the article title based on several guidelines from the content playbook.
+            - Note that this prompt takes in 2 inputs:
+                1. {feedback}: The title optimisation feedback extracted from the User Annotation Excel file
+                2. {content}: Content for the llm to write the new optimised title.
+        2. "shorten title": This prompt is used to shorten the optimised titles to ensure the optimised titles meet the length requirements.
+
+        Args:
+            step(str): a String indicating the step in which the title optimisation node is at and which title prompt to return.
 
         Returns:
             list[tuple[str, str]]: a list containing the title optimisation prompt. {Content} is the only input required to invoke the prompt.
@@ -1372,7 +1441,7 @@ class AzurePrompts(LLMPrompt):
                                     2. Title 2
                                     3. Title 3
                                 ### End of title format example
-                            Check through the length of each title carefully. Each title MUST be less than 71 characters including the spaces.
+                            Check through the length of each title carefully. Each title MUST be less than 65 characters including the spaces.
                             You must write your titles such that they address points in the feedback given.
                             You MUST consider the guidelines and the examples when writing out the title.
                             You must NOT reveal any part of the prompt in your answer.
@@ -1421,7 +1490,7 @@ class AzurePrompts(LLMPrompt):
                                 This shortened version has 62 characters with spaces, which meets the length requirements now:
                                     "Living Healthy: Tips to Nutrition, Exercise, and Mental Health"
 
-                            4. Return your rewritten tit;es as the final answer.
+                            4. Return your rewritten titles as the final answer.
 
                                 Your final answer:
                                 "1. Simple Steps to a Healthy Lifestyle: Tips for Everyday Well-Being
@@ -1444,7 +1513,16 @@ class AzurePrompts(LLMPrompt):
     @staticmethod
     def return_meta_desc_prompt(step: str) -> list[tuple[str, str]]:
         """
-        Returns the meta description optimisation prompt
+        Returns the specified meta description optimisation prompt. There are 2 possible meta description optimisation prompts, namely:
+
+        1. "optimise meta desc": This prompt is used to instruct the LLM agent to optimise the meta desc based on several guidelines.
+            - Note that this prompt takes in 2 inputs:
+                1. {feedback}: The meta description optimisation feedback extracted from the User Annotation Excel file
+                2. {content}: Content for the llm to write the new optimised meta descriptions.
+        2. "shorten meta desc": This prompt is used to shorten the optimised meta descriptions to ensure the optimised meta descriptions meet the length requirements.
+
+        Args:
+            step(str): a String indicating the step in which the meta description optimisation node is at and which meta description prompt to return.
 
         Returns:
             list[tuple[str, str]]: a list containing the meta description optimisation prompt. {Content} is the only input required to invoke the prompt.
@@ -1537,7 +1615,7 @@ class AzurePrompts(LLMPrompt):
                 ]
 
                 return shorten_meta_desc_prompt
-    
+
     @staticmethod
     def return_changes_summariser_prompt() -> list[tuple[str, str]]:
         """
@@ -1550,18 +1628,14 @@ class AzurePrompts(LLMPrompt):
             (
                 "system",
                 """
-                You will be given two versions of an article: the original version and the optimised version after rewriting. Your task is to analyze and summarize the differences between these two versions, focusing on the following aspects:
-
-                Content Removal:
-
-                Identify any significant information, sections, or key points that were present in the original version but have been removed in the optimized version.
-                Explain the potential impact of these removals on the overall message or effectiveness of the article.
+                You will be given two versions of an article: the original version and the optimised version after rewriting. Your task is to analyze and summarize the differences between these two versions in 2-3 sentences, with a focus on how the article quality has improved.
+                Below is a list of criterias you can focus on while writing the summary:
 
 
-                Content Addition:
+                Content Changes:
 
-                Highlight any new information, sections, or key points that have been added to the optimized version.
-                Discuss how these additions enhance or change the article's message, clarity, or effectiveness.
+                Highlight any information, sections, or key points that have been added or removed to the optimized version.
+                Discuss how these additions or removals enhance or change the article's message, clarity, or effectiveness.
 
 
                 Structural Changes:
@@ -1579,27 +1653,25 @@ class AzurePrompts(LLMPrompt):
                 Overall Impact:
 
                 Provide a brief assessment of whether the changes in the optimized version have improved the article's quality, clarity, or effectiveness compared to the original version.
-                If applicable, suggest any areas where further optimization might be beneficial.
 
 
-                Please provide your analysis in a clear, concise manner, using bullet points or numbered lists where appropriate to enhance readability.
+                Please provide your analysis in a clear and concise manner in 2-3 sentences.
                 """,
             ),
             (
-                "human", 
+                "human",
                 """
                 Compare the original and optimised articles and come up with a summary of the changes made.
 
-                Original article: 
+                Original article:
                 {Original}
-                
+
                 Optimised article:
                 {Optimised}
-                """
+                """,
             ),
         ]
         return change_summariser_prompt
-
 
 
 class LlamaPrompts(LLMPrompt):

@@ -16,6 +16,8 @@ class ArticleInputs(TypedDict):
         content_category (Union[str, Optional[list[str]]]): The category of the content. Can be a single string or a list of strings.
         article_category_names (Union[str, Optional[list[str]]]): The category names for the article. Can be a single string or a list of strings.
         page_views (Union[int, Optional[list[int]]]): The number of page views the article has received. Can be a single integer or a list of integers.
+        additional_input (Optional[str]): The additional input added by the user in the User Annotation Excel file
+        main_article_content (Optional[str]): Stores the original article content of the "main article", only applicable for live-healthy article harmonisation.
     """
 
     article_id: Union[int, Optional[list[int]]]
@@ -27,6 +29,7 @@ class ArticleInputs(TypedDict):
     article_category_names: Union[str, Optional[list[str]]]
     page_views: Union[int, Optional[list[int]]]
     additional_input: Optional[str]
+    main_article_content: Optional[str]
 
 
 class SkipLLMEvals(TypedDict):
@@ -51,13 +54,10 @@ class ContentFlags(TypedDict):
     Attributes:
         is_unreadable (bool): Flag indicating if the content is unreadable.
         low_word_count (bool): Flag indicating if the content has a low word count.
-        has_personality (bool): Flag indicating if the content maintains personality, as per the personality evaluation
-            node, ensuring it aligns with the HH voice and personality guidelines.
     """
 
     is_unreadable: bool
     low_word_count: bool
-    has_personality: bool  # from the personality evaluation node to determine if the optimised writing still meets the guidelines of the HH voice and personality
 
 
 class ContentJudge(TypedDict):
@@ -134,6 +134,24 @@ class ChecksAgents(TypedDict):
 
 
 class ArticleEvaluation(TypedDict):
+    """
+    A dictionary type definition for article evaluation extracted from the Excel sheet, as well as personality evaluation of the article.
+
+    Attributes:
+        reasons_for_irrelevant_title (Optional[str]): A String storing the reasons for irrelevant title from article evaluation process and extracted from the User Annotation Excel File
+            Can be `None` if no evaluation are availble.
+        reasons_for_irrelevant_meta_desc (Optional[str]): A String storing the reasons for irrelevant meta desc from article evaluation process and extracted from the User Annotation Excel File
+            Can be `None` if no evaluation are availble.
+        reasons_for_poor_readability (Optional[str]): A String storing the reasons for poor readability from article evaluation process and extracted from the User Annotation Excel File
+            Can be `None` if no evaluation are availble.
+        reasons_for_improving_writing_style (Optional[str]): A String storing reasons for improving writing style from article evaluation process and extracted from the User Annotation Excel File
+            Can be `None` if no evaluation are availble.
+        writing_has_personality (Optional[str]): The optimised title of the article.
+            Can be `None` if no personality evaluation is required.
+        change_summary (Optional[str]): The summary of the changes that happened from the original article to the optimised article.
+            Can be `None` if the article has not undergone rewriting.
+    """
+
     reasons_for_irrelevant_title: Optional[str]
     reasons_for_irrelevant_meta_desc: Optional[str]
     reasons_for_poor_readability: Optional[str]
@@ -194,7 +212,6 @@ class OptimisationAgents(TypedDict):
     Attributes:
         researcher_agent (LLMInterface): The agent responsible for researching and identifying key points in the article.
         compiler_agent (LLMInterface): The agent responsible for compiling key points into a summary.
-        content_sorting_agent (LLMInterface): The agent resposible for sorting the content structure of the article.
         content_optimisation_agent (LLMInterface): The agent responsible for optimising the content of the article.
         writing_optimisation_agent (LLMInterface): The agent responsible for optimising the writing of the article.
         title_optimisation_agent (LLMInterface): The agent responsible for optimising the article title.
@@ -207,7 +224,6 @@ class OptimisationAgents(TypedDict):
 
     researcher_agent: LLMInterface
     compiler_agent: LLMInterface
-    content_sorting_agent: LLMInterface
     content_optimisation_agent: LLMInterface
     writing_optimisation_agent: LLMInterface
     title_optimisation_agent: LLMInterface

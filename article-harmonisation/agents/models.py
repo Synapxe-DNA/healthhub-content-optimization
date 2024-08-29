@@ -156,15 +156,15 @@ class LLMInterface(ABC):
         """
         pass
 
-    @abstractmethod
-    def optimise_content(self, keypoints: list[str]):
-        """
-        Abstract method for generating the article content based on the article keypoints
+    # @abstractmethod
+    # def optimise_content(self, keypoints: list[str]):
+    #     """
+    #     Abstract method for generating the article content based on the article keypoints
 
-        Args:
-            keypoints (list[str]): list of compiled keypoints
-        """
-        pass
+    #     Args:
+    #         keypoints (list[str]): list of compiled keypoints
+    #     """
+    #     pass
 
     @abstractmethod
     def optimise_writing(self, content: str):
@@ -834,20 +834,17 @@ class Azure(LLMInterface):
         prompt_t = ChatPromptTemplate.from_messages(template)
 
         # Define the chain and execute it
-        chain = prompt_t | self.model | StrOutputParser()
+        chain = (
+            prompt_t
+            | self.model
+            | StrOutputParser()
+            | RunnableLambda(parse_string_to_boolean)
+        )
         print("Evaluating personality of article")
-        res = chain.invoke({"Content": content})
+        response = chain.invoke({"Content": content})
         print("Article personality evaluated")
 
-        response = re.sub(" +", " ", res)
-
-        # TODO: Refactor implementation to utilise `parse_string_to_boolean` via RunnableLambda in chain
-        if "True" in response:
-            print("Article writing meets personality guidelines")
-            return True
-        else:
-            print("Article writing does not meet personality guidelines")
-            return False
+        return response
 
     def generate_keypoints(self, article: str) -> str:
         """
@@ -878,20 +875,22 @@ class Azure(LLMInterface):
         # Define the chain and execute it
         chain = prompt_t | self.model | StrOutputParser()
         res = chain.invoke({"Article": article})
+
+        # Regex to remove white spaces
         response = re.sub(" +", " ", res)
 
         return response
 
     def add_additional_content(self, keypoints: str, additional_content: str):
         """
-        Adds additional content form the user.
+        Adds additional content from the User Annotation Excel file.
 
         Args:
-            keypoints: a string input of the keypoints from the researcher node
-            additional_content: a string input of the additional content ot be added to the article
+            keypoints(str): a string input of the keypoints from the researcher node
+            additional_content(str): a string input of the additional content ot be added to the article
 
         Returns:
-            answer: a string containing the keypoints and additional content
+            str: a String containing the keypoints and additional content
 
         Raises:
             TypeError: a TypeError is raised if the node role does not support the function. This is because the prompts for each node is specific its role.
@@ -953,10 +952,13 @@ class Azure(LLMInterface):
             self.prompt_template.return_compiler_prompt()
         )
 
-        # Concatenate list of keypoints into a single string
         input_keypoints = ""
+        # For loop that concatenates all keypoints into a single string with appropriate headers and footnotes
         for article_index in range(len(keypoints)):
+            # Extracting the article keypoints from the keypoints list.
             article_kp = keypoints[article_index]
+
+            # Concatenating the keypoints to input_keypoints with clear headers and ending
             input_keypoints += f"""
             ### Start of Article {article_index + 1} Keypoints ###
             {article_kp}
@@ -968,14 +970,97 @@ class Azure(LLMInterface):
         print("Compiling keypoints for article harmonisation...")
         res = chain.invoke({"Keypoints": input_keypoints})
         print("Keypoints compiled for article harmonisation")
+
+        # Regex to remove white spaces
         response = re.sub(" +", " ", res)
 
         return response
 
-    def optimise_content(self, sorted_content: list[str]) -> str:
-        # TODO: Write up the docstring for the input argument - structure_evaluation. Note: Amend the abstract class accordingly to include structure_evaluation parameter
+    def optimise_healthy_content(
+        self, keypoints: list[str], main_article_content: str = ""
+    ) -> str:
         """
-        An article is generated based on the keypoints provided.
+        A live healthy article is generated based on the keypoints provided.
+
+        Args:
+            keypoints (list[str]): a list input of the keypoints from the articles to be optimized
+            main_article_content (str): a string input containing the article content for the main article
+
+        Returns:
+            str: A response string containing the generated article content
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+
+        # Raise an error if the role is not "Content optimisation"
+        if self.role != ROLES.CONTENT_OPTIMISATION:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_content()"
+            )
+
+        print(
+            "Optimising live healthy article content based on main article structure..."
+        )
+
+        # Define the prompt template for extracting article structure
+        article_structure_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt(
+                "extract main live healthy article structure"
+            )
+        )
+
+        # Define the extract structure chain
+        article_structure_chain = (
+            article_structure_prompt | self.model | StrOutputParser()
+        )
+
+        # Define the prompt template for sorting article based on structure
+        sorting_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt("structure live healthy")
+        )
+
+        # Define the sort article chain
+        sort_article_chain = sorting_prompt | self.model | StrOutputParser()
+
+        # Define the prompt template for optimising article content
+        optimise_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt("optimise health and conditions")
+        )
+
+        # Define the optimise article chain
+        optimise_article_chain = optimise_prompt | self.model | StrOutputParser()
+
+        # Define the overall chain used: Extract structure -> sort content -> optimise content
+        chain = (
+            RunnableParallel(
+                Structure=article_structure_chain, Keypoints=RunnablePassthrough()
+            )
+            | sort_article_chain
+            | optimise_article_chain
+        )
+
+        optimised_content = chain.invoke(
+            {
+                "article": main_article_content,
+                "Keypoints": keypoints,
+            }
+        )
+
+        print("Article content optimised")
+
+        # Regex to remove whitespaces
+        response = re.sub(" +", " ", optimised_content)
+
+        return response
+
+    def optimise_disease_content(
+        self,
+        keypoints: list[str],
+    ) -> str:
+        """
+        An disease and conditions article is generated based on the keypoints provided.
+        This is a two step process: sort based on structure -> rewrite content
 
         Args:
             keypoints (list[str]): a list input of the keypoints from the articles to be optimized
@@ -993,44 +1078,49 @@ class Azure(LLMInterface):
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
 
-        # Define the prompt template
-        prompt_t = ChatPromptTemplate.from_messages(
-            self.prompt_template.return_content_prompt()
-        )
-
-        # Define the chain and execute it
-        chain = prompt_t | self.model | StrOutputParser()
-        print("Optimising article content based on content guidelines...")
-        res = chain.invoke(
-            {
-                "Content": sorted_content,
-
-            }
-        )
-        print("Article content optimised")
-        response = re.sub(" +", " ", res)
-
-        return response
-
-    def sort_content(self, keypoints: list[str]) -> str:
-        if self.role != ROLES.CONTENT_SORTER:
-            raise TypeError(
-                f"This node is a {self.role} node and cannot run sort_content()"
+        # Define the prompt template for sorting health and conditions articles based on structure
+        structure_health_conditions_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt(
+                "structure health and conditions"
             )
-
-        prompt_t = ChatPromptTemplate.from_messages(
-            self.prompt_template.return_content_sorting_prompt()
         )
 
-        chain = prompt_t | self.model | StrOutputParser()
-        print("Sorting article content based on content structure...")
+        # Define the sort article chain
+        sort_article_chain = (
+            structure_health_conditions_prompt
+            | self.model
+            | StrOutputParser()
+            | {"sorted_content": RunnablePassthrough()}
+        )
+
+        # Define the prompt template for optimising health and conditions articles based on guidelines
+        optimise_health_conditions_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt("optimise health and conditions")
+        )
+        # Define the optimize article chain
+        optimise_artice_chain = (
+            optimise_health_conditions_prompt | self.model | StrOutputParser()
+        )
+
+        # Define the overall chain which first runs the sort chain and then the optimize chain
+        # TODO: fix if broken
+        chain = (
+            sort_article_chain
+            | {"sorted_content": itemgetter("sorted_content")}
+            | RunnableParallel(content=optimise_artice_chain)
+        )
+
+        print("Optimizing disease and conditions article content...")
         res = chain.invoke(
             {
                 "Keypoints": keypoints,
             }
         )
-        print("Article content sorted")
-        response = re.sub(" +", " ", res)
+        print("Disease and condition article content optimised")
+
+        # Regex to remove whitespaces
+        response = res["content"]
+        response = re.sub(" +", " ", response)
 
         return response
 
@@ -1051,7 +1141,7 @@ class Azure(LLMInterface):
         # Raises an error if the role is not "Writing optimisation"
         if self.role != ROLES.WRITING_OPTIMISATION:
             raise TypeError(
-                f"This node is a {self.role} node and cannot run optimise_content()"
+                f"This node is a {self.role} node and cannot run optimise_writing()"
             )
 
         # Define the prompt template
@@ -1069,11 +1159,11 @@ class Azure(LLMInterface):
 
     def optimise_readability(self, content: str, step: str) -> str:
         """
-        Rewrites the article content based on the given readability evaluation. The objective is to improve article readability
+        Rewrites the article content based on the given readability evaluation. The objective is to improve article readability.
 
         Args:
-            content (str): the article content
-            readability_evaluation (str): the readability evaluation
+            content (str): the article content for readability optimisation.
+            step (str): Indicates the prompt of the readability optimisation step to use.
 
         Returns:
             str: A response string containing the optimized article content
@@ -1099,7 +1189,6 @@ class Azure(LLMInterface):
                 "content": content
             }
         )
-        print("-- Article readability optimised --")
 
         return response
 
@@ -1123,7 +1212,7 @@ class Azure(LLMInterface):
             raise TypeError(
                 f"This node is a {self.role} node and cannot run produce_changes_summary()"
             )
-        
+
         prompt_t = ChatPromptTemplate.from_messages(
             self.prompt_template.return_changes_summariser_prompt()
         )
@@ -1131,11 +1220,12 @@ class Azure(LLMInterface):
         chain = prompt_t | self.model | StrOutputParser()
 
         print("Producing summary of the changes...")
-        response = chain.invoke({"Original": original_content, "Optimised": optimised_content})
+        response = chain.invoke(
+            {"Original": original_content, "Optimised": optimised_content}
+        )
         print("Summary of changes completed")
 
         return response
-
 
     def optimise_title(self, content, feedback):
         """
@@ -1143,6 +1233,7 @@ class Azure(LLMInterface):
 
         Args:
             content (str): the optimised article content
+            feedback (str): A string containing the feedback for optimising the article title from previous evaluation steps
 
         Returns:
               str: A response string containing the optimised article title
@@ -1156,21 +1247,29 @@ class Azure(LLMInterface):
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_title()"
             )
+
+        # Defining the optimise title prompt
         optimise_title_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_title_prompt("optimise title")
         )
 
+        # Defining the shorten title prompt
         shorten_title_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_title_prompt("shorten title")
         )
 
+        # Defining the optimise title chain
         optimise_title_chain = (
             optimise_title_prompt
             | self.model
             | StrOutputParser()
             | {"title": RunnablePassthrough()}
         )
+
+        # Defining the shorten title chain
         shorten_title_chain = shorten_title_prompt | self.model | StrOutputParser()
+
+        # Combining the final chain with the optimise title and shorten title chain
         chain = (
             optimise_title_chain
             | {"content": itemgetter("title")}
@@ -1178,9 +1277,11 @@ class Azure(LLMInterface):
         )
 
         print("Optimising article title...")
+        # Invoking the final optimise title chain
         response = chain.invoke({"content": content, "feedback": feedback})
         print("Article title optimised")
 
+        # Extracting the final optimised titles from the dictionary returned by the final optimise title chain
         response = response["title"]
 
         return response
@@ -1191,6 +1292,7 @@ class Azure(LLMInterface):
 
         Args:
             content (str): the optimised article content
+            feedback (str): A string containing the feedback for optimising the article meta description from previous evaluation steps
 
         Returns:
             str: A response string containing the optimised article meta description
@@ -1204,30 +1306,42 @@ class Azure(LLMInterface):
             raise TypeError(
                 f"This node is a {self.role} node and cannot run optimise_meta_desc()"
             )
+
+        # Defining the optimise meta description prompt
         optimise_meta_desc_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_meta_desc_prompt("optimise meta desc")
         )
 
+        # Defining the shorten meta description prompt
         shorten_meta_desc_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_meta_desc_prompt("shorten meta desc")
         )
 
+        # Defining the optimise meta description chain
         optimise_meta_desc_chain = (
             optimise_meta_desc_prompt
             | self.model
             | StrOutputParser()
             | {"meta_desc": RunnablePassthrough()}
         )
+
+        # Defining the shorten meta description chain
         shorten_meta_desc_chain = (
             shorten_meta_desc_prompt | self.model | StrOutputParser()
         )
+
+        # Combining the optimise meta description chain with the shorten meta description chain to form the final chain
         chain = (
             optimise_meta_desc_chain
             | {"content": itemgetter("meta_desc")}
             | RunnableParallel(meta_desc=shorten_meta_desc_chain)
         )
+
         print("Optimising article meta description...")
+        # Invoking the final optimise meta description chain
         response = chain.invoke({"content": content, "feedback": feedback})
         print("Article meta description optimised")
+
+        # Extracting the final optimised meta description from the dictionary returned by the final optimise meta description chain
         response = response["meta_desc"]
         return response

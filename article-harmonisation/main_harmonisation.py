@@ -12,22 +12,39 @@ from utils.graphs import execute_graph
 MODEL = settings.MODEL_NAME
 
 # File path to user annotation Excel file
-USER_ANNOTATION = "article-harmonisation/data/optimization_checks/Stage 1 user annotation for HPB (Updated).xlsx"
+USER_ANNOTATION_FILE = "Stage 1 user annotation for HPB (Updated).xlsx"
+USER_ANNOTATION = f"article-harmonisation/data/article_rewriting/{USER_ANNOTATION_FILE}"
 
-OPTIMISATION_SHEET_NAME = "Article Optimisation Output"
-HARMONISATION_SHEET_NAME = "Article Harmonisation Output"
+# Declaring the respective sheet names for optimisation and harmonisation
+OPTIMISATION_SHEET_OUTPUT = "Article Optimisation Output"
+HARMONISATION_SHEET_OUTPUT = "Article Harmonisation Output"
+OPTIMISATION_SHEET_INPUT = "User Annotation (to optimise)"
+HARMONISATION_SHEET_INPUT = "User Annotation (to combine)"
+# HARMONISATION_SHEET_INPUT = "harmonise_test"
+# OPTIMISATION_SHEET_INPUT = "optimise_test"
 
 
 def optimise_articles(app):
+    """Runs the article optimisation flow.
+
+    Details of the articles are extracted from the merged_data.parquet file obtained from the kedro pipeline and from the User Annotation Excel File.
+
+    Optimised outputs are stored in the User Annotation Excel File
+
+    Args:
+        - app: GraphState object of the optimisation graph
+    """
     # Opening the excel contents
     optimization_check = pd.ExcelFile(USER_ANNOTATION)
 
     # Setting df to the User Annotation sheets for article optimisation
     # df = optimization_check.parse('User Annotation (to optimise)')
-    df = optimization_check.parse("optimise_test")
+    df = optimization_check.parse(OPTIMISATION_SHEET_INPUT)
 
-    # Removing all articles not requiring any type of optimisation
-    df = df[df["overall flags"]]
+    # Removing all articles not requiring any type of optimisation. This includes all empty fields and "No action".
+    df = df[
+        (df["Action"] != "No action") & (~df["Action"].apply(isinstance, args=(float,)))
+    ]
 
     print("Num of articles to optimise: ", len(df))
     num_of_articles_in_df = len(df)
@@ -63,7 +80,7 @@ def optimise_articles(app):
         ]
 
         # Determines which optimisation steps are flagged by user
-        article_flags = return_optimisation_flags(article)
+        article_flags = return_optimisation_flags(article, "optimisation")
 
         # Dictionary with the various input keys and items
         inputs = {
@@ -87,11 +104,10 @@ def optimise_articles(app):
             "optimised_article_output": {
                 "researcher_keypoints": [],
             },
-            "user_flags": return_optimisation_flags(article),
+            "user_flags": return_optimisation_flags(article, "optimisation"),
             "llm_agents": {
                 "researcher_agent": researcher_agent,
                 "compiler_agent": compiler_agent,
-                "content_sorting_agent": content_sorting_agent,
                 "content_optimisation_agent": content_optimisation_agent,
                 "writing_optimisation_agent": writing_optimisation_agent,
                 "title_optimisation_agent": title_optimisation_agent,
@@ -102,6 +118,7 @@ def optimise_articles(app):
             },
         }
 
+        # Running the article harmonisation process
         result = execute_graph(app, inputs)
 
         article_inputs = [
@@ -162,18 +179,28 @@ def optimise_articles(app):
             # Note that reasons_for_poor_readability and reasons_for_improving_writing_style are not included as it complicates the llm prompt, leading to poorer performance.
         ]
 
+        # Storing the optimised outputs into the User Annotation Excel File
         store_optimised_outputs(
-            USER_ANNOTATION, OPTIMISATION_SHEET_NAME, article_inputs
+            USER_ANNOTATION, OPTIMISATION_SHEET_OUTPUT, article_inputs
         )
 
 
 def harmonise_articles(app):
+    """Runs the article harmonisation flow.
+
+    Details of the articles are extracted from the merged_data.parquet file obtained from the kedro pipeline and from the User Annotation Excel File.
+
+    Optimised outputs are stored in the User Annotation Excel File
+
+    Args:
+        - app: GraphState object of the harmonisation graph
+    """
     # Opening the excel contents
     optimization_check = pd.ExcelFile(USER_ANNOTATION)
 
     # Setting df to the User Annotation sheets for article harmonisation
     # df = optimization_check.parse('User Annotation (to combine)')
-    df = optimization_check.parse("harmonise_test")
+    df = optimization_check.parse(HARMONISATION_SHEET_INPUT)
 
     # Removing all articles not flagged for combination
     df = df[df["Action"] == "Combine"]
@@ -197,7 +224,7 @@ def harmonise_articles(app):
 
         # For loop iterating through each sub group in a specific group flagged for harmonisation
         for sub_group_num in sub_group_numbers:
-            print(f"Harmonising subgroup {sub_group_num}")
+            print(f"Harmonising subgroup {int(sub_group_num)}")
             # Extracting all rows in df in this subgroup
             subgrouped_articles = grouped_articles_to_harmonise[
                 grouped_articles_to_harmonise["Subgroup"] == sub_group_num
@@ -233,6 +260,10 @@ def harmonise_articles(app):
                 article_id = article["article_id"]
                 article_url = article["url"]
                 article_page_views = article["page_views"]
+                main_article = article[
+                    "Main Article? (Y)"
+                ]  # checks if the article is the main article for the sub group harmonisation
+
                 # If additional input cell in the Excel sheet is empty, it returns nan, which is of float type. Hence, if it's a float type, we set it to "".
                 if isinstance(
                     article["User: additional content to add for harmonisation"], float
@@ -264,6 +295,10 @@ def harmonise_articles(app):
                         f"\n\n{article_additional_inputs}"
                     )
 
+                # If statement checking if the article is the main article for the sub group harmonisation
+                if main_article == "Y":
+                    main_article_content = concat_headers_to_content([article_id]).pop()
+
             inputs = {
                 "article_rewriting_tries": 0,
                 "original_article_inputs": {
@@ -275,15 +310,16 @@ def harmonise_articles(app):
                     "article_category_names": article_group_category_names,
                     "page_views": article_sub_group_page_views,
                     "additional_input": article_sub_group_additional_inputs,
+                    "main_article_content": main_article_content,
                 },
                 "optimised_article_output": {
                     "researcher_keypoints": [],
                 },
-                "user_flags": return_optimisation_flags(article),
+                "article_evaluation": {},
+                "user_flags": return_optimisation_flags(article, "harmonisation"),
                 "llm_agents": {
                     "researcher_agent": researcher_agent,
                     "compiler_agent": compiler_agent,
-                    "content_sorting_agent": content_sorting_agent,
                     "content_optimisation_agent": content_optimisation_agent,
                     "writing_optimisation_agent": writing_optimisation_agent,
                     "title_optimisation_agent": title_optimisation_agent,
@@ -294,6 +330,7 @@ def harmonise_articles(app):
                 },
             }
 
+            # Running the article harmonisation process
             result = execute_graph(app, inputs)
 
             article_inputs = [
@@ -337,8 +374,9 @@ def harmonise_articles(app):
                 None,  # User attached updated article
             ]
 
+            # Storing the optimised outputs into the User Annotation Excel File
             store_optimised_outputs(
-                USER_ANNOTATION, HARMONISATION_SHEET_NAME, article_inputs
+                USER_ANNOTATION, HARMONISATION_SHEET_OUTPUT, article_inputs
             )
 
 
@@ -348,7 +386,6 @@ if __name__ == "__main__":
     compiler_agent = start_llm(MODEL, ROLES.COMPILER)
     meta_desc_optimisation_agent = start_llm(MODEL, ROLES.META_DESC, temperature=0.1)
     title_optimisation_agent = start_llm(MODEL, ROLES.TITLE, temperature=0.5)
-    content_sorting_agent = start_llm(MODEL, ROLES.CONTENT_SORTER)
     content_optimisation_agent = start_llm(MODEL, ROLES.CONTENT_OPTIMISATION)
     writing_optimisation_agent = start_llm(
         MODEL, ROLES.WRITING_OPTIMISATION, temperature=0.6
@@ -359,7 +396,9 @@ if __name__ == "__main__":
     )
     changes_summariser_agent = start_llm(MODEL, ROLES.CHANGES_SUMMARISER)
 
+    # Obtaining the GraphState
     app = build_graph()
 
+    # Running the appropriate process
     # harmonise_articles(app)
     optimise_articles(app)
