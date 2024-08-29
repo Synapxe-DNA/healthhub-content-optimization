@@ -234,7 +234,7 @@ Ensure that your `conf/local/credentials.yml` file includes the Azure credential
 
 #### 2. Install Azure CLI
 
-- Follow the instructions in the [Azure CLI Installation Guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) to install the Azure CLI <br>
+- Follow the instructions in the [Azure CLI Installation Guide](https://learn.microsoft.com/cli/azure/install-azure-cli) to install the Azure CLI <br>
 
 You can run the entire `azure_rag` pipeline by running:
 
