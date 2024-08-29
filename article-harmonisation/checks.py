@@ -364,8 +364,7 @@ def load_evaluation_dataframe(
     """
     Load and prepare evaluation dataframe for article harmonisation.
 
-    This function loads the full dataset from a parquet file + article IDs from a csv file, checks for previously evaluated articles,
-    and filters the dataframe to include only relevant Health Promotion Board articles that haven't been evaluated yet.
+    This function loads the full dataset from a parquet file + article IDs from a csv file, checks for previously evaluated articles.
 
     Args:
         full_data_filepath (str): The path to the parquet file to load the full dataset.
@@ -394,31 +393,28 @@ def load_evaluation_dataframe(
         df_eval = None
     else:
         latest_fpath = filepaths[-1]
-        print(f"Loading latest article evaluation dataframe from {latest_fpath}...")
+        print(
+            f"Loading latest article evaluation dataframe from {latest_fpath}...",
+            end="\n\n",
+        )
         df_eval = pd.read_parquet(latest_fpath)
-        evaluated_article_ids = list(df_eval.article_id)
-        print(f"Evaluated Article IDs: {evaluated_article_ids}")
+        if "article_id" in df_eval.columns:
+            evaluated_article_ids = list(df_eval.article_id)
+            print(f"Evaluated Article IDs: {evaluated_article_ids}")
+        else:
+            print(
+                "Article ID does not exist in Latest Article Evaluation Dataset. Please remove this file if it is empty."
+            )
+            print("Evaluating all articles...", end="\n\n")
+            evaluated_article_ids = []
+            df_eval = None
 
     # Get articles for Optimisation
     df_ids_to_optimise = pd.read_csv(ids_filepath)
     ids_to_optimise = list(df_ids_to_optimise.article_id)
 
-    # Filter for relevant HPB articles
-    df_keep = df[~df["to_remove"]]
-    df_keep = df_keep[df_keep["pr_name"] == "Health Promotion Board"]
-    df_keep = df_keep[
-        df_keep["content_category"].isin(
-            [
-                "cost-and-financing",
-                "live-healthy-articles",
-                "diseases-and-conditions",
-                "medical-care-and-facilities",
-                "support-group-and-others",
-            ]
-        )
-    ]
     # Keep articles of interest that need to be evaluated based on provided user annotations
-    df_keep = df_keep[df_keep["id"].isin(ids_to_optimise)]
+    df_keep = df[df["id"].isin(ids_to_optimise)]
 
     # Filter out articles that have already been evaluated
     df_keep = df_keep[~df_keep["id"].isin(evaluated_article_ids)]
@@ -557,9 +553,12 @@ if __name__ == "__main__":
                 )
                 if "content filter being triggered" in message:
                     print(
-                        "Content Filter has been triggered. Skipping LLM-based evaluations...",
-                        end="\n\n",
+                        "Content Filter has been triggered.",
+                        f"Article ID: {article_id}",
+                        f"Article Title: {article_title}",
+                        sep="\n",
                     )
+                    print("Skipping LLM-based evaluations...", end="\n\n")
                     skip_llm_evaluations = {
                         "decision": True,
                         "explanation": "LLM unable to process content due to Azure's content filtering on hate, sexual, violence, and self-harm related categories",

@@ -403,8 +403,6 @@ def format_checks_outputs(checks: dict) -> dict:
         -   "content category",
         -   "article category names",
         -   "page views",
-        -   "Skipped LLM Evaluations",
-        -   "Reason for Skipping LLM Evaluations"
         -   "overall flags",
         -   "overall title flags",
         -   "long title",
@@ -444,11 +442,6 @@ def format_checks_outputs(checks: dict) -> dict:
     article_category_names = article_inputs.get("article_category_names")
     page_views = int(article_inputs.get("page_views"))
 
-    # Extracting Flags for Skipping LLM generation for evaluations & explanations
-    skip_llm_evaluations = checks.get("skip_llm_evaluations")
-    skip_llm_eval_decision = skip_llm_evaluations.get("decision", None)
-    skip_llm_eval_explanation = skip_llm_evaluations.get("explanation", None)
-
     # Extracting Content flags (Rule-based) from the checks dictionary
     content_flags = checks.get("content_flags")
     poor_readability = content_flags.get("is_unreadable")
@@ -484,16 +477,9 @@ def format_checks_outputs(checks: dict) -> dict:
     )
 
     # Populating the result dictionary with formatted data
+    # Article ID and URL
     result["article_id"] = article_id
-    result["title"] = title
     result["url"] = url
-    result["content category"] = content_category
-    result["article category names"] = article_category_names
-    result["page views"] = page_views
-
-    # Check if LLM Evaluation is skipped for the article
-    result["Skipped LLM Evaluations"] = skip_llm_eval_decision
-    result["Reason for Skipping LLM Evaluations"] = skip_llm_eval_explanation
 
     # Overall flags based on content, title, and meta description checks
     result["overall flags"] = (
@@ -504,18 +490,32 @@ def format_checks_outputs(checks: dict) -> dict:
         | meta_not_within_char_count
         | bool(irrelevant_meta_desc_decision)
     )
+    result["overall title flags"] = long_title | bool(irrelevant_title_decision)
+    result["overall meta description flags"] = meta_not_within_char_count | bool(
+        irrelevant_meta_desc_decision
+    )
+    result["overall content flags"] = poor_readability | insufficient_content
+
+    # Placeholder fields for further actions and additional content
+    result["Action"] = ""
+    result["Reason for Action (IMPT for Cancellation)"] = ""
+    result["Optional: additional content to add for optimisation"] = ""
+
+    # Article Properties (Title, Content Category, Category Names, Page Views)
+    result["title"] = title
+    result["content category"] = content_category
+    result["article category names"] = article_category_names
+    result["page views"] = page_views
 
     # Title-related flags and explanations
-    result["overall title flags"] = long_title | bool(irrelevant_title_decision)
     result["long title"] = long_title
     result["irrelevant title"] = irrelevant_title_decision
     result["reason for irrelevant title"] = irrelevant_title_explanation
 
-    # Meta description-related flags and explanations
-    result["overall meta description flags"] = meta_not_within_char_count | bool(
-        irrelevant_meta_desc_decision
-    )
+    # Meta Description
     result["meta description"] = meta_description
+
+    # Meta description-related flags and explanations
     result["meta description not within 70 and 160 characters"] = (
         meta_not_within_char_count
     )
@@ -523,14 +523,8 @@ def format_checks_outputs(checks: dict) -> dict:
     result["reason for irrelevant meta description"] = irrelevant_meta_desc_explanation
 
     # Content-related flags and explanations
-    result["overall content flags"] = poor_readability | insufficient_content
     result["poor readability"] = poor_readability
     result["reason for poor readability"] = readability_explanation
     result["insufficient content"] = insufficient_content
-
-    # Placeholder fields for further actions and additional content
-    result["Action"] = ""
-    result["Reason for Action (IMPT for Cancellation)"] = ""
-    result["Optional: additional content to add for optimisation"] = ""
 
     return result
