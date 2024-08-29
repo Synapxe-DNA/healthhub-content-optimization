@@ -99,7 +99,7 @@ def add_data(
     Process and add data to standardized content, incorporating missing contents and updated URLs.
 
     This function performs the following operations:
-    1. Adds missing content from text files to correct Excel errors.
+    1. Fetches missing content from text files to correct Excel errors.
     2. Adds content body to the dataframe for each content category.
     3. Updates URLs in the dataframe.
     4. Flags articles that should be removed before extraction.
@@ -110,7 +110,7 @@ def add_data(
         missing_contents (dict[str, Callable[[], Any]]): A dictionary where keys are file paths and values are functions
             that load the content of text files.
         updated_urls (dict[str, dict[int, str]]): A dictionary where keys are content categories and values are
-            dictionaries mapping index to updated URLs.
+            dictionaries mapping the article IDs to updated URLs.
 
     Returns:
         dict[str, Callable[[], Any]]: A dictionary where keys are content categories and values are functions that return
@@ -162,10 +162,10 @@ def extract_data(
     Args:
         all_contents_added (dict[str, Callable[[], Any]]):
             A dictionary containing the standardized `partitions.PartitionedDataset` where the keys are the content
-            categories and the values loads the standardized parquet data as `pandas.DataFrame`.
+            categories and the values loads the updated parquet data as `pandas.DataFrame`.
         word_count_cutoff (int): The minimum number of words in an article to be considered before flagging for removal.
         whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
-        blacklist (dict[int, str]): The list of article IDs to remove. See https://bitly.cx/f8FIk.
+        blacklist (dict[int, str]): A dictionary containing the article IDs and the reason to remove it. See https://bitly.cx/f8FIk.
 
     Returns:
         tuple[dict[str, pd.DataFrame], dict[str, str]]: A tuple containing two dictionaries. The first dictionary
@@ -270,7 +270,7 @@ def map_data(
     """
     Map extracted content data to L1 and L2 Information Architecture (IA) categories.
 
-    This function processes the extracted content data, applying L1 and L2 IA mappings for each content category.
+    This function applies the L1 and L2 IA mappings for each content category.
     It inverts the provided mappings, iterates through each content category, and applies the mappings to the
     'article_category_names' column in the dataframe.
 
