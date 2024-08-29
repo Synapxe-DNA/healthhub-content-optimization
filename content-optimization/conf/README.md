@@ -37,7 +37,8 @@ azure_credentials:
 **Step 6:**
 ![Step 6](/content-optimization/docs/images/azure_5.png)
 
-> _Note:_ Please do not check in any local configuration to version control.
+> [!NOTE]  
+> Please do not check in any local configuration to version control.
 
 ## Base configuration
 
