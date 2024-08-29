@@ -1,5 +1,6 @@
 import sys
 import time
+import traceback
 from datetime import datetime
 from glob import glob
 from typing import Annotated, Optional, TypedDict
@@ -17,6 +18,7 @@ from states.definitions import (
     ContentJudge,
     MetaFlags,
     MetaJudge,
+    SkipLLMEvals,
     TitleFlags,
     TitleJudge,
 )
@@ -40,6 +42,7 @@ class ChecksState(TypedDict):
 
     Attributes:
         article_inputs (ArticleInputs): Contains inputs related to the article being evaluated.
+        skip_llm_evaluations (SkipLLMEvals): Contains input flags whether to skip LLM-based evaluations
         content_flags (Annotated[ContentFlags, merge_dict]): Flags based on content analysis using rule-based/statistical methods.
         title_flags (Annotated[TitleFlags, merge_dict]): Flags based on title analysis using rule-based/statistical methods.
         meta_flags (Annotated[MetaFlags, merge_dict]): Flags based on meta description analysis using rule-based/statistical methods.
@@ -51,6 +54,9 @@ class ChecksState(TypedDict):
 
     # Article Inputs
     article_inputs: ArticleInputs
+
+    # Skip LLM evaluations
+    skip_llm_evaluations: SkipLLMEvals
 
     # Flags for rule-based/statistical-based methods
     content_flags: Annotated[ContentFlags, merge_dict]
@@ -127,6 +133,11 @@ def content_explanation_node(state: ChecksState) -> dict:
         dict: Updated content judge dictionary containing explanations for content quality.
     """
 
+    # Check if LLM evaluation is skipped
+    skip_llm = state.get("skip_llm_evaluations", {}).get("decision", False)
+    if skip_llm:
+        return
+
     # Extract article content, content flags and content judge from the state
     article_content = state.get("article_inputs")["article_content"]
     content_flags = state.get("content_flags", {})
@@ -155,20 +166,30 @@ def content_evaluation_llm_node(state: ChecksState) -> dict:
 
     Returns:
         dict: Updated content judge dictionary containing decisions and explanations for content quality.
+
+    Note:
+        Writing style optimisation has been removed as all articles are being flagged as true. Further refinement is required.
+        For now, the writing style evaluation has been commented out upon request. However, this may change in the future.
     """
 
-    # Extract article content and content judge from the state
-    article_content = state.get("article_inputs")["article_content"]
-    content_judge = state.get("content_judge", {})
-    content_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
+    # Check if LLM evaluation is skipped
+    skip_llm = state.get("skip_llm_evaluations", {}).get("decision", False)
+    if skip_llm:
+        return
 
-    # Check for poor content structure - Refer to `return_structure_evaluation_prompt` function in agents/prompts.py
-    content_structure_eval = content_evaluation_agent.evaluate_content(
-        article_content, choice="structure"
-    )
-    content_judge["structure"] = content_structure_eval
-
-    return {"content_judge": content_judge}
+    # # Extract article content and content judge from the state
+    # article_content = state.get("article_inputs")["article_content"]
+    # content_judge = state.get("content_judge", {})
+    # content_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
+    #
+    # # Check for poor content structure - Refer to `return_structure_evaluation_prompt` function in agents/prompts.py
+    # content_structure_eval = content_evaluation_agent.evaluate_content(
+    #     article_content, choice="structure"
+    # )
+    # content_judge["structure"] = content_structure_eval
+    #
+    # return {"content_judge": content_judge}
+    pass
 
 
 def title_evaluation_rules_node(state: ChecksState) -> dict:
@@ -208,6 +229,11 @@ def title_evaluation_llm_node(state: ChecksState) -> dict:
     Returns:
         dict: Updated title judge dictionary containing decisions and explanations regarding title relevance
     """
+
+    # Check if LLM evaluation is skipped
+    skip_llm = state.get("skip_llm_evaluations", {}).get("decision", False)
+    if skip_llm:
+        return
 
     # Extract article title, article content and title judge from the state
     article_title = state.get("article_inputs")["article_title"]
@@ -261,6 +287,11 @@ def meta_desc_evaluation_llm_node(state: ChecksState) -> dict:
     Returns:
         dict: Updated meta judge dictionary containing decisions and explanations regarding meta description relevance
     """
+
+    # Check if LLM evaluation is skipped
+    skip_llm = state.get("skip_llm_evaluations", {}).get("decision", False)
+    if skip_llm:
+        return
 
     # Extract article meta description, article content and meta judge from the state
     meta_desc = state.get("article_inputs")["meta_desc"]
@@ -327,15 +358,17 @@ def create_checks_graph(state: ChecksState) -> CompiledGraph:
     return app
 
 
-def load_evaluation_dataframe(filepath: str) -> tuple[pd.DataFrame]:
+def load_evaluation_dataframe(
+    full_data_filepath: str, ids_filepath: str
+) -> tuple[pd.DataFrame]:
     """
     Load and prepare evaluation dataframe for article harmonisation.
 
-    This function loads data from a parquet file, checks for previously evaluated articles, and filters the dataframe to
-    include only relevant Health Promotion Board articles that haven't been evaluated yet.
+    This function loads the full dataset from a parquet file + article IDs from a csv file, checks for previously evaluated articles.
 
     Args:
-        filepath (str): The path to the parquet file to load.
+        full_data_filepath (str): The path to the parquet file to load the full dataset.
+        ids_filepath (str): The path to the parquet file to load the article IDs.
 
     Returns:
         tuple: A tuple containing two pandas DataFrames:
@@ -347,7 +380,7 @@ def load_evaluation_dataframe(filepath: str) -> tuple[pd.DataFrame]:
     """
 
     # Load data from merged_data.parquet
-    df = pd.read_parquet(filepath)
+    df = pd.read_parquet(full_data_filepath)
 
     # Get latest evaluation dataframe
     filepaths = sorted(
@@ -360,41 +393,28 @@ def load_evaluation_dataframe(filepath: str) -> tuple[pd.DataFrame]:
         df_eval = None
     else:
         latest_fpath = filepaths[-1]
-        print(f"Loading latest article evaluation dataframe from {latest_fpath}...")
-        df_eval = pd.read_parquet(latest_fpath)
-        evaluated_article_ids = list(df_eval.article_id)
-        print(f"Evaluated Article IDs: {evaluated_article_ids}")
-
-    # Get the final predicted clusters dataframe (user annotation)
-    df_final_clusters = pd.read_excel(
-        f"{ROOT_DIR}/article-harmonisation/data/marked_articles/final_predicted_clusters.xlsx"
-    )
-    individual_articles_ids = list(
-        df_final_clusters[df_final_clusters["group_keywords"].isna()].id
-    )
-
-    # Get the dataframe of articles that HealthHub has requested for optimisation check (user annotation)
-    df_post_annotation = pd.read_excel(
-        f"{ROOT_DIR}/article-harmonisation/data/marked_articles/post-HH annotation (articles marked individual for optimisation check).xlsx"
-    )
-    ids_to_optimise = individual_articles_ids + list(df_post_annotation.article_id)
-
-    # Filter for relevant HPB articles
-    df_keep = df[~df["to_remove"]]
-    df_keep = df_keep[df_keep["pr_name"] == "Health Promotion Board"]
-    df_keep = df_keep[
-        df_keep["content_category"].isin(
-            [
-                "cost-and-financing",
-                "live-healthy-articles",
-                "diseases-and-conditions",
-                "medical-care-and-facilities",
-                "support-group-and-others",
-            ]
+        print(
+            f"Loading latest article evaluation dataframe from {latest_fpath}...",
+            end="\n\n",
         )
-    ]
+        df_eval = pd.read_parquet(latest_fpath)
+        if "article_id" in df_eval.columns:
+            evaluated_article_ids = list(df_eval.article_id)
+            print(f"Evaluated Article IDs: {evaluated_article_ids}")
+        else:
+            print(
+                "Article ID does not exist in Latest Article Evaluation Dataset. Please remove this file if it is empty."
+            )
+            print("Evaluating all articles...", end="\n\n")
+            evaluated_article_ids = []
+            df_eval = None
+
+    # Get articles for Optimisation
+    df_ids_to_optimise = pd.read_csv(ids_filepath)
+    ids_to_optimise = list(df_ids_to_optimise.article_id)
+
     # Keep articles of interest that need to be evaluated based on provided user annotations
-    df_keep = df_keep[df_keep["id"].isin(ids_to_optimise)]
+    df_keep = df[df["id"].isin(ids_to_optimise)]
 
     # Filter out articles that have already been evaluated
     df_keep = df_keep[~df_keep["id"].isin(evaluated_article_ids)]
@@ -423,6 +443,9 @@ def save_evaluation_dataframe(
 
     Returns:
         None
+
+    Note:
+        The columns stated in df_store must exist. Refer to `format_checks_outputs` in utils/formatters.py
     """
 
     # Generate current timestamp for the filename
@@ -451,7 +474,12 @@ if __name__ == "__main__":
 
     # Get dataframe of articles to be evaluated
     merged_data_filepath = f"{ROOT_DIR}/article-harmonisation/data/merged_data.parquet"
-    df_keep, df_evaluated = load_evaluation_dataframe(merged_data_filepath)
+    ids_to_optimise_filepath = (
+        f"{ROOT_DIR}/article-harmonisation/data/ids_for_optimisation.csv"
+    )
+    df_keep, df_evaluated = load_evaluation_dataframe(
+        merged_data_filepath, ids_to_optimise_filepath
+    )
 
     # Note: n can be adjusted as and when needed.
     # Usually, lower n is useful for generating evaluations in a more stable manner
@@ -499,6 +527,10 @@ if __name__ == "__main__":
                     "article_content": article_content,
                     "meta_desc": meta_desc,
                 },
+                "skip_llm_evaluations": {
+                    "decision": False,
+                    "explanation": None,
+                },
                 "content_flags": {},
                 "title_flags": {},
                 "meta_flags": {},
@@ -510,10 +542,33 @@ if __name__ == "__main__":
                     "explanation_agent": explanation_agent,
                 },
             }
+            try:
+                # Execute the Optimisation Checks on the article
+                response = execute_graph(app, inputs)
+                print(response)
+            except ValueError as value_error:
+                # Skip LLM evaluations if Azure Content Filter is triggered
+                message = (
+                    getattr(value_error, "message", repr(value_error)).strip().lower()
+                )
+                if "content filter being triggered" in message:
+                    print(
+                        "Content Filter has been triggered.",
+                        f"Article ID: {article_id}",
+                        f"Article Title: {article_title}",
+                        sep="\n",
+                    )
+                    print("Skipping LLM-based evaluations...", end="\n\n")
+                    skip_llm_evaluations = {
+                        "decision": True,
+                        "explanation": "LLM unable to process content due to Azure's content filtering on hate, sexual, violence, and self-harm related categories",
+                    }
+                    inputs["skip_llm_evaluations"] = skip_llm_evaluations
+                    response = execute_graph(app, inputs)
+                    print(response)
+                else:
+                    raise value_error
 
-            # Execute the Optimisation Checks on the article
-            response = execute_graph(app, inputs)
-            print(response)
             # Save output with the correct keys (Easier to parse into a Pandas DataFrame)
             result = format_checks_outputs(response)
             print("Result generated!")
@@ -536,7 +591,8 @@ if __name__ == "__main__":
         print(f"Exception raised: {repr(ex)}")
         print(f"Exception type: {ex_type}")
         print(f"Exception value: {ex_value}")
-        print(f"Exception traceback: {ex_traceback}")
+        print("Exception traceback:")
+        traceback.print_tb(ex_traceback)
 
     # Save the evaluated outputs into a new dataframe - Very useful esp when Keyboard Interrupts are executed. Generated evaluations are preserved.
     finally:
