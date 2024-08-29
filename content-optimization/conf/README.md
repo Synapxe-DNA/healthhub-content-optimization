@@ -8,11 +8,58 @@ This file can be used to provide users with instructions for how to reproduce lo
 
 The `local` folder should be used for configuration that is either user-specific (e.g. IDE configuration) or protected (e.g. security keys).
 
+### Azure RAG <a id="azure-rag"></a>
+
+Create a new `conf/local/credentials.yml` file and include these Azure credentials:
+
+```yaml
+azure_credentials:
+  API_VERSION: <api_version>
+  AZURE_ENDPOINT: <resource_end_point>
+  COGNITIVE_SERVICES: <cognitive_service_link>
+  MODEL_DEPLOYMENT: <chat_deployment_name>
+```
+
+<p><strong>Step 1:</strong> For API_VERSION, see here for the latest version: <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/reference" target="_blank">API Version Reference</a></p>
+
+<p><strong>Step 2:</strong></p>
+<img src="docs/images/azure_1.png" height="400" alt="Kedro Pipeline Step 2">
+
+<p><strong>Step 3:</strong></p>
+<img src="docs/images/azure_2.png" height="400" alt="Kedro Pipeline Step 3">
+
+<p><strong>Step 4:</strong></p>
+<img src="docs/images/azure_3.png" height="400" alt="Kedro Pipeline Step 4">
+
+<p><strong>Step 5:</strong></p>
+<img src="docs/images/azure_4.png" height="400" alt="Kedro Pipeline Step 5">
+
+<p><strong>Step 6:</strong></p>
+<img src="docs/images/azure_5.png" height="400" alt="Kedro Pipeline Step 6">
+
 > _Note:_ Please do not check in any local configuration to version control.
 
 ## Base configuration
 
 The `base` folder is for shared configuration, such as non-sensitive and project-related configuration that may be shared across team members.
+
+### Clustering <a id="clustering-configuration"></a>
+
+Create a new `conf/base/credentials.yml` file and include these Neo4j credentials:
+
+```yaml
+neo4j_credentials:
+  username: your_username
+  password: your_password
+```
+
+Ensure that your `parameters_clustering.yml` file includes the Neo4j configurations:
+
+```yaml
+neo4j_config:
+  uri: neo4j://localhost:7687
+  database: hh-articles
+```
 
 WARNING: Please do not put access credentials in the base configuration folder.
 
