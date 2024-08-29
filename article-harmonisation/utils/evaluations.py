@@ -2,28 +2,37 @@ import math
 import re
 import string
 from functools import reduce
-from typing import Any, Union
+from typing import Union
 
 from readability import Readability
 
 
-def calculate_readability(text: str, choice: str = "hemmingway") -> Any:
+def calculate_readability(text: str, choice: str = "hemmingway") -> dict:
     """
-    Calculates the readability score of a given text.
+    Calculates the readability score of a given text using the specified metric.
+
+    This function analyzes the readability of the input text using either the "py-readability" library or the "Hemmingway"
+    readability algorithm.
 
     Args:
-        text (str): The text to analyze.
-        choice (str, optional): Select the metric to calculate from [py-readability, hemmingway]. Defaults to "hemmingway".
+        text (str): The text to analyze for readability.
+        choice (str, optional): The readability metric to calculate. Can be either "py-readability" for multiple readability
+            metrics or "hemmingway" for the Hemingway readability score. Defaults to "hemmingway".
 
     Returns:
-          Any: Returns the readability metric
+        dict: A dictionary containing the readability metrics calculated based on the selected choice.
 
     Raises:
-        ValueError: If the choice given is not supported
+        ValueError: If the specified `choice` is not supported.
+
+    Example:
+        metrics = calculate_readability("This is a test sentence.", choice="py-readability")
     """
 
+    # Match the readability choice to the corresponding metric calculation
     match choice.lower():
         case "py-readability":
+            # Calculate multiple readability metrics using the Readability library
             readability_metrics = Readability(text)
 
             metrics = {
@@ -39,9 +48,11 @@ def calculate_readability(text: str, choice: str = "hemmingway") -> Any:
             }
 
         case "hemmingway":
+            # Calculate readability using the Hemingway readability algorithm
             metrics = hemmingway_score(text)
 
         case _:
+            # Raise an error if the choice is not supported
             raise ValueError(f"{choice} not supported")
 
     return metrics
@@ -55,7 +66,7 @@ def hemmingway_score(text: str) -> dict[str, Union[str, int]]:
         text (str): The text to be scored.
 
     Returns:
-        tuple(int, str): Returns a tuple containing the hemmingway score and difficulty of the text
+        dict[str, Union[int, str]]: Returns a dictionary containing the hemmingway score as "score" and difficulty of the text as "level"
     """
     sentences = []
     words = []
@@ -108,36 +119,36 @@ def hemmingway_score(text: str) -> dict[str, Union[str, int]]:
 
 if __name__ == "__main__":
     text = """
-    Myth 1: E-cigarettes are Harmless
-    E-cigarettes (also known as vapourisers) are battery-operated devices that release nicotine by heating up e-liquids in a cartridge and turning them into vapour, which users then inhale. The main difference between e-cigarettes and regular cigarettes is the absence of tobacco leaves.
-    E-cigarette makers have touted them as the healthier alternative to regular cigarettes but the World Health Organisation has declared that e-cigarettes are undoubtedly harmful to health and that they are not safer alternatives to regular cigarettes. In addition, there is evidence that vaporisers can be a gateway for non-smokers to start using traditional cigarettes. [1].
+        Myth 1: E-cigarettes are Harmless
+        E-cigarettes (also known as vapourisers) are battery-operated devices that release nicotine by heating up e-liquids in a cartridge and turning them into vapour, which users then inhale. The main difference between e-cigarettes and regular cigarettes is the absence of tobacco leaves.
+        E-cigarette makers have touted them as the healthier alternative to regular cigarettes but the World Health Organisation has declared that e-cigarettes are undoubtedly harmful to health and that they are not safer alternatives to regular cigarettes. In addition, there is evidence that vaporisers can be a gateway for non-smokers to start using traditional cigarettes. [1].
 
-    Myth 2: Low-yield Cigarettes are Safer
-    Some of us think smoking low-yield cigarettes ("lights") are safer than regular cigarettes because they have enhancements such as filters claimed to trap tar, or ventilation holes in the filter tip that promises to dilute smoke with air, or simply promise lower nicotine content.
-    However, given that smokers crave nicotine, they may inhale more deeply when smoking low-yield cigarettes, or block the filter vents with their hands or lips. The actual levels of tar, nicotine and other harmful chemicals may be the same as, or possibly more than normal-yield cigarettes.
-    Studies show that low yield cigarettes have little to no benefits in reducing the risk of smoking related diseases [2].
+        Myth 2: Low-yield Cigarettes are Safer
+        Some of us think smoking low-yield cigarettes ("lights") are safer than regular cigarettes because they have enhancements such as filters claimed to trap tar, or ventilation holes in the filter tip that promises to dilute smoke with air, or simply promise lower nicotine content.
+        However, given that smokers crave nicotine, they may inhale more deeply when smoking low-yield cigarettes, or block the filter vents with their hands or lips. The actual levels of tar, nicotine and other harmful chemicals may be the same as, or possibly more than normal-yield cigarettes.
+        Studies show that low yield cigarettes have little to no benefits in reducing the risk of smoking related diseases [2].
 
-    Myth 3: Roll-your-own Cigarettes are Safer
-    Smokers may choose to roll their own cigarettes (sometimes called ang hoon) as a cheaper alternative to buying regular cigarettes.
-    Since many of the harmful chemicals found in regular cigarettes are also found in the loose tobacco used for roll-your-own cigarettes, smokers of ang hoon face the same risks of smoking-related diseases.
+        Myth 3: Roll-your-own Cigarettes are Safer
+        Smokers may choose to roll their own cigarettes (sometimes called ang hoon) as a cheaper alternative to buying regular cigarettes.
+        Since many of the harmful chemicals found in regular cigarettes are also found in the loose tobacco used for roll-your-own cigarettes, smokers of ang hoon face the same risks of smoking-related diseases.
 
-    Myth 4: Shisha (Waterpipe) Smoking is Harmless
-    A shisha is a waterpipe, inside which flavoured tobacco is partially burned. The smoke passes through water held in the waterpipe before being inhaled by smokers through tubes attached to the pipe. Shisha is seen as a popular social activity, especially among youths. The import, distribution and sale of shisha tobacco is prohibited by law in Singapore.
-    Shisha smoking is dangerous and studies have shown that the shisha smoke contains the same harmful components found in cigarette smoke, such as nicotine, tar and heavy metals. Also, the water in the shisha pipe does not absorb harmful substances in the smoke.
-    Because shisha users tend to take more and deeper puffs from the waterpipe, users may absorb more toxic substances in a single shisha session compared to a single cigarette. In fact, during a 1-hour shisha session, users will inhale 100 to 200 times the amount of smoke, up to 9 times the carbon monoxide and 1.7 times the nicotine produced by a single cigarette [3].
+        Myth 4: Shisha (Waterpipe) Smoking is Harmless
+        A shisha is a waterpipe, inside which flavoured tobacco is partially burned. The smoke passes through water held in the waterpipe before being inhaled by smokers through tubes attached to the pipe. Shisha is seen as a popular social activity, especially among youths. The import, distribution and sale of shisha tobacco is prohibited by law in Singapore.
+        Shisha smoking is dangerous and studies have shown that the shisha smoke contains the same harmful components found in cigarette smoke, such as nicotine, tar and heavy metals. Also, the water in the shisha pipe does not absorb harmful substances in the smoke.
+        Because shisha users tend to take more and deeper puffs from the waterpipe, users may absorb more toxic substances in a single shisha session compared to a single cigarette. In fact, during a 1-hour shisha session, users will inhale 100 to 200 times the amount of smoke, up to 9 times the carbon monoxide and 1.7 times the nicotine produced by a single cigarette [3].
 
-    Myth 5: Oral Tobacco is Safer since it's not Smoked
-    Oral smokeless tobacco is chewed or sucked in the mouth. These include chewing tobacco leaves and finely ground powdered tobacco (also known as "snuff"). Chewing tobacco is prohibited by law in Singapore.
-    Smokeless tobacco is not a safe substitute for cigarette smoking. Oral tobacco is a major form of tobacco addiction and is linked to serious health risks such as cancer of the mouth, throat, oesophagus, and pancreas [4].
+        Myth 5: Oral Tobacco is Safer since it's not Smoked
+        Oral smokeless tobacco is chewed or sucked in the mouth. These include chewing tobacco leaves and finely ground powdered tobacco (also known as "snuff"). Chewing tobacco is prohibited by law in Singapore.
+        Smokeless tobacco is not a safe substitute for cigarette smoking. Oral tobacco is a major form of tobacco addiction and is linked to serious health risks such as cancer of the mouth, throat, oesophagus, and pancreas [4].
 
-    Not A Myth: Tobacco in Any Form Hurts our Health
-    Consumption of tobacco, in any form, increases your risks of contracting serious health problems like diabetes and cancer. The best way to keep you safe from the harmful effects of tobacco is to stay away entirely.
+        Not A Myth: Tobacco in Any Form Hurts our Health
+        Consumption of tobacco, in any form, increases your risks of contracting serious health problems like diabetes and cancer. The best way to keep you safe from the harmful effects of tobacco is to stay away entirely.
 
-    Resources for Quitting
-    Join the I Quit Programme
-    and remain smoke free for 28 days and you are 5 times more likely to quit smoking. You can nominate your loved ones as a supporter when you sign up for the programme. Validate your smoke-free status and redeem a HPB eVoucher* worth $50 at the 28th day milestone. Keep going and you'll also receive eVouchers* worth $30 and $20 at the 3rd month and 6th month milestone respectively!
-    *Terms and conditions apply. Return to Diabetes Hub
-    """
+        Resources for Quitting
+        Join the I Quit Programme
+        and remain smoke free for 28 days and you are 5 times more likely to quit smoking. You can nominate your loved ones as a supporter when you sign up for the programme. Validate your smoke-free status and redeem a HPB eVoucher* worth $50 at the 28th day milestone. Keep going and you'll also receive eVouchers* worth $30 and $20 at the 3rd month and 6th month milestone respectively!
+        *Terms and conditions apply. Return to Diabetes Hub
+        """
 
     choice = "hemmingway"
 
@@ -156,3 +167,5 @@ if __name__ == "__main__":
 
     # # hemmingway
     # {'score': 11, 'level': 'hard'}
+
+# print(hemmingway_score(""""""))
