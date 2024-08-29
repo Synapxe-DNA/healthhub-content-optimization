@@ -183,21 +183,7 @@ kedro run --nodes="extract_keywords_node"
 
 #### 1. Configuration <a id="clustering-configuration"></a>
 
-Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
-
-```yaml
-neo4j_credentials:
-  username: your_username
-  password: your_password
-```
-
-Ensure that your `parameters_clustering.yml` file includes the Neo4j configurations:
-
-```yaml
-neo4j_config:
-  uri: neo4j://localhost:7687
-  database: hh-articles
-```
+Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials [`conf/base`](conf/base). Refer to the [conf/README.md](conf/README.md) section for more information.
 
 #### 2.Neo4j Set Up
 
@@ -238,21 +224,17 @@ kedro run --pipeline="clustering"
 ### Azure RAG <a id="azure-rag"></a>
 
 > [!IMPORTANT]
-> Before running the [`azure_rag`](src/content_optimization/pipelines/azure_rag/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
+> Before running the [`azure_rag`](src/content_optimization/pipelines/azure_rag/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [conf/README.md](conf/README.md) section for more information.
 
 #### Prerequisites <a id="azure-rag-prerequisites"></a>
 
 #### 1. Configuration <a id="azure-rag-configuration"></a>
 
-Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
+Ensure that your `conf/local/credentials.yml` file includes the Azure credentials [`conf/local`](conf/local). Refer to section for more information.
 
-```yaml
-azure_credentials:
-  API_VERSION: <api_version>
-  AZURE_ENDPOINT: <resource_end_point>
-  COGNITIVE_SERVICES: <cognitive_service_link>
-  MODEL_DEPLOYMENT: <chat_deployment_name>
-```
+#### 2. Install Azure CLI
+
+- Follow the instructions in the [Azure CLI Installation Guide](https://learn.microsoft.com/cli/azure/install-azure-cli) to install the Azure CLI <br>
 
 You can run the entire `azure_rag` pipeline by running:
 
