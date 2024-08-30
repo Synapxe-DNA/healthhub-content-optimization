@@ -325,6 +325,7 @@ class AzurePrompts(LLMPrompt):
                 1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
                 2.  Write a brief report based on your findings, including specific examples.
                 3.  Do NOT make any title suggestions or recommendations. Focus solely on the critique instead.
+                4.  Casual tone or style in the title is acceptable and should not be a point of critique. Focus on the title relevance to the content.
                 """,
             ),
             (
