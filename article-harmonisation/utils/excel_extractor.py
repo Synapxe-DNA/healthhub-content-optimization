@@ -119,6 +119,7 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
         "User approval of optimised article",
         "Optional: User attached updated article (Y)",
         "Content Edit Status (if any)",
+        "Content Filter Flag",
     ]
 
     # try statement that checks if Excel file already exists

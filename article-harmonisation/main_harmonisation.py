@@ -133,79 +133,133 @@ def optimise_articles(app):
             },
         }
 
-        # Running the article harmonisation process
-        result = execute_graph(app, inputs)
+        try:
+            # Running the article harmonisation process
+            result = execute_graph(app, inputs)
 
-        article_inputs = [
-            article_id.pop(),  # article_id. article_id.pop() is used as openpyxl cannot handle list inputs
-            article_url,  # url
-            # Article title optimisation
-            str(overall_title_flag),  # Overall title flag
-            str(long_title),  # long title
-            str(irrelevant_title),  # irrelevant title
-            reasons_for_irrelevant_title,  # Reasons for irrelevant title from evaluation step
-            (
-                result["optimised_article_output"]["optimised_article_title"][0]
-                if article_flags["flag_for_title_optimisation"]
-                else None
-            ),  # Optimised title 1
-            (
-                result["optimised_article_output"]["optimised_article_title"][1]
-                if article_flags["flag_for_title_optimisation"]
-                else None
-            ),  # Optimised title 2
-            (
-                result["optimised_article_output"]["optimised_article_title"][2]
-                if article_flags["flag_for_title_optimisation"]
-                else None
-            ),  # Optimised title 3
-            None,  # Title chosen (user to choose 1 from: Title 1, Title 2, Title 3 or ‘Write your own’)
-            None,  # Optional: Title written by user (free text for user to add only if ‘Write your own’ is chosen)
-            # Article meta desc optimisation
-            str(overall_meta_desc_flag),  # Overall meta desc flag
-            str(meta_desc_length),  # Meta desc length not within 70 and 160 characters
-            str(irrelevant_meta_desc),  # irrelevant meta description
-            reasons_for_irrelevant_meta_desc,  # Reasons for irrelevant meta desc from evaluation step
-            (
-                result["optimised_article_output"]["optimised_meta_desc"][0]
-                if article_flags["flag_for_meta_desc_optimisation"]
-                else None
-            ),  # Optimised meta desc 1
-            (
-                result["optimised_article_output"]["optimised_meta_desc"][1]
-                if article_flags["flag_for_meta_desc_optimisation"]
-                else None
-            ),  # Optimised meta desc 2
-            (
-                result["optimised_article_output"]["optimised_meta_desc"][2]
-                if article_flags["flag_for_meta_desc_optimisation"]
-                else None
-            ),  # Optimised meta desc 3
-            None,  # Meta Description chosen (user to choose 1 from: Meta Description 1, Meta Description 2, Meta Description 3 or ‘Write your own’)
-            None,  # Optional: meta description written by user (free text for user to add only if ‘Write your own’ is chosen)
-            # Article writing optimisation
-            str(overall_content_flag),  # Overall content flag
-            str(poor_readability),  # poor readability
-            reasons_for_poor_readability,  # reasons for poor readability
-            str(insufficient_content),  # insufficient content
-            (
-                result["optimised_article_output"]["optimised_writing"]
-                if article_flags["flag_for_writing_optimisation"]
-                else None
-            ),  # Rewritten article content (should be a link)
-            (
-                result["article_evaluation"].get("change_summary", None)
-            ),  # Article optimisation evaluation summary
-            None,  # User approval of optimised article
-            None,  # Optional: User attached updated article (Y)
-            None,  # Content Edit Status (if any)
-            # Note that reasons_for_poor_readability and reasons_for_improving_writing_style are not included as it complicates the llm prompt, leading to poorer performance.
-        ]
-
-        # Storing the optimised outputs into the User Annotation Excel File
-        store_optimised_outputs(
-            USER_ANNOTATION_OUTPUT_PATH, OPTIMISATION_SHEET_OUTPUT, article_inputs
-        )
+            article_inputs = [
+                article_id.pop(),  # article_id. article_id.pop() is used as openpyxl cannot handle list inputs
+                article_url,  # url
+                # Article title optimisation
+                str(overall_title_flag),  # Overall title flag
+                str(long_title),  # long title
+                str(irrelevant_title),  # irrelevant title
+                reasons_for_irrelevant_title,  # Reasons for irrelevant title from evaluation step
+                (
+                    result["optimised_article_output"]["optimised_article_title"][0]
+                    if article_flags["flag_for_title_optimisation"]
+                    else None
+                ),  # Optimised title 1
+                (
+                    result["optimised_article_output"]["optimised_article_title"][1]
+                    if article_flags["flag_for_title_optimisation"]
+                    else None
+                ),  # Optimised title 2
+                (
+                    result["optimised_article_output"]["optimised_article_title"][2]
+                    if article_flags["flag_for_title_optimisation"]
+                    else None
+                ),  # Optimised title 3
+                None,  # Title chosen (user to choose 1 from: Title 1, Title 2, Title 3 or ‘Write your own’)
+                None,  # Optional: Title written by user (free text for user to add only if ‘Write your own’ is chosen)
+                # Article meta desc optimisation
+                str(overall_meta_desc_flag),  # Overall meta desc flag
+                str(
+                    meta_desc_length
+                ),  # Meta desc length not within 70 and 160 characters
+                str(irrelevant_meta_desc),  # irrelevant meta description
+                reasons_for_irrelevant_meta_desc,  # Reasons for irrelevant meta desc from evaluation step
+                (
+                    result["optimised_article_output"]["optimised_meta_desc"][0]
+                    if article_flags["flag_for_meta_desc_optimisation"]
+                    else None
+                ),  # Optimised meta desc 1
+                (
+                    result["optimised_article_output"]["optimised_meta_desc"][1]
+                    if article_flags["flag_for_meta_desc_optimisation"]
+                    else None
+                ),  # Optimised meta desc 2
+                (
+                    result["optimised_article_output"]["optimised_meta_desc"][2]
+                    if article_flags["flag_for_meta_desc_optimisation"]
+                    else None
+                ),  # Optimised meta desc 3
+                None,  # Meta Description chosen (user to choose 1 from: Meta Description 1, Meta Description 2, Meta Description 3 or ‘Write your own’)
+                None,  # Optional: meta description written by user (free text for user to add only if ‘Write your own’ is chosen)
+                # Article writing optimisation
+                str(overall_content_flag),  # Overall content flag
+                str(poor_readability),  # poor readability
+                reasons_for_poor_readability,  # reasons for poor readability
+                str(insufficient_content),  # insufficient content
+                (
+                    result["optimised_article_output"]["optimised_writing"]
+                    if article_flags["flag_for_writing_optimisation"]
+                    else None
+                ),  # Rewritten article content (should be a link)
+                (
+                    result["article_evaluation"].get("change_summary", None)
+                ),  # Article optimisation evaluation summary
+                None,  # User approval of optimised article
+                None,  # Optional: User attached updated article (Y)
+                None,  # Content Edit Status (if any)
+                False,
+                # Note that reasons_for_poor_readability and reasons_for_improving_writing_style are not included as it complicates the llm prompt, leading to poorer performance.
+            ]
+        except ValueError as value_error:
+            # Skip LLM evaluations if Azure Content Filter is triggered
+            message = getattr(value_error, "message", repr(value_error)).strip().lower()
+            if "content filter being triggered" in message:
+                print(
+                    "Content Filter has been triggered.",
+                    f"Article ID: {article_id}",
+                    f"Article Title: {article_title}",
+                    sep="\n",
+                )
+                article_inputs = [
+                    article_id.pop(),  # article_id. article_id.pop() is used as openpyxl cannot handle list inputs
+                    article_url,  # url
+                    # Article title optimisation
+                    str(overall_title_flag),  # Overall title flag
+                    str(long_title),  # long title
+                    str(irrelevant_title),  # irrelevant title
+                    reasons_for_irrelevant_title,  # Reasons for irrelevant title from evaluation step
+                    None,  # Optimised title 1
+                    None,  # Optimised title 2
+                    None,  # Optimised title 3
+                    None,  # Title chosen (user to choose 1 from: Title 1, Title 2, Title 3 or ‘Write your own’)
+                    None,  # Optional: Title written by user (free text for user to add only if ‘Write your own’ is chosen)
+                    # Article meta desc optimisation
+                    str(overall_meta_desc_flag),  # Overall meta desc flag
+                    str(
+                        meta_desc_length
+                    ),  # Meta desc length not within 70 and 160 characters
+                    str(irrelevant_meta_desc),  # irrelevant meta description
+                    reasons_for_irrelevant_meta_desc,  # Reasons for irrelevant meta desc from evaluation step
+                    None,  # Optimised meta desc 1
+                    None,  # Optimised meta desc 2
+                    None,  # Optimised meta desc 3
+                    None,  # Meta Description chosen (user to choose 1 from: Meta Description 1, Meta Description 2, Meta Description 3 or ‘Write your own’)
+                    None,  # Optional: meta description written by user (free text for user to add only if ‘Write your own’ is chosen)
+                    # Article writing optimisation
+                    str(overall_content_flag),  # Overall content flag
+                    str(poor_readability),  # poor readability
+                    reasons_for_poor_readability,  # reasons for poor readability
+                    str(insufficient_content),  # insufficient content
+                    None,  # Rewritten article content (should be a link)
+                    None,  # Article optimisation evaluation summary
+                    None,  # User approval of optimised article
+                    None,  # Optional: User attached updated article (Y)
+                    None,  # Content Edit Status (if any)
+                    True,  # Content Filter Flag
+                    # Note that reasons_for_poor_readability and reasons_for_improving_writing_style are not included as it complicates the llm prompt, leading to poorer performance.
+                ]
+            else:
+                raise value_error
+        finally:
+            # Storing the optimised outputs into the User Annotation Excel File
+            store_optimised_outputs(
+                USER_ANNOTATION_OUTPUT_PATH, OPTIMISATION_SHEET_OUTPUT, article_inputs
+            )
 
 
 def harmonise_articles(app):
