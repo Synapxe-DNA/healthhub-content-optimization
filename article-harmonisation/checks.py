@@ -239,11 +239,12 @@ def title_evaluation_llm_node(state: ChecksState) -> dict:
     article_title = state.get("article_inputs")["article_title"]
     article_content = state.get("article_inputs")["article_content"]
     title_judge = state.get("title_judge", {})
+    article_content_category = state.get("article_inputs")["content_category"]
 
     # Check for irrelevant Page Title - Evaluate against the article content
     title_evaluation_agent = state.get("llm_agents")["evaluation_agent"]
     title_evaluation = title_evaluation_agent.evaluate_title(
-        article_title, article_content
+        article_title, article_content, article_content_category
     )
     title_judge["title"] = title_evaluation
 
@@ -514,7 +515,7 @@ if __name__ == "__main__":
             article_category_names = df_sample["article_category_names"].iloc[i]
             page_views = df_sample["page_views"].iloc[i]
 
-            print(f"Checking {article_title} now...")
+            print(f"Checking '{article_title}' now...")
             # Set up Inputs for the Optimisation Checks graph
             inputs = {
                 "article_inputs": {
