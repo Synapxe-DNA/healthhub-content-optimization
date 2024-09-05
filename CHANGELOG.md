@@ -2,11 +2,12 @@
 
 ## September 5, 2024 <a id="september-5-2024"></a>
 
-- Updated the README.md for 'azure_rag' data, and included the 2 new fields "pr_name" and "date_modified" to the new field in the data.
+- Updated the README.md for [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) data, and included the 2 new fields "pr_name" and "date_modified" to the new field in the data.
+- Edited the extractor.py for the [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline to account for the recursive extraction of content from "programs" and "program-sub-pages" articles.
 
 ## August 29, 2024 <a id="august-29-2024"></a>
 
-- Added the documentation for 'azure_rag' pipeline, and updated the credentials documentation for 'clustering' pipeline
+- Added the documentation for [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) pipeline, and updated the credentials documentation for [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline
 
 ## August 28, 2024 <a id="august-28-2024"></a>
 
