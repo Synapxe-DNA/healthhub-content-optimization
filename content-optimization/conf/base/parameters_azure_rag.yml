@@ -34,6 +34,8 @@ article_content_columns:
   - extracted_content_body
   - content_category
   - category_description
+  - pr_name
+  - date_modified
   - has_table
 
 table_content_columns:
@@ -44,3 +46,5 @@ table_content_columns:
   - processed_table_content
   - content_category
   - category_description
+  - pr_name
+  - date_modified

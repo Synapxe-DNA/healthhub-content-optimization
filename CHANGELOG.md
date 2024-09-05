@@ -1,5 +1,17 @@
 # Changelog
 
+## September 5, 2024 <a id="september-5-2024"></a>
+
+- Updated the README.md for 'azure_rag' data, and included the 2 new fields "pr_name" and "date_modified" to the new field in the data.
+
+## August 29, 2024 <a id="august-29-2024"></a>
+
+- Added the documentation for 'azure_rag' pipeline, and updated the credentials documentation for 'clustering' pipeline
+
+## August 28, 2024 <a id="august-28-2024"></a>
+
+- Added [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) pipeline to process the data for the search index in Azure.
+
 ## August 26, 2024 <a id="august-26-2024"></a>
 
 - Added articles labeled as 'excluded' by HH in the Stage 1 User Annotation for HPB_HHcomments_20Aug24.xlsx file to the blacklist

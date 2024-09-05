@@ -885,8 +885,8 @@ kedro run --pipeline="azure_rag"
 ### File Information <a id="processed-articles-file-information"></a>
 
 - **File Format:** JSON
-- **Number of Files:** 2713
-- **Total Size:** 30.8MB
+- **Number of Files:** 2724
+- **Total Size:** 31.8MB
 
 #### **Columns** <a id="processed-articles-columns"></a>
 

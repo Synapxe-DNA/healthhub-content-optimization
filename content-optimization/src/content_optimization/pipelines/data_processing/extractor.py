@@ -147,30 +147,86 @@ class HTMLExtractor:
 
         # Extract the main content
         content = []
-        for tag in self.soup.find_all(
-            [
-                "h1",
-                "h2",
-                "h3",
-                "h4",
-                "h5",
-                "h6",
-                "p",
-                "ul",
-                "ol",
-                "div",
-                "span",
-                "blockquote",
-            ],
-            recursive=False,
-        ):
-            # For texts within div and span - recursive search
-            if tag.name in ["div", "span", "blockquote"]:
-                # Changes content via Pass By Reference
-                self._extract_text_from_container(tag, content)
-            # Handles the text for the rest
-            else:
-                self._extract_text_elements(tag, content)
+
+        # # First Pass: Process articles with content_category != "programs" and "program-sub-pages"
+        # for tag in self.soup.find_all(
+        #         [
+        #             "h1",
+        #             "h2",
+        #             "h3",
+        #             "h4",
+        #             "h5",
+        #             "h6",
+        #             "p",
+        #             "ul",
+        #             "ol",
+        #             "div",
+        #             "span",
+        #             "blockquote",
+        #         ],
+        #         recursive=True,
+        #     ):
+        #         # For texts within div and span - recursive search
+        #         if tag.name in ["div", "span", "blockquote"]:
+        #             # Changes content via Pass By Reference
+        #             self._extract_text_from_container(tag, content)
+        #         # Handles the text for the rest
+        #         else:
+        #             self._extract_text_elements(tag, content)
+
+        if self.content_category not in ["programs", "program-sub-pages"]:
+            print(self.content_category)
+            for tag in self.soup.find_all(
+                [
+                    "h1",
+                    "h2",
+                    "h3",
+                    "h4",
+                    "h5",
+                    "h6",
+                    "p",
+                    "ul",
+                    "ol",
+                    "div",
+                    "span",
+                    "blockquote",
+                ],
+                recursive=False,
+            ):
+                # For texts within div and span - recursive search
+                if tag.name in ["div", "span", "blockquote"]:
+                    # Changes content via Pass By Reference
+                    self._extract_text_from_container(tag, content)
+                # Handles the text for the rest
+                else:
+                    self._extract_text_elements(tag, content)
+            
+        # Second Pass: Process remaining articles or those with "programs" and "program-sub-pages"
+        if not content or self.content_category in ["programs", "program-sub-pages"]:
+            print(self.content_category)
+            for tag in self.soup.find_all(
+                [
+                    "h1",
+                    "h2",
+                    "h3",
+                    "h4",
+                    "h5",
+                    "h6",
+                    "p",
+                    "ul",
+                    "ol",
+                    "div",
+                    "span",
+                    "blockquote",
+                ],
+                recursive=True,
+            ):
+                if tag.name in ["div", "span", "blockquote"]:
+                    # Changes content via Pass By Reference
+                    self._extract_text_from_container(tag, content)
+                # Handles the text for the rest
+                else:
+                    self._extract_text_elements(tag, content)
 
         # Clean up content fragments
         cleaned_content = self._clean_up_fragments(content)
@@ -273,11 +329,26 @@ class HTMLExtractor:
             self._extract_text_from_ol(tag, content)
 
         # For texts in anchor tags (e.g. links)
+        # elif tag.name == "a":
+        #     if len(content) > 0 and content[-1] != "\n":
+        #         content[-1] = content[-1] + " " + self.clean_text(tag.text)
+        #     else:
+        #         content.append(self.clean_text(tag.text))
+
         elif tag.name == "a":
-            if len(content) > 0 and content[-1] != "\n":
-                content[-1] = content[-1] + " " + self.clean_text(tag.text)
+            # Extract text and URL
+            text = self.clean_text(tag.text)
+            url = tag.get("href", "")
+            # Format as "text [URL]" if URL is present
+            if url:
+                formatted_text = f"{text} [{url}]"
             else:
-                content.append(self.clean_text(tag.text))
+                formatted_text = text
+            
+            if len(content) > 0 and content[-1] != "\n":
+                content[-1] = content[-1] + " " + formatted_text
+            else:
+                content.append(formatted_text)
 
         # For lists
         elif tag.name == "li":
@@ -312,6 +383,8 @@ class HTMLExtractor:
                 "live-healthy-articles",
                 "medical-care-and-facilities",
                 "support-group-and-others",
+                "programs",
+                "program-sub-pages",
             ]:
                 logger.debug(
                     f"Text Extraction - Tag {tag.name} not handled within {self._extract_text_elements.__name__}: {cleaned_text[:25]}"
