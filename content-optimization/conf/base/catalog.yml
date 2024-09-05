@@ -50,6 +50,22 @@ merged_data:
   filepath: data/03_primary/merged_data.parquet
   versioned: true
 
+google_analytics_data:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/GenAI-updatedGAviews_03092024.xlsx
+  load_args:
+    sheet_name:
+      - cost-and-financing
+      - diseases-and-conditions
+      - health-statistics
+      - live-healthy-articles
+      - medical-care-and-facilities
+      - medications
+      - programs
+      - program-sub-pages
+      - support-group-and-others
+    engine: openpyxl
+
 # Jupyter Notebooks
 raw_word_counts:
   type: content_optimization.datasets.plotly.HTMLDataset

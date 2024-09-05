@@ -324,7 +324,11 @@ def map_data(
     return all_contents_mapped
 
 
-def merge_data(all_contents_mapped: dict[str, Callable[[], Any]]) -> pd.DataFrame:
+def merge_data(
+    all_contents_mapped: dict[str, Callable[[], Any]],
+    google_analytics_data: dict[str, pd.DataFrame],
+    google_analytics_columns: dict[str, str],
+) -> pd.DataFrame:
     """
     Merge the data from multiple partitioned dataframes into a single `pandas.DataFrame`.
 
@@ -332,13 +336,26 @@ def merge_data(all_contents_mapped: dict[str, Callable[[], Any]]) -> pd.DataFram
         all_contents_mapped (dict[str, Callable[[], Any]]):
             A dictionary containing the `partitions.PartitionedDataset` where the values load the parquet data as `pandas.DataFrame`.
 
+        google_analytics_data: dict[str, pd.DataFrame]:
+            A dictionary containing the `pandas.DataFrame` where the keys are the content categories and the values
+            are the dataframes with the Google Analytics data.
+
+        google_analytics_columns (dict[str, str]): A mapping to default column names for the Google Analytics data.
+
     Returns:
-        pd.DataFrame: The merged dataframe.
+        pd.DataFrame: The merged dataframe with updated Google Analytics data.
     """
     merged_df = pd.DataFrame()
-    for _, partition_load_func in all_contents_mapped.items():
+    for content_category, ga_df in google_analytics_data.items():
+        # Rename columns and remove unnecessary columns
+        df = ga_df.rename(columns=google_analytics_columns)
+        df = df[["id", *google_analytics_columns.values()]]
         # Load partition data
-        df = partition_load_func()
-        merged_df = pd.concat([merged_df, df], axis=0, ignore_index=True)
+        orig_df = all_contents_mapped[content_category]()
+        # Drop outdated Google Analytics data columns
+        orig_df = orig_df.drop(list(google_analytics_columns.values()), axis=1)
+        # Merge data with updated Google Analytics statistics
+        tmp = orig_df.merge(df, on="id")
+        merged_df = pd.concat([merged_df, tmp], axis=0, ignore_index=True)
 
     return merged_df

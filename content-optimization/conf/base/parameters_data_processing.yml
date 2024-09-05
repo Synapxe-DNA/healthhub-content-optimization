@@ -464,3 +464,13 @@ updated_urls:
     1445543: "https://www.healthhub.sg/live-healthy/child-obesity-causes"
     1445673: "https://www.healthhub.sg/live-healthy/a-healthy-food-foundation-for-kids-and-teens"
     1445746: "https://www.healthhub.sg/live-healthy/how%20to%20ask%20for%20a%20medical%20report"
+
+# Google Analytics
+google_analytics_columns:
+  Page Views: page_views
+  Engagement Rate: engagement_rate
+  Bounce Rate: bounce_rate
+  Exit Rate: exit_rate
+  Scroll %: scroll_percentage
+  "% of Total Views": percentage_total_views
+  Cumulative % of Total Views: cumulative_percentage_total_views

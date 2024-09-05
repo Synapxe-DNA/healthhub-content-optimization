@@ -1,8 +1,12 @@
 # Changelog
 
+## September 5, 2024 <a id="september-5-2024"></a>
+
+- Updated `merge_data` node in `data_processing` pipeline to update Google Analytics data
+
 ## August 26, 2024 <a id="august-26-2024"></a>
 
-- Added articles labeled as 'excluded' by HH in the Stage 1 User Annotation for HPB_HHcomments_20Aug24.xlsx file to the blacklist
+- Added articles labeled as `excluded` by Health Hub in the Stage 1 User Annotation to the blacklist
 
 ## August 16, 2024 <a id="august-16-2024"></a>
 
