@@ -26,6 +26,8 @@ tests/data/**
 # keep also the example dataset
 !data/01_raw/*
 
+# but not raw files
+data/**/*.xlsx
 
 ##########################
 # Common files
