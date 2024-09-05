@@ -61,6 +61,8 @@ cat requirements.txt | xargs poetry add
 
     - `google_analytics_data.xlsx`: contains the latest Google Analytics data patitioned by their content categories (i.e. 9 sheets in total). Do amend the [catalog.yml](conf/base/catalog.yml) for the appropriate file name. Get the data [here](https://trello.com/c/PwWDPMfr).
 
+    - `Synapxe Content Prioritisation - Live Healthy_020724.xlsx`: contains the past manual audit by HH and its agency (VML) for content optimisation. Please note that this data serves as a reference only and should not be considered as the definitive ground truth. Get the data [here](https://trello.com/c/n0cMa6k2).
+
   - [`02_intermediate/`](data/02_intermediate): contains all intermediate data
 
     - `all_contents_standardized/`: contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
