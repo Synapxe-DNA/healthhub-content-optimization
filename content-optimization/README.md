@@ -59,7 +59,7 @@ cat requirements.txt | xargs poetry add
 
     - [`missing_contents/`](data/01_raw/missing_contents/): contains the content body of articles with `Excel Error` but were designated as `keep` by HealthHub. Do note that they should be in folders named as their respective content categories. Get the data [here](https://trello.com/c/n0cMa6k2).
 
-    - `google_analytics_data.xlsx`: contains the latest Google Analytics data patitioned by their content categories (i.e. 9 sheets in total). Do amend the [catalog.yml](conf/base/catalog.yml) for the appropriate file name.
+    - `google_analytics_data.xlsx`: contains the latest Google Analytics data patitioned by their content categories (i.e. 9 sheets in total). Do amend the [catalog.yml](conf/base/catalog.yml) for the appropriate file name. Get the data [here](https://trello.com/c/PwWDPMfr).
 
   - [`02_intermediate/`](data/02_intermediate): contains all intermediate data
 
