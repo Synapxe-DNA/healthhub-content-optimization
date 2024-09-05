@@ -11,10 +11,11 @@
 ## August 28, 2024 <a id="august-28-2024"></a>
 
 - Added [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) pipeline to process the data for the search index in Azure.
+- Updated `merge_data` node in `data_processing` pipeline to update Google Analytics data
 
 ## August 26, 2024 <a id="august-26-2024"></a>
 
-- Added articles labeled as 'excluded' by HH in the Stage 1 User Annotation for HPB_HHcomments_20Aug24.xlsx file to the blacklist
+- Added articles labeled as `excluded` by Health Hub in the Stage 1 User Annotation to the blacklist
 
 ## August 16, 2024 <a id="august-16-2024"></a>
 
