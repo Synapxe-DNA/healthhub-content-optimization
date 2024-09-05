@@ -42,14 +42,16 @@ def return_optimisation_flags(article, rewriting_process: str):
                 flags["flag_for_writing_optimisation"] = False
 
             # Checks if the content category is not diseases and conditions, as it will not require content optimisation if it's not.
+            if article["content category"] not in ["diseases-and-conditions"]:
+                flags["flag_for_content_optimisation"] = False
+
+            return flags
+        case "harmonisation":
             if article["content category"] not in [
                 "diseases-and-conditions",
                 "live-healthy-articles",
             ]:
                 flags["flag_for_content_optimisation"] = False
-
-            return flags
-        case "harmonisation":
             # Returning the other flags as true as this is a harmonisation flow
             return flags
 

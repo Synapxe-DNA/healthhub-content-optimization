@@ -340,7 +340,6 @@ def harmonise_articles(app):
                 main_article = article[
                     "Main Article Structure? (Y)"
                 ]  # checks if the article is the main article for the sub group harmonisation.
-
                 # If additional input cell in the Excel sheet is empty, it returns nan, which is of float type. Hence, if it's a float type, we set it to "".
                 if isinstance(
                     article["Optional: additional content to add for harmonisation"],
@@ -379,8 +378,6 @@ def harmonise_articles(app):
                     and article_group_content_category != "diseases-and-condition"
                 ):
                     main_article_content = concat_headers_to_content([article_id]).pop()
-                else:
-                    main_article_content = ""
 
             inputs = {
                 "article_rewriting_tries": 0,
@@ -484,5 +481,5 @@ if __name__ == "__main__":
     app = build_graph()
 
     # Running the appropriate process
-    # harmonise_articles(app)
-    optimise_articles(app)
+    harmonise_articles(app)
+    # optimise_articles(app)

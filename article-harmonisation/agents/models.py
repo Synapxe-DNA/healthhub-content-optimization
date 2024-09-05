@@ -1015,6 +1015,10 @@ class Azure(LLMInterface):
             article_structure_prompt | self.model | StrOutputParser()
         )
 
+        article_structure = article_structure_chain.invoke(
+            {"article": main_article_content}
+        )
+
         # Define the prompt template for sorting article based on structure
         sorting_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_content_prompt("structure live healthy")
@@ -1022,6 +1026,10 @@ class Azure(LLMInterface):
 
         # Define the sort article chain
         sort_article_chain = sorting_prompt | self.model | StrOutputParser()
+
+        sorted_article = sort_article_chain.invoke(
+            {"Structure": article_structure, "Keypoints": keypoints}
+        )
 
         # Define the prompt template for optimising article content
         optimise_prompt = ChatPromptTemplate.from_messages(
@@ -1031,26 +1039,14 @@ class Azure(LLMInterface):
         # Define the optimise article chain
         optimise_article_chain = optimise_prompt | self.model | StrOutputParser()
 
-        # Define the overall chain used: Extract structure -> sort content -> optimise content
-        chain = (
-            RunnableParallel(
-                Structure=article_structure_chain, Keypoints=RunnablePassthrough()
-            )
-            | sort_article_chain
-            | optimise_article_chain
-        )
-
-        optimised_content = chain.invoke(
-            {
-                "article": main_article_content,
-                "Keypoints": keypoints,
-            }
+        optimised_article = optimise_article_chain.invoke(
+            {"sorted_content": sorted_article}
         )
 
         print("Article content optimised")
 
         # Regex to remove whitespaces
-        response = re.sub(" +", " ", optimised_content)
+        response = re.sub(" +", " ", optimised_article)
 
         return response
 

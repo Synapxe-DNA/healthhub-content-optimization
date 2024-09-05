@@ -649,18 +649,24 @@ class AzurePrompts(LLMPrompt):
                 ### End of Context guidelines
 
                 ### Start of Instructions
-                You should analyze each header and it's contents step by step and determine if it's a unique keypoint, or it's content can be combined with another keypoint.
-                If you have identified two keypoints to contain very similar information, combine the common information and unique information in each article to form a new keypoint, and remove redundant sentences if required.
-                Do NOT summarise the content. Your main task is to improve the position of the keypoints and remove duplication information, not to summarise the information.
-                Your final answer be a compilation of all the keypoints from the two articles, with minimal to no loss in information when compared to the original keypoints individually.
+                1. Focus on the content of each keypoint, not just the headers. Similar content should be merged even if the headers are different.
+                2. Analyze the content of each keypoint thoroughly, looking for thematic similarities with other keypoints.
+                3. If you identify two or more keypoints with similar themes or information, regardless of their headers:
+                    a. Combine their content to form a new, comprehensive keypoint.
+                    b. Choose the most appropriate header for the combined content, or create a new header that accurately represents the merged information.
+                    c. Remove any redundant sentences, but ensure all unique information is retained.
+                4. Do NOT summarise the content. Your main task is to improve the position of the keypoints and remove duplication information, not to summarise the information.
+                5. Your final answer be a compilation of all the keypoints from the two articles, with minimal to no loss in information when compared to the original keypoints individually.
+                6. RETAIN ALL specific details, especially information pertaining to quantities, percentages, specific names, and technical terms.
+                7. You MUST check your final answer with each keypoint in the original articles to ensure that all information has been captured in your final answer.
+                8. Do NOT paraphrase and strictly only add or remove sentences.
+                9. You may use bullet points, but do NOT paraphrase the sentences
+                10. Remove ALL sentences under the "Omitted Sentences" section when compiling the information.
+                11. You may add conjunctions and connectors between sentences if it improves the flow of the sentences.
+                12. You MUST retain ALL key information, especially information pertaining to specific disease names and medications.
+                13. When in doubt about whether to include a piece of information, always choose to include it in the final compilation.
 
-                You MUST check your final answer with each keypoint in the original articles to ensure that all information has been captured in your final answer.
-                Do NOT paraphrase and strictly only add or remove sentences.
-                You may use bullet points, but do NOT paraphrase the sentences
-                Remove ALL sentences under the "Omitted Sentences" section when compiling the information.
-
-                You may add conjunctions and connectors between sentences if it improves the flow of the sentences.
-                You MUST retain ALL key information, especially information pertaining to specific disease names and medications.
+                IMPORTANT: The goal is to create a comprehensive, non-redundant compilation of all information from the original keypoints. Err on the side of inclusion rather than omission when in doubt.
                 ### End of Instructions
 
                 Use the example below as an idea on how compiling the keypoints should be:
@@ -749,62 +755,87 @@ class AzurePrompts(LLMPrompt):
 
                             ### Complications
 
-                            ### Treatment and Prevention
+                            ### Treatment
+
+                            ### Prevention
 
                             ### When to see a doctor
 
                         Your final answer MUST include these sections with the relevant headers in this specific order and follow the instructions provided.
 
                         Instructions:
-                        1. If the key points do not contain information for one of the above sections, include the section headers in the final answer with no body of text for that section.
-                        2. You may use the original keypoint header name as the section header if it's similar enough to the predefined headers, but maintain the overall structure.
-                        3. Do NOT modify the content of the keypoints; your task is to sort them into the most appropriate sections.
-                        4. If a keypoint doesn't fit any predefined section:
-                            a. First, try to broaden your interpretation of the existing sections.
-                            b. If it still doesn't fit, create a new section with a clear, descriptive title based on the keypoint's content. You may use the keypoint header as the title.
-                            c. IMPORTANT: Place the new section immediately before or after the most closely related predefined section. Do not place new sections at the beginning or end of the article unless they are specifically related to the overview or follow-up care.
-                            d. Ensure the new section maintains the article's overall coherence.
-                        5. Do NOT leave out any of the keypoints provided.
+                        1. Prioritize using the predefined section headers listed above.
+                        2. Use the original keypoint name as the section header name if it's similar enough to the predefined headers.
+                        3. If a keypoint doesn't fit perfectly into one of these sections, follow these steps in order:
+                            a. First, try to place it as a subsection under the most relevant main section.
+                            b. If it truly doesn't fit as a subsection, only then create a new main section.
+                        4. Use the following format for subsections:
+                        #### [Subsection Title]
+                        5. Do NOT modify the content of the keypoints; your task is to sort them into the most appropriate sections or subsections.
+                        6. IMPORTANT: ALL keypoints and their COMPLETE contents MUST be present in the final output. Do not omit or summarize any information. The only exception is if a keypoint does not have any content under it.
+                        7. Each piece of information should appear ONLY ONCE in the final output.
+                        8. If a predefined section has no content, include the section header with no body text.
 
-                        Let's think step by step:
+                        Sorting Process:
+                        1. Read through all keypoints carefully.
+                        2. For each keypoint:
+                            a. Determine if it fits into one of the predefined sections.
+                            b. If not, try to create a subsection under the most relevant main section.
+                            c. If it doesn't fit as a subsection, only then create a new main section.
+                            d. Use the keypoint's title or a summary of its content as the section or subsection title.
+                            e. Place the ENTIRE content of the keypoint into the appropriate section or subsection.
+                        3. After sorting all keypoints, review your output to ensure:
+                            a. ALL keypoints are included.
+                            b. The COMPLETE content of each keypoint is present.
+                            c. No information has been omitted or summarized.
+                            d. No information appears more than once.
+                            e. New main sections are created only when absolutely necessary.
 
-                        1. Sort the following keypoints:
 
+                        The following is an example input:
                             "Main Keypoint: Causes of Influenza
-                            Content: Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
+                            Content: Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks.
+
+                            Main Keypoint: Self-care
+                            Content: When you have the flu, prioritize rest, stay hydrated, and manage symptoms with over-the-counter medications as needed."
 
                             Main Keypoint: Use of MediSave
                             Content: Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
-                            "
 
-                        2. Determine which section each keypoint falls under and sort it accordingly. Multiple keypoints can go into a single section. The information in this keypoint is relevant to the final section "Causes and Risk Factors" and will be sorted in accordingly. The original keypoint header name will be kept as it is similar to "Causes and Risk Factors" header.
+                        Corresponding output:
+                            ### Overview of the condition
 
-                            Your answer:
-                            "### Overview of Influenza
-
-                            ### Causes of Influenza
-                            Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
+                            ### Causes and Risk Factors of Influenza
+                            Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks.
 
                             ### Symptoms and Signs
 
                             ### Complications
 
-                            ### Treatment and Prevention
+                            ### Treatment
+                            #### Self-care
+                            When you have the flu, prioritize rest, stay hydrated, and manage symptoms with over-the-counter medications as needed.
+
+                            ### Prevention
 
                             ### When to see a doctor
 
-                            ### Use of MediSave
+                            ### Use of Medisave
                             Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
 
-                        3. For content that doesn't fit the predefined sections, follow step 4 in the instructions provided above, paying special attention to proper placement of new sections.
+                            In the above example, the first keypoint is placed under "Causes and Risk Factors" as its content closely relates to the header.
+                            The "Self-care" keypoint doesn't match any predefined headers exactly, but it's most closely related to "Treatment". Therefore, it's added as a subsection under "Treatment"
+                            The "Use of MediSave" keypoint doesn't fit well under any predefined headers or as a subsection. As a result, a new main section is created using the original keypoint name.
 
-                        4. Check through each step carefully with each keypoint. Ensure that all keypoints and their content are included in your final answer.
 
                         Final Reminders:
-                        Adhere to the given structure, only adding sections when absolutely necessary.
+                        Adhere to the given structure.
+                        Prioritize using the predefined structure, only adding new sections when absolutely necessary.
                         Do not remove any of the predefined sections.
                         Always place new sections next to the most closely related predefined sections.
-                        Ensure ALL keypoints and their content are included in your final answer.
+                        Ensure ALL keypoints, except those without content, and their content are included in your final answer. This is crucial.
+                        Each keypoint and its content should appear in ONLY ONE section.
+                        Check that each section header is unique.
                         Maintain a logical flow of information throughout the article.
 
                         """,
@@ -826,7 +857,7 @@ class AzurePrompts(LLMPrompt):
                         You are part of an article re-writing process.
 
                         Your task is to phrase the content from the given article content using the following guidelines and examples.
-                        If one of the sections has no content, you MUST write your own content based on the header. Your writing MUST be relevant to the header and the topic.
+                        If one of the sections, denoted by ###, has no content, you MUST write your own content based on the header. Your writing MUST be relevant to the header and the topic.
                         You will also be given a set of instructions that you MUST follow.
 
                         ### Start of content requirements
@@ -891,14 +922,17 @@ class AzurePrompts(LLMPrompt):
 
                             2. CONTENT STRUCTURE
                             Do NOT change the content structure or the headers.
-                            Do NOT leave any sections empty.
+                            Do NOT leave any sections empty. Ensure that ALL sections have content.
 
-                            3. CONTENT LENGTH
-                            Maintain a word count close to the original content.
-
-                            4. ACCURACY AND COMPLETENESS
+                            3. ACCURACY AND COMPLETENESS
                             After rewriting each section, review the original content to ensure all points are included.
                             Do NOT abridge or summarize the content. Your task is to restructure, not condense.
+                            Double-check that all specific details (e.g., names, places, numbers, criteria) are accurately preserved.
+
+                            4. SPECIFICITY PRESERVATION
+                            Maintain the level of specificity present in the original content.
+                            Do not generalize specific information (e.g., "Singaporean children" should not become just "children").
+                            Preserve mentions of specific programs, subsidies, or healthcare systems
 
                             5. CLARITY AND PRESENTATION
                             Do NOT include any prompt instructions in your response.
@@ -934,8 +968,17 @@ class AzurePrompts(LLMPrompt):
                     (
                         "human",
                         """
-                        Write out a template based on this article's structure and flow:
+                        Analyze the following article and create a template of its structure. Follow these guidelines:
+
+                        Use Markdown formatting for headers (e.g., # for main title, ## for major sections, ### for subsections).
+                        Capture the hierarchical structure of the article, including main sections and subsections.
+                        For each section, provide a brief description of the expected content in square brackets.
+                        Do not include specific content from the original article.
+                        Omit formatting tags like "Content:" or "h2 Sub Header:".
+
+                        Here's the article to analyze:
                         {article}
+                        Please provide the structure template based on the above guidelines.
                         """,
                     ),
                 ]
@@ -944,86 +987,31 @@ class AzurePrompts(LLMPrompt):
                 sort_live_healthy_prompt = [
                     (
                         "system",
-                        """ You are part of an article re-writing process. Your task is to sort the given keypoints into the structure provided:
-
-                        Your final answer MUST include these sections in the structure provided with the relevant headers in this specific order and follow the instructions provided.
-
-                        Instructions:
-                        1. If the key points do not contain information for one of the above sections, include the section headers in the final answer with no body of text for that section.
-                        2. You may use the original keypoint header name as the section header if it's similar enough to the predefined headers, but maintain the overall structure.
-                        3. Do NOT modify the content of the keypoints; your task is to sort them into the most appropriate sections.
-                        4. If a keypoint doesn't fit any predefined section:
-                            a. First, try to broaden your interpretation of the existing sections.
-                            b. If it still doesn't fit, create a new section with a clear, descriptive title based on the keypoint's content. You may use the keypoint header as the title.
-                            c. IMPORTANT: Place the new section immediately before or after the most closely related predefined section. Do not place new sections at the beginning or end of the article unless they are specifically related to the overview or follow-up care.
-                            d. Ensure the new section maintains the article's overall coherence.
-                        5. Do NOT leave out any of the keypoints provided.
-
-                        Let's think step by step:
-
-                        1. Sort the following keypoints:
-
-                            "Main Keypoint: Causes of Influenza
-                            Content: Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
-
-                            Main Keypoint: Use of MediSave
-                            Content: Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
-                            "
-
-                        2. The structure example is provided below.
-                            ### Overview of Influenza
-
-                            ### Causes of Influenza
-
-                            ### Symptoms and Signs
-
-                            ### Complications
-
-                            ### Treatment and Prevention
-
-                            ### When to see a doctor
-
-                            ### Use of MediSave
-
-                        3. Determine which section each keypoint falls under and sort it accordingly. Multiple keypoints can go into a single section. The information in this keypoint is relevant to the final section "Causes and Risk Factors" and will be sorted in accordingly. The original keypoint header name will be kept as it is similar to "Causes and Risk Factors" header.
-
-                            Your answer:
-                            "### Overview of Influenza
-
-                            ### Causes of Influenza
-                            Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks. The virus can also spread by touching contaminated surfaces and then touching your face. The flu is most contagious in the first few days of illness. High-risk groups, like the elderly and young children, should get vaccinated yearly to reduce the risk of severe complications.
-
-                            ### Symptoms and Signs
-
-                            ### Complications
-
-                            ### Treatment and Prevention
-
-                            ### When to see a doctor
-
-                            ### Use of MediSave
-                            Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
-
-                        4. For content that doesn't fit the predefined sections, follow step 4 in the instructions provided above, paying special attention to proper placement of new sections.
-
-                        5. Check through each step carefully with each keypoint. Ensure that all keypoints and their content are included in your final answer.
-
-                        Final Reminders:
-                        Adhere to the given structure, only adding sections when absolutely necessary.
-                        Do not remove any of the predefined sections.
-                        Always place new sections next to the most closely related predefined sections.
-                        Ensure ALL keypoints and their content are included in your final answer.
-                        Maintain a logical flow of information throughout the article.
-
+                        """
+                        You are part of an article re-writing process. Your task is to sort the given keypoints into the provided structure, creating a cohesive article.
                         """,
                     ),
                     (
                         "human",
                         """
-                        Structure of article:
+                        Sort the following keypoints into the provided structure, following these guidelines:
+
+                        1. Use the provided structure as a template, maintaining the hierarchy of headers.
+                        2. Place each keypoint under the most appropriate section based on the description of each section.
+                        3. Present the content as a flowing article, with headers followed directly by relevant text.
+                        4. IMPORTANT: Ensure that EVERY single keypoint is included in the final article. None should be left out.
+                        5. If a keypoint doesn't fit any existing section:
+                            a. Try to broaden your interpretation of existing sections first.
+                            b. If it still doesn't fit, create a new section with a descriptive yet generalizable title.
+                            c. Place new sections next to the most closely related existing sections.
+                        6. Ensure all keypoints are included and the article maintains a logical flow.
+                        7. Each keypoint should be placed in one section only to avoid redundancy.
+
+                        Structure:
                         {Structure}
-                        Sort the following keypoints:
+                        Keypoints to sort:
                         {Keypoints}
+                        Please provide the sorted article based on the above guidelines.
                         """,
                     ),
                 ]
@@ -1293,16 +1281,17 @@ class AzurePrompts(LLMPrompt):
                 hemingway_readability_optimisation_prompt = [
                     (
                         "system",
-                        """ You are part of an article rewriting process. Your task is to identify remove redundant writing in the given context.
+                        """ You are part of an article rewriting process. Your task is to identify remove redundant writing in the given context while preserving all key information, examples, and specific details.
 
                         There should not be any loss of key information when removing these redundant information.
 
                         Your writing should carry a friendly and engaging tone. Do NOT write in a professional and formal tone.
 
-                        Do not change the article structure such as use of headers.
-                        Do not alter any bullet points.
-                        Do NOT leave out any examples present in the original article.
-                        Do NOT leave out any nouns present in the original article.
+                        Instructions:
+                        1. Do not change the article structure such as use of headers.
+                        2. Do not alter any bullet points.
+                        3. Preserve ALL examples present in the original article.
+                        4. Retain ALL nouns, proper names, and specific terms present in the original article.
 
                         You can use this example to help you identify redundant phrasing and to structure your answer.
 
@@ -1311,6 +1300,13 @@ class AzurePrompts(LLMPrompt):
 
                         Your answer: "To finish the project on time, all team members must work together."
                         ### End of example
+
+                        Final Checks:
+                        Before submitting your rewritten content, review it against the original to ensure:
+                        1. All examples are preserved.
+                        2. Lists of items or types (e.g., patient groups, symptoms) are complete.
+                        3. The core meaning and emphasis of each sentence is maintained.
+                        4. No key information or details have been lost in the process of removing redundancy.
                         """,
                     ),
                     ("human", "Rewrite the following content {content}"),
