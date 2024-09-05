@@ -60,7 +60,11 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=merge_data,
-                inputs="all_contents_mapped",
+                inputs=[
+                    "all_contents_mapped",
+                    "google_analytics_data",
+                    "params:google_analytics_columns",
+                ],
                 outputs="merged_data",
                 name="merge_data_node",
             ),
