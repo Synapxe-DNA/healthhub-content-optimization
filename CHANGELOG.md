@@ -2,6 +2,16 @@
 
 ## September 5, 2024 <a id="september-5-2024"></a>
 
+- Updated the README.md for [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) data, and included the 2 new fields "pr_name" and "date_modified" to the new field in the data.
+- Edited the extractor.py for the [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline to account for the recursive extraction of content from "programs" and "program-sub-pages" articles.
+
+## August 29, 2024 <a id="august-29-2024"></a>
+
+- Added the documentation for [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) pipeline, and updated the credentials documentation for [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline
+
+## August 28, 2024 <a id="august-28-2024"></a>
+
+- Added [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) pipeline to process the data for the search index in Azure.
 - Updated `merge_data` node in `data_processing` pipeline to update Google Analytics data
 
 ## August 26, 2024 <a id="august-26-2024"></a>
