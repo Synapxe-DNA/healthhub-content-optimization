@@ -36,7 +36,11 @@ all_contents_extracted:
 all_extracted_text:
   type: partitions.PartitionedDataset
   path: data/02_intermediate/all_extracted_text
-  dataset: text.TextDataset
+  dataset:
+    type: text.TextDataset
+    fs_args:
+      open_args_save:
+        encoding: "utf-8"
   filename_suffix: ".txt"
 
 all_contents_mapped:
