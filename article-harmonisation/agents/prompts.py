@@ -265,75 +265,141 @@ class AzurePrompts(LLMPrompt):
         return structure_evaluation_prompt
 
     @staticmethod
-    def return_title_evaluation_prompt() -> list[tuple[str, str]]:
+    def return_title_evaluation_prompt(step: str) -> list[tuple[str, str]]:
         """
         Returns the title evaluation prompt where the chain output will be a string
 
         Returns:
             list[tuple[str, str]]: a list containing the title evaluation prompt. {title} and {article} are the inputs required to invoke the prompt.
         """
+        match step:
+            case "diseases-and-conditions":
+                title_evaluation_prompt = [
+                    (
+                        "system",
+                        """
+                        Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
 
-        title_evaluation_prompt = [
-            (
-                "system",
-                """
-                Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
+                        Steps to Follow -
+                        1.  Identify the Title:
+                        -   What is the title of the article?
 
-                Steps to Follow -
-                1.  Identify the Title:
-                -   What is the title of the article?
+                        2.  Analyze the Title:
+                        -   Does the title only feature the name/ synonym/ abbreviation/ common name of the disease?
+                        -   What main topic or benefit does the title convey?
+                        -   Is the title specific and clear in its message?
 
-                2.  Analyze the Title:
-                -   What main topic or benefit does the title convey?
-                -   Is the title specific and clear in its message?
+                        3.  Review the Content:
+                        -   Read the entire article carefully.
+                        -   Summarize the main points and key themes of the article.
+                        -   Note any specific sections or statements that align with or diverge from the title's promise.
 
-                3.  Review the Content:
-                -   Read the entire article carefully.
-                -   Summarize the main points and key themes of the article.
-                -   Note any specific sections or statements that align with or diverge from the title's promise.
+                        4.  Compare Title and Content:
+                        -   Does the content directly address the main topic or benefit stated in the title?
+                        -   Are the main themes and messages of the article consistent with the expectations set by the title?
+                        -   Identify any significant information in the article that is not reflected in the title and vice versa.
 
-                4.  Compare Title and Content:
-                -   Does the content directly address the main topic or benefit stated in the title?
-                -   Are the main themes and messages of the article consistent with the expectations set by the title?
-                -   Identify any significant information in the article that is not reflected in the title and vice versa.
+                        5.  Evaluate Relevance:
+                        -   Provide a detailed explanation of how well the title reflects the content.
+                        -   Use specific examples or excerpts from the article to support your evaluation.
+                        -   Highlight any discrepancies or misalignment between the title and the content.
 
-                5.  Evaluate Relevance:
-                -   Provide a detailed explanation of how well the title reflects the content.
-                -   Use specific examples or excerpts from the article to support your evaluation.
-                -   Highlight any discrepancies or misalignment between the title and the content.
+                        Your assessment should emphasize the relevance of the article and explain why the title is irrelevant as and when needed.
+                        """,
+                    ),
+                    ("human", """ Title: "10 Tips for Effective Time Management" """),
+                    (
+                        "assistant",
+                        """
+                        Content Summary:
+                        -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
 
-                Your assessment should emphasize the relevance of the article and explain why the title is irrelevant as and when needed.
-                """,
-            ),
-            ("human", """ Title: "10 Tips for Effective Time Management" """),
-            (
-                "assistant",
-                """
-                Content Summary:
-                -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
+                        Comparison and Evaluation:
+                        -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
+                        -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
+                        -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
+                        -   The relevance score is high due to the direct alignment of content with the title.""",
+                    ),
+                    (
+                        "system",
+                        """
+                        Instructions:
+                        1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
+                        2.  Write a brief report based on your findings, including specific examples.
+                        3.  Do NOT make any title suggestions or recommendations. Focus solely on the critique instead.
+                        4.  Casual tone or style in the title is acceptable and should not be a point of critique. Focus on the title relevance to the content.
+                        5.  The title MUST NOT only feature the name/ synonym/ abbreviation/ common name of the disease.
+                            -   "Avian Influenza H5N1 (Bird Flu)" should be considered as only featuring the disease name.
+                        """,
+                    ),
+                    (
+                        "human",
+                        "Evaluate the following title:\n{title}\n\nUsing the following article:\n{article}",
+                    ),
+                ]
+                return title_evaluation_prompt
+            case _:
+                title_evaluation_prompt = [
+                    (
+                        "system",
+                        """
+                        Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
 
-                Comparison and Evaluation:
-                -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
-                -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
-                -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
-                -   The relevance score is high due to the direct alignment of content with the title.""",
-            ),
-            (
-                "system",
-                """
-                Instructions:
-                1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
-                2.  Write a brief report based on your findings, including specific examples.
-                3.  Do NOT make any title suggestions or recommendations. Focus solely on the critique instead.
-                """,
-            ),
-            (
-                "human",
-                "Evaluate the following title:\n{title}\n\nUsing the following article:\n{article}",
-            ),
-        ]
+                        Steps to Follow -
+                        1.  Identify the Title:
+                        -   What is the title of the article?
 
-        return title_evaluation_prompt
+                        2.  Analyze the Title:
+                        -   What main topic or benefit does the title convey?
+                        -   Is the title specific and clear in its message?
+
+                        3.  Review the Content:
+                        -   Read the entire article carefully.
+                        -   Summarize the main points and key themes of the article.
+                        -   Note any specific sections or statements that align with or diverge from the title's promise.
+
+                        4.  Compare Title and Content:
+                        -   Does the content directly address the main topic or benefit stated in the title?
+                        -   Are the main themes and messages of the article consistent with the expectations set by the title?
+                        -   Identify any significant information in the article that is not reflected in the title and vice versa.
+
+                        5.  Evaluate Relevance:
+                        -   Provide a detailed explanation of how well the title reflects the content.
+                        -   Use specific examples or excerpts from the article to support your evaluation.
+                        -   Highlight any discrepancies or misalignment between the title and the content.
+
+                        Your assessment should emphasize the relevance of the article and explain why the title is irrelevant as and when needed.
+                        """,
+                    ),
+                    ("human", """ Title: "10 Tips for Effective Time Management" """),
+                    (
+                        "assistant",
+                        """
+                        Content Summary:
+                        -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
+
+                        Comparison and Evaluation:
+                        -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
+                        -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
+                        -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
+                        -   The relevance score is high due to the direct alignment of content with the title.""",
+                    ),
+                    (
+                        "system",
+                        """
+                        Instructions:
+                        1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
+                        2.  Write a brief report based on your findings, including specific examples.
+                        3.  Do NOT make any title suggestions or recommendations. Focus solely on the critique instead.
+                        4.  Casual tone or style in the title is acceptable and should not be a point of critique. Focus on the title relevance to the content.
+                        """,
+                    ),
+                    (
+                        "human",
+                        "Evaluate the following title:\n{title}\n\nUsing the following article:\n{article}",
+                    ),
+                ]
+                return title_evaluation_prompt
 
     @staticmethod
     def return_meta_desc_evaluation_prompt() -> list[tuple[str, str]]:

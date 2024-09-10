@@ -36,7 +36,11 @@ all_contents_extracted:
 all_extracted_text:
   type: partitions.PartitionedDataset
   path: data/02_intermediate/all_extracted_text
-  dataset: text.TextDataset
+  dataset:
+    type: text.TextDataset
+    fs_args:
+      open_args_save:
+        encoding: "utf-8"
   filename_suffix: ".txt"
 
 all_contents_mapped:
@@ -49,6 +53,22 @@ merged_data:
   type: pandas.ParquetDataset
   filepath: data/03_primary/merged_data.parquet
   versioned: true
+
+google_analytics_data:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/GenAI-updatedGAviews_03092024.xlsx
+  load_args:
+    sheet_name:
+      - cost-and-financing
+      - diseases-and-conditions
+      - health-statistics
+      - live-healthy-articles
+      - medical-care-and-facilities
+      - medications
+      - programs
+      - program-sub-pages
+      - support-group-and-others
+    engine: openpyxl
 
 # Jupyter Notebooks
 raw_word_counts:

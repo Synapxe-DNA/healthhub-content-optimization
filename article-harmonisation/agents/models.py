@@ -697,7 +697,7 @@ class Azure(LLMInterface):
 
         return res
 
-    def evaluate_title(self, title: str, content: str) -> dict:
+    def evaluate_title(self, title: str, content: str, step: str) -> dict:
         """
         Evaluates the given article title based on its article content.
 
@@ -713,7 +713,7 @@ class Azure(LLMInterface):
 
         # Set up prompts for title evaluation and decision-making
         evaluation_prompt = ChatPromptTemplate.from_messages(
-            self.prompt_template.return_title_evaluation_prompt()
+            self.prompt_template.return_title_evaluation_prompt(step)
         )
         decision_prompt = ChatPromptTemplate.from_messages(
             self.prompt_template.return_decision_prompt()

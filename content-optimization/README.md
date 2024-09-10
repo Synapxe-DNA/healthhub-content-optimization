@@ -55,9 +55,13 @@ cat requirements.txt | xargs poetry add
 
   - [`01_raw/`](data/01_raw): contains all raw data
 
-    - `all_contents/`: contains all the raw data provided by HealthHub for the project. Get the data [here](https://trello.com/c/n0cMa6k2).
+    - [`all_contents/`](data/01_raw/all_contents/): contains all the raw data provided by HealthHub for the project. Get the data [here](https://trello.com/c/n0cMa6k2).
 
-    - `missing_contents/`: contains the content body of articles with `Excel Error` but were designated as `keep` by HealthHub. Get the data [here](https://trello.com/c/n0cMa6k2).
+    - [`missing_contents/`](data/01_raw/missing_contents/): contains the content body of articles with `Excel Error` but were designated as `keep` by HealthHub. Do note that they should be in folders named as their respective content categories. Get the data [here](https://trello.com/c/n0cMa6k2).
+
+    - `google_analytics_data.xlsx`: contains the latest Google Analytics data patitioned by their content categories (i.e. 9 sheets in total). Do amend the [catalog.yml](conf/base/catalog.yml) for the appropriate file name. Get the data [here](https://trello.com/c/PwWDPMfr).
+
+    - `Synapxe Content Prioritisation - Live Healthy_020724.xlsx`: contains the past manual audit by HH and its agency (VML) for content optimisation. Please note that this data serves as a reference only and should not be considered as the definitive ground truth. Get the data [here](https://trello.com/c/n0cMa6k2).
 
   - [`02_intermediate/`](data/02_intermediate): contains all intermediate data
 
@@ -183,21 +187,7 @@ kedro run --nodes="extract_keywords_node"
 
 #### 1. Configuration <a id="clustering-configuration"></a>
 
-Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
-
-```yaml
-neo4j_credentials:
-  username: your_username
-  password: your_password
-```
-
-Ensure that your `parameters_clustering.yml` file includes the Neo4j configurations:
-
-```yaml
-neo4j_config:
-  uri: neo4j://localhost:7687
-  database: hh-articles
-```
+Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials [`conf/base`](conf/base). Refer to the [conf/README.md](conf/README.md) section for more information.
 
 #### 2.Neo4j Set Up
 
@@ -238,21 +228,17 @@ kedro run --pipeline="clustering"
 ### Azure RAG <a id="azure-rag"></a>
 
 > [!IMPORTANT]
-> Before running the [`azure_rag`](src/content_optimization/pipelines/azure_rag/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [Data Processing](#data-processing) section for more information.
+> Before running the [`azure_rag`](src/content_optimization/pipelines/azure_rag/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [conf/README.md](conf/README.md) section for more information.
 
 #### Prerequisites <a id="azure-rag-prerequisites"></a>
 
 #### 1. Configuration <a id="azure-rag-configuration"></a>
 
-Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials:
+Ensure that your `conf/local/credentials.yml` file includes the Azure credentials [`conf/local`](conf/local). Refer to section for more information.
 
-```yaml
-azure_credentials:
-  API_VERSION: <api_version>
-  AZURE_ENDPOINT: <resource_end_point>
-  COGNITIVE_SERVICES: <cognitive_service_link>
-  MODEL_DEPLOYMENT: <chat_deployment_name>
-```
+#### 2. Install Azure CLI
+
+- Follow the instructions in the [Azure CLI Installation Guide](https://learn.microsoft.com/cli/azure/install-azure-cli) to install the Azure CLI <br>
 
 You can run the entire `azure_rag` pipeline by running:
 
@@ -903,8 +889,8 @@ kedro run --pipeline="azure_rag"
 ### File Information <a id="processed-articles-file-information"></a>
 
 - **File Format:** JSON
-- **Number of Files:** 2713
-- **Total Size:** 30.8MB
+- **Number of Files:** 2724
+- **Total Size:** 31.8MB
 
 #### **Columns** <a id="processed-articles-columns"></a>
 
