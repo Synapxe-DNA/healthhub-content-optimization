@@ -129,7 +129,7 @@ def optimise_articles(app):
                 "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
                 "readability_optimisation_agent": readability_optimisation_agent,
                 "personality_evaluation_agent": personality_evaluation_agent,
-                "changes_summariser_agent": changes_summariser_agent,
+                "writing_postprocessor_agent": writing_postprocessor_agent,
             },
         }
 
@@ -197,6 +197,11 @@ def optimise_articles(app):
                     else None
                 ),  # Rewritten article content (should be a link)
                 (
+                    result["optimised_article_output"]["optimised_writing_XML"]
+                    if article_flags["flag_for_writing_optimisation"]
+                    else None
+                ),  # Rewritten article content in XML
+                (
                     result["article_evaluation"].get("change_summary", None)
                 ),  # Article optimisation evaluation summary
                 None,  # User approval of optimised article
@@ -246,6 +251,7 @@ def optimise_articles(app):
                     reasons_for_poor_readability,  # reasons for poor readability
                     str(insufficient_content),  # insufficient content
                     None,  # Rewritten article content (should be a link)
+                    None,  # Rewritten article content in XML
                     None,  # Article optimisation evaluation summary
                     None,  # User approval of optimised article
                     None,  # Optional: User attached updated article (Y)
@@ -406,7 +412,7 @@ def harmonise_articles(app):
                     "meta_desc_optimisation_agent": meta_desc_optimisation_agent,
                     "readability_optimisation_agent": readability_optimisation_agent,
                     "personality_evaluation_agent": personality_evaluation_agent,
-                    "changes_summariser_agent": changes_summariser_agent,
+                    "writing_postprocessor_agent": writing_postprocessor_agent,
                 },
             }
 
@@ -447,6 +453,9 @@ def harmonise_articles(app):
                 result["optimised_article_output"][
                     "optimised_writing"
                 ],  # Optimised article content (should be a link)
+                result["optimised_article_output"][
+                    "optimised_writing_XML"
+                ],  # Rewritten article content in XML
                 (
                     result["article_evaluation"].get("change_summary", None)
                 ),  # Article optimisation evaluation summary (could be nil)
@@ -475,11 +484,11 @@ if __name__ == "__main__":
     readability_optimisation_agent = start_llm(
         MODEL, ROLES.READABILITY_OPTIMISATION, temperature=0.5
     )
-    changes_summariser_agent = start_llm(MODEL, ROLES.CHANGES_SUMMARISER)
+    writing_postprocessor_agent = start_llm(MODEL, ROLES.WRITING_POSTPROCESSOR)
 
     # Obtaining the GraphState
     app = build_graph()
 
     # Running the appropriate process
-    harmonise_articles(app)
-    # optimise_articles(app)
+    # harmonise_articles(app)
+    optimise_articles(app)

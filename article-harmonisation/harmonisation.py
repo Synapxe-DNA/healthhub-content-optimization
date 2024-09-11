@@ -501,8 +501,8 @@ def personality_guidelines_evaluation_node(state):
     }
 
 
-def changes_summariser_node(state):
-    """Creates a changes summariser node that summarises the changes that have taken place after rewriting the original article to the optimized article.
+def writing_optimisation_postprocessor_node(state):
+    """Creates a writing optimisation postprocessor node that summarises the changes that have taken place after rewriting the original article and outputs the optimised article in xml format.
 
     Args:
         state: a dictionary storing relevant attributes as keys and content as the respective items.
@@ -514,14 +514,22 @@ def changes_summariser_node(state):
     original_article_inputs = state.get("original_article_inputs")
     original_article = original_article_inputs["article_content"]
 
-    # Obtaining the recently readability optimised writing
+    # Obtaining the recently optimised writing
     optimised_article_output = state.get("optimised_article_output")
     optimised_writing = optimised_article_output.get("optimised_writing")
 
-    changes_summary_agent = state.get("llm_agents")["changes_summariser_agent"]
+    writing_optimisation_postprocessor_agent = state.get("llm_agents")[
+        "writing_postprocessor_agent"
+    ]
 
-    changes_summary = changes_summary_agent.produce_changes_summary(
+    # Get summary of the changes between original and optimised article
+    changes_summary = writing_optimisation_postprocessor_agent.produce_changes_summary(
         original_content=original_article, optimised_content=optimised_writing
+    )
+
+    # Convert optimised article to XML format
+    optimised_article_XML = writing_optimisation_postprocessor_agent.get_xml(
+        optimised_content=optimised_writing
     )
 
     # Obtaining article_flags dict
@@ -529,7 +537,10 @@ def changes_summariser_node(state):
     # Updating article_evaluation with the updated personality_evaluation flags
     article_evaluation["change_summary"] = changes_summary
 
+    optimised_article_output["optimised_writing_XML"] = optimised_article_XML
+
     return {
+        "optimised_article_output": optimised_article_output,
         "article_evaluation": article_evaluation,
     }
 
@@ -666,8 +677,8 @@ def check_personality_after_personality_evaluation(state):
     has_personality = content_flags["writing_has_personality"]
 
     if has_personality:
-        # Extracts user flags for title and meta desc optimisation
-        return "changes_summariser_node"
+        # Directs state to writing optimisation post processing node
+        return "writing_optimisation_postprocessor_node"
 
     else:
         # Directs state to writing guidelines optimisation node if not has_personality
@@ -825,8 +836,8 @@ def check_readability_after_writing_optimisation(state):
         else:
             print("Number of writing retries exceeded limit hit.")
 
-        # Go to changes summary node
-        return "changes_summariser_node"
+        # Go to writing optimisation postprocessor node
+        return "writing_optimisation_postprocessor_node"
 
     else:
         # Send article for readability optimisation as it's readability score is >= 10 and rewriting tries < limit
@@ -854,7 +865,7 @@ def build_graph():
         "meta_description_optimisation_node": meta_description_optimisation_node,
         "personality_guidelines_evaluation_node": personality_guidelines_evaluation_node,
         "readability_optimisation_node": readability_optimisation_node,
-        "changes_summariser_node": changes_summariser_node,
+        "writing_optimisation_postprocessor_node": writing_optimisation_postprocessor_node,
     }
 
     # Declaring dictionary with all edges
@@ -904,7 +915,7 @@ def build_graph():
             check_readability_after_writing_optimisation,
             {
                 "readability_optimisation_node": "readability_optimisation_node",
-                "changes_summariser_node": "changes_summariser_node",
+                "writing_optimisation_postprocessor_node": "writing_optimisation_postprocessor_node",
             },
         ),
         # Conditional edge from readability_optimisation_node that checks the number of rewriting tries after readability optimisation to determine which optimisatio node to direct the state to.
@@ -920,11 +931,11 @@ def build_graph():
             check_personality_after_personality_evaluation,
             {
                 "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
-                "changes_summariser_node": "changes_summariser_node",
+                "writing_optimisation_postprocessor_node": "writing_optimisation_postprocessor_node",
             },
         ),
-        # Conditional edge from changes_summariser_node that checks the user flags to determine which optimisation node to direct the state to
-        "changes_summariser_node": (
+        # Conditional edge from writing_optimisation_postprocessor_node that checks the user flags to determine which optimisation node to direct the state to
+        "writing_optimisation_postprocessor_node": (
             decide_next_optimisation_node,
             {
                 "title_optimisation_node": "title_optimisation_node",

@@ -47,7 +47,7 @@ class ROLES(Enum):
           READABILITY_EVALUATION: Readability Evaluation LLM to evaluate the readability of the generated article content
           READABILITY_OPTIMISATION: Readability Evaluation LLM to optimise the readability of the generated article content
           PERSONALITY_EVALUATION: Personality Evaluation LLM to evaluate the writing style of the generated article content
-          CHANGES_SUMMARISER: Changes Summariser LLM to summarise the changes between the original article and the optimized article
+          WRITING_POSTPROCESSOR: Writing postprocessor LLM to summarise the changes between the original article and the optimized article and output the latter in XML format
     """
 
     # Declaring node roles
@@ -62,4 +62,4 @@ class ROLES(Enum):
     READABILITY_EVALUATION = "Readability evaluation"
     READABILITY_OPTIMISATION = "Readability optimisation"
     PERSONALITY_EVALUATION = "Personality evaluation"
-    CHANGES_SUMMARISER = "Changes summariser"
+    WRITING_POSTPROCESSOR = "Writing postprocessor"

@@ -1188,6 +1188,37 @@ class Azure(LLMInterface):
 
         return response
 
+    def get_xml(self, optimised_content):
+        """
+        Produces a XML version of the optimised article.
+
+        Args:
+            optimised_content (str): the optimised article content
+
+        Returns:
+            str: A response string containing the XML output.
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+        # Raises an error if the role is not "Writing postprocessor"
+        if self.role != ROLES.WRITING_POSTPROCESSOR:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run produce_changes_summary()"
+            )
+
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_output_xml_prompt()
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+
+        print("Converting to XML format...")
+        response = chain.invoke({"Optimised": optimised_content})
+        print("Output is now in XML format")
+
+        return response
+
     def produce_changes_summary(self, original_content, optimised_content):
         """
         Produces a summary of the changes that happened when rewriting original article to optimized article.
@@ -1203,8 +1234,8 @@ class Azure(LLMInterface):
             TypeError: a TypeError is raised if the node role does not support the function
         """
 
-        # Raises an error if the role is not "Title optimisation"
-        if self.role != ROLES.CHANGES_SUMMARISER:
+        # Raises an error if the role is not "Writing postprocessor"
+        if self.role != ROLES.WRITING_POSTPROCESSOR:
             raise TypeError(
                 f"This node is a {self.role} node and cannot run produce_changes_summary()"
             )

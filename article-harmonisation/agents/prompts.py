@@ -1740,6 +1740,43 @@ class AzurePrompts(LLMPrompt):
         ]
         return change_summariser_prompt
 
+    @staticmethod
+    def return_output_xml_prompt() -> list[tuple[str, str]]:
+        """
+        Returns a prompt that instructs the model to output file to XML format from markdown.
+
+         Returns:
+            list[tuple[str, str]]: a list containing the output xml prompt. {Optimized} is the only input required to invoke the prompt.
+        """
+        output_xml_prompt = [
+            (
+                "system",
+                """
+                You are an expert in both Markdown and XML formats. Your task is to convert a given article from Markdown format to a well-structured XML format.
+
+                Follow these guidelines:
+
+                1. Analyze the Markdown structure carefully, identifying all elements such as headings, paragraphs, lists and any other formatting.
+                2. Create an appropriate XML structure that preserves the hierarchy and semantics of the original Markdown content.
+                3. Use meaningful XML tags that reflect the content's structure and purpose.
+                4. For any Markdown elements that don't have a clear XML equivalent, create appropriate custom tags or use comments to preserve the information.
+                5. Preserve any attributes or metadata from the Markdown, such as link URLs or image alt text, as XML attributes.
+                6. Ensure that the resulting XML is well-formed and valid, with proper nesting of elements.
+                7. Add an XML declaration at the beginning of the document: <?xml version="1.0" encoding="UTF-8"?>
+                8. If applicable, include a root element that encompasses the entire article.
+                9. If the Markdown contains any special characters, ensure they are properly escaped in the XML output.
+                """,
+            ),
+            (
+                "human",
+                """
+                Convert the following article in Markdown format to XML:
+                {Optimised}
+                """,
+            ),
+        ]
+        return output_xml_prompt
+
 
 class LlamaPrompts(LLMPrompt):
     """
