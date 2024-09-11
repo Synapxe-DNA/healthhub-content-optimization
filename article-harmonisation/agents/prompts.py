@@ -1493,6 +1493,10 @@ class AzurePrompts(LLMPrompt):
                                 Guideline: Your title should motivate readers to take action
                                 Example: "Prioritise Your Well-being with Regular Health Screenings"
 
+                            8.  SEO-friendly
+                                Guideline: Your title should be designed to rank high in search engine results and maximise the click-through rate (CTR) from Google search results
+                                Example: "Keto Diet Plan: 7-Day Menu for Rapid Weight Loss (2024)"
+
                             Consider the guidelines step by step carefully.
                         ### End of guidelines
 
@@ -1612,6 +1616,7 @@ class AzurePrompts(LLMPrompt):
                         1. Use an active voice and make it actionable
                         2. Make sure it matches the content of the page
                         3. Make it unique
+                        4. Make sure it is SEO-friendly to help increase click-through rate (CTR) from search results
                         ### End of guidelines
 
                         Check through your writing carefully.
