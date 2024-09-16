@@ -42,11 +42,16 @@ def return_optimisation_flags(article, rewriting_process: str):
                 flags["flag_for_writing_optimisation"] = False
 
             # Checks if the content category is not diseases and conditions, as it will not require content optimisation if it's not.
-            if article["content category"] != "diseases-and-conditions":
+            if article["content category"] not in ["diseases-and-conditions"]:
                 flags["flag_for_content_optimisation"] = False
 
             return flags
         case "harmonisation":
+            if article["content category"] not in [
+                "diseases-and-conditions",
+                "live-healthy-articles",
+            ]:
+                flags["flag_for_content_optimisation"] = False
             # Returning the other flags as true as this is a harmonisation flow
             return flags
 
@@ -79,6 +84,7 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
         "Meta Description Chosen",
         "Optional: Meta Description written by user",
         "Optimised article content",
+        "Optimised article content (XML)",
         "Article optimisation evaluation summary",
         "User approval of optimised article",
         "Optional: User attached updated article (Y)",
@@ -112,10 +118,12 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
         "reasons for poor readability",
         "insufficient content",
         "Optimised article content",
+        "Optimised article content (XML)",
         "Article optimisation evaluation summary",
         "User approval of optimised article",
         "Optional: User attached updated article (Y)",
         "Content Edit Status (if any)",
+        "Content Filter Flag",
     ]
 
     # try statement that checks if Excel file already exists
@@ -157,17 +165,16 @@ def store_optimised_outputs(file_path: str, sheet_name: str, article_data):
 
         # If sheet_name is "User Annotation (Optimised)", creates a list containing the article_optimisation_columns and article_data
         if sheet_name == "User Annotation (Optimised)":
-            data = [[article_optimisation_columns], [article_data]]
-
+            columns = article_optimisation_columns
         # elif sheet_name is "User Annotation (Harmonisaed)", creates a list containing the article_harmonisation_columns and article_data
         elif sheet_name == "User Annotation (Harmonised)":
-            data = [[article_harmonisation_columns], [article_data]]
+            columns = article_harmonisation_columns
         # else raise ValueError
         else:
             raise ValueError(f"{sheet_name} is not a valid sheet name!")
 
         # Creates a dataframe with first list in data as the column headers and subsequent rows as data
-        df = pd.DataFrame(data[1], columns=data[0])
+        df = pd.DataFrame([article_data], columns=columns)
 
         # Converting the dataframe to an Excel sheet
         df.to_excel(file_path, sheet_name=sheet_name, index=False)

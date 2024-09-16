@@ -265,75 +265,141 @@ class AzurePrompts(LLMPrompt):
         return structure_evaluation_prompt
 
     @staticmethod
-    def return_title_evaluation_prompt() -> list[tuple[str, str]]:
+    def return_title_evaluation_prompt(step: str) -> list[tuple[str, str]]:
         """
         Returns the title evaluation prompt where the chain output will be a string
 
         Returns:
             list[tuple[str, str]]: a list containing the title evaluation prompt. {title} and {article} are the inputs required to invoke the prompt.
         """
+        match step:
+            case "diseases-and-conditions":
+                title_evaluation_prompt = [
+                    (
+                        "system",
+                        """
+                        Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
 
-        title_evaluation_prompt = [
-            (
-                "system",
-                """
-                Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
+                        Steps to Follow -
+                        1.  Identify the Title:
+                        -   What is the title of the article?
 
-                Steps to Follow -
-                1.  Identify the Title:
-                -   What is the title of the article?
+                        2.  Analyze the Title:
+                        -   Does the title only feature the name/ synonym/ abbreviation/ common name of the disease?
+                        -   What main topic or benefit does the title convey?
+                        -   Is the title specific and clear in its message?
 
-                2.  Analyze the Title:
-                -   What main topic or benefit does the title convey?
-                -   Is the title specific and clear in its message?
+                        3.  Review the Content:
+                        -   Read the entire article carefully.
+                        -   Summarize the main points and key themes of the article.
+                        -   Note any specific sections or statements that align with or diverge from the title's promise.
 
-                3.  Review the Content:
-                -   Read the entire article carefully.
-                -   Summarize the main points and key themes of the article.
-                -   Note any specific sections or statements that align with or diverge from the title's promise.
+                        4.  Compare Title and Content:
+                        -   Does the content directly address the main topic or benefit stated in the title?
+                        -   Are the main themes and messages of the article consistent with the expectations set by the title?
+                        -   Identify any significant information in the article that is not reflected in the title and vice versa.
 
-                4.  Compare Title and Content:
-                -   Does the content directly address the main topic or benefit stated in the title?
-                -   Are the main themes and messages of the article consistent with the expectations set by the title?
-                -   Identify any significant information in the article that is not reflected in the title and vice versa.
+                        5.  Evaluate Relevance:
+                        -   Provide a detailed explanation of how well the title reflects the content.
+                        -   Use specific examples or excerpts from the article to support your evaluation.
+                        -   Highlight any discrepancies or misalignment between the title and the content.
 
-                5.  Evaluate Relevance:
-                -   Provide a detailed explanation of how well the title reflects the content.
-                -   Use specific examples or excerpts from the article to support your evaluation.
-                -   Highlight any discrepancies or misalignment between the title and the content.
+                        Your assessment should emphasize the relevance of the article and explain why the title is irrelevant as and when needed.
+                        """,
+                    ),
+                    ("human", """ Title: "10 Tips for Effective Time Management" """),
+                    (
+                        "assistant",
+                        """
+                        Content Summary:
+                        -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
 
-                Your assessment should emphasize the relevance of the article and explain why the title is irrelevant as and when needed.
-                """,
-            ),
-            ("human", """ Title: "10 Tips for Effective Time Management" """),
-            (
-                "assistant",
-                """
-                Content Summary:
-                -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
+                        Comparison and Evaluation:
+                        -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
+                        -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
+                        -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
+                        -   The relevance score is high due to the direct alignment of content with the title.""",
+                    ),
+                    (
+                        "system",
+                        """
+                        Instructions:
+                        1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
+                        2.  Write a brief report based on your findings, including specific examples.
+                        3.  Do NOT make any title suggestions or recommendations. Focus solely on the critique instead.
+                        4.  Casual tone or style in the title is acceptable and should not be a point of critique. Focus on the title relevance to the content.
+                        5.  The title MUST NOT only feature the name/ synonym/ abbreviation/ common name of the disease.
+                            -   "Avian Influenza H5N1 (Bird Flu)" should be considered as only featuring the disease name.
+                        """,
+                    ),
+                    (
+                        "human",
+                        "Evaluate the following title:\n{title}\n\nUsing the following article:\n{article}",
+                    ),
+                ]
+                return title_evaluation_prompt
+            case _:
+                title_evaluation_prompt = [
+                    (
+                        "system",
+                        """
+                        Objective: Assess the relevance of the article title by qualitatively comparing it with the content of the article, ensuring a detailed and contextual analysis.
 
-                Comparison and Evaluation:
-                -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
-                -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
-                -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
-                -   The relevance score is high due to the direct alignment of content with the title.""",
-            ),
-            (
-                "system",
-                """
-                Instructions:
-                1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
-                2.  Write a brief report based on your findings, including specific examples.
-                3.  Do NOT make any title suggestions or recommendations. Focus solely on the critique instead.
-                """,
-            ),
-            (
-                "human",
-                "Evaluate the following title:\n{title}\n\nUsing the following article:\n{article}",
-            ),
-        ]
+                        Steps to Follow -
+                        1.  Identify the Title:
+                        -   What is the title of the article?
 
-        return title_evaluation_prompt
+                        2.  Analyze the Title:
+                        -   What main topic or benefit does the title convey?
+                        -   Is the title specific and clear in its message?
+
+                        3.  Review the Content:
+                        -   Read the entire article carefully.
+                        -   Summarize the main points and key themes of the article.
+                        -   Note any specific sections or statements that align with or diverge from the title's promise.
+
+                        4.  Compare Title and Content:
+                        -   Does the content directly address the main topic or benefit stated in the title?
+                        -   Are the main themes and messages of the article consistent with the expectations set by the title?
+                        -   Identify any significant information in the article that is not reflected in the title and vice versa.
+
+                        5.  Evaluate Relevance:
+                        -   Provide a detailed explanation of how well the title reflects the content.
+                        -   Use specific examples or excerpts from the article to support your evaluation.
+                        -   Highlight any discrepancies or misalignment between the title and the content.
+
+                        Your assessment should emphasize the relevance of the article and explain why the title is irrelevant as and when needed.
+                        """,
+                    ),
+                    ("human", """ Title: "10 Tips for Effective Time Management" """),
+                    (
+                        "assistant",
+                        """
+                        Content Summary:
+                        -   The article introduces the importance of time management, discusses ten detailed tips, provides examples for each tip, and concludes with the benefits of good time management.
+
+                        Comparison and Evaluation:
+                        -   The title promises "10 Tips for Effective Time Management," and the article delivers on this promise by providing ten actionable tips.
+                        -   Each section of the article corresponds to a tip mentioned in the title, ensuring coherence and relevance.
+                        -   Specific excerpts: "Tip 1: Prioritize Your Tasks" aligns with the title's promise of effective time management strategies.
+                        -   The relevance score is high due to the direct alignment of content with the title.""",
+                    ),
+                    (
+                        "system",
+                        """
+                        Instructions:
+                        1.  Use the steps provided to qualitatively evaluate the relevance of the article title.
+                        2.  Write a brief report based on your findings, including specific examples.
+                        3.  Do NOT make any title suggestions or recommendations. Focus solely on the critique instead.
+                        4.  Casual tone or style in the title is acceptable and should not be a point of critique. Focus on the title relevance to the content.
+                        """,
+                    ),
+                    (
+                        "human",
+                        "Evaluate the following title:\n{title}\n\nUsing the following article:\n{article}",
+                    ),
+                ]
+                return title_evaluation_prompt
 
     @staticmethod
     def return_meta_desc_evaluation_prompt() -> list[tuple[str, str]]:
@@ -649,18 +715,24 @@ class AzurePrompts(LLMPrompt):
                 ### End of Context guidelines
 
                 ### Start of Instructions
-                You should analyze each header and it's contents step by step and determine if it's a unique keypoint, or it's content can be combined with another keypoint.
-                If you have identified two keypoints to contain very similar information, combine the common information and unique information in each article to form a new keypoint, and remove redundant sentences if required.
-                Do NOT summarise the content. Your main task is to improve the position of the keypoints and remove duplication information, not to summarise the information.
-                Your final answer be a compilation of all the keypoints from the two articles, with minimal to no loss in information when compared to the original keypoints individually.
+                1. Focus on the content of each keypoint, not just the headers. Similar content should be merged even if the headers are different.
+                2. Analyze the content of each keypoint thoroughly, looking for thematic similarities with other keypoints.
+                3. If you identify two or more keypoints with similar themes or information, regardless of their headers:
+                    a. Combine their content to form a new, comprehensive keypoint.
+                    b. Choose the most appropriate header for the combined content, or create a new header that accurately represents the merged information.
+                    c. Remove any redundant sentences, but ensure all unique information is retained.
+                4. Do NOT summarise the content. Your main task is to improve the position of the keypoints and remove duplication information, not to summarise the information.
+                5. Your final answer be a compilation of all the keypoints from the two articles, with minimal to no loss in information when compared to the original keypoints individually.
+                6. RETAIN ALL specific details, especially information pertaining to quantities, percentages, specific names, and technical terms.
+                7. You MUST check your final answer with each keypoint in the original articles to ensure that all information has been captured in your final answer.
+                8. Do NOT paraphrase and strictly only add or remove sentences.
+                9. You may use bullet points, but do NOT paraphrase the sentences
+                10. Remove ALL sentences under the "Omitted Sentences" section when compiling the information.
+                11. You may add conjunctions and connectors between sentences if it improves the flow of the sentences.
+                12. You MUST retain ALL key information, especially information pertaining to specific disease names and medications.
+                13. When in doubt about whether to include a piece of information, always choose to include it in the final compilation.
 
-                You MUST check your final answer with each keypoint in the original articles to ensure that all information has been captured in your final answer.
-                Do NOT paraphrase and strictly only add or remove sentences.
-                You may use bullet points, but do NOT paraphrase the sentences
-                Remove ALL sentences under the "Omitted Sentences" section when compiling the information.
-
-                You may add conjunctions and connectors between sentences if it improves the flow of the sentences.
-                You MUST retain ALL key information, especially information pertaining to specific disease names and medications.
+                IMPORTANT: The goal is to create a comprehensive, non-redundant compilation of all information from the original keypoints. Err on the side of inclusion rather than omission when in doubt.
                 ### End of Instructions
 
                 Use the example below as an idea on how compiling the keypoints should be:
@@ -723,9 +795,10 @@ class AzurePrompts(LLMPrompt):
         """
         Returns the content optimisation prompt. There are 3 different content prompt that can be returned:
 
-        1. "optimise health and conditions": This prompt contains a pre-defined structure that all diseases-and-conditions articles will follow, regardless of optimisation or harmonisation.
-        2. "extract main article structure": This prompt will produce a template based on the article input. This is used as the first step duing harmonisation of live-healthy articles, where it will extract out the structure of the main article.
-        3. "optimise live healthy": This prompt will structure the given content based on the extracted article template. This is used as the second step during the harmonisation of live-healthy articles.
+        1. "structure health and conditions": This prompt contains a pre-defined structure that all diseases-and-conditions articles will follow, regardless of optimisation or harmonisation.
+        2. "optimise health and conditions": This prompt will optimize the content of all diseases-and-conditions articles.
+        3. "extract main article structure": This prompt will produce a template based on the article input. This is used as the first step duing harmonisation of live-healthy articles, where it will extract out the structure of the main article.
+        4. "optimise live healthy": This prompt will structure the given content based on the extracted article template. This is used as the second step during the harmonisation of live-healthy articles.
 
         Args:
             step(str): a String indicating which content prompt should be returned.
@@ -734,89 +807,103 @@ class AzurePrompts(LLMPrompt):
             list[tuple[str, str]]: a list containing the content optimisation prompt. {Keypoints} is the only input required to invoke the prompt.
         """
         match step:
-            case "optimise health and conditions":
-                optimise_health_conditions_content_prompt = [
+            case "structure health and conditions":
+                sort_health_conditions_prompt = [
                     (
                         "system",
-                        """
-                        You are part of an article re-writing process. The article content is aimed to educate readers about a particular health condition or disease.
+                        """ You are part of an article re-writing process. Your task is to sort the given keypoints into the following structure:
 
-                            Your task is to utilise content from the given key points to fill in for the required sections stated below.
-                            You will also be given a set of instructions that you MUST follow.
+                            ### Overview of the condition
 
-                            ### Start of content requirements
-                                When rewriting the content, your writing MUST meet the requirements stated here.
-                                If the key points do not contain information for missing sections, you may write your own content based on the header. Your writing MUST be relevant to the header.
+                            ### Causes and Risk Factors of the condition
 
-                                Your final writing MUST include these sections in this specific order. Some sections carry specific instructions that you SHOULD follow.
-                                    1. Overview of the condition
-                                        - In this section, your writing should be a brief explanation of the disease. You can assume that your readers have no prior knowledge of the condition.
-                                    2. Causes and Risk Factors
-                                    3. Symptoms and Signs
-                                    4. Complications
-                                    5. Treatment and Prevention
-                                    6. When to see a doctor
+                            ### Symptoms and Signs
 
-                                You must also use the following guidelines and examples to phrase your writing.
+                            ### Complications
 
-                                1. Elaborate and Insightful
-                                    Your writing should expand upon the given key points and write new content aimed at educating readers on the condition.
-                                    You MUST state the primary intent, goals, and a glimpse of information in the first paragraph.
+                            ### Treatment
 
-                                2. Carry a positive tone
-                                    Do NOT convey negative sentiments in your writing.
-                                    You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
-                                    Example: We recommend taking the diabetes medicine as prescribed by your doctor or pharmacist. This will help in the medicine’s effectiveness and reduce the risk of side effects.
+                            ### Prevention
 
-                                3. Provide reassurance
-                                    Your writing should reassure readers that the situation is not a lost cause.
-                                    Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
+                            ### When to see a doctor
 
-                                You should write your content based on the required sections step by step.
-                                After each section has been rewritten, you must check your writing with each guideline step by step.
+                        Your final answer MUST include these sections with the relevant headers in this specific order and follow the instructions provided.
 
-                                Here is an example you should use to structure your writing:
-                                    ### Start of example
-                                        1. Overview of Influenza
-                                        Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
+                        Instructions:
+                        1. Prioritize using the predefined section headers listed above.
+                        2. Use the original keypoint name as the section header name if it's similar enough to the predefined headers.
+                        3. If a keypoint doesn't fit perfectly into one of these sections, follow these steps in order:
+                            a. First, try to place it as a subsection under the most relevant main section.
+                            b. If it truly doesn't fit as a subsection, only then create a new main section.
+                        4. Use the following format for subsections:
+                        #### [Subsection Title]
+                        5. Do NOT modify the content of the keypoints; your task is to sort them into the most appropriate sections or subsections.
+                        6. IMPORTANT: ALL keypoints and their COMPLETE contents MUST be present in the final output. Do not omit or summarize any information. The only exception is if a keypoint does not have any content under it.
+                        7. Each piece of information should appear ONLY ONCE in the final output.
+                        8. If a predefined section has no content, include the section header with no body text.
 
-                                        2. Causes and Risk Factors
-                                        Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. The flu virus is classified into three main types: A, B, and C. Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. Factors that increase the risk of contracting influenza include close contact with infected individuals, a weakened immune system, and lack of vaccination. Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
+                        Sorting Process:
+                        1. Read through all keypoints carefully.
+                        2. For each keypoint:
+                            a. Determine if it fits into one of the predefined sections.
+                            b. If not, try to create a subsection under the most relevant main section.
+                            c. If it doesn't fit as a subsection, only then create a new main section.
+                            d. Use the keypoint's title or a summary of its content as the section or subsection title.
+                            e. Place the ENTIRE content of the keypoint into the appropriate section or subsection.
+                        3. After sorting all keypoints, review your output to ensure:
+                            a. ALL keypoints are included.
+                            b. The COMPLETE content of each keypoint is present.
+                            c. No information has been omitted or summarized.
+                            d. No information appears more than once.
+                            e. New main sections are created only when absolutely necessary.
 
-                                        3. Symptoms and Signs
-                                        Some symptoms include: High fever, cough, headache, and muscle aches. Other symptoms include sneezing, nasal discharge, and loss of appetite. Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhoea, although these are more common in children.
 
-                                        4. Complications of Influenza
-                                        The following people are at greater risk of influenza-related complications:
-                                        - Persons aged 65 years old and above.
-                                        - Children aged between 6 months old to 5 years old.
-                                        - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
-                                        - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalisation or even death, particularly in vulnerable populations.
+                        The following is an example input:
+                            "Main Keypoint: Causes of Influenza
+                            Content: Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks.
 
-                                        5. Treatment and Prevention
-                                        Here are some ways to battle influenza and to avoid it:
-                                        Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
-                                        Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
-                                        Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
+                            Main Keypoint: Self-care
+                            Content: When you have the flu, prioritize rest, stay hydrated, and manage symptoms with over-the-counter medications as needed."
 
-                                        6. When to See a Doctor
-                                        You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
-                                    ### End of example
+                            Main Keypoint: Use of MediSave
+                            Content: Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
 
-                            ### End of content requirements
+                        Corresponding output:
+                            ### Overview of the condition
 
-                            ### Start of instructions
-                                You MUST follow these instructions when writing out your content.
+                            ### Causes and Risk Factors of Influenza
+                            Influenza, or the flu, is a contagious respiratory illness caused by influenza viruses. It spreads mainly through droplets when an infected person coughs, sneezes, or talks.
 
-                                You MUST always ensure that all the key information you have been given is reflected in your final answer. There must be NO information loss.
-                                Your answer should also contain a close word count to the original content.
-                                You MUST follow the content requirements.
-                                You MUST NOT abridge the content AT ALL. Instead, your task is only to restructure the writing to fit these guidelines. There MUST NOT be any loss in key information between the original keypoints and your final answer.
-                                You must use the given key points to FILL IN the required sections.
-                                Do NOT include any of the prompt instructions inside your response. The reader must NOT know what is inside the prompts.
+                            ### Symptoms and Signs
 
-                            Follow these instructions step by step carefully
-                        ### End of instructions
+                            ### Complications
+
+                            ### Treatment
+                            #### Self-care
+                            When you have the flu, prioritize rest, stay hydrated, and manage symptoms with over-the-counter medications as needed.
+
+                            ### Prevention
+
+                            ### When to see a doctor
+
+                            ### Use of Medisave
+                            Additionally, MediSave may be used up to $500/$700 per year for Influenza vaccinations for persons with a higher risk of developing influenza-related complications at both CHAS GP clinics and polyclinics.
+
+                            In the above example, the first keypoint is placed under "Causes and Risk Factors" as its content closely relates to the header.
+                            The "Self-care" keypoint doesn't match any predefined headers exactly, but it's most closely related to "Treatment". Therefore, it's added as a subsection under "Treatment"
+                            The "Use of MediSave" keypoint doesn't fit well under any predefined headers or as a subsection. As a result, a new main section is created using the original keypoint name.
+
+
+                        Final Reminders:
+                        Adhere to the given structure.
+                        Prioritize using the predefined structure, only adding new sections when absolutely necessary.
+                        Do not remove any of the predefined sections.
+                        Always place new sections next to the most closely related predefined sections.
+                        Ensure ALL keypoints, except those without content, and their content are included in your final answer. This is crucial.
+                        Each keypoint and its content should appear in ONLY ONE section.
+                        Check that each section header is unique.
+                        Maintain a logical flow of information throughout the article.
+
                         """,
                     ),
                     (
@@ -827,12 +914,115 @@ class AzurePrompts(LLMPrompt):
                         """,
                     ),
                 ]
+                return sort_health_conditions_prompt
+            case "optimise health and conditions":
+                optimise_health_conditions_content_prompt = [
+                    (
+                        "system",
+                        """
+                        You are part of an article re-writing process.
 
+                        Your task is to phrase the content from the given article content using the following guidelines and examples.
+                        If one of the sections, denoted by ###, has no content, you MUST write your own content based on the header. Your writing MUST be relevant to the header and the topic.
+                        You will also be given a set of instructions that you MUST follow.
+
+                        ### Start of content requirements
+                            When rewriting the content, your writing MUST meet the requirements stated here.
+                            Do NOT change the content structure. ALL headers present in the given content should be presented in your final answer.
+
+                                    You must also use the following guidelines and examples to phrase your writing.
+
+                                    1. Elaborate and Insightful
+                                        Your writing should expand upon the given key points and write new content aimed at educating readers on the condition.
+                                        You MUST state the primary intent, goals, and a glimpse of information in the first paragraph.
+
+                                    2. Carry a positive tone
+                                        Do NOT convey negative sentiments in your writing.
+                                        You should communicate in a firm but sensitive way, focusing on the positives of a certain medication instead of the potential risks.
+                                        Example: We recommend taking the diabetes medicine as prescribed by your doctor or pharmacist. This will help in the medicine’s effectiveness and reduce the risk of side effects.
+
+                                    3. Provide reassurance
+                                        Your writing should reassure readers that the situation is not a lost cause.
+                                        Example: Type 1 diabetes can develop due to factors beyond your control. However, it can be managed through a combination of lifestyle changes and medication. On the other hand, type 2 diabetes can be prevented by having a healthier diet, increasing physical activity, and losing weight.
+
+                                    You should write your content based on the required sections step by step.
+                                    After each section has been rewritten, you must check your writing with each guideline step by step.
+
+                                    Here is an example you should use to structure your writing:
+                                        ### Start of example
+                                            1. Overview of Influenza
+                                            Influenza is a contagious viral disease that can affect anyone. It spreads when a person coughs, sneezes, or speaks. The virus is airborne and infects people when they breathe it in. Influenza, commonly known as the flu, can cause significant discomfort and disruption to daily life. It typically occurs in seasonal outbreaks and can vary in severity from mild to severe.
+
+                                            2. Causes and Risk Factors
+                                            Influenza is caused by the flu virus, which is responsible for seasonal outbreaks and epidemics. The flu virus is classified into three main types: A, B, and C. Types A and B are responsible for seasonal flu epidemics, while Type C causes milder respiratory illness. Factors that increase the risk of contracting influenza include close contact with infected individuals, a weakened immune system, and lack of vaccination. Additionally, those living in crowded conditions or traveling frequently may also be at higher risk.
+
+                                            3. Symptoms and Signs
+                                            Some symptoms include: High fever, cough, headache, and muscle aches. Other symptoms include sneezing, nasal discharge, and loss of appetite. Influenza symptoms can develop suddenly and may be accompanied by chills, fatigue, and sore throat. Some individuals may also experience gastrointestinal symptoms such as nausea, vomiting, or diarrhoea, although these are more common in children.
+
+                                            4. Complications of Influenza
+                                            The following people are at greater risk of influenza-related complications:
+                                            - Persons aged 65 years old and above.
+                                            - Children aged between 6 months old to 5 years old.
+                                            - Persons with chronic disorders of their lungs, such as asthma or chronic obstructive pulmonary disease (COPD).
+                                            - Women in the second or third trimester of pregnancy. Complications can include pneumonia, bronchitis, and sinus infections. In severe cases, influenza can lead to hospitalisation or even death, particularly in vulnerable populations.
+
+                                            5. Treatment and Prevention
+                                            Here are some ways to battle influenza and to avoid it:
+                                            Treatment: You can visit the local pharmacist to procure some flu medicine. Antiviral medications can help reduce the severity and duration of symptoms if taken early. Over-the-counter medications can alleviate symptoms such as fever and body aches.
+                                            Prevention: Avoid crowded areas and wear a mask to reduce the risk of transmission. Hand hygiene is crucial; wash your hands frequently with soap and water or use hand sanitizer. Getting an annual flu vaccine is one of the most effective ways to prevent influenza. The vaccine is updated each year to match the circulating strains.
+                                            Treatment: Rest at home while avoiding strenuous activities until your symptoms subside. Stay hydrated and maintain a balanced diet to support your immune system. Over-the-counter medications can provide symptomatic relief, but it is important to consult a healthcare provider for appropriate treatment options.
+
+                                            6. When to See a Doctor
+                                            You should visit your local doctor if your symptoms persist for more than 3 days, or when you see fit. Seek medical attention if you experience difficulty breathing, chest pain, confusion, severe weakness, or high fever that does not respond to medication. Prompt medical evaluation is crucial for those at higher risk of complications or if symptoms worsen.
+                                        ### End of example
+
+                        ### End of content requirements
+
+                        ### Start of instructions
+                            You MUST follow these instructions when writing out your content.
+
+                            1. RETENTION OF INFORMATION
+                            Ensure ALL information from the original content is reflected in your final answer.
+                            Do NOT omit any details, facts, examples, or specific nouns.
+                            If unsure how to rewrite a point, retain it in its original form.
+
+                            2. CONTENT STRUCTURE
+                            Do NOT change the content structure or the headers.
+                            Do NOT leave any sections empty. Ensure that ALL sections have content.
+
+                            3. ACCURACY AND COMPLETENESS
+                            After rewriting each section, review the original content to ensure all points are included.
+                            Do NOT abridge or summarize the content. Your task is to restructure, not condense.
+                            Double-check that all specific details (e.g., names, places, numbers, criteria) are accurately preserved.
+
+                            4. SPECIFICITY PRESERVATION
+                            Maintain the level of specificity present in the original content.
+                            Do not generalize specific information (e.g., "Singaporean children" should not become just "children").
+                            Preserve mentions of specific programs, subsidies, or healthcare systems
+
+                            5. CLARITY AND PRESENTATION
+                            Do NOT include any prompt instructions in your response.
+                            The reader must NOT be aware of the prompts or instructions you've been given.
+
+                            6. FINAL CHECK
+                            Before submitting, compare your rewritten content with the original to ensure no information has been lost.
+                            Verify that your response adheres to all the above instructions.
+
+
+                        ### End of instructions
+                        """,
+                    ),
+                    (
+                        "human",
+                        """
+                        Rewrite the following sorted content:
+                        {sorted_content}
+                        """,
+                    ),
+                ]
                 return optimise_health_conditions_content_prompt
-            case "optimise live healthy":
-                pass
-            case "extract main article structure":
-                extract_main_article_structure = [
+            case "extract main live healthy article structure":
+                extract_healthy_main_article_structure = [
                     (
                         "system",
                         """
@@ -844,12 +1034,54 @@ class AzurePrompts(LLMPrompt):
                     (
                         "human",
                         """
-                        Write out a template based on this article's structure and flow:
+                        Analyze the following article and create a template of its structure. Follow these guidelines:
+
+                        Use Markdown formatting for headers (e.g., # for main title, ## for major sections, ### for subsections).
+                        Capture the hierarchical structure of the article, including main sections and subsections.
+                        For each section, provide a brief description of the expected content in square brackets.
+                        Do not include specific content from the original article.
+                        Omit formatting tags like "Content:" or "h2 Sub Header:".
+
+                        Here's the article to analyze:
                         {article}
+                        Please provide the structure template based on the above guidelines.
                         """,
                     ),
                 ]
-                return extract_main_article_structure
+                return extract_healthy_main_article_structure
+            case "structure live healthy":
+                sort_live_healthy_prompt = [
+                    (
+                        "system",
+                        """
+                        You are part of an article re-writing process. Your task is to sort the given keypoints into the provided structure, creating a cohesive article.
+                        """,
+                    ),
+                    (
+                        "human",
+                        """
+                        Sort the following keypoints into the provided structure, following these guidelines:
+
+                        1. Use the provided structure as a template, maintaining the hierarchy of headers.
+                        2. Place each keypoint under the most appropriate section based on the description of each section.
+                        3. Present the content as a flowing article, with headers followed directly by relevant text.
+                        4. IMPORTANT: Ensure that EVERY single keypoint is included in the final article. None should be left out.
+                        5. If a keypoint doesn't fit any existing section:
+                            a. Try to broaden your interpretation of existing sections first.
+                            b. If it still doesn't fit, create a new section with a descriptive yet generalizable title.
+                            c. Place new sections next to the most closely related existing sections.
+                        6. Ensure all keypoints are included and the article maintains a logical flow.
+                        7. Each keypoint should be placed in one section only to avoid redundancy.
+
+                        Structure:
+                        {Structure}
+                        Keypoints to sort:
+                        {Keypoints}
+                        Please provide the sorted article based on the above guidelines.
+                        """,
+                    ),
+                ]
+                return sort_live_healthy_prompt
 
     @staticmethod
     def return_writing_prompt() -> list[tuple[str, str]]:
@@ -866,7 +1098,7 @@ class AzurePrompts(LLMPrompt):
                 """ You are part of an article re-writing process. The article content is aimed to educate readers about a health-related topic and motivate them to take charge of their health.
 
                 Your objective is to rewrite the given article to based on the given guidelines and instructions.
-                Your writing should carry a casual, friendly and engaging tone. Do NOT write in a professional and formal tone. Do NOT write in a conversational style as well.
+                Your writing should carry a professional, friendly and engaging tone. Do NOT write in a formal tone. Do NOT write in a conversational style as well.
 
                 Follow the personality and voice guidelines below and adhere to the specific instructions provided.
                 You should use the given examples to form your final answer.
@@ -1115,14 +1347,17 @@ class AzurePrompts(LLMPrompt):
                 hemingway_readability_optimisation_prompt = [
                     (
                         "system",
-                        """ You are part of an article rewriting process. Your task is to identify remove redundant writing in the given context.
+                        """ You are part of an article rewriting process. Your task is to identify remove redundant writing in the given context while preserving all key information, examples, and specific details.
 
                         There should not be any loss of key information when removing these redundant information.
 
                         Your writing should carry a friendly and engaging tone. Do NOT write in a professional and formal tone.
 
-                        Do not change the article structure such as use of headers.
-                        Do not alter any bullet points.
+                        Instructions:
+                        1. Do not change the article structure such as use of headers.
+                        2. Do not alter any bullet points.
+                        3. Preserve ALL examples present in the original article.
+                        4. Retain ALL nouns, proper names, and specific terms present in the original article.
 
                         You can use this example to help you identify redundant phrasing and to structure your answer.
 
@@ -1131,6 +1366,13 @@ class AzurePrompts(LLMPrompt):
 
                         Your answer: "To finish the project on time, all team members must work together."
                         ### End of example
+
+                        Final Checks:
+                        Before submitting your rewritten content, review it against the original to ensure:
+                        1. All examples are preserved.
+                        2. Lists of items or types (e.g., patient groups, symptoms) are complete.
+                        3. The core meaning and emphasis of each sentence is maintained.
+                        4. No key information or details have been lost in the process of removing redundancy.
                         """,
                     ),
                     ("human", "Rewrite the following content {content}"),
@@ -1251,6 +1493,10 @@ class AzurePrompts(LLMPrompt):
                                 Guideline: Your title should motivate readers to take action
                                 Example: "Prioritise Your Well-being with Regular Health Screenings"
 
+                            8.  SEO-friendly
+                                Guideline: Your title should be designed to rank high in search engine results and maximise the click-through rate (CTR) from Google search results
+                                Example: "Keto Diet Plan: 7-Day Menu for Rapid Weight Loss (2024)"
+
                             Consider the guidelines step by step carefully.
                         ### End of guidelines
 
@@ -1370,6 +1616,7 @@ class AzurePrompts(LLMPrompt):
                         1. Use an active voice and make it actionable
                         2. Make sure it matches the content of the page
                         3. Make it unique
+                        4. Make sure it is SEO-friendly to help increase click-through rate (CTR) from search results
                         ### End of guidelines
 
                         Check through your writing carefully.
@@ -1435,6 +1682,100 @@ class AzurePrompts(LLMPrompt):
                 ]
 
                 return shorten_meta_desc_prompt
+
+    @staticmethod
+    def return_changes_summariser_prompt() -> list[tuple[str, str]]:
+        """
+        Returns the change summariser prompt
+
+        Returns:
+            list[tuple[str, str]]: a list containing the change summariser prompt. {Orignial} and {Optimized} are the only inputs required to invoke the prompt.
+        """
+        change_summariser_prompt = [
+            (
+                "system",
+                """
+                You will be given two versions of an article: the original version and the optimised version after rewriting. Your task is to analyze and summarize the differences between these two versions in 2-3 sentences, with a focus on how the article quality has improved.
+                Below is a list of criterias you can focus on while writing the summary:
+
+
+                Content Changes:
+
+                Highlight any information, sections, or key points that have been added or removed to the optimized version.
+                Discuss how these additions or removals enhance or change the article's message, clarity, or effectiveness.
+
+
+                Structural Changes:
+
+                Note any significant changes in the organization or structure of the content between the two versions.
+                Explain how these structural changes might affect the reader's understanding or engagement with the article.
+
+
+                Language and Style:
+
+                Identify any notable changes in language, tone, or writing style between the original and optimized versions.
+                Discuss how these changes might impact the article's readability, engagement, or target audience.
+
+
+                Overall Impact:
+
+                Provide a brief assessment of whether the changes in the optimized version have improved the article's quality, clarity, or effectiveness compared to the original version.
+
+
+                Please provide your analysis in a clear and concise manner in 2-3 sentences.
+                """,
+            ),
+            (
+                "human",
+                """
+                Compare the original and optimised articles and come up with a summary of the changes made.
+
+                Original article:
+                {Original}
+
+                Optimised article:
+                {Optimised}
+                """,
+            ),
+        ]
+        return change_summariser_prompt
+
+    @staticmethod
+    def return_output_xml_prompt() -> list[tuple[str, str]]:
+        """
+        Returns a prompt that instructs the model to output file to XML format from markdown.
+
+         Returns:
+            list[tuple[str, str]]: a list containing the output xml prompt. {Optimized} is the only input required to invoke the prompt.
+        """
+        output_xml_prompt = [
+            (
+                "system",
+                """
+                You are an expert in both Markdown and XML formats. Your task is to convert a given article from Markdown format to a well-structured XML format.
+
+                Follow these guidelines:
+
+                1. Analyze the Markdown structure carefully, identifying all elements such as headings, paragraphs, lists and any other formatting.
+                2. Create an appropriate XML structure that preserves the hierarchy and semantics of the original Markdown content.
+                3. Use meaningful XML tags that reflect the content's structure and purpose.
+                4. For any Markdown elements that don't have a clear XML equivalent, create appropriate custom tags or use comments to preserve the information.
+                5. Preserve any attributes or metadata from the Markdown, such as link URLs or image alt text, as XML attributes.
+                6. Ensure that the resulting XML is well-formed and valid, with proper nesting of elements.
+                7. Add an XML declaration at the beginning of the document: <?xml version="1.0" encoding="UTF-8"?>
+                8. If applicable, include a root element that encompasses the entire article.
+                9. If the Markdown contains any special characters, ensure they are properly escaped in the XML output.
+                """,
+            ),
+            (
+                "human",
+                """
+                Convert the following article in Markdown format to XML:
+                {Optimised}
+                """,
+            ),
+        ]
+        return output_xml_prompt
 
 
 class LlamaPrompts(LLMPrompt):
