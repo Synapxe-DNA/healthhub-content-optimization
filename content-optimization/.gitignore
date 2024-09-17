@@ -28,6 +28,8 @@ tests/data/**
 
 # but not raw files
 data/**/*.xlsx
+# program-sub-pages csv files
+notebooks/**/*.csv
 
 ##########################
 # Common files
