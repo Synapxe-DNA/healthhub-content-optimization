@@ -1,5 +1,9 @@
 # Changelog
 
+## September 18, 2024 <a id="september-18-2024"></a>
+
+- Edited the extractor.py for the [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline to resolve the error in the recursive extraction of content from "programs" and "program-sub-pages" articles.
+
 ## September 5, 2024 <a id="september-5-2024"></a>
 
 - Updated the README.md for [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) data, and included the 2 new fields "pr_name" and "date_modified" to the new field in the data.
