@@ -148,9 +148,9 @@ The exploratory/experimental code for content optimization is stored in the [`no
 
   - [`runner_statistical.ipynb`](notebooks/runner_statistical.ipynb): contains the code for running the notebook — [`emb_sim_statistical.ipynb`](notebooks/emb_sim_statistical.ipynb); parameterize by [`papermill`](https://papermill.readthedocs.io/en/latest/); this notebook helps you run your experiments for different SVE techniques and similarity metrics and evaluate the results in the `artifacts/` folder
 
-  - [`IQuit.ipynb`](notebooks/IQuit.ipynb): contains the code to process the IQuit article Javascript file.
+  - [`IQuit.ipynb`](content-optimization/notebooks/IQuit.ipynb): contains the code to process the IQuit article Javascript file.
 
-  - [`vaccinate.ipynb`](notebooks/vaccinate.ipynb): contains the code to process the vaccinate article Javascript file.embeddings
+  - [`vaccinate.ipynb`](content-optimization/notebooks/vaccinate.ipynb): contains the code to process the vaccinate article Javascript file.embeddings
 
 ## Usage
 
