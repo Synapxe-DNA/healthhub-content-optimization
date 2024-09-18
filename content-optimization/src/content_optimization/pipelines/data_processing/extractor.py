@@ -4,7 +4,7 @@ import string
 import unicodedata
 from typing import Optional
 
-from bs4 import BeautifulSoup, NavigableString, PageElement
+from bs4 import BeautifulSoup, NavigableString, PageElement, element
 
 # Set up logger in extractor.py
 # Edit conf/logging.yml to see changes
@@ -108,47 +108,89 @@ class HTMLExtractor:
 
         return soup
 
+    def manual_extract_text(self, tag, content):
+        """
+        Recursively extracts text from the HTML tag and its children.
+
+        Args:
+            tag (Tag): The current HTML tag to process.
+            content (list): A list to append the extracted content to.
+        """
+        for child in tag.children:
+            # If the child is a string (NavigableString), extract it directly
+            if isinstance(child, str):
+                cleaned_text = child.strip()
+                if cleaned_text:
+                    if content and content[-1] not in ["\n", ""]:
+                        content[-1] += " " + cleaned_text
+                    else:
+                        content.append(cleaned_text + " ")
+            # If the child is a Tag, recurse deeper
+            elif isinstance(child, element.Tag):
+                if child.name in [
+                    "div",
+                    "span",
+                    "blockquote",
+                    "header",
+                    "footer",
+                    "aside",
+                ]:
+                    self.manual_extract_text(child, content)
+                elif child.name in ["h1", "h2", "h3", "h4", "h5", "h6", "p"]:
+                    text = child.get_text(separator=" ")
+                    text = text.replace("*", " ")  # Replace '*' with space
+                    if text:
+                        text = " ".join(text.split())  # Clean spaces
+                        content.append(text + " ")
+                elif child.name == "strong":
+                    self._extract_text_from_strong(child, content)
+                elif child.name == "em":
+                    self._extract_text_from_em(child, content)
+                elif child.name == "ul":
+                    self._extract_text_from_ul(child, content)
+                elif child.name == "ol":
+                    self._extract_text_from_ol(child, content)
+                elif child.name == "a":
+                    text = child.get_text(separator=" ")
+                    url = child.get("href", "")
+                    formatted_text = f"{text} [{url}] " if url else f" {text} "
+                    formatted_text = " ".join(formatted_text.split())
+                    if content and content[-1] != "\n":
+                        content[-1] += formatted_text
+                    else:
+                        content.append(formatted_text)
+                elif child.name in ["li", "sup"]:
+                    text = " ".join(child.get_text().split())
+                    if text:
+                        content.append(
+                            ("- " if child.name == "li" else "") + text + " "
+                        )
+                elif child.name == "br":
+                    if content and content[-1] != "\n":
+                        content.append("\n")
+                else:
+                    self.manual_extract_text(child, content)
+
     def extract_text(self) -> str:
         """
         Extracts the main content from the HTML content.
 
         Returns:
             str: The main content body extracted from the HTML content.
-
-        Note:
-            This function unwraps the HTML content if it is contained in a <div>.
-            It then removes tables and extracts the main content by iterating over the tags in the soup.
-            The following tags are considered:
-
-                - h1, h2, h3, h4, h5, h6: These tags are treated as key headers and are paragraphed between them.
-                - p: This tag is treated as a paragraph.
-                    * If the text does not contain sentences about HealthHub app, Google Play, or Apple Store,
-                    and it contains a strong tag, it is treated differently based on the text content.
-                - ul: This tag is treated as an unordered list. If it is the child of a <div>, it is treated as a list.
-                - ol: This tag is treated as an ordered list.
-                - div: This tag is treated as a text within a div.
-                - span: This tag is treated as a text within a span.
-                - blockquote: This tag is treated as a text within a blockquote.
-
-            The extracted content is stored in a list and then processed (_clean_up_fragments).
-            Double newlines are replaced with single newlines and whitespace is stripped.
-            If the processed text is empty, the function attempts to extract the content from the <div> tags.
         """
         # Unwrap if the HTML content is contained in a div
-        # NOTE: The log is commented out as it is only used during development
         if self.soup.div is not None:
-            # logger.debug("Text Extraction - Unwrapping outermost div container")
             self.soup.div.unwrap()
 
         # Remove all tables from the HTML text
         for table in self.soup.find_all("table"):
             table.extract()
-            logger.debug(f"Text Extraction - Removing table from {self.content_name}")
 
         # Extract the main content
         content = []
+        unique_lines = set()  # To track unique lines and avoid duplicates
 
-        # # First Pass: Process articles with content_category != "programs" and "program-sub-pages"
+        # First Pass: Process articles with content_category != "programs" and "program-sub-pages"
         if self.content_category not in ["programs", "program-sub-pages"]:
             for tag in self.soup.find_all(
                 [
@@ -164,14 +206,12 @@ class HTMLExtractor:
                     "div",
                     "span",
                     "blockquote",
+                    "a",
                 ],
                 recursive=False,
             ):
-                # For texts within div and span - recursive search
                 if tag.name in ["div", "span", "blockquote"]:
-                    # Changes content via Pass By Reference
                     self._extract_text_from_container(tag, content)
-                # Handles the text for the rest
                 else:
                     self._extract_text_elements(tag, content)
 
@@ -191,23 +231,27 @@ class HTMLExtractor:
                     "div",
                     "span",
                     "blockquote",
+                    "a",
                 ],
-                recursive=True,
+                recursive=False,
             ):
                 if tag.name in ["div", "span", "blockquote"]:
-                    # Changes content via Pass By Reference
-                    self._extract_text_from_container(tag, content)
-                # Handles the text for the rest
+                    self.manual_extract_text(tag, content)
                 else:
                     self._extract_text_elements(tag, content)
 
         # Clean up content fragments
         cleaned_content = self._clean_up_fragments(content)
 
+        # Remove duplicate lines by preserving only unique lines
+        final_content = []
+        for line in cleaned_content:
+            if line.strip() not in unique_lines:
+                final_content.append(line)
+                unique_lines.add(line.strip())
+
         # Replace double newlines with single newlines and strip whitespace
-        extracted_content_body = (
-            "\n".join(cleaned_content).replace("\n\n", "\n").strip()
-        )
+        extracted_content_body = "\n".join(final_content).replace("\n\n", "\n").strip()
 
         return extracted_content_body
 
