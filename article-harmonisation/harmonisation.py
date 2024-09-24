@@ -95,8 +95,14 @@ def researcher_node(state):
         # Generating the keypoints using the researcher agent
         article_keypoints = researcher_agent.generate_keypoints(article)
 
+        print(f"Type: {type(additional_content)}")
+        print(additional_content)
         # If statement for adding additional content to the researcher keypoints. It checks if the additional_content is of float type, as an empty cell in Excel returns "nan", which is a float.
-        if not isinstance(additional_content, float):
+        if (
+            not isinstance(additional_content, float)
+            and len(additional_content.strip()) != 0
+        ):
+            print("Adding additional content")
             article_keypoints = researcher_agent.add_additional_content(
                 keypoints=article_keypoints, additional_content=additional_content
             )
@@ -257,7 +263,7 @@ def title_optimisation_node(state):
 
 
 def content_guidelines_optimisation_node(state):
-    """Creates a content guidelines node, which will rewrite missing content of the article based on the article topic's requirements state in the content playbook.
+    """Creates a content guidelines node, which will stucture and rewrite missing content of the article based on the article topic's requirements state in the content playbook.
 
         Requirements for each topic can be found in the content playbook under:
             1. Chapter 3, Step 1, (iii) writing guide
@@ -293,9 +299,11 @@ def content_guidelines_optimisation_node(state):
     match content_category:
         # If content category is disease and conditions, there is no need for a main_article_content input and vice versa
         case "diseases-and-conditions":
-            optimised_content = content_optimisation_agent.optimise_content(keypoints)
+            optimised_content = content_optimisation_agent.optimise_disease_content(
+                keypoints
+            )
         case "live-healthy-articles":
-            optimised_content = content_optimisation_agent.optimise_content(
+            optimised_content = content_optimisation_agent.optimise_healthy_content(
                 keypoints, main_article_content
             )
 
@@ -493,6 +501,50 @@ def personality_guidelines_evaluation_node(state):
     }
 
 
+def writing_optimisation_postprocessor_node(state):
+    """Creates a writing optimisation postprocessor node that summarises the changes that have taken place after rewriting the original article and outputs the optimised article in xml format.
+
+    Args:
+        state: a dictionary storing relevant attributes as keys and content as the respective items.
+
+    Returns:
+        "article_evaluation": dictionary with updated changes_summary indicating the changes in content that have taken place from the original to the optimized article.
+    """
+    # Obtaining the original article
+    original_article_inputs = state.get("original_article_inputs")
+    original_article = original_article_inputs["article_content"]
+
+    # Obtaining the recently optimised writing
+    optimised_article_output = state.get("optimised_article_output")
+    optimised_writing = optimised_article_output.get("optimised_writing")
+
+    writing_optimisation_postprocessor_agent = state.get("llm_agents")[
+        "writing_postprocessor_agent"
+    ]
+
+    # Get summary of the changes between original and optimised article
+    changes_summary = writing_optimisation_postprocessor_agent.produce_changes_summary(
+        original_content=original_article, optimised_content=optimised_writing
+    )
+
+    # Convert optimised article to XML format
+    optimised_article_XML = writing_optimisation_postprocessor_agent.get_xml(
+        optimised_content=optimised_writing
+    )
+
+    # Obtaining article_flags dict
+    article_evaluation = state.get("article_evaluation", {})
+    # Updating article_evaluation with the updated personality_evaluation flags
+    article_evaluation["change_summary"] = changes_summary
+
+    optimised_article_output["optimised_writing_XML"] = optimised_article_XML
+
+    return {
+        "optimised_article_output": optimised_article_output,
+        "article_evaluation": article_evaluation,
+    }
+
+
 # Conditional edge functions
 def check_for_compiler(state):
     """Determines if the state should move on to the compiler node for harmonisation, or other article optimisation nodes.
@@ -625,22 +677,8 @@ def check_personality_after_personality_evaluation(state):
     has_personality = content_flags["writing_has_personality"]
 
     if has_personality:
-        # Extracts user flags for title and meta desc optimisation
-        user_flags = state.get("user_flags")
-        title_optimisation_flag = user_flags["flag_for_title_optimisation"]
-        meta_desc_optimisation_flag = state.get("user_flags")[
-            "flag_for_meta_desc_optimisation"
-        ]
-
-        if title_optimisation_flag:
-            # Directs state to title optimisation node if article has been flagged for title optimisation
-            return "title_optimisation_node"
-        elif meta_desc_optimisation_flag:
-            # Directs state to meta desc optimisation node if article has been flagged for meta desc optimisation
-            return "meta_description_optimisation_node"
-        else:
-            # If not other optimisation steps are needed, article optimisation ends.
-            return END
+        # Directs state to writing optimisation post processing node
+        return "writing_optimisation_postprocessor_node"
 
     else:
         # Directs state to writing guidelines optimisation node if not has_personality
@@ -798,27 +836,8 @@ def check_readability_after_writing_optimisation(state):
         else:
             print("Number of writing retries exceeded limit hit.")
 
-        # Extracting title optimisation flag from state
-        title_optimisation_flags = state.get("user_flags")[
-            "flag_for_title_optimisation"
-        ]
-
-        # Extracting meta description optimisation flag from state
-        meta_desc_optimisation_flags = state.get("user_flags")[
-            "flag_for_meta_desc_optimisation"
-        ]
-
-        # If statement checking if article is flagged for title optimisation and returning "title_optimisation_node"
-        if title_optimisation_flags:
-            return "title_optimisation_node"
-
-        # elif statement checking if article is flagged for meta description optimisation and returning "meta_description_optimisation_node"
-        elif meta_desc_optimisation_flags:
-            return "meta_description_optimisation_node"
-
-        # If both conditions above are False, return END
-        else:
-            return END
+        # Go to writing optimisation postprocessor node
+        return "writing_optimisation_postprocessor_node"
 
     else:
         # Send article for readability optimisation as it's readability score is >= 10 and rewriting tries < limit
@@ -846,6 +865,7 @@ def build_graph():
         "meta_description_optimisation_node": meta_description_optimisation_node,
         "personality_guidelines_evaluation_node": personality_guidelines_evaluation_node,
         "readability_optimisation_node": readability_optimisation_node,
+        "writing_optimisation_postprocessor_node": writing_optimisation_postprocessor_node,
     }
 
     # Declaring dictionary with all edges
@@ -895,9 +915,7 @@ def build_graph():
             check_readability_after_writing_optimisation,
             {
                 "readability_optimisation_node": "readability_optimisation_node",
-                "title_optimisation_node": "title_optimisation_node",
-                "meta_description_optimisation_node": "meta_description_optimisation_node",
-                END: END,
+                "writing_optimisation_postprocessor_node": "writing_optimisation_postprocessor_node",
             },
         ),
         # Conditional edge from readability_optimisation_node that checks the number of rewriting tries after readability optimisation to determine which optimisatio node to direct the state to.
@@ -913,6 +931,13 @@ def build_graph():
             check_personality_after_personality_evaluation,
             {
                 "writing_guidelines_optimisation_node": "writing_guidelines_optimisation_node",
+                "writing_optimisation_postprocessor_node": "writing_optimisation_postprocessor_node",
+            },
+        ),
+        # Conditional edge from writing_optimisation_postprocessor_node that checks the user flags to determine which optimisation node to direct the state to
+        "writing_optimisation_postprocessor_node": (
+            decide_next_optimisation_node,
+            {
                 "title_optimisation_node": "title_optimisation_node",
                 "meta_description_optimisation_node": "meta_description_optimisation_node",
                 END: END,
