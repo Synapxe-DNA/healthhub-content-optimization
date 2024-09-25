@@ -156,15 +156,15 @@ class LLMInterface(ABC):
         """
         pass
 
-    @abstractmethod
-    def optimise_content(self, keypoints: list[str]):
-        """
-        Abstract method for generating the article content based on the article keypoints
+    # @abstractmethod
+    # def optimise_content(self, keypoints: list[str]):
+    #     """
+    #     Abstract method for generating the article content based on the article keypoints
 
-        Args:
-            keypoints (list[str]): list of compiled keypoints
-        """
-        pass
+    #     Args:
+    #         keypoints (list[str]): list of compiled keypoints
+    #     """
+    #     pass
 
     @abstractmethod
     def optimise_writing(self, content: str):
@@ -976,11 +976,11 @@ class Azure(LLMInterface):
 
         return response
 
-    def optimise_content(
+    def optimise_healthy_content(
         self, keypoints: list[str], main_article_content: str = ""
     ) -> str:
         """
-        An article is generated based on the keypoints provided.
+        A live healthy article is generated based on the keypoints provided.
 
         Args:
             keypoints (list[str]): a list input of the keypoints from the articles to be optimized
@@ -999,50 +999,124 @@ class Azure(LLMInterface):
                 f"This node is a {self.role} node and cannot run optimise_content()"
             )
 
-        # If statement checking if there is any input as main_article_content. If there isn't, this means the input article category is diseases-and-conditions, otherwise its live-healthy
-        if len(main_article_content.strip()) == 0:
+        print(
+            "Optimising live healthy article content based on main article structure..."
+        )
 
-            # Define the prompt template for optimise health conditions
-            optimise_health_conditions_prompt = ChatPromptTemplate.from_messages(
-                self.prompt_template.return_content_prompt(
-                    "optimise health and conditions"
-                )
+        # Define the prompt template for extracting article structure
+        article_structure_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt(
+                "extract main live healthy article structure"
             )
+        )
 
-            # Define the chain and execute it
-            chain = optimise_health_conditions_prompt | self.model | StrOutputParser()
+        # Define the extract structure chain
+        article_structure_chain = (
+            article_structure_prompt | self.model | StrOutputParser()
+        )
 
-            print("Optimising article content based on content guidelines...")
-            # Invoking the chain
-            res = chain.invoke(
-                {
-                    "Keypoints": keypoints,
-                }
-            )
-            print("Article content optimised")
+        article_structure = article_structure_chain.invoke(
+            {"article": main_article_content}
+        )
 
-        else:
-            # Define the prompt template
-            article_structure_prompt = ChatPromptTemplate.from_messages(
-                self.prompt_template.return_content_prompt(
-                    "extract main article structure"
-                )
-            )
+        # Define the prompt template for sorting article based on structure
+        sorting_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt("structure live healthy")
+        )
 
-            # Define the chain and execute it
-            chain = article_structure_prompt | self.model | StrOutputParser()
+        # Define the sort article chain
+        sort_article_chain = sorting_prompt | self.model | StrOutputParser()
 
-            print("Optimising article content based on main article structure...")
-            # Invoking the chain
-            res = chain.invoke(
-                {
-                    "article": main_article_content,
-                }
-            )
-            print("Article content optimised")
+        sorted_article = sort_article_chain.invoke(
+            {"Structure": article_structure, "Keypoints": keypoints}
+        )
+
+        # Define the prompt template for optimising article content
+        optimise_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt("optimise health and conditions")
+        )
+
+        # Define the optimise article chain
+        optimise_article_chain = optimise_prompt | self.model | StrOutputParser()
+
+        optimised_article = optimise_article_chain.invoke(
+            {"sorted_content": sorted_article}
+        )
+
+        print("Article content optimised")
 
         # Regex to remove whitespaces
-        response = re.sub(" +", " ", res)
+        response = re.sub(" +", " ", optimised_article)
+
+        return response
+
+    def optimise_disease_content(
+        self,
+        keypoints: list[str],
+    ) -> str:
+        """
+        An disease and conditions article is generated based on the keypoints provided.
+        This is a two step process: sort based on structure -> rewrite content
+
+        Args:
+            keypoints (list[str]): a list input of the keypoints from the articles to be optimized
+
+        Returns:
+            str: A response string containing the generated article content
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+
+        # Raise an error if the role is not "Content optimisation"
+        if self.role != ROLES.CONTENT_OPTIMISATION:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run optimise_content()"
+            )
+
+        # Define the prompt template for sorting health and conditions articles based on structure
+        structure_health_conditions_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt(
+                "structure health and conditions"
+            )
+        )
+
+        # Define the sort article chain
+        sort_article_chain = (
+            structure_health_conditions_prompt
+            | self.model
+            | StrOutputParser()
+            | {"sorted_content": RunnablePassthrough()}
+        )
+
+        # Define the prompt template for optimising health and conditions articles based on guidelines
+        optimise_health_conditions_prompt = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_content_prompt("optimise health and conditions")
+        )
+        # Define the optimize article chain
+        optimise_artice_chain = (
+            optimise_health_conditions_prompt | self.model | StrOutputParser()
+        )
+
+        # Define the overall chain which first runs the sort chain and then the optimize chain
+        # TODO: fix if broken
+        chain = (
+            sort_article_chain
+            | {"sorted_content": itemgetter("sorted_content")}
+            | RunnableParallel(content=optimise_artice_chain)
+        )
+
+        print("Optimizing disease and conditions article content...")
+        res = chain.invoke(
+            {
+                "Keypoints": keypoints,
+            }
+        )
+        print("Disease and condition article content optimised")
+
+        # Regex to remove whitespaces
+        response = res["content"]
+        response = re.sub(" +", " ", response)
 
         return response
 
@@ -1111,6 +1185,72 @@ class Azure(LLMInterface):
                 "content": content
             }
         )
+
+        return response
+
+    def get_xml(self, optimised_content):
+        """
+        Produces a XML version of the optimised article.
+
+        Args:
+            optimised_content (str): the optimised article content
+
+        Returns:
+            str: A response string containing the XML output.
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+        # Raises an error if the role is not "Writing postprocessor"
+        if self.role != ROLES.WRITING_POSTPROCESSOR:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run produce_changes_summary()"
+            )
+
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_output_xml_prompt()
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+
+        print("Converting to XML format...")
+        response = chain.invoke({"Optimised": optimised_content})
+        print("Output is now in XML format")
+
+        return response
+
+    def produce_changes_summary(self, original_content, optimised_content):
+        """
+        Produces a summary of the changes that happened when rewriting original article to optimized article.
+
+        Args:
+            original_content (str): the original article content
+            optimised_content (str): the optimised article content
+
+        Returns:
+              str: A response string containing the summary of the changes
+
+        Raises:
+            TypeError: a TypeError is raised if the node role does not support the function
+        """
+
+        # Raises an error if the role is not "Writing postprocessor"
+        if self.role != ROLES.WRITING_POSTPROCESSOR:
+            raise TypeError(
+                f"This node is a {self.role} node and cannot run produce_changes_summary()"
+            )
+
+        prompt_t = ChatPromptTemplate.from_messages(
+            self.prompt_template.return_changes_summariser_prompt()
+        )
+
+        chain = prompt_t | self.model | StrOutputParser()
+
+        print("Producing summary of the changes...")
+        response = chain.invoke(
+            {"Original": original_content, "Optimised": optimised_content}
+        )
+        print("Summary of changes completed")
 
         return response
 

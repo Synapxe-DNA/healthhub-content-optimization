@@ -146,12 +146,15 @@ class ArticleEvaluation(TypedDict):
             Can be `None` if no evaluation are availble.
         writing_has_personality (Optional[str]): The optimised title of the article.
             Can be `None` if no personality evaluation is required.
+        change_summary (Optional[str]): The summary of the changes that happened from the original article to the optimised article.
+            Can be `None` if the article has not undergone rewriting.
     """
 
     reasons_for_irrelevant_title: Optional[str]
     reasons_for_irrelevant_meta_desc: Optional[str]
     reasons_for_poor_readability: Optional[str]
     writing_has_personality: Optional[bool]
+    change_summary: Optional[str]
 
 
 class OptimisedArticle(TypedDict):
@@ -167,6 +170,8 @@ class OptimisedArticle(TypedDict):
             Can be `None` if the content has not been optimised.
         optimised_writing (Optional[str]): The optimised version of the article's writing.
             Can be `None` if the writing has not been optimised.
+        optimised_writing_XML (Optional[str]): The optimised XML version of the article's writing.
+            Can be `None` if the writing has not been optimised.
         optimised_article_title (Optional[str]): The optimised title of the article.
             Can be `None` if the title has not been optimised.
         optimised_meta_desc (Optional[str]): The optimised meta description of the article.
@@ -175,8 +180,10 @@ class OptimisedArticle(TypedDict):
 
     researcher_keypoints: Optional[list[str]]
     compiled_keypoints: Optional[str]
+    sorted_content: Optional[str]
     optimised_content: Optional[str]
     optimised_writing: Optional[str]
+    optimised_writing_XML: Optional[str]
     optimised_article_title: Optional[list]
     optimised_meta_desc: Optional[list]
 
@@ -212,6 +219,7 @@ class OptimisationAgents(TypedDict):
         readability_optimisation_agent (LLMInterface): The agent responsible for optimising the readability of the article.
         personality_evaluation_agent (LLMInterface): The agent responsible for evaluating the article's adherence to the required personality and voice.
         writing_evaluation_agent (LLMInterface): The agent responsible for evaluating the quality and effectiveness of the writing.
+        writing_postprocessor_agent (LLMInterface): The agent responsible for producing a summary of the changes between the original and optimised article and output the optimised article in XML format.
     """
 
     researcher_agent: LLMInterface
@@ -222,3 +230,4 @@ class OptimisationAgents(TypedDict):
     meta_desc_optimisation_agent: LLMInterface
     readability_optimisation_agent: LLMInterface
     personality_evaluation_agent: LLMInterface
+    writing_postprocessor_agent: LLMInterface
