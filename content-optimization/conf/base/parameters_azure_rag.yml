@@ -5,15 +5,17 @@
 # Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
 
 duplicated_articles:
-  - 1445629
-  - 1443608
+  - 1444496
+  - 1445828
+  - 1445798
+  - 1444751
   - 1435183
-  - 1435335
-  - 1434652
+  - 1435188
+  - 1434614
 
 duplicated_content:
-  - 1497409
-  - 1469472
+  - 1495949
+  - 1445972
 
 lengthy_articles:
   - 1435223
