@@ -15,6 +15,19 @@ def filter_articles(
     duplicated_content: List[int],
     lengthy_articles: List[int],
 ) -> pd.DataFrame:
+    """
+    Filters the input DataFrame by removing articles based on specific conditions.
+
+    Args:
+        merged_data (pd.DataFrame): DataFrame containing the merged article data.
+        duplicated_articles (List[int]): List of article IDs to be removed as duplicates.
+        duplicated_content (List[int]): List of article IDs that contain duplicated content but should be kept.
+        lengthy_articles (List[int]): List of article IDs for articles that are too lengthy and should be removed.
+
+    Returns:
+        pd.DataFrame: Filtered DataFrame after applying all conditions for removal.
+    """
+    # Apply the filtering conditions
     print(merged_data.head())
     # Apply the filtering conditions
     # Remove articles with 'No HTML Tags' from the 'remove_type' column
@@ -56,6 +69,19 @@ def process_html_tables(
     n_completions: int,
     seed: int,
 ) -> pd.DataFrame:
+    """
+    Processes articles containing HTML tables by passing the content through an LLM for extraction.
+
+    Args:
+        filtered_data_rag (pd.DataFrame): Filtered DataFrame that may contain HTML table content.
+        temperature (int): Sampling temperature to control the randomness in the LLM output.
+        max_tokens (int): Maximum number of tokens to generate from the LLM.
+        n_completions (int): Number of completion outputs to generate from the LLM.
+        seed (int): Random seed for reproducibility.
+
+    Returns:
+        pd.DataFrame: DataFrame with an additional column containing processed table content.
+    """
     processed_data_rag = filtered_data_rag.copy()
 
     def _process_row(row):
@@ -80,7 +106,17 @@ def extract_content(
     article_content_columns: List[str],
     table_content_columns: List[str],
 ) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Extracts article content and table content into a structured dictionary format for further use.
 
+    Args:
+        processed_data_rag (pd.DataFrame): DataFrame containing the processed article and table content.
+        article_content_columns (List[str]): List of column names for the article content.
+        table_content_columns (List[str]): List of column names for the table content.
+
+    Returns:
+        Dict[str, List[Dict[str, Any]]]: A dictionary containing extracted article and table content, with unique keys based on article IDs.
+    """
     # Prepare the dictionary to hold data
     json_data_rag = {}
 
