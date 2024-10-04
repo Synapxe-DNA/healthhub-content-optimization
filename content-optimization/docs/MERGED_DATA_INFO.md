@@ -2,7 +2,7 @@
 
 ## General Information <a id="merged-data-general-information"></a>
 
-- **Location**: [`data/03_primary`](../data/03_primary/)
+- **Location**: [`data/03_primary/`](../data/03_primary/)
 - **Dataset Description:** Merged collection of Health Hub articles across different content categories
 - **Version**: v1
 - **Date of Creation:** June 28, 2024
@@ -607,4 +607,4 @@
 
 ### Data Quality Checks <a id="merged-data-data-quality-checks"></a>
 
-- Under [`data/02_intermediate`](../data/02_intermediate/)
+- Under [`data/02_intermediate/`](../data/02_intermediate/)

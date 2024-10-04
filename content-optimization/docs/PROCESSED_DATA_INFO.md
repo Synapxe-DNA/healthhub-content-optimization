@@ -2,7 +2,7 @@
 
 ## General Information <a id="processed-articles-general-information"></a>
 
-- **Location**: [`data/03_primary`](../data/03_primary/)
+- **Location**: [`data/03_primary/`](../data/03_primary/)
 - **Dataset Description:** JSON format of the article content and tables files
 - **Version**: v1
 - **Date of Creation:** August 28, 2024
