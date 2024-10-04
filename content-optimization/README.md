@@ -57,7 +57,7 @@ GDRIVE_CLIENT_SECRET=
 Create an `.env` file and copy and paste the contents from above into it.
 
 > [!NOTE]
-> Consult the an administrator for the required credentials.
+> Consult an administrator for the required credentials.
 
 Once the environment variables have been set up, you can run the following command to set up the DVC configurations:
 
@@ -71,7 +71,7 @@ For Windows, run the following command:
 ./scripts/setup_dvc.ps1
 ```
 
-After running, the script would have added the remote data repositories and set the credentials in a local configuration file (i.e. not versioned controlled).
+After running the command, the script would have added the remote data repositories in the [config](../.dvc/config) file and set the credentials in a local configuration file (i.e. not versioned controlled).
 
 Lastly, run the following command to get the latest version of the raw data:
 
@@ -85,16 +85,18 @@ For Windows, run the following command:
 ./scripts/get_raw_data.ps1
 ```
 
-After the command is ran, you will be redirected to a browser. Select the email address that you have provided to the adminstrator — ideally, he or she would have whitelisted your email address as a test user. Next, give all access to DVC remote storage to access your Google Drive. Once this is completed, you should see all the raw data populated within the [`data/01_raw/`](data/01_raw/) directory. It may take a while for all the data to be downloaded if this is your first time pulling in the raw data.
-
-> [!TIP]
-> Should you encounter any issues, please consult an administrator. Usually, an error occurs when you have selected the wrong email address or that the provided email address has not been whitelisted.
-
-For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/google-drive#using-a-custom-google-cloud-project-recommended) in DVC documentation.
+After the command is ran, you will be redirected to a browser. Select the email address that you have provided to the adminstrator — ideally, he or she would have whitelisted your email address as a test user.
 
 <p align="center">
     <img src="docs/images/test.png" height="250", alt="Test Users">
 </p>
+
+Next, give all access to DVC remote storage to access your Google Drive. Once this is completed, you should see all the raw data populated within the [`data/01_raw/`](data/01_raw/) directory. It may take a while for all the data to be downloaded if this is your first time pulling in the raw data.
+
+> [!TIP]
+> If you encounter any issues, please consult an administrator. Usually, an error occurs when you have selected the wrong email address or that the provided email address has not been whitelisted.
+
+For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/google-drive#using-a-custom-google-cloud-project-recommended) documentation in DVC.
 
 ### Data Versioning <a id="data-versioning"></a>
 
@@ -122,11 +124,11 @@ git commit -m "Raw dataset updated"
 
 ## File Structure
 
-- [`conf/`](conf): contains all configurations for the project
+- [`conf/`](conf/): contains all configurations for the project
 
-  - [`base/`](conf/base): contains all configurations for the parameters used in the pipelines
+  - [`base/`](conf/base/): contains all configurations for the parameters used in the pipelines
 
-  - [`local/`](conf/local): contains all local configurations for the project like secrets and credentials (not to be checked into version control)
+  - [`local/`](conf/local/): contains all local configurations for the project like secrets and credentials (not to be checked into version control)
 
 > [!IMPORTANT]
 > If you find any discrepancies in the extracted or merged data, please [open an issue](https://github.com/Synapxe-DNA/healthhub-content-optimization/issues).
@@ -211,7 +213,7 @@ This will run the entire project for all pipelines.
 ### Data Processing <a id="data-processing"></a>
 
 > [!IMPORTANT]
-> Before running the `data_processing` [pipeline](src/content_optimization/pipelines/data_processing/pipeline.py), ensure that you have the raw data in the [`data/01_raw/all_contents`](../content-optimization/data/01_raw/all_contents) directory.
+> Before running the `data_processing` [pipeline](src/content_optimization/pipelines/data_processing/pipeline.py), ensure that you have the raw data in the [`data/01_raw/all_contents/`](../content-optimization/data/01_raw/all_contents/) directory.
 
 You can run the entire `data_processing` pipeline by running:
 
