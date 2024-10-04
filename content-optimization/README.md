@@ -139,7 +139,7 @@ git commit -m "Raw dataset updated"
 
     - [`missing_contents.dvc`](data/01_raw/missing_contents/): contains information about the data for the purpose of Git tracking. The original folder contains the content body of articles with `Excel Error` but were designated as `keep` by HealthHub. Do note that they should be in folders named as their respective content categories.
 
-    - [`google_analytics_data.xlsx.dvc`](data/01_raw/google_analytics_data.xlsx.dvc): contains information about the data for the purpose of Git tracking. The original file contains the latest Google Analytics data patitioned by their content categories (i.e. 9 sheets in total).
+    - [`google_analytics_data.xlsx.dvc`](data/01_raw/google_analytics.xlsx.dvc): contains information about the data for the purpose of Git tracking. The original file contains the latest Google Analytics data patitioned by their content categories (i.e. 9 sheets in total).
 
   - [`02_intermediate/`](data/02_intermediate/): contains all intermediate data
 
