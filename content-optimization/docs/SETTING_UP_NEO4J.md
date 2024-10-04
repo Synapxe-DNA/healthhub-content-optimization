@@ -29,4 +29,4 @@ For more information, refer to the [conf/README.md](../conf/README.md#clustering
 
 ### Data
 
-Verify that the file `data/01_raw/Synapxe Content Prioritisation - Live Healthy_020724.xlsx` is available in the specified directory.
+Verify that the file `ground_truth.xlsx` is available in the [`data/01_raw/`](../data/01_raw/) directory.

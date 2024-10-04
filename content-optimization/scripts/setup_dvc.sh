@@ -30,7 +30,7 @@ done < "$ENV_FILE"
 echo "Environment variables set."
 
 # Define your remote names in an array
-remotes=("all_contents" "missing_contents" "google_analytics")
+remotes=("all_contents" "missing_contents" "google_analytics", "ground_truth")
 
 # Loop through each remote and execute the DVC commands
 for remote in "${remotes[@]}"; do
