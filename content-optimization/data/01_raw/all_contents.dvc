@@ -1,0 +1,6 @@
+outs:
+- md5: 6269659ef867e5591af3bc51c28bcddd.dir
+  size: 9965218
+  nfiles: 9
+  hash: md5
+  path: all_contents
