@@ -1,0 +1,6 @@
+outs:
+- md5: d54612d08984c63492660cee765852c2.dir
+  size: 17400075
+  nfiles: 163
+  hash: md5
+  path: missing_contents

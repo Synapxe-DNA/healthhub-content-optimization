@@ -1,0 +1,9 @@
+['remote "all_contents"']
+    url = gdrive://1yC4kQg5_eIkWE-7vuJW32i7A-vKcKzM4/all_contents
+    gdrive_acknowledge_abuse = true
+['remote "missing_contents"']
+    url = gdrive://1yC4kQg5_eIkWE-7vuJW32i7A-vKcKzM4/missing_contents
+    gdrive_acknowledge_abuse = true
+['remote "google_analytics"']
+    url = gdrive://1yC4kQg5_eIkWE-7vuJW32i7A-vKcKzM4/google_analytics
+    gdrive_acknowledge_abuse = true
