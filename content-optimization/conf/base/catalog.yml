@@ -56,7 +56,7 @@ merged_data:
 
 google_analytics_data:
   type: pandas.ExcelDataset
-  filepath: data/01_raw/GenAI-updatedGAviews_03092024.xlsx
+  filepath: data/01_raw/google_analytics.xlsx
   load_args:
     sheet_name:
       - cost-and-financing
