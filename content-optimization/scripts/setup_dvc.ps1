@@ -34,7 +34,7 @@ Get-Content $envFile | ForEach-Object {
 Write-Host "Environment variables set."
 
 # Define your remote names in an array
-$remotes = @("all_contents", "missing_contents", "google_analytics")
+$remotes = @("all_contents", "missing_contents", "google_analytics", "ground_truth")
 
 # Loop through each remote and execute the DVC commands
 foreach ($remote in $remotes) {

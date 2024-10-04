@@ -112,7 +112,7 @@ weighted_embeddings:
 # Clustering Pipeline
 ground_truth_data:
   type: pandas.ExcelDataset
-  filepath: data/01_raw/Synapxe Content Prioritisation - Live Healthy_020724.xlsx
+  filepath: data/01_raw/ground_truth.xlsx
   load_args:
     sheet_name: 2
 

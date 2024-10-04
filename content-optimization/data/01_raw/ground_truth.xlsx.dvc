@@ -1,0 +1,5 @@
+outs:
+- md5: 832c621136e60476c5ca5095bfa636d1
+  size: 597138
+  hash: md5
+  path: ground_truth.xlsx
