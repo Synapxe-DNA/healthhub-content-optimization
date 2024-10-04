@@ -18,8 +18,8 @@ def create_pipeline(**kwargs) -> Pipeline:
                 func=filter_articles,
                 inputs=[
                     "merged_data",
-                    "params:duplicated_articles",
-                    "params:duplicated_content",
+                    "params:azure_blacklist",
+                    "params:azure_whitelist",
                     "params:lengthy_articles",
                 ],
                 outputs="filtered_data_rag",

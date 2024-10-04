@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import requests
 from pandas.errors import SettingWithCopyWarning
 
 warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
@@ -409,6 +410,75 @@ def flag_articles_via_blacklist(
     return df
 
 
+def flag_url_error(df: pd.DataFrame, whitelist: list[int]) -> pd.DataFrame:
+    """
+    Flags rows in the given DataFrame where the URL returns an error, such as a 404, 400 or exception error.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the articles.
+        whitelist (list[int]): The list of article IDs to keep. See https://bitly.cx/IlwNV.
+
+    Returns:
+        pd.DataFrame:
+            The modified DataFrame with the `to_remove` and `remove_type` columns updated for articles with flagged URL Error.
+            The `remove_type` column is updated with the type of "URL Error".
+    """
+
+    # Function to check if URL exists via requests
+    def check_url_exists(url):
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+        }
+        try:
+            # Get response of URL
+            response = requests.get(
+                url, headers=headers, allow_redirects=True, timeout=15
+            )
+            # Get page content to check if it contains 404 error
+            page_content = response.text.lower()
+            # Constant variable of where error status is 400 or above
+            errorStatusCode = 400
+            # Check if page contains "404 error" in its content
+            if "404 error" in page_content:
+                return False, "404 error"
+            # If response is error status code, treat it as not existing
+            elif response.status_code >= errorStatusCode:
+                return False, "400 error"
+            # If no exception is raised, URL exists
+            else:
+                return True, "URL exists"
+        # If exception is raised, treat it as not existing
+        except requests.RequestException as e:
+            return False, str(e)
+
+    no_url_error_content_ids = []
+    # Load through merged_dataset to check validity of URLs
+    for idx, row in df.iterrows():
+        # Exclude whitelisted articles for URL 404 error check
+        if row["id"] not in whitelist:
+            url = row.get(
+                "full_url", ""
+            )  # Safely retrieve 'full_url', defaulting to an empty string if not found
+            if url:
+                url_exists, status = check_url_exists(url)
+                # If URL returns (1) 404, (2) 400 or (3) request exception error
+                if not url_exists:
+                    no_url_error_content_ids.append(row["id"])
+
+    # All article urls with 404 errors indexes
+    no_url_error_content_indexes = df.query(
+        f"id in {list(no_url_error_content_ids)}"
+    ).index
+
+    # Update `to_remove`
+    df.loc[no_url_error_content_indexes, "to_remove"] = True
+
+    # Set `remove_type` for all indexes, rewrite for those that are already flagged
+    df.loc[no_url_error_content_indexes, "remove_type"] = "URL Error"
+
+    return df
+
+
 def flag_articles_to_remove_after_extraction(
     df: pd.DataFrame,
     word_count_cutoff: int,
@@ -434,6 +504,7 @@ def flag_articles_to_remove_after_extraction(
     df = flag_multilingual_content(df, whitelist)
     df = flag_below_word_count_cutoff(df, word_count_cutoff, whitelist)
     df = flag_articles_via_blacklist(df, blacklist)
+    df = flag_url_error(df, whitelist)
 
     return df
 
