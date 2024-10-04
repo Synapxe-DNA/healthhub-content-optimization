@@ -21,7 +21,7 @@ Docker is currently used to host a MongoDB instance that is used for local devel
 The `Makefile` in the parent directory contains the commands to start and stop the Mongo DB instance on the local
 instance. To start or stop the Mongo DB, run the following commands in the root directory (the one with the `Makefile`).
 
-```bash
+```zsh
 # Starts Mongo DB
 make local-db-start
 

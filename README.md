@@ -85,7 +85,7 @@ python3 -m venv <VENV_NAME>
 
 You can then activate the environment and install the dependencies using the following commands -
 
-For UNIX-based systems (macOS / Linux):
+For Unix-based systems (macOS / Linux):
 
 ```zsh
 # Activate virtual environment

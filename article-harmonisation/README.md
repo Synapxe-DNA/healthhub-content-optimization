@@ -126,7 +126,7 @@ Sign in to your Azure account via the CLI. Refer to this [guide](https://learn.m
 
 After a successful login, run the following command to check that your credentials are saved -
 
-```bash
+```zsh
 az account show
 ```
 
