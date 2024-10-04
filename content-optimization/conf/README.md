@@ -8,19 +8,37 @@ This file can be used to provide users with instructions for how to reproduce lo
 
 The `local` folder should be used for configuration that is either user-specific (e.g. IDE configuration) or protected (e.g. security keys).
 
-### Azure RAG <a id="azure-rag"></a>
+### Clustering Credentials <a id="clustering-credentials"></a>
 
-Create a new `conf/local/credentials.yml` file and include these Azure credentials:
+If it does not already exist, create a new `credentials.yml` file in the [`local/`](local/) directory and include these Neo4j credentials:
+
+```yaml
+neo4j_credentials:
+  username: <YOUR_USERNAME>
+  password: <YOUR_PASSWORD>
+```
+
+Ensure that your [`parameters_clustering.yml`](base/parameters_clustering.yml) file contains the necessary Neo4j configurations:
+
+```yaml
+neo4j_config:
+  uri: neo4j://localhost:7687
+  database: hh-articles
+```
+
+### Azure Credentials <a id="azure-credentials"></a>
+
+If it does not already exist, create a new `credentials.yml` file in the [`local/`](local/) directory and include these Azure credentials:
 
 ```yaml
 azure_credentials:
-  API_VERSION: <api_version>
-  AZURE_ENDPOINT: <resource_end_point>
-  COGNITIVE_SERVICES: <cognitive_service_link>
-  MODEL_DEPLOYMENT: <chat_deployment_name>
+  api_version: <API_VERSION>
+  azure_endpoint: <MODEL_ENDPOINT>
+  cognitive_services: <NAME_OF_COGNITIVE_SERVICES>
+  model_deployment: <DEPLOYMENT_NAME>
 ```
 
-**Step 1:** For API_VERSION, see here for the latest version: [API Version Reference](https://learn.microsoft.com/azure/ai-services/openai/reference)
+**Step 1:** For API version, see here for the latest version: [API Version Reference](https://learn.microsoft.com/azure/ai-services/openai/reference)
 
 **Step 2:**
 ![Step 2](/content-optimization/docs/images/azure_1.png)
@@ -44,25 +62,8 @@ azure_credentials:
 
 The `base` folder is for shared configuration, such as non-sensitive and project-related configuration that may be shared across team members.
 
-### Clustering <a id="clustering-configuration"></a>
-
-Create a new `conf/base/credentials.yml` file and include these Neo4j credentials:
-
-```yaml
-neo4j_credentials:
-  username: your_username
-  password: your_password
-```
-
-Ensure that your `parameters_clustering.yml` file includes the Neo4j configurations:
-
-```yaml
-neo4j_config:
-  uri: neo4j://localhost:7687
-  database: hh-articles
-```
-
-WARNING: Please do not put access credentials in the base configuration folder.
+> [!WARNING]
+> Please do not put access credentials in the base configuration folder.
 
 ## Find out more
 

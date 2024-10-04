@@ -40,6 +40,86 @@ If you're using Poetry instead, run:
 cat requirements.txt | xargs poetry add
 ```
 
+## Set Up
+
+Raw data is versioned using [Data Version Control (DVC)](https://dvc.org/). Before running the pipeline, we have to ensure that the raw data is available and up-to-date. For more information on data versioning best-practices, refer to the following section [below](#data-versioning).
+
+### Raw Data
+
+In the root of this project, you will find a [`.env.sample`](.env.sample). It should look like this:
+
+```text
+GDRIVE_URL=
+GDRIVE_CLIENT_ID=
+GDRIVE_CLIENT_SECRET=
+```
+
+Create an `.env` file and copy and paste the contents from above into it.
+
+> [!NOTE]
+> Consult the an administrator for the required credentials.
+
+Once the environment variables have been set up, you can run the following command to set up the DVC configurations:
+
+```zsh
+./scripts/setup_dvc.sh
+```
+
+For Windows, run the following command:
+
+```powershell
+./scripts/setup_dvc.ps1
+```
+
+After running, the script would have added the remote data repositories and set the credentials in a local configuration file (i.e. not versioned controlled).
+
+Lastly, run the following command to get the latest version of the raw data:
+
+```zsh
+./scripts/get_raw_data.sh
+```
+
+For Windows, run the following command:
+
+```powershell
+./scripts/get_raw_data.ps1
+```
+
+After the command is ran, you will be redirected to a browser. Select the email address that you have provided to the adminstrator — ideally, he or she would have whitelisted your email address as a test user. Next, give all access to DVC remote storage to access your Google Drive. Once this is completed, you should see all the raw data populated within the [`data/01_raw/`](data/01_raw/) directory. It may take a while for all the data to be downloaded if this is your first time pulling in the raw data.
+
+> [!TIP]
+> Should you encounter any issues, please consult an administrator. Usually, an error occurs when you have selected the wrong email address or that the provided email address has not been whitelisted.
+
+For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/google-drive#using-a-custom-google-cloud-project-recommended) in DVC documentation.
+
+<p align="center">
+    <img src="docs/images/test.png" height="250", alt="Test Users">
+</p>
+
+### Data Versioning <a id="data-versioning"></a>
+
+Below is a diagram showing the flow of data versioning.
+
+<p align="center">
+    <img src="docs/images/dvc.png" height="1000", alt="Data Version Control">
+</p>
+
+When you have made an update or change to the raw data, you can perform a commit operation to version the data:
+
+```zsh
+dvc add <PATH_TO_RAW_DATA>
+
+# or you can simply run `dvc push --remote <REMOTE_NAME>` if you've only staged a single raw data
+dvc push <PATH_TO_RAW_DATA> --remote <REMOTE_NAME>
+```
+
+You should see an updated version of a `.dvc` file of your updated raw data. It is best practice to version control to Git this `.dvc` file, whenever a change has been made to any raw data. This `.dvc` file tracks the versioning of your data and is crucial when you want to revert back to a previous version of your data. You may run the following commands to track changes in Git:
+
+```zsh
+git add <PATH_TO_RAW_DATA>.dvc
+git commit -m "Raw dataset updated"
+```
+
 ## File Structure
 
 - [`conf/`](conf): contains all configurations for the project
@@ -49,43 +129,43 @@ cat requirements.txt | xargs poetry add
   - [`local/`](conf/local): contains all local configurations for the project like secrets and credentials (not to be checked into version control)
 
 > [!IMPORTANT]
-> If you find any discrepancies in the extracted or merged data, please [open an issue](https://github.com/Wilsven/healthhub-content-optimization/issues).
+> If you find any discrepancies in the extracted or merged data, please [open an issue](https://github.com/Synapxe-DNA/healthhub-content-optimization/issues).
 
-- [`data/`](data): contains all data for the project at every stages; there are many sub-directories but here are the notable ones (will be updated as the pipeline progresses)
+- [`data/`](data/): contains all data for the project at every stages; there are many sub-directories but here are the notable ones (will be updated as the pipeline progresses)
 
-  - [`01_raw/`](data/01_raw): contains all raw data
+  - [`01_raw/`](data/01_raw/): contains all raw data
 
-    - [`all_contents/`](data/01_raw/all_contents/): contains all the raw data provided by HealthHub for the project. Get the data [here](https://trello.com/c/n0cMa6k2).
+    - [`all_contents.dvc`](data/01_raw/all_contents.dvc): contains information about the data for the purpose of Git tracking. The original folder contains all raw data and was provided by HealthHub for the project.
 
-    - [`missing_contents/`](data/01_raw/missing_contents/): contains the content body of articles with `Excel Error` but were designated as `keep` by HealthHub. Do note that they should be in folders named as their respective content categories. Get the data [here](https://trello.com/c/n0cMa6k2).
+    - [`missing_contents.dvc`](data/01_raw/missing_contents/): contains information about the data for the purpose of Git tracking. The original folder contains the content body of articles with `Excel Error` but were designated as `keep` by HealthHub. Do note that they should be in folders named as their respective content categories.
 
-    - `google_analytics_data.xlsx`: contains the latest Google Analytics data patitioned by their content categories (i.e. 9 sheets in total). Do amend the [catalog.yml](conf/base/catalog.yml) for the appropriate file name. Get the data [here](https://trello.com/c/PwWDPMfr).
+    - [`google_analytics_data.xlsx.dvc`](data/01_raw/google_analytics.xlsx.dvc): contains information about the data for the purpose of Git tracking. The original file contains the latest Google Analytics data patitioned by their content categories (i.e. 9 sheets in total).
 
-  - [`02_intermediate/`](data/02_intermediate): contains all intermediate data
+  - [`02_intermediate/`](data/02_intermediate/): contains all intermediate data
 
     - `all_contents_standardized/`: contains all standardized data; kept only relevant columns and renamed the columns across all content categories to the same columns names
 
-    - `all_contents_extracted/`: contains all extracted data; various data was extracted from the HTML content body. Refer to the [Dataset](#dataset-info) description below
+    - `all_contents_extracted/`: contains all extracted data; various data was extracted from the HTML content body.
 
     - `all_extracted_text/`: contains all the extracted HTML content body; saved as `.txt` files; for validation and sanity checks
 
     - `all_contents_mapped/`: contains all the new IA mappings as provided in the [kedro configuration](conf/base/parameters_data_processing.yml) as new columns
 
-  - [`03_primary/`](data/03_primary): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
+  - [`03_primary/`](data/03_primary/): contains the primary data; all processes (i.e. modeling) after data processing should only ingest the primary data
 
-    - `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](#merged-data-data-schema)
+    - `merged_data.parquet/`: contains the merged data across all content categories and versioned; for more information on the data schema, refer [here](docs/MERGED_DATA_INFO.md#merged-data-information)
 
-    - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](#merged-data-data-schema)
+    - `filtered_data_with_keywords.parquet/`: contains the filtered data with keywords and versioned; for more information on the data schema, refer [here](docs/MERGED_DATA_INFO.md#merged-data-data-schema)
 
-    - `filtered_data.parquet/`: contains the filtered data after removing the 'to_remove' categories for indexing; for more information on the data, refer [here](#processed-articles-file-information)
+    - `filtered_data.parquet/`: contains the filtered data after removing the 'to_remove' categories for indexing; for more information on the data, refer [here](docs/PROCESSED_DATA_INFO.md#processed-articles-information)
 
-    - `processed_data.parquet/`: contains the processed data after passing filtered_data into the LLM to clean the "content_body" column to the new "processed_table_content" for indexing; for more information on the data, refer [here](#processed-articles-file-information)
+    - `processed_data.parquet/`: contains the processed data after passing filtered_data into the LLM to clean the "content_body" column to the new "processed_table_content" for indexing; for more information on the data, refer [here](docs/PROCESSED_DATA_INFO.md#processed-articles-file-information)
 
-    - `processed_articles/`: contains the JSON data for article content and article tables for ingestion into the index; for more information on the data, refer [here](#processed-articles-file-information)
+    - `processed_articles/`: contains the JSON data for article content and article tables for ingestion into the index; for more information on the data, refer [here](docs/PROCESSED_DATA_INFO.md#processed-articles-file-information)
 
-  - [`04_feature/`](data/04_feature): contains the features data
+  - [`04_feature/`](data/04_feature/): contains the features data
 
-  - [`08_reporting/`](data/08_reporting): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\\_count)}$
+  - [`08_reporting/`](data/08_reporting/): contains files and images for reporting; [`presentation.ipynb`](notebooks/presentation.ipynb) and [`word_count.ipynb`](notebooks/word_count.ipynb) generates an Excel file containing flagged articles for removal by type and distribution of raw and $\log{(word\\_count)}$
 
     - `flag_for_removal_by_type.xlsx/`: contains the flagged articles for removal by type saved as an Excel fileand versioned
 
@@ -172,50 +252,14 @@ kedro run --pipeline="feature_engineering"
 If for any reason, you would like to run specific nodes in the `feature_engineering` pipeline, you can run:
 
 ```zsh
-# Running only the `standardize_columns_node`
+# Running only the `extract_keywords_node`
 kedro run --nodes="extract_keywords_node"
 ```
 
 ### Clustering <a id="clustering"></a>
 
 > [!IMPORTANT]
-> Before running the [`clustering`](src/content_optimization/pipelines/clustering/pipeline.py) pipeline, ensure that you have already ran the `data_processing` and `feature_engineering` pipeline. Additionally, make sure that Neo4j is set up locally.
-
-#### Prerequisites <a id="clustering-prerequisites"></a>
-
-#### 1. Configuration <a id="clustering-configuration"></a>
-
-Ensure that your `conf/base/credentials.yml` file includes the Neo4j credentials [`conf/base`](conf/base). Refer to the [conf/README.md](conf/README.md) section for more information.
-
-#### 2.Neo4j Set Up
-
-<details>
-  <summary>Local Neo4j Setup Instuctions</summary>
-
-1. Download and Install Neo4j <br>
-
-   - Follow the [installation guide](https://neo4j.com/docs/operations-manual/current/installation/) provided by Neo4j
-
-2. Add Local DBMS <br>
-
-   - Open Neo4j Desktop <br>
-   - Create a new project or select an existing project <br>
-   - Click on "Add" and select "Add Local DBMS" <br>
-   - Use the username and password in your `conf/base/credentials.yml` file. <br>
-
-3. Create Database <br>
-
-   - Create a database with the name specified in the `database` variable in `parameters_clustering.yml` <br>
-
-4. Install GDS Library Plugins: <br>
-
-   - Follow the instructions in the [Neo4j GDS Library Installation Guide](https://neo4j.com/docs/graph-data-science/current/installation/neo4j-desktop/) to install the GDS library plugins<br>
-
-</details>
-
-#### 3. Data File
-
-- Verify that the file `data/01_raw/Synapxe Content Prioritisation - Live Healthy_020724.xlsx` is available in the specified directory.
+> Before running the [`clustering`](src/content_optimization/pipelines/clustering/pipeline.py) pipeline, ensure that you have already ran the `data_processing` and `feature_engineering` pipeline. Additionally, ensure that Neo4j has been set up locally. You may refer to [Setting Up Neo4j](docs/SETTING_UP_NEO4J.md) for more information.
 
 You can run the entire `clustering` pipeline by running:
 
@@ -226,17 +270,7 @@ kedro run --pipeline="clustering"
 ### Azure RAG <a id="azure-rag"></a>
 
 > [!IMPORTANT]
-> Before running the [`azure_rag`](src/content_optimization/pipelines/azure_rag/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Refer to the [conf/README.md](conf/README.md) section for more information.
-
-#### Prerequisites <a id="azure-rag-prerequisites"></a>
-
-#### 1. Configuration <a id="azure-rag-configuration"></a>
-
-Ensure that your `conf/local/credentials.yml` file includes the Azure credentials [`conf/local`](conf/local). Refer to section for more information.
-
-#### 2. Install Azure CLI
-
-- Follow the instructions in the [Azure CLI Installation Guide](https://learn.microsoft.com/cli/azure/install-azure-cli) to install the Azure CLI <br>
+> Before running the [`azure_rag`](src/content_optimization/pipelines/azure_rag/pipeline.py) pipeline, ensure that you have already ran the `data_processing` pipeline. Additionally, ensure that access and credentials to Azure have been set up locally. You may refer to [Setting Up Azure](docs/SETTING_UP_AZURE.md) for more information.
 
 You can run the entire `azure_rag` pipeline by running:
 
@@ -257,766 +291,3 @@ kedro run --pipeline="azure_rag"
 ```python
 # TODO: Integration Tests Documentation
 ```
-
-## Dataset <a id="dataset-info"></a>
-
-### General Information <a id="merged-data-general-information"></a>
-
-- **Dataset Name:** `merged_data.parquet`
-- **Location**: [`data/03_primary`](data/03_primary)
-- **Dataset Description:** Merged collection of Health Hub articles across different content categories
-- **Version**: v1
-- **Date of Creation:** June 28, 2024
-- **Last Updated:** August 2, 2024
-
-### File Information <a id="merged-data-file-information"></a>
-
-- **File Format:** Apache Parquet
-- **Number of Files:** 1
-- **Total Size:** 13.5MB
-
-### Data Schema <a id="merged-data-data-schema"></a>
-
-- **Number of Rows:** 2613
-- **Number of Columns:** 39
-- **Subject Area/Domain:** Health Hub Articles
-
-#### **Columns** <a id="merged-data-columns"></a>
-
-<details>
-  <summary>Expand for more information</summary>
-
-- **`id`**
-  <details>
-
-  - Data Type: `integer`
-  - Description:
-    - Corresponds to the Article ID
-  - Example Values:
-    - 1464154
-  - Null Values Allowed: No
-  - Primary Key: Yes
-  - Foreign Key: No
-
-  </details>
-
-- **`content_name`**
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Name of the article stored as metadata
-  - Example Values:
-    - Zopiclone
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`title`**
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Title of the article
-  - Example Values:
-    - deLIGHTS for Diabetic Patients
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`article_category_names`**
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Categories that articles can belong to
-  - Example Values:
-    - Food & Nutrition, Exercise and Fitness
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`cover_image_url`**
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - URL of the cover image of the article
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`full_url`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - URL of the article
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`full_url2`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - URL of the article (backup)
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`friendly_url`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - File path with reference from content category for redirection
-  - Example Values:
-    - dont-forget-your-form
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`category_description`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Brief Summary of the article that is typically found at the top of the webpage
-  - Example Values:
-    - Learn how your mind affects your physical and emotional health to strengthen your mental well-being.
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`content_body`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - HTML element containing the entire article body
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`keywords`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Article Keywords
-  - Example Values:
-    - ICD-21-Health Services,PER_Parent,PGM_Student Screening,PGM_HealthAmbassador,AGE_Teens,AGE_Young Adult,CHILD_Children,INTEREST_Body Care,
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`feature_title`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Feature Title of the articles
-  - Example Values:
-    - Recipe: Nonya Curry Infused Patties
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`pr_name`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Provider Name
-  - Example Values:
-    - Active Health
-    - Health Promotion Board
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: Yes
-
-  </details>
-
-- **`alternate_image_text`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Alternate Image text provided to convey the “why” of the image as it relates to the content
-  - Example Values:
-    - Benefits of staying smoke-free
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`date_modified`**
-
-  <details>
-
-  - Data Type: `timestamp`
-  - Description:
-    - Timestamp of the article when modified
-  - Example Values:
-    - 2022-11-15T08:35:27.0000000Z
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`last_month_view_count`**
-
-  <details>
-
-  - Data Type: `integer`
-  - Description:
-    - Number of views over the past month
-  - Example Values:
-    - 63
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`last_two_months_view`**
-
-  <details>
-
-  - Data Type: `integer`
-  - Description:
-    - Number of views over the past 2 months
-  - Example Values:
-    - 91
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`page_views`**
-
-  <details>
-
-  - Data Type: `integer`
-  - Description:
-    - (Google Analytics) Number of page views
-  - Example Values:
-    - 1138
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`engagement_rate`**
-
-  <details>
-
-  - Data Type: `float`
-  - Description:
-    - (Google Analytics) The percentage of engaged sessions for article
-  - Example Values:
-    - 0.658709107
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`bounce_rate`**
-
-  <details>
-
-  - Data Type: `float`
-  - Description:
-    - (Google Analytics) The percentage of sessions that were not engaged
-      - Opposite of Engagement Rate
-  - Example Values:
-    - 0.34129089300000004
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`exit_rate`**
-
-  <details>
-
-  - Data Type: `float`
-  - Description:
-    - (Google Analytics) The percentage of sessions that ended on a page or screen
-      - Equivalent to the number of exits divided by the number of sessions.
-  - Example Values:
-    - 0.9041850220264317
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`scroll_percentage`**
-
-  <details>
-
-  - Data Type: `float`
-  - Description:
-    - (Google Analytics) Measures how far users scroll down a page before leaving
-      - Also known as scroll depth
-      - 100% represents that users, on average, scroll to the bottom of the page.
-  - Example Values:
-    - 0.35698594
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`percentage_total_views`**
-
-  <details>
-
-  - Data Type: `float`
-  - Description:
-    - The percentage of views captured by the article within a particular content category
-  - Example Values:
-    - 0.002679191533943097
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`cumulative_percentage_total_views`**
-
-  <details>
-
-  - Data Type: `float`
-  - Description:
-    - The cumulative percentage of views captured within a particular content category
-  - Example Values:
-    - 0.6859483702369595
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`content_category`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - The content category that the article corresponds to on HealthHub
-  - Example Values:
-    - medications
-    - live-healthy-articles
-    - diseases-and-conditions
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: Yes
-
-  </details>
-
-- **`to_remove`**
-
-  <details>
-
-  - Data Type: `boolean`
-  - Description:
-    - Indicates whether the articles have met the criteria for removal
-      - No content / Dummy content
-      - No extracted content
-  - Example Values:
-    - True/False
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`remove_type`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Indicates reason for removal if article is flagged
-  - Example Values:
-    - No HTML Tags
-    - Excel Error
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`has_table`**
-
-  <details>
-
-  - Data Type: `boolean`
-  - Description:
-    - Check whether the article has a table element within the content body
-  - Example Values:
-    - True/False
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`has_image`**
-
-  <details>
-
-  - Data Type: `boolean`
-  - Description:
-    - Check whether the article has an image element within the content body
-  - Example Values:
-    - True/False
-  - Null Values Allowed: No
-  - Primary Key: No - Foreign Key: No
-
-  </details>
-
-- **`related_sections`**
-
-  <details>
-
-  - Data Type: `list[string]`
-  - Description:
-    - A list of extracted text within articles that are captured under “Related:” and “Read these next:”
-  - Example Values:
-    - ['How to Eat Right to Feel Right' 'Getting the Fats Right!' 'Banish Nasty Nibbles With Healthy Snacks' 'Getting the Fats Right!' 'Make a Healthier Choice Today!' 'Make Snacking Smart a Healthy Eating Habit']
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`extracted_tables`**
-
-  <details>
-
-  - Data Type: `list[list[list[string]]]`
-  - Description:
-    - A list of extracted tables as a 2d-array extracted from the content body
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`extracted_raw_html_tables`**
-
-  <details>
-
-  - Data Type: `list[string]`
-  - Description:
-    - A list of extracted tables in HTML extracted from the content body
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`extracted_links`**
-
-  <details>
-
-  - Data Type: `list[tuple[string, string]]`
-  - Description:
-    - A list of extracted links with the corresponding text from the content body
-  - Example Values:
-    - `[('Child Health Booklet', 'https://www.healthhub.sg/programmes/parent-hub/child-health-booklet')]`
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`extracted_headers`**
-
-  <details>
-
-  - Data Type: `list[tuple[string, string]]`
-  - Description:
-    - A list of headers extracted from the content body based on the `<h*>` tag
-  - Example Values:
-    - `[('What is this medication for?', 'h2'])]`
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`extracted_images`**
-
-  <details>
-
-  - Data Type: `list[tuple[string, string]]`
-  - Description:
-    - A list of alternate text and urls extracted from images based on the `<img>` tag
-  - Example Values:
-    - `[('chas blue card','https://ch-api.healthhub.sg/api/public/content/059bbb4ca6934cea84c745e45518b15a?v=f726ce14')]`
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`extracted_content_body`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - The extracted text from the `content_body` column
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`l1_mappings`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - A list of L1 IA Mappings presented as a joined string, delimited by "|"
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`l2_mappings`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - A list of L2 IA Mappings presented as a joined string, delimited by "|"
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-</details>
-
-### Data Quality and Processing <a id="merged-data-quality-and-processing"></a>
-
-<details>
-  <summary>Expand for more information</summary>
-
-#### Data Cleaning Process <a id="merged-data-data-cleaning-process"></a>
-
-1. Standardise all column names
-2. Removed columns where all values are `NaN`
-3. Flagged articles with no content or dummy content
-4. Mark articles with tables and images in content body
-5. Extracted content body as clean text from HTML PageElement
-6. Extracted related sections, links, headers
-7. Flagged articles with no extracted content body
-8. Merged all articles across different content categories into one dataframe
-
-#### Missing Data Handling <a id="merged-data-missing-data-handling"></a>
-
-- Left as is for exploration purposes
-- No data imputation was used
-
-#### Known Issues or Limitations <a id="merged-data-issues"></a>
-
-- Issue with handling text extraction within `<div>` containers
-
-#### Data Quality Checks <a id="merged-data-data-quality-checks"></a>
-
-- Under [`data/02_intermediate`](data/02_intermediate)
-
-</details>
-
-### General Information <a id="processed-articles-general-information"></a>
-
-- **Dataset Name:** `processed_articles`
-- **Location**: [`data/03_primary`](data/03_primary)
-- **Dataset Description:** JSON format of the article content and tables files
-- **Version**: v1
-- **Date of Creation:** August 28, 2024
-- **Last Updated:** August 28, 2024
-
-### File Information <a id="processed-articles-file-information"></a>
-
-- **File Format:** JSON
-- **Number of Files:** 2724
-- **Total Size:** 31.8MB
-
-#### **Columns** <a id="processed-articles-columns"></a>
-
-<details>
-  <summary>Expand for more information</summary>
-
-- **`id`**
-  <details>
-
-  - Data Type: `integer`
-  - Description:
-    - Corresponds to the Article ID
-  - Example Values:
-    - 1464154
-  - Null Values Allowed: No
-  - Primary Key: Yes
-  - Foreign Key: No
-
-  </details>
-
-- **`title`**
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Title of the article
-  - Example Values:
-    - deLIGHTS for Diabetic Patients
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`cover_image_url`**
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - URL of the cover image of the article
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`full_url`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - URL of the article
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`content_category`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - The content category that the article corresponds to on HealthHub
-  - Example Values:
-    - medications
-    - live-healthy-articles
-    - diseases-and-conditions
-  - Null Values Allowed: No
-  - Primary Key: No
-  - Foreign Key: Yes
-
-  </details>
-
-- **`category_description`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Brief Summary of the article that is typically found at the top of the webpage
-  - Example Values:
-    - Learn how your mind affects your physical and emotional health to strengthen your mental well-being.
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-- **`content`**
-
-  <details>
-
-  - Data Type: `string`
-  - Description:
-    - Post processed table/article content by the LLM.
-  - Null Values Allowed: Yes
-  - Primary Key: No
-  - Foreign Key: No
-
-  </details>
-
-</details>
-
-### Data Quality and Processing <a id="processed-articles-data-quality-and-processing"></a>
-
-<details>
-  <summary>Expand for more information</summary>
-
-#### Data Cleaning Process <a id="processed-articles-data-cleaning-process"></a>
-
-1. Filter articles by their 'to_remove' categories
-2. Convert the data in 'content_body' column to 'processed_table_content' with the LLM.
-3. Split the dataframe by rows and according to their 'extracted_content_body' and "processed_table_content" to {row_id}\_content.json and {row_id}\_table.json.
-
-#### Missing Data Handling <a id="processed-articles-missing-data-handling"></a>
-
-- Left as is for exploration purposes
-- No data imputation was used
-
-#### Known Issues or Limitations <a id="processed-articles-issues"></a>
-
-- N.A.
-
-#### Data Quality Checks <a id="processed-articles-data-quality-checks"></a>
-
-- N.A.
-
-</details>
