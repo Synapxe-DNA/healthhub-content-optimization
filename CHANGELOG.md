@@ -1,21 +1,29 @@
 # Changelog
 
+## October 4, 2024 <a id="october-4-2024"></a>
+
+- Added Data Version Control (DVC) on raw data.
+  - New users now are not required to manually download the raw data from remote storage and drag the raw data into the Kedro project before running the pipeline
+  - Current users will be able to version control the raw data should any changes or updates be made to it
+  - Team members can then perform a `dvc pull` to get updated raw data
+- Shifted some of the content in the README for the Kedro project into its own Markdown in the [docs](content-optimization/docs/) directory
+
 ## September 18, 2024 <a id="september-18-2024"></a>
 
-- Edited the extractor.py for the [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline to resolve the error in the recursive extraction of content from "programs" and "program-sub-pages" articles.
+- Edited the `extractor.py` for the [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing/) pipeline to resolve the error in the recursive extraction of content from "programs" and "program-sub-pages" articles.
 
 ## September 5, 2024 <a id="september-5-2024"></a>
 
-- Updated the README.md for [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) data, and included the 2 new fields "pr_name" and "date_modified" to the new field in the data.
-- Edited the extractor.py for the [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline to account for the recursive extraction of content from "programs" and "program-sub-pages" articles.
+- Updated the README.md for [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag/) data, and included the 2 new fields "pr_name" and "date_modified" to the new field in the data.
+- Edited the `extractor.py` for the [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing/) pipeline to account for the recursive extraction of content from "programs" and "program-sub-pages" articles.
 
 ## August 29, 2024 <a id="august-29-2024"></a>
 
-- Added the documentation for [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) pipeline, and updated the credentials documentation for [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline
+- Added the documentation for [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag/) pipeline, and updated the credentials documentation for [`clustering`](content-optimization/src/content_optimization/pipelines/clustering/) pipeline
 
 ## August 28, 2024 <a id="august-28-2024"></a>
 
-- Added [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag) pipeline to process the data for the search index in Azure.
+- Added [`azure_rag`](content-optimization/src/content_optimization/pipelines/azure-rag/) pipeline to process the data for the search index in Azure.
 - Updated `merge_data` node in `data_processing` pipeline to update Google Analytics data
 
 ## August 26, 2024 <a id="august-26-2024"></a>
@@ -24,8 +32,8 @@
 
 ## August 16, 2024 <a id="august-16-2024"></a>
 
-- Added `generate_embeddings_node` and `combine_embeddings_by_weightage_node` to [`feature_engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering) pipeline to generate feature embeddings
-- Added [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline for two-step clustering via community detection and BERTopic
+- Added `generate_embeddings_node` and `combine_embeddings_by_weightage_node` to [`feature_engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering/) pipeline to generate feature embeddings
+- Added [`clustering`](content-optimization/src/content_optimization/pipelines/clustering/) pipeline for two-step clustering via community detection and BERTopic
 
 ## August 13, 2024 <a id="august-13-2024"></a>
 
@@ -80,12 +88,12 @@
 
 ## July 13, 2204 <a id="july-13-2024"></a>
 
-- Added unit tests and integration test for [`feature_engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering) pipeline
+- Added unit tests and integration test for [`feature_engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering/) pipeline
 
 ## July 12, 2024 <a id="july-12-2024"></a>
 
-- Added unit tests and integration test for [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline
-- Added [data directories](content-optimization/tests/data) for test datasets
+- Added unit tests and integration test for [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing/) pipeline
+- Added [data directories](content-optimization/tests/data/) for test datasets
 - Removed use of `alive_progress` because of incompatibility with `pytest`
 - Added [`run_tests.py`](run_tests.py) to provide as an entry point for `make test`
 
@@ -97,11 +105,11 @@
 
 ## July 9, 2024 <a id="july-9-2024"></a>
 
-- Created [`clustering`](content-optimization/src/content_optimization/pipelines/clustering) pipeline
+- Created [`clustering`](content-optimization/src/content_optimization/pipelines/clustering/) pipeline
 
 ## July 8, 2024 <a id="july-8-2024"></a>
 
-- Overhauled the text processing in [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing) pipeline to handle edge cases across the chosen 5 content categories
+- Overhauled the text processing in [`data_processing`](content-optimization/src/content_optimization/pipelines/data_processing/) pipeline to handle edge cases across the chosen 5 content categories
 - Added logging statements to monitor for edge cases during extraction (only during development)
 - Added new column `extracted_img_alt_text` to preserve alternate texts present in images
 - Renamed column `type` to `remove_type` for better understanding
@@ -120,7 +128,7 @@
 
 ## July 5, 2024 <a id="july-5-2024"></a>
 
-- Swapped out vanilla `CountVectorizer` for `KeyphraseVectorizer` in [`feature engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering) pipeline
+- Swapped out vanilla `CountVectorizer` for `KeyphraseVectorizer` in [`feature engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering/) pipeline
 - No longer storing intermediate features such as `doc_embeddings`, `word_embeddings` and `filtered_data`
 
 ## July 4, 2024 <a id="july-4-2024"></a>
@@ -128,7 +136,7 @@
 - Refactored and improved text processing pipeline to handle nested <div> containers
   - All articles should now be organised as paragraphs
 - Removed `data_science` pipeline
-- Added [`feature engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering) pipeline to extract keywords from articles
+- Added [`feature engineering`](content-optimization/src/content_optimization/pipelines/feature_engineering/) pipeline to extract keywords from articles
 - Updated Makefile to run Kedro from root and clean Kedro datasets for fresh run
 
 ## July 3, 2024 <a id="july-3-2024"></a>
@@ -138,9 +146,9 @@
 ## July 1, 2024 <a id="july-1-2024"></a>
 
 - Added additional feature to flag articles for removal below a certain word count (for more information, you can see the [`word_count.ipynb`](content-optimization/notebooks/word_count.ipynb) notebook)
-- Reporting files are generated, versioned and stored in [`content-optimization/data/08_reporting`](content-optimization/data/08_reporting)
+- Reporting files are generated, versioned and stored in [`content-optimization/data/08_reporting`](content-optimization/data/08_reporting/)
 
 ## June 28, 2024
 
 - Refactored pipeline to standardize the column names to facilitate downstream merging
-- The merged data is generated, versioned and stored in [`content-optimization/data/03_primary`](content-optimization/data/03_primary)
+- The merged data is generated, versioned and stored in [`content-optimization/data/03_primary`](content-optimization/data/03_primary/)
