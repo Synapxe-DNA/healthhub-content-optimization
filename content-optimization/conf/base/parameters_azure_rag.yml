@@ -4,18 +4,29 @@
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
 
-duplicated_articles:
-  - 1444496
-  - 1445828
-  - 1445798
-  - 1444751
-  - 1435183
-  - 1435188
-  - 1434614
+# See: https://docs.google.com/spreadsheets/d/1PjRx_GkdlNZpV--Ui6sLd0Hvk-3LJ6qk/edit?usp=sharing&ouid=100274458010118191962&rtpof=true&sd=true
+# These articles contain duplicated URLs to be removed
+azure_blacklist:
+  - 1446081 # Duplicated URL
+  - 1445828 # Duplicated URL
+  - 1443608 # Duplicated URL
+  - 1445829 # Duplicated URL
+  - 1435183 # Duplicated URL
+  - 1435331 # Duplicated URL
+  - 1434652 # Duplicated URL
 
-duplicated_content:
-  - 1495949
-  - 1445972
+# See: https://docs.google.com/spreadsheets/d/1PjRx_GkdlNZpV--Ui6sLd0Hvk-3LJ6qk/edit?usp=sharing&ouid=100274458010118191962&rtpof=true&sd=true
+# These articles are to be kept, please refer to the column `keep id` in the above link
+azure_whitelist:
+  - 1497409 # Duplicated Content
+  - 1469472 # Duplicated Content
+  - 1444496 # Duplicated URL
+  - 1445629 # Duplicated URL
+  - 1445798 # Duplicated URL
+  - 1444751 # Duplicated URL
+  - 1435335 # Duplicated URL
+  - 1435188 # Duplicated URL
+  - 1434614 # Duplicated URL
 
 lengthy_articles:
   - 1435223

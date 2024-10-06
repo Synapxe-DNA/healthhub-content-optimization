@@ -11,8 +11,8 @@ from content_optimization.pipelines.azure_rag.llm_extraction import ask
 
 def filter_articles(
     merged_data: pd.DataFrame,
-    duplicated_articles: List[int],
-    duplicated_content: List[int],
+    azure_blacklist: List[int],
+    azure_whitelist: List[int],
     lengthy_articles: List[int],
 ) -> pd.DataFrame:
     """
@@ -20,8 +20,8 @@ def filter_articles(
 
     Args:
         merged_data (pd.DataFrame): DataFrame containing the merged article data.
-        duplicated_articles (List[int]): List of article IDs to be removed as duplicates.
-        duplicated_content (List[int]): List of article IDs that contain duplicated content but should be kept.
+        blacklist (List[int]): List of article IDs to be removed as duplicates.
+        whitelist (List[int]): List of article IDs that contain duplicated content/url but should be kept.
         lengthy_articles (List[int]): List of article IDs for articles that are too lengthy and should be removed.
 
     Returns:
@@ -43,15 +43,20 @@ def filter_articles(
         filtered_data_rag["remove_type"] != "Multilingual"
     ]
 
+    # Remove 'URL Error' from 'remove_type' column
+    filtered_data_rag = filtered_data_rag[
+        filtered_data_rag["remove_type"] != "URL Error"
+    ]
+
     # Remove the duplicated articles with specific 'id' values
     filtered_data_rag = filtered_data_rag[
-        ~filtered_data_rag["id"].isin(duplicated_articles)
+        ~filtered_data_rag["id"].isin(azure_blacklist)
     ]
 
     # Remove 'Duplicated Content' from 'remove_type' column, except for specific 'id' values
     filtered_data_rag = filtered_data_rag[
         (filtered_data_rag["remove_type"] != "Duplicated Content")
-        | (filtered_data_rag["id"].isin(duplicated_content))
+        | (filtered_data_rag["id"].isin(azure_whitelist))
     ]
 
     # Remove the article that is too lengthy
