@@ -48,44 +48,46 @@ Before proceeding to the [Raw Data](#raw-data-set-up) section to set up, please 
 
 ### Integration of Data with Azure<a id="integration-azure"></a>
 
-Azure Blob Storage is selected as our Remote Storage for DVC. A container named `raw` under the resource group `rg-hhgai-prod-eastasia-002` is created in the Enterprise Cloud for this purpose.
+Azure Blob Storage is selected as our Remote Storage for DVC. A container named `raw` is created in the Enterprise Cloud for this purpose.
 
 With the implementation of DVC, there are 3 Roles present:
 
-1. <b>Data Controller</b> (Maintains Remote Storage + Google Drive)
+1. **Data Controller** (Maintains Remote Storage + Google Drive)
 
    - Controls the raw data version in Azure
-   - In-charge of `git push` the latest version of `.dvc` files to GitHub, so that Data Users can `dvc pull` the correct data version from the remote storage
+   - In-charge of `git push` the latest version of `.dvc` files to GitHub, so that Data Users can retrieve the correct data version from the remote storage
    - Updates the data files in Google Drive, for Data Viewers to view the data
      <br><hr>
    - Manages the Azure resources
    - Generate and disseminate the SAS token very time it expires within a set time period e.g. a month
 
-2. <b>Data User</b> (Interacts with Remote Storage)
+2. **Data User** (Interacts with Remote Storage)
 
-   - Pull in versioned control data:
+   - Pulls in versioned control data:
      - `git pull` to retrieve latest `.dvc` files, then
-     - `dvc pull` to retrieve latest data version locally for use in their code
+     - Run `get_raw_data.sh` or `get_raw_data.ps1` to retrieve latest data version locally for use in their code
    - Setup steps using scripts can be found under [Raw Data](#raw-data-set-up)
 
-3. <b>Data Viewer</b> (Interacts with Google Drive)
+3. **Data Viewer** (Interacts with Google Drive)
    - View raw data found in the [Google Drive](https://drive.google.com/drive/folders/1RZe7qHWat8wxxYBDfdMSpZLHxqhCkYXV?usp=sharing)
 
 ### Azure Authentication
 
-We use SAS Token as our authentication method to set up the remote configuration to the Azure Blob Storage. The Data Controller will perform the steps to generate the SAS Token as follows:
+We use SAS Token as our authentication method to set up the remote configuration to the Azure Blob Storage. The Data Controller will perform the steps to generate the SAS Token.
 
-1. Create an Azure Storage Account
-2. Click on + Container > Enter a name for your container › Create
-3. Click on your new container > Under Settings › Click on Shared access token
-4. Under Signing method > Select Account key
-5. Under Permissions > Check Read, Write, Delete and List
-6. Under Start and Expiry > Set the date and time
-7. Under Allowed protocols > Select HTTPS only
-8. Generate SAS token and URL > Copy the SAS token
+**Steps (Generate SAS Token):**
+
+1. Create an **Azure Storage Account**
+2. Click on **+ Container** > Enter a name for your container › **Create**
+3. Click on your new container > Under **Settings** › Click on **Shared access token**
+4. Under **Signing method** > Select **Account key**
+5. Under **Permissions** > Check **Read, Write, Delete** and **List**
+6. Under **Start** and **Expiry** > Set the date and time
+7. Under **Allowed protocols** > Select **HTTPS only**
+8. Generate **SAS token and URL** > Copy the **SAS token**
 
 > [!IMPORTANT]
-> Once you exit the Azure page, you can no longer find the SAS token as Azure does not store it. It is important for <b>Data Controllers to note down the following details of the latest SAS token</b>:
+> Once you exit the Azure page, you can no longer find the SAS token as Azure does not store it. It is important for **Data Controllers to note down the following details of the latest SAS token**:
 
 1. Creation Date
 2. Expiry Date
@@ -93,7 +95,7 @@ We use SAS Token as our authentication method to set up the remote configuration
 4. Blob SAS URL
 
 > [!IMPORTANT]
-> The details of the latest SAS Token is as follows</b>:
+> The details of the latest SAS Token is as follows\*\*:
 
 ```text
 Creation Date: 9 Oct 2024
@@ -147,7 +149,7 @@ After running the command, you should see all the raw data populated within the 
 > [!TIP]
 > If you encounter any issues, please consult a Data Controller. Usually, an error occurs when the SAS token has expired.
 
-For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/google-drive#using-a-custom-google-cloud-project-recommended) documentation in DVC.
+For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/azure-blob-storage) documentation in DVC.
 
 ### Data Versioning <a id="data-versioning"></a>
 
