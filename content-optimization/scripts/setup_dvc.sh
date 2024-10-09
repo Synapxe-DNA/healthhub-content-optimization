@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# Perform operations in the root directory using a subshell
+(
+    # Navigate to the root of the project
+    cd "$(git rev-parse --show-toplevel)" || exit
+
+    # Define the config file path relative to the root
+    CONFIG_FILE_PATH=".dvc/config.local"
+
+    # Attempt to remove the config file
+    if [ -f "$CONFIG_FILE_PATH" ]; then
+        echo "Removing config.local."
+        rm "$CONFIG_FILE_PATH"
+    else
+        echo "config.local not found, continuing."
+    fi
+)
+
 # Path to the .env file
 ENV_FILE=".env"
 
