@@ -57,9 +57,6 @@ With the implementation of DVC, there are 3 Roles present:
    - Controls the raw data version in Azure
    - In-charge of `git push` the latest version of `.dvc` files to GitHub, so that Data Users can retrieve the correct data version from the remote storage
    - Updates the data files in Google Drive, for Data Viewers to view the data
-
-   ***
-
    - Manages the Azure resources
    - Generates and disseminates the SAS token very time it expires within a set time period e.g. a month
 
@@ -96,7 +93,8 @@ We use SAS Token as our authentication method to set up the remote configuration
 3. Blob SAS Token
 4. Blob SAS URL
 
-> [!IMPORTANT] > **The details of the latest SAS Token is as follows**:
+> [!IMPORTANT]
+> The **details of the latest SAS Token** is as follows:
 
 ```text
 Creation Date: 9 Oct 2024
@@ -160,6 +158,8 @@ Below is a diagram showing the flow of data versioning.
     <img src="docs/images/dvc.png" height="1000", alt="Data Version Control">
 </p>
 
+## Steps (Update to raw data)
+
 When you have made an update or change to the raw data, you can perform a commit operation to version the data:
 
 ```zsh
@@ -173,7 +173,28 @@ You should see an updated version of a `.dvc` file of your updated raw data. It 
 
 ```zsh
 git add <PATH_TO_RAW_DATA>.dvc
-git commit -m "Raw dataset updated"
+git commit -m "Raw data updated"
+```
+
+## Steps (Revert raw data to previous version)
+
+When you wish to revert back the raw data to a previous version, you can perform a commit operation to retrieve it back:
+
+```zsh
+git log # view commit log to find specific commit to revert back to
+git checkout <commitNumber>
+dvc checkout # reverts local raw data version
+```
+
+You should see a reverted version of a `.dvc` file of your reverted raw data. It is best practice to version control to Git this `.dvc` file, whenever a change has been made to any raw data. This `.dvc` file tracks the versioning of your data and is crucial when you want to revert back to a previous version of your data. You may run the following commands to track changes in Git:
+
+```zsh
+git checkout main
+dvc add <PATH_TO_RAW_DATA>
+dvc push <PATH_TO_RAW_DATA> --remote <REMOTE_NAME>
+git add .
+git commit -m "Revert raw data version"
+git push
 ```
 
 ## File Structure
