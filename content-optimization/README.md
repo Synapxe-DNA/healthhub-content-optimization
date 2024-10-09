@@ -57,16 +57,18 @@ With the implementation of DVC, there are 3 Roles present:
    - Controls the raw data version in Azure
    - In-charge of `git push` the latest version of `.dvc` files to GitHub, so that Data Users can retrieve the correct data version from the remote storage
    - Updates the data files in Google Drive, for Data Viewers to view the data
-     <br><hr>
+
+   ***
+
    - Manages the Azure resources
-   - Generate and disseminate the SAS token very time it expires within a set time period e.g. a month
+   - Generates and disseminates the SAS token very time it expires within a set time period e.g. a month
 
 2. **Data User** (Interacts with Remote Storage)
 
    - Pulls in versioned control data:
-     - `git pull` to retrieve latest `.dvc` files, then
-     - Run `get_raw_data.sh` or `get_raw_data.ps1` to retrieve latest data version locally for use in their code
-   - Setup steps using scripts can be found under [Raw Data](#raw-data-set-up)
+     - `git pull` to retrieve latest `.dvc` files
+     - Runs [`get_raw_data.sh`](scripts\get_raw_data.sh) or [`get_raw_data.ps1`](scripts\get_raw_data.ps1) to retrieve latest data version locally for use in their code
+   - Set up steps using the scripts can be found under [Raw Data](#raw-data-set-up)
 
 3. **Data Viewer** (Interacts with Google Drive)
    - View raw data found in the [Google Drive](https://drive.google.com/drive/folders/1RZe7qHWat8wxxYBDfdMSpZLHxqhCkYXV?usp=sharing)
