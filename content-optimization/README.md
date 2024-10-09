@@ -94,8 +94,7 @@ We use SAS Token as our authentication method to set up the remote configuration
 3. Blob SAS Token
 4. Blob SAS URL
 
-> [!IMPORTANT]
-> The details of the latest SAS Token is as follows\*\*:
+> [!IMPORTANT] > **The details of the latest SAS Token is as follows**:
 
 ```text
 Creation Date: 9 Oct 2024
