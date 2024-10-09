@@ -21,8 +21,8 @@ Get-Content $envFile | ForEach-Object {
         return
     }
 
-    # Split the line into key and value
-    $parts = $line -split '='
+    # Split the line into key and value, only split on the first occurrence of '='
+    $parts = $line -split '=', 2
     # Trim any surrounding whitespace (useful for some environments)
     $key = $parts[0].Trim()
     $value = $parts[1].Trim()
@@ -39,12 +39,11 @@ $remotes = @("all_contents", "missing_contents", "google_analytics", "ground_tru
 # Loop through each remote and execute the DVC commands
 foreach ($remote in $remotes) {
     # Add remote with base URL
-    dvc remote add $remote "$env:GDRIVE_URL/$remote" --force
-    dvc remote modify $remote gdrive_acknowledge_abuse true
+    dvc remote add $remote "$env:AZURE_URL/$remote" --force
 
     # Add local configurations for credentials
-    dvc remote modify --local $remote gdrive_client_id $env:GDRIVE_CLIENT_ID
-    dvc remote modify --local $remote gdrive_client_secret $env:GDRIVE_CLIENT_SECRET
+    dvc remote modify --local $remote account_name $env:AZURE_STORAGE_ACCOUNT
+    dvc remote modify --local $remote sas_token $env:AZURE_STORAGE_SAS_TOKEN
 }
 
 # Inform the user of completion

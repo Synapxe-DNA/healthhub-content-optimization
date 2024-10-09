@@ -2,7 +2,7 @@
 
 ## Overview <a id="kedro-pipeline"></a>
 
-> This Kedro project with Kedro-Viz setup was generated using `kedro 0.19.6`.
+> This Kedro project with Kedro-Viz set up was generated using `kedro 0.19.6`.
 
 This visualization shows the current (latest) Kedro pipeline. This will be updated as the pipeline progresses.
 
@@ -44,20 +44,78 @@ cat requirements.txt | xargs poetry add
 
 Raw data is versioned using [Data Version Control (DVC)](https://dvc.org/). Before running the pipeline, we have to ensure that the raw data is available and up-to-date. For more information on data versioning best-practices, refer to the following section [below](#data-versioning).
 
-### Raw Data
+Before proceeding to the [Raw Data](#raw-data-set-up) section to set up, please read the following sections [below](#integration-azure) to understand clearly the use of DVC, and how you can interact with this raw data:
+
+### Integration of Data with Azure<a id="integration-azure"></a>
+
+Azure Blob Storage is selected as our Remote Storage for DVC. A container named `raw` is created in the Enterprise Cloud for this purpose.
+
+With the implementation of DVC, there are 3 Roles present:
+
+1. **Data Controller** (Maintains Remote Storage + Google Drive)
+
+   - Controls the raw data version in Azure
+   - In-charge of `git push` the latest version of `.dvc` files to GitHub, so that Data Users can retrieve the correct data version from the remote storage
+   - Updates the data files in Google Drive, for Data Viewers to view the data
+   - Manages the Azure resources
+   - Generates and disseminates the SAS token very time it expires within a set time period e.g. a month
+
+2. **Data User** (Interacts with Remote Storage)
+
+   - Pulls in versioned control data:
+     - `git pull` to retrieve latest `.dvc` files
+     - Runs [`get_raw_data.sh`](scripts\get_raw_data.sh) or [`get_raw_data.ps1`](scripts\get_raw_data.ps1) to retrieve latest data version locally for use in their code
+   - Set up steps using the scripts can be found under [Raw Data](#raw-data-set-up)
+
+3. **Data Viewer** (Interacts with Google Drive)
+   - View raw data found in the [Google Drive](https://drive.google.com/drive/folders/1RZe7qHWat8wxxYBDfdMSpZLHxqhCkYXV?usp=sharing)
+
+### Azure Authentication
+
+We use SAS Token as our authentication method to set up the remote configuration to the Azure Blob Storage. The Data Controller will perform the steps to generate the SAS Token.
+
+**Steps (Generate SAS Token):**
+
+1. Create an **Azure Storage Account**
+2. Click on **+ Container** > Enter a name for your container › **Create**
+3. Click on your new container > Under **Settings** › Click on **Shared access token**
+4. Under **Signing method** > Select **Account key**
+5. Under **Permissions** > Check **Read, Write, Delete** and **List**
+6. Under **Start** and **Expiry** > Set the date and time
+7. Under **Allowed protocols** > Select **HTTPS only**
+8. Generate **SAS token and URL** > Copy the **SAS token**
+
+> [!IMPORTANT]
+> Once you exit the Azure page, you can no longer find the SAS token as Azure does not store it. It is important for **Data Controllers to note down the following details of the latest SAS token**:
+
+1. Creation Date
+2. Expiry Date
+3. Blob SAS Token
+4. Blob SAS URL
+
+> [!IMPORTANT]
+> The **details of the latest SAS Token** is as follows:
+
+```text
+Creation Date: 9 Oct 2024
+Expiry Date: 7 Feb 2025
+SAS Token: Consult a Data Controller
+```
+
+### Raw Data<a id="raw-data-set-up"></a>
 
 In the root of this project, you will find a [`.env.sample`](.env.sample). It should look like this:
 
-```text
-GDRIVE_URL=
-GDRIVE_CLIENT_ID=
-GDRIVE_CLIENT_SECRET=
+```dotenv
+AZURE_URL=
+AZURE_STORAGE_ACCOUNT=
+AZURE_STORAGE_SAS_TOKEN=
 ```
 
 Create an `.env` file and copy and paste the contents from above into it.
 
 > [!NOTE]
-> Consult an administrator for the required credentials.
+> Consult a Data Controller for the required credentials.
 
 Once the environment variables have been set up, you can run the following command to set up the DVC configurations:
 
@@ -85,18 +143,12 @@ For Windows, run the following command:
 ./scripts/get_raw_data.ps1
 ```
 
-After the command is ran, you will be redirected to a browser. Select the email address that you have provided to the adminstrator — ideally, he or she would have whitelisted your email address as a test user.
-
-<p align="center">
-    <img src="docs/images/test.png" height="250", alt="Test Users">
-</p>
-
-Next, give all access to DVC remote storage to access your Google Drive. Once this is completed, you should see all the raw data populated within the [`data/01_raw/`](data/01_raw/) directory. It may take a while for all the data to be downloaded if this is your first time pulling in the raw data.
+After running the command, you should see all the raw data populated within the [`data/01_raw/`](data/01_raw/) directory. It may take a while for all the data to be downloaded if this is your first time pulling in the raw data.
 
 > [!TIP]
-> If you encounter any issues, please consult an administrator. Usually, an error occurs when you have selected the wrong email address or that the provided email address has not been whitelisted.
+> If you encounter any issues, please consult a Data Controller. Usually, an error occurs when the SAS token has expired.
 
-For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/google-drive#using-a-custom-google-cloud-project-recommended) documentation in DVC.
+For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/azure-blob-storage) documentation in DVC.
 
 ### Data Versioning <a id="data-versioning"></a>
 
@@ -105,6 +157,8 @@ Below is a diagram showing the flow of data versioning.
 <p align="center">
     <img src="docs/images/dvc.png" height="1000", alt="Data Version Control">
 </p>
+
+## Steps (Update to raw data)
 
 When you have made an update or change to the raw data, you can perform a commit operation to version the data:
 
@@ -119,7 +173,28 @@ You should see an updated version of a `.dvc` file of your updated raw data. It 
 
 ```zsh
 git add <PATH_TO_RAW_DATA>.dvc
-git commit -m "Raw dataset updated"
+git commit -m "Raw data updated"
+```
+
+## Steps (Revert raw data to previous version)
+
+When you wish to revert back the raw data to a previous version, you can perform a commit operation to retrieve it back:
+
+```zsh
+git log # view commit log to find specific commit to revert back to
+git checkout <commitNumber>
+dvc checkout # reverts local raw data version
+```
+
+You should see a reverted version of a `.dvc` file of your reverted raw data. It is best practice to version control to Git this `.dvc` file, whenever a change has been made to any raw data. This `.dvc` file tracks the versioning of your data and is crucial when you want to revert back to a previous version of your data. You may run the following commands to track changes in Git:
+
+```zsh
+git checkout main
+dvc add <PATH_TO_RAW_DATA>
+dvc push <PATH_TO_RAW_DATA> --remote <REMOTE_NAME>
+git add .
+git commit -m "Revert raw data version"
+git push
 ```
 
 ## File Structure

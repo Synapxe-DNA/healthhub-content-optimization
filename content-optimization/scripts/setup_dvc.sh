@@ -35,12 +35,11 @@ remotes=("all_contents" "missing_contents" "google_analytics" "ground_truth")
 # Loop through each remote and execute the DVC commands
 for remote in "${remotes[@]}"; do
     # Add remote with base URL
-    dvc remote add "$remote" "$GDRIVE_URL/$remote" --force
-    dvc remote modify "$remote" gdrive_acknowledge_abuse true
+    dvc remote add "$remote" "$AZURE_URL/$remote" --force
 
     # Add local configurations for credentials
-    dvc remote modify --local "$remote" gdrive_client_id "$GDRIVE_CLIENT_ID"
-    dvc remote modify --local "$remote" gdrive_client_secret "$GDRIVE_CLIENT_SECRET"
+    dvc remote modify --local "$remote" account_name "$AZURE_STORAGE_ACCOUNT"
+    dvc remote modify --local "$remote" sas_token "$AZURE_STORAGE_SAS_TOKEN"
 
 done
 

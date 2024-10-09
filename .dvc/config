@@ -1,12 +1,8 @@
 ['remote "all_contents"']
-    url = gdrive://1yC4kQg5_eIkWE-7vuJW32i7A-vKcKzM4/all_contents
-    gdrive_acknowledge_abuse = true
+    url = azure://raw/all_contents
 ['remote "missing_contents"']
-    url = gdrive://1yC4kQg5_eIkWE-7vuJW32i7A-vKcKzM4/missing_contents
-    gdrive_acknowledge_abuse = true
+    url = azure://raw/missing_contents
 ['remote "google_analytics"']
-    url = gdrive://1yC4kQg5_eIkWE-7vuJW32i7A-vKcKzM4/google_analytics
-    gdrive_acknowledge_abuse = true
+    url = azure://raw/google_analytics
 ['remote "ground_truth"']
-    url = gdrive://1yC4kQg5_eIkWE-7vuJW32i7A-vKcKzM4/ground_truth
-    gdrive_acknowledge_abuse = true
+    url = azure://raw/ground_truth
