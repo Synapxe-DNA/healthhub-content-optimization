@@ -1,0 +1,5 @@
+{
+  "parameters": {
+    "embeddings_weightage.keywords": 0
+  }
+}

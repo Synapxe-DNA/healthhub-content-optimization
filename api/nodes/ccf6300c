@@ -1,0 +1,8 @@
+{
+  "parameters": {
+    "umap_parameters": {
+      "n_neighbors": 15,
+      "n_components": 8
+    }
+  }
+}

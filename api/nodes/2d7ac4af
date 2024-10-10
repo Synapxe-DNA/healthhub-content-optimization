@@ -1,0 +1,16 @@
+{
+  "code": "def merge_ground_truth_to_data(\n    ground_truth_data: pd.DataFrame,\n    content_contributor: str,\n    weighted_embeddings: pd.DataFrame,\n) -> pd.DataFrame:\n    \"\"\"\n    Merges ground truth data with weighted embeddings.\n\n    This function filters the ground truth data to include only entries that match the specified\n    content contributor. It then merges this filtered ground truth data with the weighted embeddings\n    dataframe based on the URL.\n\n    Parameters:\n        ground_truth_data (pd.DataFrame): DataFrame containing reference ground truth data, with columns including\n            \"Owner\", \"Page Title\", \"Combine Group ID\", and \"URL\".\n        content_contributor (str): The name of the content contributor to filter the ground truth data.\n        weighted_embeddings (pd.DataFrame): DataFrame containing the weighted embeddings (loaded from a .pkl file) with a \"full_url\" column.\n\n    Returns:\n        pd.DataFrame: A merged DataFrame containing the weighted embeddings and ground truth label.\n    \"\"\"\n    ground_truth_data = ground_truth_data[\n        ground_truth_data[\"Owner\"].str.contains(content_contributor)\n    ]\n    ground_truth_data = ground_truth_data[ground_truth_data[\"Combine Group ID\"].notna()]\n\n    ground_truth_data = ground_truth_data[[\"Page Title\", \"URL\", \"Combine Group ID\"]]\n    ground_truth_data.rename(\n        columns={\"Combine Group ID\": \"ground_truth_cluster\"}, inplace=True\n    )\n\n    # merge with ground truth\n    articles_df = pd.merge(\n        weighted_embeddings,\n        ground_truth_data,\n        how=\"left\",\n        left_on=\"full_url\",\n        right_on=\"URL\",\n    )\n    return articles_df\n",
+  "filepath": "content-optimization/src/content_optimization/pipelines/clustering/nodes.py",
+  "parameters": {
+    "content_contributor": "Health Promotion Board"
+  },
+  "run_command": "kedro run --to-nodes='merge_ground_truth_to_data_node'",
+  "inputs": [
+    "ground_truth_data",
+    "params:content_contributor",
+    "weighted_embeddings"
+  ],
+  "outputs": [
+    "merged_df_with_groundtruth"
+  ]
+}

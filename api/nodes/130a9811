@@ -1,0 +1,5 @@
+{
+  "parameters": {
+    "embeddings.pooling_strategy": "mean"
+  }
+}

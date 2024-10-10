@@ -1,0 +1,8 @@
+{
+  "parameters": {
+    "neo4j_config": {
+      "uri": "neo4j://localhost:7687",
+      "database": "hh-articles"
+    }
+  }
+}

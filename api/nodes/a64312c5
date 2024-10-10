@@ -1,0 +1,38 @@
+{
+  "code": "def extract_content(\n    processed_data_rag: pd.DataFrame,\n    article_content_columns: List[str],\n    table_content_columns: List[str],\n) -> Dict[str, List[Dict[str, Any]]]:\n    \"\"\"\n    Extracts article content and table content into a structured dictionary format for further use.\n\n    Args:\n        processed_data_rag (pd.DataFrame): DataFrame containing the processed article and table content.\n        article_content_columns (List[str]): List of column names for the article content.\n        table_content_columns (List[str]): List of column names for the table content.\n\n    Returns:\n        Dict[str, List[Dict[str, Any]]]: A dictionary containing extracted article and table content, with unique keys based on article IDs.\n    \"\"\"\n    # Prepare the dictionary to hold data\n    json_data_rag = {}\n\n    # Loop through each row in the DataFrame using iterrows()\n    for index, row in processed_data_rag.iterrows():\n        row_id = row[\"id\"]\n        extracted_row_content = row[article_content_columns]\n        has_table = extracted_row_content[\"has_table\"]\n\n        # Create the dictionary for the content\n        extracted_data_content = extracted_row_content.drop(\"has_table\").to_dict()\n        extracted_data_content[\"content\"] = str(\n            extracted_data_content.pop(\"extracted_content_body\")\n        )\n        extracted_data_content[\"id\"] = str(row_id) + \"_content\"\n        content_key = str(row_id) + \"_content\"\n\n        # Append to the dictionary under the unique key\n        if content_key not in json_data_rag:\n            json_data_rag[content_key] = []\n        json_data_rag[content_key].append(extracted_data_content)\n\n        if has_table:\n            # Create the dictionary for the table\n            extracted_row_table = row[table_content_columns]\n            extracted_data_table = extracted_row_table.to_dict()\n            extracted_data_table[\"content\"] = str(\n                extracted_data_table.pop(\"processed_table_content\")\n            )\n            extracted_data_table[\"id\"] = str(row_id) + \"_table\"\n            table_key = str(row_id) + \"_table\"\n\n            # Append to the dictionary under the unique key\n            if table_key not in json_data_rag:\n                json_data_rag[table_key] = []\n            json_data_rag[table_key].append(extracted_data_table)\n\n    return json_data_rag\n",
+  "filepath": "content-optimization/src/content_optimization/pipelines/azure_rag/nodes.py",
+  "parameters": {
+    "article_content_columns": [
+      "id",
+      "title",
+      "cover_image_url",
+      "full_url",
+      "extracted_content_body",
+      "content_category",
+      "category_description",
+      "pr_name",
+      "date_modified",
+      "has_table"
+    ],
+    "table_content_columns": [
+      "id",
+      "title",
+      "cover_image_url",
+      "full_url",
+      "processed_table_content",
+      "content_category",
+      "category_description",
+      "pr_name",
+      "date_modified"
+    ]
+  },
+  "run_command": "kedro run --to-nodes='extract_content_node'",
+  "inputs": [
+    "processed_data_rag",
+    "params:article_content_columns",
+    "params:table_content_columns"
+  ],
+  "outputs": [
+    "json_data_rag"
+  ]
+}

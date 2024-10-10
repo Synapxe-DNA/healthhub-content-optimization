@@ -1,0 +1,15 @@
+{
+  "parameters": {
+    "table_content_columns": [
+      "id",
+      "title",
+      "cover_image_url",
+      "full_url",
+      "processed_table_content",
+      "content_category",
+      "category_description",
+      "pr_name",
+      "date_modified"
+    ]
+  }
+}

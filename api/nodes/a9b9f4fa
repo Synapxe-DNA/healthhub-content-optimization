@@ -1,0 +1,39 @@
+{
+  "code": "def filter_articles(\n    merged_data: pd.DataFrame,\n    azure_blacklist: List[int],\n    azure_whitelist: List[int],\n    lengthy_articles: List[int],\n) -> pd.DataFrame:\n    \"\"\"\n    Filters the input DataFrame by removing articles based on specific conditions.\n\n    Args:\n        merged_data (pd.DataFrame): DataFrame containing the merged article data.\n        blacklist (List[int]): List of article IDs to be removed as duplicates.\n        whitelist (List[int]): List of article IDs that contain duplicated content/url but should be kept.\n        lengthy_articles (List[int]): List of article IDs for articles that are too lengthy and should be removed.\n\n    Returns:\n        pd.DataFrame: Filtered DataFrame after applying all conditions for removal.\n    \"\"\"\n    # Apply the filtering conditions\n    print(merged_data.head())\n    # Apply the filtering conditions\n    # Remove articles with 'No HTML Tags' from the 'remove_type' column\n    filtered_data_rag = merged_data.loc[merged_data[\"remove_type\"] != \"No HTML Tags\"]\n    # Remove the rows with 'No Extracted Content' from 'remove_type' column\n    filtered_data_rag = filtered_data_rag[\n        filtered_data_rag[\"remove_type\"] != \"No Extracted Content\"\n    ]\n    # Remove the rows with 'NaN' from 'remove_type' column\n    filtered_data_rag = filtered_data_rag[filtered_data_rag[\"remove_type\"] != \"NaN\"]\n    # Remove 'Multilingual' from 'remove_type' column\n    filtered_data_rag = filtered_data_rag[\n        filtered_data_rag[\"remove_type\"] != \"Multilingual\"\n    ]\n\n    # Remove 'URL Error' from 'remove_type' column\n    filtered_data_rag = filtered_data_rag[\n        filtered_data_rag[\"remove_type\"] != \"URL Error\"\n    ]\n\n    # Remove the duplicated articles with specific 'id' values\n    filtered_data_rag = filtered_data_rag[\n        ~filtered_data_rag[\"id\"].isin(azure_blacklist)\n    ]\n\n    # Remove 'Duplicated Content' from 'remove_type' column, except for specific 'id' values\n    filtered_data_rag = filtered_data_rag[\n        (filtered_data_rag[\"remove_type\"] != \"Duplicated Content\")\n        | (filtered_data_rag[\"id\"].isin(azure_whitelist))\n    ]\n\n    # Remove the article that is too lengthy\n    filtered_data_rag = filtered_data_rag[\n        ~filtered_data_rag[\"id\"].isin(lengthy_articles)\n    ]\n\n    return filtered_data_rag\n",
+  "filepath": "content-optimization/src/content_optimization/pipelines/azure_rag/nodes.py",
+  "parameters": {
+    "azure_blacklist": [
+      1446081,
+      1445828,
+      1443608,
+      1445829,
+      1435183,
+      1435331,
+      1434652
+    ],
+    "azure_whitelist": [
+      1497409,
+      1469472,
+      1444496,
+      1445629,
+      1445798,
+      1444751,
+      1435335,
+      1435188,
+      1434614
+    ],
+    "lengthy_articles": [
+      1435223
+    ]
+  },
+  "run_command": "kedro run --to-nodes='filter_articles_node'",
+  "inputs": [
+    "merged_data",
+    "params:azure_blacklist",
+    "params:azure_whitelist",
+    "params:lengthy_articles"
+  ],
+  "outputs": [
+    "filtered_data_rag"
+  ]
+}

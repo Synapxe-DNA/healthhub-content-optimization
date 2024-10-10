@@ -1,0 +1,5 @@
+{
+  "parameters": {
+    "embeddings_weightage.extracted_content_body": 0.7
+  }
+}

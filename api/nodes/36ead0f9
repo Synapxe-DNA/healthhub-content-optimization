@@ -1,0 +1,5 @@
+{
+  "parameters": {
+    "embeddings_weightage.article_category_names": 0
+  }
+}

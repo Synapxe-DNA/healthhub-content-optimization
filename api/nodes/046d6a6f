@@ -1,0 +1,11 @@
+{
+  "parameters": {
+    "columns_to_emb": [
+      "title",
+      "article_category_names",
+      "category_description",
+      "extracted_content_body",
+      "keywords_all-MiniLM-L6-v2"
+    ]
+  }
+}

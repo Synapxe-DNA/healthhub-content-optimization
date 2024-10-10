@@ -1,0 +1,23 @@
+{
+  "code": "def combine_embeddings_by_weightage(\n    embeddings_data: pd.DataFrame,\n    title_weight: float,\n    article_category_names_weight: float,\n    category_description_weight: float,\n    extracted_content_body_weight: float,\n    keywords_weight: float,\n) -> pd.DataFrame:\n    \"\"\"\n    Generates weighted embeddings on based on the provided parameters and\n    returns a DataFrame with added 'combined_embeddings' column containing\n    the weighted embeddings.\n\n    Args:\n        embeddings_data (pd.DataFrame): The DataFrame with the generated embeddings.\n        title_weight (float): Weightage of title embeddings to use to compute combined embeddings.\n        article_category_names_weight (float): Weightage of article_category_names embeddings to use to compute combined embeddings.\n        category_description_weight (float): Weightage of category_description embeddings to use to compute combined embeddings.\n        extracted_content_body_weight (float): Weightage of extracted_content_body embeddings to use to compute combined embeddings.\n        keywords_weight (float): Weightage of keywords embeddings to use to compute combined embeddings.\n\n    Returns:\n        pd.DataFrame: The DataFrame with the weighted embeddings.\n    \"\"\"\n    embeddings_df = embeddings_data.copy()\n\n    embeddings_df[\"combined_embeddings\"] = (\n        embeddings_df[\"title_embeddings\"] * title_weight\n        + embeddings_df[\"article_category_names_embeddings\"]\n        * article_category_names_weight\n        + embeddings_df[\"category_description_embeddings\"] * category_description_weight\n        + embeddings_df[\"extracted_content_body_embeddings\"]\n        * extracted_content_body_weight\n        + embeddings_df[\"keywords_all-MiniLM-L6-v2_embeddings\"] * keywords_weight\n    )\n\n    weighted_embeddings = embeddings_df[\n        [\n            \"id\",\n            \"title\",\n            \"full_url\",\n            \"extracted_content_body\",\n            \"category_description\",\n            \"keywords_all-MiniLM-L6-v2\",\n            \"title_embeddings\",\n            \"article_category_names_embeddings\",\n            \"category_description_embeddings\",\n            \"extracted_content_body_embeddings\",\n            \"keywords_all-MiniLM-L6-v2_embeddings\",\n            \"combined_embeddings\",\n        ]\n    ]\n    return weighted_embeddings\n",
+  "filepath": "content-optimization/src/content_optimization/pipelines/feature_engineering/nodes.py",
+  "parameters": {
+    "embeddings_weightage.title": 0.3,
+    "embeddings_weightage.article_category_names": 0,
+    "embeddings_weightage.category_description": 0,
+    "embeddings_weightage.extracted_content_body": 0.7,
+    "embeddings_weightage.keywords": 0
+  },
+  "run_command": "kedro run --to-nodes='combine_embeddings_by_weightage_node'",
+  "inputs": [
+    "embeddings_data",
+    "params:embeddings_weightage.title",
+    "params:embeddings_weightage.article_category_names",
+    "params:embeddings_weightage.category_description",
+    "params:embeddings_weightage.extracted_content_body",
+    "params:embeddings_weightage.keywords"
+  ],
+  "outputs": [
+    "weighted_embeddings"
+  ]
+}

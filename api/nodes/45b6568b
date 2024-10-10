@@ -1,0 +1,21 @@
+{
+  "code": "def process_html_tables(\n    filtered_data_rag: pd.DataFrame,\n    temperature: int,\n    max_tokens: int,\n    n_completions: int,\n    seed: int,\n) -> pd.DataFrame:\n    \"\"\"\n    Processes articles containing HTML tables by passing the content through an LLM for extraction.\n\n    Args:\n        filtered_data_rag (pd.DataFrame): Filtered DataFrame that may contain HTML table content.\n        temperature (int): Sampling temperature to control the randomness in the LLM output.\n        max_tokens (int): Maximum number of tokens to generate from the LLM.\n        n_completions (int): Number of completion outputs to generate from the LLM.\n        seed (int): Random seed for reproducibility.\n\n    Returns:\n        pd.DataFrame: DataFrame with an additional column containing processed table content.\n    \"\"\"\n    processed_data_rag = filtered_data_rag.copy()\n\n    def _process_row(row):\n        if row[\"has_table\"]:\n            return ask(\n                html_content=row[\"content_body\"],\n                temperature=temperature,\n                max_tokens=max_tokens,\n                n_completions=n_completions,\n                seed=seed,\n            )\n        return None\n\n    processed_data_rag[\"processed_table_content\"] = processed_data_rag.apply(\n        _process_row, axis=1\n    )\n    return processed_data_rag\n",
+  "filepath": "content-optimization/src/content_optimization/pipelines/azure_rag/nodes.py",
+  "parameters": {
+    "temperature": 0.0,
+    "max_tokens": 2000,
+    "n_completions": 1,
+    "seed": 1234
+  },
+  "run_command": "kedro run --to-nodes='process_html_tables_node'",
+  "inputs": [
+    "filtered_data_rag",
+    "params:temperature",
+    "params:max_tokens",
+    "params:n_completions",
+    "params:seed"
+  ],
+  "outputs": [
+    "processed_data_rag"
+  ]
+}

@@ -1,0 +1,474 @@
+{
+  "nodes": [
+    {
+      "id": "aac5126e",
+      "name": "merged_data",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "azure_rag",
+        "__default__",
+        "data_processing"
+      ],
+      "type": "data",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": "pandas.parquet_dataset.ParquetDataset",
+      "stats": null
+    },
+    {
+      "id": "a9b9f4fa",
+      "name": "filter_articles_node",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "task",
+      "modular_pipelines": null,
+      "parameters": {
+        "azure_blacklist": [
+          1446081,
+          1445828,
+          1443608,
+          1445829,
+          1435183,
+          1435331,
+          1434652
+        ],
+        "azure_whitelist": [
+          1497409,
+          1469472,
+          1444496,
+          1445629,
+          1445798,
+          1444751,
+          1435335,
+          1435188,
+          1434614
+        ],
+        "lengthy_articles": [
+          1435223
+        ]
+      }
+    },
+    {
+      "id": "5064cd16",
+      "name": "params:azure_blacklist",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "997ee651",
+      "name": "params:azure_whitelist",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "0392f56b",
+      "name": "params:lengthy_articles",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "ed19d5f2",
+      "name": "filtered_data_rag",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "data",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": "pandas.parquet_dataset.ParquetDataset",
+      "stats": null
+    },
+    {
+      "id": "45b6568b",
+      "name": "process_html_tables_node",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "task",
+      "modular_pipelines": null,
+      "parameters": {
+        "temperature": 0.0,
+        "max_tokens": 2000,
+        "n_completions": 1,
+        "seed": 1234
+      }
+    },
+    {
+      "id": "f2d6db8d",
+      "name": "params:temperature",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "ff699c81",
+      "name": "params:max_tokens",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "1d024c9f",
+      "name": "params:n_completions",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "85e11043",
+      "name": "params:seed",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "803f1c9b",
+      "name": "processed_data_rag",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "data",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": "pandas.parquet_dataset.ParquetDataset",
+      "stats": null
+    },
+    {
+      "id": "a64312c5",
+      "name": "extract_content_node",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "task",
+      "modular_pipelines": null,
+      "parameters": {
+        "article_content_columns": [
+          "id",
+          "title",
+          "cover_image_url",
+          "full_url",
+          "extracted_content_body",
+          "content_category",
+          "category_description",
+          "pr_name",
+          "date_modified",
+          "has_table"
+        ],
+        "table_content_columns": [
+          "id",
+          "title",
+          "cover_image_url",
+          "full_url",
+          "processed_table_content",
+          "content_category",
+          "category_description",
+          "pr_name",
+          "date_modified"
+        ]
+      }
+    },
+    {
+      "id": "eed99cef",
+      "name": "params:article_content_columns",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "ae432684",
+      "name": "params:table_content_columns",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "256e3119",
+      "name": "json_data_rag",
+      "tags": [],
+      "pipelines": [
+        "azure_rag",
+        "__default__"
+      ],
+      "type": "data",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": "partitions.partitioned_dataset.PartitionedDataset",
+      "stats": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "eed99cef",
+      "target": "a64312c5"
+    },
+    {
+      "source": "ae432684",
+      "target": "a64312c5"
+    },
+    {
+      "source": "0392f56b",
+      "target": "a9b9f4fa"
+    },
+    {
+      "source": "ed19d5f2",
+      "target": "45b6568b"
+    },
+    {
+      "source": "f2d6db8d",
+      "target": "45b6568b"
+    },
+    {
+      "source": "85e11043",
+      "target": "45b6568b"
+    },
+    {
+      "source": "803f1c9b",
+      "target": "a64312c5"
+    },
+    {
+      "source": "1d024c9f",
+      "target": "45b6568b"
+    },
+    {
+      "source": "a9b9f4fa",
+      "target": "ed19d5f2"
+    },
+    {
+      "source": "a64312c5",
+      "target": "256e3119"
+    },
+    {
+      "source": "5064cd16",
+      "target": "a9b9f4fa"
+    },
+    {
+      "source": "997ee651",
+      "target": "a9b9f4fa"
+    },
+    {
+      "source": "45b6568b",
+      "target": "803f1c9b"
+    },
+    {
+      "source": "aac5126e",
+      "target": "a9b9f4fa"
+    },
+    {
+      "source": "ff699c81",
+      "target": "45b6568b"
+    }
+  ],
+  "layers": [],
+  "tags": [],
+  "pipelines": [
+    {
+      "id": "__default__",
+      "name": "__default__"
+    },
+    {
+      "id": "data_processing",
+      "name": "data_processing"
+    },
+    {
+      "id": "feature_engineering",
+      "name": "feature_engineering"
+    },
+    {
+      "id": "azure_rag",
+      "name": "azure_rag"
+    },
+    {
+      "id": "clustering",
+      "name": "clustering"
+    }
+  ],
+  "modular_pipelines": {
+    "__root__": {
+      "id": "__root__",
+      "name": "__root__",
+      "inputs": [],
+      "outputs": [],
+      "children": [
+        {
+          "id": "ae432684",
+          "type": "data"
+        },
+        {
+          "id": "5064cd16",
+          "type": "parameters"
+        },
+        {
+          "id": "a9b9f4fa",
+          "type": "task"
+        },
+        {
+          "id": "eed99cef",
+          "type": "parameters"
+        },
+        {
+          "id": "aac5126e",
+          "type": "data"
+        },
+        {
+          "id": "1d024c9f",
+          "type": "parameters"
+        },
+        {
+          "id": "45b6568b",
+          "type": "task"
+        },
+        {
+          "id": "ae432684",
+          "type": "parameters"
+        },
+        {
+          "id": "997ee651",
+          "type": "data"
+        },
+        {
+          "id": "f2d6db8d",
+          "type": "data"
+        },
+        {
+          "id": "0392f56b",
+          "type": "data"
+        },
+        {
+          "id": "ed19d5f2",
+          "type": "data"
+        },
+        {
+          "id": "256e3119",
+          "type": "data"
+        },
+        {
+          "id": "f2d6db8d",
+          "type": "parameters"
+        },
+        {
+          "id": "997ee651",
+          "type": "parameters"
+        },
+        {
+          "id": "0392f56b",
+          "type": "parameters"
+        },
+        {
+          "id": "85e11043",
+          "type": "data"
+        },
+        {
+          "id": "a64312c5",
+          "type": "task"
+        },
+        {
+          "id": "5064cd16",
+          "type": "data"
+        },
+        {
+          "id": "ff699c81",
+          "type": "data"
+        },
+        {
+          "id": "eed99cef",
+          "type": "data"
+        },
+        {
+          "id": "803f1c9b",
+          "type": "data"
+        },
+        {
+          "id": "1d024c9f",
+          "type": "data"
+        },
+        {
+          "id": "85e11043",
+          "type": "parameters"
+        },
+        {
+          "id": "ff699c81",
+          "type": "parameters"
+        }
+      ]
+    }
+  },
+  "selected_pipeline": "azure_rag"
+}

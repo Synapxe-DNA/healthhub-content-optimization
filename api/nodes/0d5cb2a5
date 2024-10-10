@@ -1,0 +1,53 @@
+{
+  "code": "def generate_embeddings(\n    filtered_data_with_keywords: pd.DataFrame,\n    model: str,\n    owner: str,\n    trust_remote_code: bool,\n    pooling_strategy: str,\n    columns_to_keep_emb: list[str],\n    columns_to_emb: list[str],\n) -> pd.DataFrame:\n    \"\"\"\n    Generates embeddings on columns specified in columns_to_emb and\n    returns a DataFrame with added embeddings columns\n\n    Args:\n        filtered_data_with_keywords (pd.DataFrame): The filtered DataFrame with extracted keywords.\n        model (str): Embedding model.\n        owner (str): Owner of embedding model.\n        trust_remote_code (bool): Specifies if trust_remote_code is required.\n        pooling_strategy (str): Pooling strategy of chunk embeddings.\n        columns_to_emb (list[str]): List of column names to generate embeddings.\n\n    Returns:\n        pd.DataFrame: The DataFrame with the generated embeddings.\n    \"\"\"\n\n    df_filtered = filtered_data_with_keywords.copy()\n\n    df_filtered = df_filtered.loc[:, columns_to_keep_emb]\n    df_filtered[\"keywords_all-MiniLM-L6-v2\"] = df_filtered[\n        \"keywords_all-MiniLM-L6-v2\"\n    ].apply(lambda x: \" \".join(x))\n\n    # Load the tokenizer and model\n    if trust_remote_code:\n        sentence_transformer = SentenceTransformer(\n            f\"{owner}/{model}\", trust_remote_code=True\n        )\n    else:\n        sentence_transformer = SentenceTransformer(f\"{owner}/{model}\")\n    tokenizer = AutoTokenizer.from_pretrained(f\"{owner}/{model}\")\n    max_length = sentence_transformer.max_seq_length\n\n    embedding_dict = {col: [] for col in columns_to_emb}\n\n    embeddings_data = df_filtered.copy()\n\n    for col_name, embedding_list in embedding_dict.items():\n        with alive_bar((embeddings_data[\"id\"].nunique()), force_tty=True) as bar:\n            print(f\"Generating embeddings for {col_name}\")\n            for id in embeddings_data[\"id\"].unique():\n                text = embeddings_data.query(\"id == @id\")[col_name].values[0]\n\n                if not text:\n                    # Store empty array\n                    dim = sentence_transformer.get_sentence_embedding_dimension()\n                    embeddings = np.empty((dim,), dtype=np.float32)\n                else:\n                    # Step 1: Split the article into sentences\n                    sentences = sent_tokenize(text)\n\n                    # Step 2: Tokenize sentences and split into chunks of max 256 tokens\n                    chunks = split_into_chunks(sentences, max_length, tokenizer)\n\n                    # Step 3: Encode each chunk to get their embeddings\n                    chunk_embeddings = [\n                        sentence_transformer.encode(chunk) for chunk in chunks\n                    ]\n\n                    # Step 4: Aggregate chunk embeddings to form a single embedding for the entire article\n                    embeddings = pool_embeddings(\n                        chunk_embeddings, strategy=pooling_strategy\n                    )\n\n                indices = embeddings_data.query(\"id == @id\").index.values\n\n                for _ in range(len(indices)):\n                    embedding_list.append(embeddings)\n\n                bar()\n\n    for col_name, embedding_list in embedding_dict.items():\n        embedding_col = f\"{col_name}_embeddings\"\n        embeddings_data[embedding_col] = embedding_list\n\n    return embeddings_data\n",
+  "filepath": "content-optimization/src/content_optimization/pipelines/feature_engineering/nodes.py",
+  "parameters": {
+    "embeddings.model": "nomic-embed-text-v1.5",
+    "embeddings.owner": "nomic-ai",
+    "embeddings.trust_remote_code": true,
+    "embeddings.pooling_strategy": "mean",
+    "columns_to_keep_emb": [
+      "id",
+      "content_name",
+      "title",
+      "article_category_names",
+      "cover_image_url",
+      "full_url",
+      "category_description",
+      "content_body",
+      "feature_title",
+      "pr_name",
+      "date_modified",
+      "page_views",
+      "engagement_rate",
+      "content_category",
+      "has_table",
+      "has_image",
+      "related_sections",
+      "extracted_links",
+      "extracted_headers",
+      "extracted_content_body",
+      "keywords_all-MiniLM-L6-v2"
+    ],
+    "columns_to_emb": [
+      "title",
+      "article_category_names",
+      "category_description",
+      "extracted_content_body",
+      "keywords_all-MiniLM-L6-v2"
+    ]
+  },
+  "run_command": "kedro run --to-nodes='generate_embeddings_node'",
+  "inputs": [
+    "filtered_data_with_keywords",
+    "params:embeddings.model",
+    "params:embeddings.owner",
+    "params:embeddings.trust_remote_code",
+    "params:embeddings.pooling_strategy",
+    "params:columns_to_keep_emb",
+    "params:columns_to_emb"
+  ],
+  "outputs": [
+    "embeddings_data"
+  ]
+}

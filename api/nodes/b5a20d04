@@ -1,0 +1,24 @@
+{
+  "code": "def merge_data(\n    all_contents_mapped: dict[str, Callable[[], Any]],\n    google_analytics_data: dict[str, pd.DataFrame],\n    google_analytics_columns: dict[str, str],\n) -> pd.DataFrame:\n    \"\"\"\n    Merge the data from multiple partitioned dataframes into a single `pandas.DataFrame`.\n\n    Parameters:\n        all_contents_mapped (dict[str, Callable[[], Any]]):\n            A dictionary containing the `partitions.PartitionedDataset` where the values load the parquet data as `pandas.DataFrame`.\n\n        google_analytics_data: dict[str, pd.DataFrame]:\n            A dictionary containing the `pandas.DataFrame` where the keys are the content categories and the values\n            are the dataframes with the Google Analytics data.\n\n        google_analytics_columns (dict[str, str]): A mapping to default column names for the Google Analytics data.\n\n    Returns:\n        pd.DataFrame: The merged dataframe with updated Google Analytics data.\n    \"\"\"\n    merged_df = pd.DataFrame()\n    for content_category, ga_df in google_analytics_data.items():\n        # Rename columns and remove unnecessary columns\n        df = ga_df.rename(columns=google_analytics_columns)\n        df = df[[\"id\", *google_analytics_columns.values()]]\n        # Load partition data\n        orig_df = all_contents_mapped[content_category]()\n        # Drop outdated Google Analytics data columns\n        orig_df = orig_df.drop(list(google_analytics_columns.values()), axis=1)\n        # Merge data with updated Google Analytics statistics\n        tmp = orig_df.merge(df, on=\"id\")\n        merged_df = pd.concat([merged_df, tmp], axis=0, ignore_index=True)\n\n    return merged_df\n",
+  "filepath": "content-optimization/src/content_optimization/pipelines/data_processing/nodes.py",
+  "parameters": {
+    "google_analytics_columns": {
+      "Page Views": "page_views",
+      "Engagement Rate": "engagement_rate",
+      "Bounce Rate": "bounce_rate",
+      "Exit Rate": "exit_rate",
+      "Scroll %": "scroll_percentage",
+      "% of Total Views": "percentage_total_views",
+      "Cumulative % of Total Views": "cumulative_percentage_total_views"
+    }
+  },
+  "run_command": "kedro run --to-nodes='merge_data_node'",
+  "inputs": [
+    "all_contents_mapped",
+    "google_analytics_data",
+    "params:google_analytics_columns"
+  ],
+  "outputs": [
+    "merged_data"
+  ]
+}

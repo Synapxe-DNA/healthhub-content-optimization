@@ -1,0 +1,806 @@
+{
+  "nodes": [
+    {
+      "id": "aac5126e",
+      "name": "merged_data",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "azure_rag",
+        "__default__",
+        "data_processing"
+      ],
+      "type": "data",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": "pandas.parquet_dataset.ParquetDataset",
+      "stats": null
+    },
+    {
+      "id": "141cb033",
+      "name": "extract_keywords_node",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "task",
+      "modular_pipelines": null,
+      "parameters": {
+        "cfg": {
+          "option": "only_confirmed",
+          "contributor": "Health Promotion Board",
+          "to_remove": true
+        },
+        "selection_options.only_confirmed": [
+          "cost-and-financing",
+          "diseases-and-conditions",
+          "live-healthy-articles",
+          "medical-care-and-facilities",
+          "support-group-and-others"
+        ],
+        "selection_options.all": [
+          "cost-and-financing",
+          "diseases-and-conditions",
+          "health-statistics",
+          "live-healthy-articles",
+          "medical-care-and-facilities",
+          "medications",
+          "program-sub-pages",
+          "programs",
+          "support-group-and-others"
+        ],
+        "keywords.model": "all-MiniLM-L6-v2",
+        "keywords.spacy_pipeline": "en_core_web_sm",
+        "keywords.stop_words": "english",
+        "keywords.workers": 1,
+        "keywords.use_mmr": true,
+        "keywords.diversity": 0.5,
+        "keywords.top_n": 5
+      }
+    },
+    {
+      "id": "a41afe5e",
+      "name": "params:cfg",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "9fcbd6df",
+      "name": "params:selection_options.only_confirmed",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "b8494b25",
+      "name": "params:selection_options.all",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "c910cd61",
+      "name": "params:keywords.model",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "732a6db5",
+      "name": "params:keywords.spacy_pipeline",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "61860242",
+      "name": "params:keywords.stop_words",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "04f6bbee",
+      "name": "params:keywords.workers",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "7cedbc47",
+      "name": "params:keywords.use_mmr",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "d7052aff",
+      "name": "params:keywords.diversity",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "151f120f",
+      "name": "params:keywords.top_n",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "9a3f3206",
+      "name": "filtered_data_with_keywords",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "data",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": "pandas.parquet_dataset.ParquetDataset",
+      "stats": null
+    },
+    {
+      "id": "0d5cb2a5",
+      "name": "generate_embeddings_node",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "task",
+      "modular_pipelines": null,
+      "parameters": {
+        "embeddings.model": "nomic-embed-text-v1.5",
+        "embeddings.owner": "nomic-ai",
+        "embeddings.trust_remote_code": true,
+        "embeddings.pooling_strategy": "mean",
+        "columns_to_keep_emb": [
+          "id",
+          "content_name",
+          "title",
+          "article_category_names",
+          "cover_image_url",
+          "full_url",
+          "category_description",
+          "content_body",
+          "feature_title",
+          "pr_name",
+          "date_modified",
+          "page_views",
+          "engagement_rate",
+          "content_category",
+          "has_table",
+          "has_image",
+          "related_sections",
+          "extracted_links",
+          "extracted_headers",
+          "extracted_content_body",
+          "keywords_all-MiniLM-L6-v2"
+        ],
+        "columns_to_emb": [
+          "title",
+          "article_category_names",
+          "category_description",
+          "extracted_content_body",
+          "keywords_all-MiniLM-L6-v2"
+        ]
+      }
+    },
+    {
+      "id": "9ab54ade",
+      "name": "params:embeddings.model",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "eea2fae4",
+      "name": "params:embeddings.owner",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "e2282a8a",
+      "name": "params:embeddings.trust_remote_code",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "130a9811",
+      "name": "params:embeddings.pooling_strategy",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "1b1133a6",
+      "name": "params:columns_to_keep_emb",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "046d6a6f",
+      "name": "params:columns_to_emb",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "4faf2f99",
+      "name": "embeddings_data",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "data",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": "pandas.parquet_dataset.ParquetDataset",
+      "stats": null
+    },
+    {
+      "id": "b9e342f2",
+      "name": "combine_embeddings_by_weightage_node",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "task",
+      "modular_pipelines": null,
+      "parameters": {
+        "embeddings_weightage.title": 0.3,
+        "embeddings_weightage.article_category_names": 0,
+        "embeddings_weightage.category_description": 0,
+        "embeddings_weightage.extracted_content_body": 0.7,
+        "embeddings_weightage.keywords": 0
+      }
+    },
+    {
+      "id": "e79a97fb",
+      "name": "params:embeddings_weightage.title",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "36ead0f9",
+      "name": "params:embeddings_weightage.article_category_names",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "5785eef7",
+      "name": "params:embeddings_weightage.category_description",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "ed452547",
+      "name": "params:embeddings_weightage.extracted_content_body",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "e40631c7",
+      "name": "params:embeddings_weightage.keywords",
+      "tags": [],
+      "pipelines": [
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "parameters",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": null,
+      "stats": null
+    },
+    {
+      "id": "aa1a7324",
+      "name": "weighted_embeddings",
+      "tags": [],
+      "pipelines": [
+        "clustering",
+        "feature_engineering",
+        "__default__"
+      ],
+      "type": "data",
+      "modular_pipelines": null,
+      "layer": null,
+      "dataset_type": "pickle.pickle_dataset.PickleDataset",
+      "stats": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "5785eef7",
+      "target": "b9e342f2"
+    },
+    {
+      "source": "d7052aff",
+      "target": "141cb033"
+    },
+    {
+      "source": "151f120f",
+      "target": "141cb033"
+    },
+    {
+      "source": "046d6a6f",
+      "target": "0d5cb2a5"
+    },
+    {
+      "source": "141cb033",
+      "target": "9a3f3206"
+    },
+    {
+      "source": "ed452547",
+      "target": "b9e342f2"
+    },
+    {
+      "source": "61860242",
+      "target": "141cb033"
+    },
+    {
+      "source": "9ab54ade",
+      "target": "0d5cb2a5"
+    },
+    {
+      "source": "130a9811",
+      "target": "0d5cb2a5"
+    },
+    {
+      "source": "a41afe5e",
+      "target": "141cb033"
+    },
+    {
+      "source": "b8494b25",
+      "target": "141cb033"
+    },
+    {
+      "source": "7cedbc47",
+      "target": "141cb033"
+    },
+    {
+      "source": "9fcbd6df",
+      "target": "141cb033"
+    },
+    {
+      "source": "c910cd61",
+      "target": "141cb033"
+    },
+    {
+      "source": "e79a97fb",
+      "target": "b9e342f2"
+    },
+    {
+      "source": "aac5126e",
+      "target": "141cb033"
+    },
+    {
+      "source": "0d5cb2a5",
+      "target": "4faf2f99"
+    },
+    {
+      "source": "732a6db5",
+      "target": "141cb033"
+    },
+    {
+      "source": "e2282a8a",
+      "target": "0d5cb2a5"
+    },
+    {
+      "source": "eea2fae4",
+      "target": "0d5cb2a5"
+    },
+    {
+      "source": "4faf2f99",
+      "target": "b9e342f2"
+    },
+    {
+      "source": "36ead0f9",
+      "target": "b9e342f2"
+    },
+    {
+      "source": "9a3f3206",
+      "target": "0d5cb2a5"
+    },
+    {
+      "source": "04f6bbee",
+      "target": "141cb033"
+    },
+    {
+      "source": "e40631c7",
+      "target": "b9e342f2"
+    },
+    {
+      "source": "1b1133a6",
+      "target": "0d5cb2a5"
+    },
+    {
+      "source": "b9e342f2",
+      "target": "aa1a7324"
+    }
+  ],
+  "layers": [],
+  "tags": [],
+  "pipelines": [
+    {
+      "id": "__default__",
+      "name": "__default__"
+    },
+    {
+      "id": "data_processing",
+      "name": "data_processing"
+    },
+    {
+      "id": "feature_engineering",
+      "name": "feature_engineering"
+    },
+    {
+      "id": "azure_rag",
+      "name": "azure_rag"
+    },
+    {
+      "id": "clustering",
+      "name": "clustering"
+    }
+  ],
+  "modular_pipelines": {
+    "__root__": {
+      "id": "__root__",
+      "name": "__root__",
+      "inputs": [],
+      "outputs": [],
+      "children": [
+        {
+          "id": "aac5126e",
+          "type": "data"
+        },
+        {
+          "id": "4faf2f99",
+          "type": "data"
+        },
+        {
+          "id": "e79a97fb",
+          "type": "parameters"
+        },
+        {
+          "id": "36ead0f9",
+          "type": "data"
+        },
+        {
+          "id": "61860242",
+          "type": "parameters"
+        },
+        {
+          "id": "a41afe5e",
+          "type": "parameters"
+        },
+        {
+          "id": "732a6db5",
+          "type": "data"
+        },
+        {
+          "id": "046d6a6f",
+          "type": "data"
+        },
+        {
+          "id": "7cedbc47",
+          "type": "data"
+        },
+        {
+          "id": "b8494b25",
+          "type": "parameters"
+        },
+        {
+          "id": "7cedbc47",
+          "type": "parameters"
+        },
+        {
+          "id": "9fcbd6df",
+          "type": "parameters"
+        },
+        {
+          "id": "c910cd61",
+          "type": "parameters"
+        },
+        {
+          "id": "1b1133a6",
+          "type": "parameters"
+        },
+        {
+          "id": "e40631c7",
+          "type": "data"
+        },
+        {
+          "id": "9ab54ade",
+          "type": "data"
+        },
+        {
+          "id": "130a9811",
+          "type": "data"
+        },
+        {
+          "id": "0d5cb2a5",
+          "type": "task"
+        },
+        {
+          "id": "36ead0f9",
+          "type": "parameters"
+        },
+        {
+          "id": "04f6bbee",
+          "type": "data"
+        },
+        {
+          "id": "5785eef7",
+          "type": "data"
+        },
+        {
+          "id": "732a6db5",
+          "type": "parameters"
+        },
+        {
+          "id": "046d6a6f",
+          "type": "parameters"
+        },
+        {
+          "id": "b9e342f2",
+          "type": "task"
+        },
+        {
+          "id": "e40631c7",
+          "type": "parameters"
+        },
+        {
+          "id": "c910cd61",
+          "type": "data"
+        },
+        {
+          "id": "9ab54ade",
+          "type": "parameters"
+        },
+        {
+          "id": "130a9811",
+          "type": "parameters"
+        },
+        {
+          "id": "5785eef7",
+          "type": "parameters"
+        },
+        {
+          "id": "ed452547",
+          "type": "data"
+        },
+        {
+          "id": "04f6bbee",
+          "type": "parameters"
+        },
+        {
+          "id": "e2282a8a",
+          "type": "data"
+        },
+        {
+          "id": "d7052aff",
+          "type": "data"
+        },
+        {
+          "id": "151f120f",
+          "type": "data"
+        },
+        {
+          "id": "eea2fae4",
+          "type": "data"
+        },
+        {
+          "id": "9a3f3206",
+          "type": "data"
+        },
+        {
+          "id": "aa1a7324",
+          "type": "data"
+        },
+        {
+          "id": "ed452547",
+          "type": "parameters"
+        },
+        {
+          "id": "141cb033",
+          "type": "task"
+        },
+        {
+          "id": "61860242",
+          "type": "data"
+        },
+        {
+          "id": "e79a97fb",
+          "type": "data"
+        },
+        {
+          "id": "d7052aff",
+          "type": "parameters"
+        },
+        {
+          "id": "151f120f",
+          "type": "parameters"
+        },
+        {
+          "id": "a41afe5e",
+          "type": "data"
+        },
+        {
+          "id": "e2282a8a",
+          "type": "parameters"
+        },
+        {
+          "id": "b8494b25",
+          "type": "data"
+        },
+        {
+          "id": "1b1133a6",
+          "type": "data"
+        },
+        {
+          "id": "9fcbd6df",
+          "type": "data"
+        },
+        {
+          "id": "eea2fae4",
+          "type": "parameters"
+        }
+      ]
+    }
+  },
+  "selected_pipeline": "feature_engineering"
+}

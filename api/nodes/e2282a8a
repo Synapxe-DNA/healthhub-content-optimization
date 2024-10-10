@@ -1,0 +1,5 @@
+{
+  "parameters": {
+    "embeddings.trust_remote_code": true
+  }
+}

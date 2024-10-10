@@ -1,0 +1,8 @@
+{
+  "type": "pickle.pickle_dataset.PickleDataset",
+  "filepath": "/home/runner/work/healthhub-content-optimization/healthhub-content-optimization/content-optimization/data/04_feature/weighted_embeddings.pkl",
+  "run_command": "kedro run --to-outputs=weighted_embeddings",
+  "preview": null,
+  "preview_type": null,
+  "stats": null
+}

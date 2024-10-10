@@ -1,0 +1,8 @@
+{
+  "type": "pandas.excel_dataset.ExcelDataset",
+  "filepath": "/home/runner/work/healthhub-content-optimization/healthhub-content-optimization/content-optimization/data/01_raw/google_analytics.xlsx",
+  "run_command": null,
+  "preview": null,
+  "preview_type": null,
+  "stats": null
+}
