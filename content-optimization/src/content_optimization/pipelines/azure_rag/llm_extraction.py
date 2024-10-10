@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from kedro.config import OmegaConfigLoader
+from kedro.config import MissingConfigException, OmegaConfigLoader
 from kedro.framework.project import settings
 from openai import AzureOpenAI
 
@@ -10,7 +10,23 @@ conf_path = str(Path("./") / settings.CONF_SOURCE)
 
 # Load the credentials
 conf_loader = OmegaConfigLoader(conf_source=conf_path)
-credentials = conf_loader["credentials"]
+try:
+    credentials = conf_loader["credentials"]
+# When credentials.yml is not created locally
+except MissingConfigException:
+    # Use dummy credentials, in order to kedro viz azure_rag pipeline on GitHub page
+    print(
+        "Using dummy credentials for kedro viz. If running azure_rag pipeline, please create credentials.yml."
+    )
+    dummy_credentials = {
+        "azure_credentials": {
+            "api_version": "2024-01-01",
+            "azure_endpoint": "dummy-azure-endpoint",
+            "cognitive_services": "dummy-cognitive-service-key",
+            "model_deployment": "dummy-model-deployment-id",
+        }
+    }
+    credentials = dummy_credentials
 
 azure_credentials = credentials.get("azure_credentials", {})
 api_version = azure_credentials.get("api_version", "")
