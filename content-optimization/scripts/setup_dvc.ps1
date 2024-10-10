@@ -1,3 +1,22 @@
+# Perform operations in the root directory using a subshell
+& {
+    # Navigate to the root of the project
+    $rootDir = git rev-parse --show-toplevel
+    if (-not $?) { exit }
+
+    # Define the config file path relative to the root
+    $configFilePath = Join-Path -Path $rootDir -ChildPath ".dvc/config.local"
+
+    # Attempt to remove the config file
+    if (Test-Path -Path $configFilePath) {
+        Write-Host "Removing config.local."
+        Remove-Item -Path $configFilePath
+    } else {
+        Write-Host "config.local not found, continuing."
+    }
+}
+
+
 # Path to the .env file
 $envFile = ".env"
 
