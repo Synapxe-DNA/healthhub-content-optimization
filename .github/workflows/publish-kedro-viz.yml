@@ -48,7 +48,7 @@ jobs:
           pip install -r requirements.txt
         # Using the action
       - name: Deploy Kedro-Viz to GH Pages
-        uses: kedro-org/publish-kedro-viz@v1
+        uses: kedro-org/publish-kedro-viz@v2
         with:
           # This is not required if your Kedro Project
           # is at the root of your GitHub Repository
