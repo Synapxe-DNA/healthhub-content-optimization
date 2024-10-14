@@ -21,7 +21,7 @@
     "@angular/router": "^18.1.0",
     "@taiga-ui/addon-charts": "^3.84.0",
     "@taiga-ui/addon-mobile": "^3.84.0",
-    "@taiga-ui/addon-preview": "^3.84.0",
+    "@taiga-ui/addon-preview": "^3.89.0",
     "@taiga-ui/addon-table": "^3.84.0",
     "@taiga-ui/addon-tablebars": "^3.84.0",
     "@taiga-ui/cdk": "^3.84.0",
