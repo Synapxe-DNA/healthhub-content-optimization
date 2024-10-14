@@ -1,5 +1,5 @@
 annotated-types==0.7.0
-anyio==4.6.2
+anyio==4.6.2.post1
 arize-phoenix==5.2.2
 arize-phoenix-evals==0.17.0
 azure-identity==1.19.0
@@ -19,8 +19,8 @@ jsonpointer==3.0.0
 langchain-core==0.3.10
 langchain-huggingface==0.1.0
 langchain-openai==0.2.2
-langgraph==0.2.35
-langsmith==0.1.134
+langgraph==0.2.36
+langsmith==0.1.135
 MarkupSafe==3.0.1
 mpmath==1.3.0
 networkx==3.4.1
