@@ -1,6 +1,6 @@
 alive_progress==3.1.5
-azure-identity==1.17.1
-bertopic==0.16.3
+azure-identity==1.19.0
+bertopic==0.16.4
 einops==0.8.0
 fastparquet==2024.5.0
 ipython>=8.10
@@ -12,9 +12,9 @@ kedro-telemetry>=0.3.1
 kedro-viz>=6.7.0
 keybert==0.8.5
 keyphrase-vectorizers==0.0.13
-neo4j==5.23.0
+neo4j==5.25.0
 notebook
-openai==1.42.0
+openai==1.51.2
 openpyxl==3.1.5
 pandas==2.2.2
 pyarrow==17.0.0

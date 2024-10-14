@@ -12,7 +12,7 @@ kedro-datasets>=1.0; python_version < "3.9"
 kedro-telemetry>=0.3.1
 kedro-viz>=6.7.0
 keybert==0.8.5
-keyphrase-vectorizers==0.0.9
+keyphrase-vectorizers==0.0.13
 matplotlib==3.9.0
 nbqa==1.8.5
 nltk==3.8.1
