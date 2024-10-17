@@ -135,6 +135,7 @@ class HTMLExtractor:
                     "footer",
                     "aside",
                 ]:
+
                     self.manual_extract_text(child, content)
                 elif child.name in ["h1", "h2", "h3", "h4", "h5", "h6", "p"]:
                     text = child.get_text(separator=" ")
